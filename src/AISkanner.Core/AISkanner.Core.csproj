@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="regler.json" LogicalName="AISkanner.regler.json" />
+    <!-- IP-land fra DB-IP.com (CC BY 4.0), komprimert. Lages med verktoy/lag-ipland.py -->
+    <EmbeddedResource Include="ipland.bin" LogicalName="AISkanner.ipland.bin" />
     <InternalsVisibleTo Include="AISkanner.Cli" />
   </ItemGroup>
 

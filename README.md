@@ -12,10 +12,12 @@ Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI f�
 - **AI-nøkler**: om nøkler som `OPENAI_API_KEY` finnes (aldri verdien).
 - **Nettleser-AI**: AI-utvidelser, AI-nettsteder du har brukt (bruksspor og historikk, analysert i minnet og aldri lagret),
   ukjente AI-nettsteder, AI-modeller lagret i nettleseren, og innebygd AI i Chrome og Edge.
+- **Hvor AI sender data**: hvilke tjenester og land hvert AI-program er koblet til akkurat nå, fra Windows' egne tabeller.
+  Programmer som snakker med AI-tjenester i det skjulte blir røde. Med administrator måles også hvor mye som sendes.
 - **Kjente produkter** (Ollama, ChatGPT, Claude Code, Cursor, DeepSeek m.fl.) får navn og risiko fra [`regler.json`](src/AISkanner.Core/regler.json).
 
 ## Sikkerhet først
-- Leser bare. Endrer, sletter eller installerer ingenting. Ber aldri om administrator (`asInvoker`).
+- Leser bare. Endrer, sletter eller installerer ingenting. Trenger ikke administrator (`asInvoker`). Bare måling av datamengde ber om det, og bare når du trykker på den.
 - Starter ingen skript eller kommandolinjer. Vinduet bruker Microsoft Edge WebView2.
 - Sender ingenting ut. Valgfri sårbarhetssjekk sender bare produktnavn til NVD.
 - Åpner aldri nettleserens passord, informasjonskapsler eller lommebøker. Håndhevet i koden (`Skanner.LovligeFiler`).
@@ -26,11 +28,11 @@ Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI f�
 Se [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses, og [CODE_SIGNING.md](CODE_SIGNING.md) for signering og personvern.
 
 ## Begrensninger
-Skanneren finner kjente spor, ikke alt. AI brukt i en vanlig nettleserfane (chatgpt.com osv.) oppdages ikke.
+Skanneren finner spor, ikke alt. Forbindelser vises bare mens programmene er åpne. Land for skytjenester er der serveren står.
 Et tomt resultat betyr ikke at PC-en er fri for AI. Den skanner bare innlogget bruker.
 
 ## Liten og rask
-- Hele programmet er rundt 2 MB, som 7-Zip. Det bruker .NET Framework 4.8 og SQLite-motoren som allerede finnes i Windows,
+- Hele programmet er rundt 3,5 MB, som 7-Zip. Det bruker .NET Framework 4.8 og SQLite-motoren som allerede finnes i Windows,
   og Microsoft Edge WebView2 for vinduet. Byggeløypa stopper hvis programmet blir større enn 10 MB.
 - Alle sjekkene kjører samtidig. Det som tar tid er å gå gjennom filene på disken; den stopper uansett etter 45 sekunder.
 
@@ -49,4 +51,4 @@ dotnet run --project src/AISkanner.Cli -- [--nvd] [--regler sti\regler.json]
 Exit-kode: 0 = ingen funn, 1 = gule/grønne funn, 2 = minst ett rødt funn.
 
 ## Lisens
-MIT
+MIT. Landtabellen er IP to Country Lite fra [DB-IP.com](https://db-ip.com) (CC BY 4.0).

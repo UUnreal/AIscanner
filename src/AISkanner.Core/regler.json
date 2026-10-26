@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-26",
+  "versjon": "2026-10-26b",
   "produkter": [
     {
       "navn": "Ollama",
@@ -456,9 +456,12 @@
       "navn": "ChatGPT",
       "domener": [
         "chatgpt.com",
-        "chat.openai.com"
+        "chat.openai.com",
+        "oaistatic.com",
+        "oaiusercontent.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-chat fra OpenAI",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -469,6 +472,7 @@
         "claude.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-chat fra Anthropic",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -481,6 +485,7 @@
         "aistudio.google.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-chat fra Google",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -491,6 +496,7 @@
         "notebooklm.google.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Google-AI som leser dokumentene dine",
       "hvorfor": "Dokumentene du laster opp sendes til Google.",
       "rad": "Ikke last opp interne dokumenter uten avtale."
@@ -501,6 +507,7 @@
         "copilot.microsoft.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Gratisversjonen av Copilot",
       "hvorfor": "Forbrukerversjonen av Copilot er ikke dekket av bedriftens Microsoft 365-avtale.",
       "rad": "På jobb: bruk Copilot via jobbkontoen i stedet."
@@ -512,6 +519,7 @@
         "copilot.cloud.microsoft"
       ],
       "risiko": "gronn",
+      "land": "US",
       "enkelt": "Copilot via jobbkontoen",
       "hvorfor": "Dekket av bedriftens Microsoft 365-avtale.",
       "rad": "Ingenting å gjøre."
@@ -522,6 +530,7 @@
         "perplexity.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-søkemotor",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -533,6 +542,7 @@
         "x.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-chat fra xAI",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -543,6 +553,7 @@
         "meta.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-chat fra Meta",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -553,6 +564,7 @@
         "chat.mistral.ai"
       ],
       "risiko": "gul",
+      "land": "FR",
       "enkelt": "AI-chat fra Mistral",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -563,6 +575,7 @@
         "poe.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Samleside for mange AI-er",
       "hvorfor": "Det du skriver sendes videre til flere AI-selskaper.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
@@ -573,6 +586,7 @@
         "character.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI-figurer å prate med",
       "hvorfor": "Samtalene lagres hos selskapet. Ofte brukt av barn og unge.",
       "rad": "Snakk med barna om hva de deler."
@@ -584,6 +598,7 @@
         "chat.deepseek.com"
       ],
       "risiko": "rod",
+      "land": "CN",
       "enkelt": "Kinesisk AI-chat",
       "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
       "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
@@ -595,6 +610,7 @@
         "kimi.moonshot.cn"
       ],
       "risiko": "rod",
+      "land": "CN",
       "enkelt": "Kinesisk AI-chat",
       "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
       "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
@@ -606,6 +622,7 @@
         "tongyi.aliyun.com"
       ],
       "risiko": "rod",
+      "land": "CN",
       "enkelt": "Kinesisk AI-chat fra Alibaba",
       "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
       "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
@@ -616,6 +633,7 @@
         "doubao.com"
       ],
       "risiko": "rod",
+      "land": "CN",
       "enkelt": "Kinesisk AI-chat fra ByteDance",
       "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
       "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
@@ -636,6 +654,7 @@
         "huggingface.co"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Nettsted for AI-modeller",
       "hvorfor": "Her lastes AI-modeller ned. Modeller fra ukjente kilder kan inneholde skadelig kode.",
       "rad": "Last bare ned modeller fra kjente kilder."
@@ -646,6 +665,7 @@
         "platform.openai.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Utviklertilgang til OpenAI",
       "hvorfor": "Brukes til å koble egne programmer til AI. Kan føre til at bedriftsdata sendes til OpenAI.",
       "rad": "På jobb: sjekk at dette er godkjent."
@@ -657,6 +677,7 @@
         "platform.claude.com"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "Utviklertilgang til Anthropic",
       "hvorfor": "Brukes til å koble egne programmer til AI.",
       "rad": "På jobb: sjekk at dette er godkjent."
@@ -667,6 +688,7 @@
         "deepl.com"
       ],
       "risiko": "gul",
+      "land": "DE",
       "enkelt": "AI-oversetter",
       "hvorfor": "Teksten og dokumentene du oversetter sendes til DeepL. Gratisversjonen kan bruke dem til trening.",
       "rad": "Ikke oversett interne dokumenter med gratisversjonen."
@@ -690,6 +712,7 @@
         "read.ai"
       ],
       "risiko": "rod",
+      "land": "US",
       "enkelt": "AI som tar opp møter",
       "hvorfor": "Tar opp og skriver ned møter, ofte uten at alle i møtet vet det.",
       "rad": "Slå av automatisk opptak. Si alltid fra før et møte tas opp."
@@ -734,6 +757,7 @@
         "leonardo.ai"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI som lager bilder",
       "hvorfor": "Bildene og beskrivelsene dine lagres hos tjenesten, ofte offentlig.",
       "rad": "Ikke last opp bilder av kunder eller kolleger."
@@ -744,6 +768,7 @@
         "elevenlabs.io"
       ],
       "risiko": "gul",
+      "land": "US",
       "enkelt": "AI som lager stemmer",
       "hvorfor": "Kan kopiere stemmer. Brukes også til svindel.",
       "rad": "Ikke last opp opptak av andre uten samtykke."
@@ -769,6 +794,343 @@
       "enkelt": "AI-søk",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    }
+  ],
+  "hoyrisikoLand": [
+    "CN",
+    "RU",
+    "IR",
+    "KP",
+    "BY"
+  ],
+  "aiTjenester": [
+    {
+      "navn": "OpenAI API",
+      "domener": [
+        "api.openai.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra OpenAI (ChatGPT) brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Azure OpenAI",
+      "domener": [
+        "openai.azure.com",
+        "services.ai.azure.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra OpenAI via Microsoft Azure",
+      "hvorfor": "Programmet bruker OpenAI-modeller via Microsoft Azure. Ofte bedriftens egen avtale, men sjekk at den er godkjent."
+    },
+    {
+      "navn": "Anthropic API (Claude)",
+      "domener": [
+        "api.anthropic.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra Anthropic (Claude) brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Google Gemini API",
+      "domener": [
+        "generativelanguage.googleapis.com",
+        "aiplatform.googleapis.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra Google brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Amazon Bedrock",
+      "domener": [
+        "bedrock-runtime.us-east-1.amazonaws.com",
+        "bedrock-runtime.us-west-2.amazonaws.com",
+        "bedrock-runtime.eu-west-1.amazonaws.com",
+        "bedrock-runtime.eu-central-1.amazonaws.com",
+        "bedrock-runtime.eu-north-1.amazonaws.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI via Amazon Bedrock",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Mistral API",
+      "domener": [
+        "api.mistral.ai",
+        "codestral.mistral.ai"
+      ],
+      "risiko": "gul",
+      "land": "FR",
+      "enkelt": "AI fra Mistral brukt av et program",
+      "hvorfor": "Programmet sender innhold til Mistral i Frankrike (EU)."
+    },
+    {
+      "navn": "xAI API (Grok)",
+      "domener": [
+        "api.x.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra xAI (Grok) brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Groq",
+      "domener": [
+        "api.groq.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-tjeneste brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Together AI",
+      "domener": [
+        "api.together.xyz",
+        "api.together.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-tjeneste brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Fireworks AI",
+      "domener": [
+        "api.fireworks.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-tjeneste brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "OpenRouter",
+      "domener": [
+        "openrouter.ai"
+      ],
+      "risiko": "rod",
+      "land": "US",
+      "enkelt": "Mellomledd til mange AI-tjenester",
+      "hvorfor": "Programmet sender innhold via OpenRouter, som videresender til mange ukjente AI-leverandører."
+    },
+    {
+      "navn": "Perplexity API",
+      "domener": [
+        "api.perplexity.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-søk brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Cohere",
+      "domener": [
+        "api.cohere.com",
+        "api.cohere.ai"
+      ],
+      "risiko": "gul",
+      "land": "CA",
+      "enkelt": "AI-tjeneste brukt av et program",
+      "hvorfor": "Programmet sender innhold til Cohere i Canada."
+    },
+    {
+      "navn": "Meta Llama API",
+      "domener": [
+        "api.llama.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI fra Meta brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Replicate",
+      "domener": [
+        "api.replicate.com",
+        "replicate.delivery"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Kjører AI-modeller i skyen for et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Hugging Face (API og modeller)",
+      "domener": [
+        "api-inference.huggingface.co",
+        "router.huggingface.co",
+        "cdn-lfs.huggingface.co",
+        "cdn-lfs.hf.co",
+        "cas-bridge.xethub.hf.co"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-modeller fra Hugging Face",
+      "hvorfor": "Programmet laster ned AI-modeller eller bruker AI fra Hugging Face. Modeller derfra kan være laget av hvem som helst."
+    },
+    {
+      "navn": "ElevenLabs API",
+      "domener": [
+        "api.elevenlabs.io"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Stemme-AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes."
+    },
+    {
+      "navn": "Stability AI",
+      "domener": [
+        "api.stability.ai"
+      ],
+      "risiko": "gul",
+      "land": "GB",
+      "enkelt": "Bilde-AI brukt av et program",
+      "hvorfor": "Programmet lager bilder med AI hos Stability AI."
+    },
+    {
+      "navn": "GitHub Copilot",
+      "domener": [
+        "api.githubcopilot.com",
+        "copilot-proxy.githubusercontent.com",
+        "api.individual.githubcopilot.com",
+        "api.business.githubcopilot.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-kodeassistent",
+      "hvorfor": "Kodeassistent som sender kode fra PC-en til GitHub/Microsoft."
+    },
+    {
+      "navn": "Cursor",
+      "domener": [
+        "api2.cursor.sh",
+        "api3.cursor.sh",
+        "repo42.cursor.sh"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-kodeeditor",
+      "hvorfor": "Kodeeditor som sender kode til AI i skyen."
+    },
+    {
+      "navn": "Windsurf / Codeium",
+      "domener": [
+        "server.codeium.com",
+        "inference.codeium.com",
+        "windsurf.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-kodeassistent",
+      "hvorfor": "Kodeassistent som sender kode til AI i skyen."
+    },
+    {
+      "navn": "Ollama (modellnedlasting)",
+      "domener": [
+        "registry.ollama.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Nedlasting av AI-modeller",
+      "hvorfor": "Programmet laster ned AI-modeller fra Ollama."
+    },
+    {
+      "navn": "LangSmith (agentlogg)",
+      "domener": [
+        "api.smith.langchain.com",
+        "eu.api.smith.langchain.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Logg fra AI-agenter",
+      "hvorfor": "En AI-agent sender logger av alt den gjør til LangChain. Loggene kan inneholde data fra PC-en."
+    },
+    {
+      "navn": "DeepSeek API",
+      "domener": [
+        "api.deepseek.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Kimi API (Moonshot)",
+      "domener": [
+        "api.moonshot.cn",
+        "api.moonshot.ai"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Qwen API (Alibaba)",
+      "domener": [
+        "dashscope.aliyuncs.com",
+        "dashscope-intl.aliyuncs.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Zhipu GLM",
+      "domener": [
+        "open.bigmodel.cn",
+        "api.z.ai"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Baidu ERNIE",
+      "domener": [
+        "qianfan.baidubce.com",
+        "aip.baidubce.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Doubao API (ByteDance)",
+      "domener": [
+        "volces.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "MiniMax",
+      "domener": [
+        "api.minimax.chat",
+        "api.minimaxi.com",
+        "api.minimax.io"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
     }
   ]
 }

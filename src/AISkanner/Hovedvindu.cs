@@ -15,12 +15,16 @@ public sealed class Hovedvindu : Form
     private readonly WebView2 _web = new() { Dock = DockStyle.Fill };
     private readonly Regelsett _regler = Regelsett.Last();
     private List<Funn> _resultat = new();
+    private Skanner? _skanner;
     private bool _soker;
+    private readonly string[] _args;
 
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    public Hovedvindu()
+    /// <param name="args">--sok: startet på nytt som administrator for å måle datamengde, så søk med en gang.</param>
+    public Hovedvindu(string[] args)
     {
+        _args = args;
         Text = "AI-skanner";
         ClientSize = new Size(980, 760);
         MinimumSize = new Size(560, 600);
@@ -35,7 +39,8 @@ public sealed class Hovedvindu : Form
     {
         try
         {
-            var data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner", "WebView2");
+            // Egen mappe når vi kjører som administrator: WebView2 tåler ikke at to nivåer deler mappe
+            var data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner", Nettverk.ErAdmin() ? "WebView2-admin" : "WebView2");
             var miljo = await CoreWebView2Environment.CreateAsync(null, data);
             await _web.EnsureCoreWebView2Async(miljo);
         }
@@ -63,6 +68,8 @@ public sealed class Hovedvindu : Form
         w.NavigationStarting += (_, e) => { if (!forste) e.Cancel = true; forste = false; };
         w.NewWindowRequested += (_, e) => e.Handled = true;
         w.WebMessageReceived += async (_, e) => await MottaAsync(e.WebMessageAsJson);
+        if (_args.Contains("--sok"))
+            w.NavigationCompleted += (_, _) => Send(new { type = "start", nvd = _args.Contains("--nvd"), historikk = !_args.Contains("--uten-historikk") });
 
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.ui.index.html")!;
         using var r = new StreamReader(s, Encoding.UTF8);
@@ -83,6 +90,8 @@ public sealed class Hovedvindu : Form
             await SokAsync(nvd, historikk);
         }
         else if (type == "lagre") Lagre();
+        else if (type == "admin")
+            StartSomAdmin(m.TryGetProperty("nvd", out var n2) && n2.ValueKind == JsonValueKind.True, !m.TryGetProperty("historikk", out var h2) || h2.ValueKind != JsonValueKind.False);
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
     }
 
@@ -91,13 +100,39 @@ public sealed class Hovedvindu : Form
         _soker = true;
         try
         {
-            var steg = new Progress<int>(nr => Send(new { type = "steg", nr }));
-            var status = new Progress<string>(tekst => { if (tekst.StartsWith("Sjekker kjente")) Send(new { type = "status", tekst = "Sjekker kjente sikkerhetshull på nett…" }); });
-            _resultat = await Task.Run(() => new Skanner(_regler, historikk).KjorAsync(nvd, status, default, steg));
+            var klokke = System.Diagnostics.Stopwatch.StartNew();
+            _skanner = new Skanner(_regler, historikk);
+            _resultat = await Task.Run(() => _skanner.KjorAsync(nvd));
+            var farlige = new HashSet<string>(_regler.HoyrisikoLand, StringComparer.OrdinalIgnoreCase);
+            long sendt = _resultat.SelectMany(f => f.Trafikk).Sum(m => m.Ut ?? 0);
             Send(new
             {
                 type = "resultat",
-                funn = _resultat.Select(f => new { risiko = f.Risiko.ToString().ToLowerInvariant(), navn = f.Navn, kort = f.Kort, steder = f.Detaljer }),
+                info = new
+                {
+                    sekunder = klokke.Elapsed.TotalSeconds,
+                    dataMalt = _skanner.DataMalt,
+                    maleSekunder = _skanner.MaleSekunder,
+                    sendtTekst = Rapport.Storrelse(sendt),
+                },
+                funn = _resultat.Select(f => new
+                {
+                    risiko = f.Risiko.ToString().ToLowerInvariant(),
+                    navn = f.Navn,
+                    kort = f.Kort,
+                    steder = f.Detaljer,
+                    trafikk = f.Trafikk.Select(m => new
+                    {
+                        adresse = m.Adresse,
+                        tjeneste = m.Tjeneste,
+                        landKode = m.Land,
+                        tilLand = m.Land == "LAN" ? null : IpLand.Navn(m.EierLand ?? (m.Land == "CDN" ? null : m.Land)),
+                        land = m.Land == "CDN" ? (m.EierLand != null ? $"Cloudflare · {IpLand.Navn(m.EierLand)}" : "Cloudflare") : IpLand.Navn(m.Land),
+                        farlig = (m.Land != null && farlige.Contains(m.Land)) || (m.EierLand != null && farlige.Contains(m.EierLand)),
+                        antall = m.Antall,
+                        data = m.Ut == null ? null : $"↑ {Rapport.Storrelse(m.Ut.Value)}  ↓ {Rapport.Storrelse(m.Inn ?? 0)}",
+                    }),
+                }),
             });
         }
         catch (Exception e)
@@ -117,16 +152,34 @@ public sealed class Hovedvindu : Form
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{sti}\"") { UseShellExecute = false });
     }
 
+    /// <summary>
+    /// Datamengde kan bare måles av administrator. Starter programmet på nytt med Windows' vanlige spørsmål om tillatelse (UAC).
+    /// </summary>
+    private void StartSomAdmin(bool nvd, bool historikk)
+    {
+        if (Nettverk.ErAdmin() || _soker) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? " --nvd" : "") + (historikk ? "" : " --uten-historikk"))
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+            });
+            Close();
+        }
+        catch (System.ComponentModel.Win32Exception) { }   // brukeren sa nei
+    }
+
     private void Lagre()
     {
         using var dlg = new SaveFileDialog
         {
-            Filter = "Rapport (*.html)|*.html|Data for IT (*.json)|*.json",
+            Filter = "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json",
             FileName = $"AI-skanner-{Environment.MachineName}-{DateTime.Now:yyyy-MM-dd}",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat) : Rapport.Html(_resultat);
+        var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat) : Rapport.Tekst(_resultat, _skanner);
         File.WriteAllText(dlg.FileName, innhold, new UTF8Encoding(true));
     }
 }

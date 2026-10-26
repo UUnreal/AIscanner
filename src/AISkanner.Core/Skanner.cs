@@ -54,7 +54,10 @@ public sealed partial class Skanner
         };
         // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
         Tider.Clear();
+        _mappeFunn.Clear();
         var klokke = Stopwatch.StartNew();
+        // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
+        using var maling = TestNett == null ? Datamaling.Start() : null;
         int ferdig = 0;
         steg?.Report(0);
         await Task.WhenAll(stegliste.Select(x => Task.Run(() =>
@@ -66,6 +69,15 @@ public sealed partial class Skanner
             steg?.Report(Interlocked.Increment(ref ferdig));
             _status?.Report(x.Tekst);
         }, ct)));
+        // Til slutt: hvor AI-programmene sender data akkurat nå
+        try
+        {
+            if (maling != null && maling.Sekunder < 5) await Task.Delay(TimeSpan.FromSeconds(5 - maling.Sekunder), ct);
+            var tid = Stopwatch.StartNew();
+            Trafikk(TestNett?.Invoke() ?? NettBilde.Hent(maling));
+            Tider["Ser hvor AI sender data"] = tid.Elapsed;
+        }
+        catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
         Tider["Totalt"] = klokke.Elapsed;
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
@@ -152,7 +164,9 @@ public sealed partial class Skanner
                 var sti = ProsessSti.Hent(p);
                 var r = FinnRegel($"{p.ProcessName} {sti}");
                 if (r == null) continue;
-                FraRegel(r, "Kjører nå", $"Program som kjører: {sti ?? p.ProcessName} (PID {p.Id})").Bruk = "Kjører nå.";
+                var f = FraRegel(r, "Kjører nå", $"Program som kjører: {sti ?? p.ProcessName} (PID {p.Id})");
+                f.Bruk = "Kjører nå.";
+                HuskMappe(sti, f);
             }
         }
     }

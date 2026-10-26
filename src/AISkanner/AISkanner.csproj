@@ -20,7 +20,7 @@
     <Description>Finner lokal AI, skygge-AI og nettleser-AI. Leser bare.</Description>
     <Company>AI-skanner (åpen kildekode)</Company>
     <Copyright>Copyright (c) 2026 Jørund og bidragsytere. MIT-lisens.</Copyright>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
 
     <Deterministic>true</Deterministic>
     <DebugType>embedded</DebugType>

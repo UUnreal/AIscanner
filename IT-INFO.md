@@ -2,10 +2,11 @@
 
 ## Formål
 Kartlegger AI-verktøy på én Windows-PC (lokal AI, skygge-AI, nettleser-AI) og viser dem sortert etter risiko.
-Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste, ingen persistens, ingen admin-rettigheter.
+Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste, ingen persistens. Trenger ikke admin.
+Administrator brukes bare hvis brukeren selv trykker «Mål datamengde» (se under).
 
 ## Hvordan den kjører
-`AISkanner.exe` er et .NET Framework 4.8-program (følger med Windows 10 og 11). Hele mappa er rundt 2 MB.
+`AISkanner.exe` er et .NET Framework 4.8-program (følger med Windows 10 og 11). Hele mappa er rundt 3,5 MB.
 Det installeres ikke, pakker ikke ut noe til `%TEMP%`, er ikke komprimert, starter ingen skript eller kommandolinjer, og kjører som vanlig bruker (`asInvoker`).
 Vinduet vises med Microsoft Edge WebView2 (som nye Outlook og Teams). WebView2 starter sine egne `msedgewebview2.exe`-prosesser
 og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er bygd inn i programmet, laster ingenting fra nett og kan ikke navigere bort.
@@ -29,8 +30,21 @@ og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er byg
   - mappenavn og størrelse under `IndexedDB` og Firefox `storage\default`
   - **historikk** (`History` og `places.sqlite`), hvis brukeren lar bryteren stå på. Filen åpnes direkte, skrivebeskyttet og uten låser.
     Den kopieres aldri. Lesingen bruker SQLite-motoren som følger med Windows (`winsqlite3.dll`). Bare vertsnavn som matcher AI-tjenester beholdes i minnet. Fulle adresser og titler beholdes ikke.
-    Ingenting fra nettleserdata lagres i rapporten.
+    Ingenting fra nettleserdata lagres automatisk. Hvis brukeren selv laster ned tekstrapporten, står nettleserfunn med nettleser, profil og nettstedsnavn (aldri hele adresser).
 - Policyverdien `GenAILocalFoundationalModelSettings` for Chrome og Edge
+- **Nettverksforbindelser nå** (nytt i 2.2): etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`).
+  Vertsnavn hentes fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme kilde som `ipconfig /displaydns`).
+  Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag. Land slås opp i en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
+  Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester, aldri annen surfing. Programmer som ikke er kjent som AI,
+  men som snakker med en AI-tjeneste (`aiTjenester` i `regler.json`), blir et eget funn.
+
+## Måling av datamengde (valgfritt, krever administrator)
+Uten administrator viser skanneren hvor AI-programmene er koblet, men ikke hvor mye de sender. Windows gir ikke vanlige brukere tilgang til tellerne.
+Trykker brukeren «Ikke målt / Trykk for å måle», startes programmet på nytt via vanlig UAC-spørsmål (`runas`).
+Som administrator slår skanneren på Windows' egne TCP-tellere (`SetPerTcpConnectionEStats`, `TcpConnectionEstatsData`, samme som Ressursovervåking)
+for forbindelsene som er åpne når søket starter, leser dem når søket er ferdig (`GetPerTcpConnectionEStats`), og slår dem av igjen.
+Tallene er byte faktisk sendt og mottatt i måleperioden (typisk 10–30 sekunder), ikke anslag. Forbindelser som åpnes underveis måles ikke.
+QUIC/UDP (brukes av noen nettlesere mot Google og Cloudflare) vises ikke, fordi Windows ikke knytter UDP-trafikk til en motpart.
 
 ## Hva den aldri leser
 Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State`, krypteringsnøkler, lommebokdata i utvidelser
@@ -38,7 +52,7 @@ Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local Stat
 Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for lesing av innhold (i tillegg til de første bytene av store filer).
 
 ## Nettverk
-Til `127.0.0.1` som beskrevet over. Ellers ingenting som standard. Hvis brukeren selv slår på sårbarhetssjekk, sendes bare et produktord
+Til `127.0.0.1` som beskrevet over. Ellers ingenting som standard. Ingen DNS-oppslag, ingen IP-oppslag på nett. Hvis brukeren selv slår på sårbarhetssjekk, sendes bare et produktord
 (f.eks. `ollama`) til `services.nvd.nist.gov`.
 
 ## Personvern på jobb-PC
@@ -46,7 +60,7 @@ Historikksøket er innsyn i elektronisk lagret materiale. En arbeidsgiver som br
 og arbeidsmiljølovens regler om kontrolltiltak, eller slå av historikksøket (kommandolinje: `--uten-historikk`).
 
 ## Kan EDR reagere?
-Lesing av nettleserhistorikk og gjennomgang av filer kan ligne rekognosering. Signerte utgivelser og godkjenning på signatur eller hash løser det.
+Lesing av nettleserhistorikk, DNS-bufferen og nettverkstabellen, og gjennomgang av filer, kan ligne rekognosering. Signerte utgivelser og godkjenning på signatur eller hash løser det.
 
 ## Godkjenning (allowlist)
 Godkjenn på signatur når utgivelsene er signert, ellers på SHA256-hash av `AISkanner.exe` (står i `SHA256.txt`).

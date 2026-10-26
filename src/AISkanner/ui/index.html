@@ -7,40 +7,43 @@
 <title>AI-skanner</title>
 <style>
   :root {
-    --bg: #f2f2f7; --kort: #ffffff; --tekst: #1c1c1e; --dempet: #6e6e73; --linje: rgba(60,60,67,.12);
+    --bg: #f2f2f7; --kort: #ffffff; --tekst: #1c1c1e; --dempet: #6e6e73; --linje: rgba(60,60,67,.12); --fyll: rgba(120,120,128,.08);
     --bla: #007aff; --rod: #ff3b30; --gul: #ff9f0a; --gronn: #34c759;
-    --rod-myk: #ffebea; --gul-myk: #fff4e0; --gronn-myk: #e7f8ec;
+    --rod-myk: #ffebea; --gul-myk: #fff4e0; --gronn-myk: #e7f8ec; --bla-myk: #e5f1ff;
+    --gul-tekst: #c77700; --gronn-tekst: #1f9d48;
     --skygge: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #000000; --kort: #1c1c1e; --tekst: #f5f5f7; --dempet: #98989d; --linje: rgba(84,84,88,.45);
+      --bg: #000000; --kort: #1c1c1e; --tekst: #f5f5f7; --dempet: #98989d; --linje: rgba(84,84,88,.45); --fyll: rgba(120,120,128,.16);
       --bla: #0a84ff; --rod: #ff453a; --gul: #ff9f0a; --gronn: #30d158;
-      --rod-myk: rgba(255,69,58,.16); --gul-myk: rgba(255,159,10,.16); --gronn-myk: rgba(48,209,88,.16);
+      --rod-myk: rgba(255,69,58,.16); --gul-myk: rgba(255,159,10,.16); --gronn-myk: rgba(48,209,88,.16); --bla-myk: rgba(10,132,255,.18);
+      --gul-tekst: #ff9f0a; --gronn-tekst: #30d158;
       --skygge: none;
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow: hidden; }
   body {
     background: var(--bg); color: var(--tekst);
     font-family: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
-    font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; user-select: none; overflow-x: hidden;
+    font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; user-select: none;
   }
-  .side { display: none; min-height: 100%; }
+  button { font: inherit; }
+  .side { display: none; height: 100%; }
   .side.aktiv { display: flex; flex-direction: column; animation: inn .35s ease; }
   @keyframes inn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
   /* ---------- Start ---------- */
-  #start { align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 10px; }
+  #start { align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 8px; }
   .storTittel { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
   .undertittel { font-size: 17px; color: var(--dempet); max-width: 440px; }
   .sokKnapp {
-    margin: 36px 0 28px; width: 176px; height: 176px; border-radius: 50%; border: 0; cursor: pointer;
+    margin: 28px 0 22px; width: 160px; height: 160px; border-radius: 50%; border: 0; cursor: pointer;
     background: linear-gradient(160deg, #3d9bff, var(--bla) 55%, #0060df); color: #fff;
-    font: inherit; font-size: 28px; font-weight: 600; letter-spacing: -.01em;
+    font-size: 28px; font-weight: 600; letter-spacing: -.01em;
     box-shadow: 0 12px 32px rgba(0,122,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
-    position: relative; transition: transform .15s ease;
+    position: relative; transition: transform .15s ease; flex: none;
   }
   .sokKnapp:hover { transform: scale(1.03); }
   .sokKnapp:active { transform: scale(.97); }
@@ -52,12 +55,8 @@
   .tillit { display: flex; gap: 18px; color: var(--dempet); font-size: 13px; flex-wrap: wrap; justify-content: center; }
   .tillit span { display: inline-flex; align-items: center; gap: 6px; }
   .tillit svg { width: 15px; height: 15px; }
-
-  .valg {
-    margin-top: 26px; background: var(--kort); border-radius: 14px; box-shadow: var(--skygge);
-    max-width: 460px; width: 100%; text-align: left; overflow: hidden;
-  }
-  .valgRad { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; }
+  .valg { margin-top: 20px; background: var(--kort); border-radius: 14px; box-shadow: var(--skygge); max-width: 460px; width: 100%; text-align: left; overflow: hidden; }
+  .valgRad { display: flex; align-items: center; gap: 14px; padding: 11px 16px; cursor: pointer; }
   .valgRad + .valgRad { border-top: 1px solid var(--linje); }
   .valg .tekst { flex: 1; }
   .valg .tekst b { font-weight: 500; display: block; }
@@ -68,59 +67,88 @@
   .bryter i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: .2s; }
   .bryter input:checked + i { background: var(--gronn); }
   .bryter input:checked + i::after { transform: translateX(20px); }
+  .feil { color: var(--rod); font-size: 14px; min-height: 20px; }
 
   /* ---------- Søker ---------- */
-  #soker { align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 8px; }
-  .ring { width: 150px; height: 150px; margin-bottom: 26px; }
+  #soker { align-items: center; justify-content: center; text-align: center; gap: 10px; }
+  .ring { width: 130px; height: 130px; margin-bottom: 18px; animation: snurr 1.4s linear infinite; }
   .ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
   .ring .spor { stroke: var(--linje); }
-  .ring .fremdrift { stroke: var(--bla); transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .5s ease; }
-  .stegliste { margin-top: 22px; display: grid; gap: 10px; text-align: left; }
-  .steg { display: flex; align-items: center; gap: 10px; color: var(--dempet); font-size: 15px; transition: color .3s; }
-  .steg .prikk { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--linje); display: grid; place-items: center; flex: none; transition: .3s; }
-  .steg.ferdig { color: var(--tekst); }
-  .steg.ferdig .prikk { background: var(--gronn); border-color: var(--gronn); }
-  .steg.ferdig .prikk::after { content: ""; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px); }
-  .steg.na { color: var(--tekst); font-weight: 500; }
-  .steg.na .prikk { border-color: var(--bla); border-top-color: transparent; animation: snurr .8s linear infinite; }
+  .ring .bue { stroke: var(--bla); stroke-dasharray: 80 200; }
   @keyframes snurr { to { transform: rotate(360deg); } }
 
-  /* ---------- Resultat ---------- */
-  #resultat { padding: 36px 24px 40px; max-width: 620px; width: 100%; margin: 0 auto; }
-  .hode { text-align: center; padding: 8px 0 24px; }
-  .hode h1 { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
-  .liste { background: var(--kort); border-radius: 16px; overflow: hidden; box-shadow: var(--skygge); }
-  .rad { border-top: 1px solid var(--linje); }
-  .rad:first-child { border-top: 0; }
-  .radHode { display: flex; align-items: center; gap: 14px; padding: 15px 18px; cursor: pointer; }
-  .radHode:hover { background: rgba(120,120,128,.06); }
-  .radHode .prikk { width: 14px; height: 14px; border-radius: 50%; flex: none; }
-  .radHode b { flex: 1; font-weight: 500; font-size: 17px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .merke { font-size: 13px; font-weight: 600; padding: 4px 11px; border-radius: 20px; flex: none; }
-  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod); }
-  .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: #c77700; }
-  .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: #1f9d48; }
-  @media (prefers-color-scheme: dark) { .gul .merke { color: var(--gul); } .gronn .merke { color: var(--gronn); } }
-  .radInnhold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
-  .rad.apen .radInnhold { grid-template-rows: 1fr; }
-  .radInnhold > div { overflow: hidden; }
-  .kort { padding: 0 18px 15px 46px; color: var(--dempet); font-size: 15px; }
-  .kort h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; margin: 12px 0 6px; color: var(--dempet); }
-  .steder { list-style: none; display: grid; gap: 6px; }
-  .steder li { display: flex; align-items: center; gap: 10px; background: rgba(120,120,128,.08); border-radius: 10px; padding: 7px 10px; }
-  .steder span { flex: 1; min-width: 0; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 12px; color: var(--tekst); word-break: break-all; user-select: text; }
-  .vis { border: 0; background: none; color: var(--bla); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
-  .knapper { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 28px; }
-  .knapp { border: 0; border-radius: 14px; padding: 14px 0; width: 100%; max-width: 320px; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; }
+  /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
+  #resultat { padding: 18px 22px 18px; gap: 14px; max-width: 1240px; width: 100%; margin: 0 auto; }
+  .topp { display: flex; align-items: center; gap: 12px; flex: none; }
+  .topp .tittel { flex: 1; min-width: 0; }
+  .topp h1 { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  .topp small { color: var(--dempet); font-size: 13px; }
+  .knapp { border: 0; border-radius: 12px; padding: 9px 16px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
   .knapp.primar { background: var(--bla); color: #fff; }
-  .knapp.lenke { background: none; color: var(--bla); font-weight: 400; font-size: 15px; padding: 8px 0; }
+  .knapp.sekundar { background: var(--bla-myk); color: var(--bla); }
+
+  .fliser { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; flex: none; }
+  .flis { background: var(--kort); border-radius: 14px; box-shadow: var(--skygge); padding: 10px 14px; text-align: left; border: 2px solid transparent; cursor: pointer; min-width: 0; color: inherit; }
+  .flis:hover { background: var(--fyll); }
+  .flis.valgt { border-color: var(--bla); }
+  .flis .tall { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flis .tall.liten { font-size: 17px; line-height: 1.75; }
+  .flis .etikett { font-size: 12.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flis.rod .tall { color: var(--rod); } .flis.gul .tall { color: var(--gul-tekst); } .flis.gronn .tall { color: var(--gronn-tekst); }
+
+  .hoved { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.25fr); gap: 14px; }
+  .panel { background: var(--kort); border-radius: 16px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .liste { flex: 1; min-height: 0; overflow: hidden; }
+  .rad { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; cursor: pointer; border-bottom: 1px solid var(--linje); }
+  .rad:hover { background: var(--fyll); }
+  .rad.valgt { background: var(--bla-myk); }
+  .rad .prikk { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .rad b { flex: 1; font-weight: 500; font-size: 15.5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .nett { flex: none; color: var(--bla); width: 16px; height: 16px; }
+  .merke { font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; flex: none; }
+  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod); }
+  .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: var(--gul-tekst); }
+  .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: var(--gronn-tekst); }
+  .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 40px; color: var(--dempet); font-size: 13.5px; }
+  .sider button { border: 0; background: var(--fyll); color: var(--bla); width: 30px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; }
+  .sider button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
+  .tom { margin: auto; text-align: center; color: var(--dempet); padding: 24px; }
+
+  .detalj { padding: 16px 18px; gap: 4px; }
+  .detalj .navnRad { display: flex; align-items: center; gap: 10px; flex: none; }
+  .detalj h2 { font-size: 20px; font-weight: 650; letter-spacing: -.01em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .detalj .tilbake { display: none; border: 0; background: none; color: var(--bla); cursor: pointer; font-size: 15px; padding-right: 4px; }
+  .detalj p { color: var(--dempet); flex: none; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .detalj h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin: 12px 0 6px; color: var(--dempet); flex: none; }
+  .detalj ul { list-style: none; display: grid; gap: 5px; flex: none; }
+  .detalj li { display: flex; align-items: center; gap: 10px; background: var(--fyll); border-radius: 10px; padding: 6px 10px; min-width: 0; }
+  .detalj li.mer { background: none; color: var(--dempet); font-size: 13px; padding: 2px 10px; }
+  .sted span { flex: 1; min-width: 0; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+  .vis { border: 0; background: none; color: var(--bla); font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
+  .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
+  .mal .vert small { color: var(--dempet); font-weight: 400; font-size: 12.5px; }
+  .mal .land { flex: none; font-size: 13px; color: var(--dempet); }
+  .mal .land.farlig { color: var(--rod); font-weight: 600; }
+  .mal .data { flex: none; font-size: 12.5px; color: var(--dempet); font-variant-numeric: tabular-nums; text-align: right; min-width: 92px; }
+  .kilde { margin-top: auto; padding-top: 8px; color: var(--dempet); font-size: 11px; flex: none; }
+
+  @media (max-width: 760px) {
+    .fliser { grid-template-columns: repeat(3, 1fr); }
+    .fliser .flis:nth-child(n+4) { display: none; }
+    .hoved { grid-template-columns: 1fr; }
+    .hoved .detalj { display: none; }
+    .hoved.detaljVises .liste-panel { display: none; }
+    .hoved.detaljVises .detalj { display: flex; }
+    .detalj .tilbake { display: block; }
+  }
+  @media (max-height: 640px) { .fliser .flis .tall { font-size: 20px; } .topp h1 { font-size: 22px; } }
 </style>
 </head>
 <body>
 
 <section id="start" class="side aktiv">
   <div class="storTittel">Er det AI på denne PC-en?</div>
-  <div class="undertittel">Finn AI-programmer, AI i nettleseren og AI som kjører i det skjulte. Det tar under ett minutt.</div>
+  <div class="undertittel">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
   <button class="sokKnapp" id="sok">Søk</button>
   <div class="tillit">
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>Endrer ingenting</span>
@@ -137,88 +165,147 @@
       <span class="bryter"><input type="checkbox" id="nvd"><i></i></span>
     </label>
   </div>
+  <div class="feil" id="feil"></div>
 </section>
 
 <section id="soker" class="side">
-  <svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="fremdrift" id="ring" cx="50" cy="50" r="44" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg>
-  <div class="storTittel" style="font-size:26px">Søker…</div>
-  <div class="undertittel" id="sokTekst">Dette tar bare litt tid.</div>
-  <div class="stegliste" id="stegliste"></div>
+  <svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" cx="50" cy="50" r="44"/></svg>
+  <div class="storTittel" style="font-size:26px">Søker etter AI…</div>
 </section>
 
 <section id="resultat" class="side">
-  <div class="hode">
-    <h1 id="hodeTittel"></h1>
-  </div>
-  <div class="liste" id="liste"></div>
-  <div class="knapper">
+  <div class="topp">
+    <div class="tittel"><h1 id="hodeTittel"></h1><small id="hodeInfo"></small></div>
+    <button class="knapp sekundar" id="lagre">Last ned rapport</button>
     <button class="knapp primar" id="igjen">Søk igjen</button>
-    <button class="knapp lenke" id="lagre">Lagre</button>
+  </div>
+  <div class="fliser" id="fliser"></div>
+  <div class="hoved" id="hoved">
+    <div class="panel liste-panel"><div class="liste" id="liste"></div><div class="sider" id="sider"></div></div>
+    <div class="panel detalj" id="detalj"></div>
   </div>
 </section>
 
 <script>
 "use strict";
-const STEG = ["Ser etter AI som kjører nå", "Sjekker installerte programmer", "Sjekker hva som starter av seg selv",
-              "Ser etter AI-verktøy og AI-nøkler", "Spør lokale programmer om de er AI", "Sjekker utvidelser i nettleserne",
-              "Ser etter AI-nettsteder du har brukt", "Sjekker innebygd AI i Chrome og Edge", "Leter gjennom filene etter AI"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const vert = window.chrome && window.chrome.webview;   // satt når siden kjører inne i programmet
 const send = m => vert ? vert.postMessage(m) : demo(m);
-
-function vis(id) { document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id)); window.scrollTo(0, 0); }
-
-function visSteg(n) {
-  $("stegliste").innerHTML = STEG.map((t, i) =>
-    `<div class="steg ${i < n ? "ferdig" : i === n ? "na" : ""}"><span class="prikk"></span>${esc(t)}</div>`).join("");
-  $("ring").style.strokeDashoffset = 276.5 * (1 - Math.min(n, STEG.length) / STEG.length);
-}
+function vis(id) { document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id)); }
 
 const MERKE = { rod: "Høy", gul: "Middels", gronn: "Lav" };
 const STI = /[A-Za-z]:\\[^:*?"<>|()]+[^:*?"<>|()\s]/;
-function stedLinje(t) {
-  const m = t.match(STI);
-  const knapp = m && vert ? `<button class="vis" data-sti="${esc(m[0])}">Vis</button>` : "";
-  return `<li><span>${esc(t)}</span>${knapp}</li>`;
-}
-function visResultat(funn) {
+const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 20V10M7 20v-5M17 20V4"/></svg>`;
+
+let alle = [], info = {}, filter = null, side = 0, valgt = null;
+
+function visResultat(funn, inf) {
+  alle = funn; info = inf || {}; filter = null; side = 0; valgt = funn[0] || null;
   $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
-  $("liste").style.display = funn.length ? "" : "none";
-  $("liste").innerHTML = funn.map(f => `
-    <div class="rad ${f.risiko}">
-      <div class="radHode"><span class="prikk"></span><b>${esc(f.navn)}</b><span class="merke">${MERKE[f.risiko]}</span></div>
-      <div class="radInnhold"><div><div class="kort">
-        <p>${esc(f.kort)}</p>
-        ${(f.steder || []).length ? `<h3>Funnet her</h3><ul class="steder">${f.steder.map(stedLinje).join("")}</ul>` : ""}
-      </div></div></div>
-    </div>`).join("");
-  document.querySelectorAll(".radHode").forEach(h => h.onclick = () => h.parentElement.classList.toggle("apen"));
-  document.querySelectorAll(".vis").forEach(b => b.onclick = e => { e.stopPropagation(); send({ type: "vis", sti: b.dataset.sti }); });
+  const deler = [];
+  if (info.sekunder) deler.push(`Søket tok ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push(info.dataMalt ? `Datamengde målt i ${Math.round(info.maleSekunder)} s` : "Datamengde ikke målt");
+  $("hodeInfo").textContent = deler.join(" · ");
   vis("resultat");
+  tegnFliser(); tegnListe(); tegnDetalj();
 }
+
+function tegnFliser() {
+  const ant = r => alle.filter(f => f.risiko === r).length;
+  const nett = alle.filter(f => (f.trafikk || []).length);
+  const land = {};
+  nett.forEach(f => f.trafikk.forEach(m => { if (m.tilLand && m.tilLand !== "ukjent land") land[m.tilLand] = (land[m.tilLand] || 0) + (m.farlig ? 1000 : 1); }));
+  const topp = Object.keys(land).sort((a, b) => land[b] - land[a]).slice(0, 2);
+  const flis = (id, klasse, tall, etikett, liten) =>
+    `<button class="flis ${klasse} ${filter === id ? "valgt" : ""}" data-f="${id}"><div class="tall ${liten ? "liten" : ""}">${esc(tall)}</div><div class="etikett">${esc(etikett)}</div></button>`;
+  const data = info.dataMalt
+    ? flis("data", "", info.sendtTekst || "0 B", `sendt ut på ${Math.round(info.maleSekunder)} s`, (info.sendtTekst || "").length > 6)
+    : flis("admin", "", "Ikke målt", "Trykk for å måle (admin)", true);
+  $("fliser").innerHTML =
+    flis("rod", "rod", ant("rod"), "Høy risiko") + flis("gul", "gul", ant("gul"), "Middels risiko") + flis("gronn", "gronn", ant("gronn"), "Lav risiko") +
+    flis("nett", "", nett.length, topp.length ? "Sender til " + topp.join(", ") : "Koblet til nettet nå") + data;
+  document.querySelectorAll(".flis").forEach(b => b.onclick = () => {
+    const f = b.dataset.f;
+    if (f === "admin") { send({ type: "admin", nvd: $("nvd").checked, historikk: $("historikk").checked }); return; }
+    if (f === "data") return;
+    filter = filter === f ? null : f; side = 0;
+    const synlige = filtrert(); if (!synlige.includes(valgt)) valgt = synlige[0] || null;
+    tegnFliser(); tegnListe(); tegnDetalj();
+  });
+}
+
+const filtrert = () => alle.filter(f => !filter || (filter === "nett" ? (f.trafikk || []).length : f.risiko === filter));
+
+function radeneSomFar() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / 47)); }
+
+function tegnListe() {
+  const liste = filtrert();
+  $("liste").innerHTML = "";
+  if (!liste.length) { $("liste").innerHTML = `<div class="tom">${alle.length ? "Ingen funn her." : "Fant ingen spor etter AI på denne PC-en."}</div>`; $("sider").innerHTML = ""; return; }
+  const per = radeneSomFar(), sider = Math.ceil(liste.length / per);
+  side = Math.min(side, sider - 1);
+  liste.slice(side * per, side * per + per).forEach(f => {
+    const r = document.createElement("div");
+    r.className = `rad ${f.risiko} ${f === valgt ? "valgt" : ""}`;
+    r.innerHTML = `<span class="prikk"></span><b>${esc(f.navn)}</b>${(f.trafikk || []).length ? NETT : ""}<span class="merke">${MERKE[f.risiko]}</span>`;
+    r.onclick = () => { valgt = f; tegnListe(); tegnDetalj(); $("hoved").classList.add("detaljVises"); };
+    $("liste").appendChild(r);
+  });
+  $("sider").innerHTML = sider > 1
+    ? `<button id="forrige" ${side === 0 ? "disabled" : ""}>‹</button><span>${side + 1} av ${sider}</span><button id="neste" ${side >= sider - 1 ? "disabled" : ""}>›</button>`
+    : `<span>${liste.length === 1 ? "1 funn" : liste.length + " funn"}</span>`;
+  if (sider > 1) { $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); }; }
+}
+
+function tegnDetalj() {
+  const d = $("detalj"), f = valgt;
+  if (!f) { d.innerHTML = `<div class="tom">${alle.length ? "Velg et funn." : "Ingen AI funnet."}</div>`; return; }
+  const mal = f.trafikk || [], steder = f.steder || [];
+  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}</span>` +
+    `<span class="land ${m.farlig ? "farlig" : ""}">${esc(m.land || "ukjent land")}</span>` +
+    `<span class="data">${esc(m.data || (info.dataMalt ? "ikke målt" : m.antall + (m.antall === 1 ? " forbindelse" : " forbindelser")))}</span></li>`;
+  const stedLinje = t => { const m = t.match(STI); return `<li class="sted"><span title="${esc(t)}">${esc(t)}</span>${m && vert ? `<button class="vis" data-sti="${esc(m[0])}">Vis</button>` : ""}</li>`; };
+  d.innerHTML = `<div class="navnRad ${f.risiko}"><button class="tilbake" id="tilbake">‹</button><h2 title="${esc(f.navn)}">${esc(f.navn)}</h2><span class="merke">${MERKE[f.risiko]}</span></div>
+    <p>${esc(f.kort)}</p>
+    ${mal.length ? `<h3>Sender til nå</h3><ul id="malListe">${mal.map(malLinje).join("")}</ul>` : ""}
+    ${steder.length ? `<h3>Funnet her</h3><ul id="stedListe">${steder.map(stedLinje).join("")}</ul>` : ""}
+    ${mal.length ? `<div class="kilde">Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).</div>` : ""}`;
+  // Ingen scrolling: vis så mange linjer som får plass, resten står i rapporten
+  for (const id of ["stedListe", "malListe"]) {
+    const ul = $(id); if (!ul) continue;
+    let skjult = 0;
+    while (d.scrollHeight > d.clientHeight + 1 && ul.children.length > 1) { ul.lastElementChild.remove(); skjult++; }
+    if (skjult) {
+      const li = document.createElement("li"); li.className = "mer"; li.textContent = `+ ${skjult} til i rapporten`;
+      ul.appendChild(li);
+      while (d.scrollHeight > d.clientHeight + 1 && ul.children.length > 2) { ul.children[ul.children.length - 2].remove(); li.textContent = `+ ${++skjult} til i rapporten`; }
+    }
+  }
+  d.querySelectorAll(".vis").forEach(b => b.onclick = () => send({ type: "vis", sti: b.dataset.sti }));
+  const t = $("tilbake"); if (t) t.onclick = () => $("hoved").classList.remove("detaljVises");
+}
+
+let venter;
+window.addEventListener("resize", () => { clearTimeout(venter); venter = setTimeout(() => { if ($("resultat").classList.contains("aktiv")) { tegnListe(); tegnDetalj(); } }, 80); });
 
 // Meldinger fra programmet
 function motta(m) {
-  if (m.type === "steg") visSteg(m.nr);
-  else if (m.type === "status") $("sokTekst").textContent = m.tekst;
-  else if (m.type === "resultat") { visSteg(STEG.length); setTimeout(() => visResultat(m.funn), 350); }
-  else if (m.type === "feil") { vis("start"); $("sokTekst").textContent = m.tekst; }
+  if (m.type === "resultat") visResultat(m.funn, m.info);
+  else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
+  else if (m.type === "start") { $("nvd").checked = !!m.nvd; $("historikk").checked = m.historikk !== false; start(); }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
-$("sok").onclick = $("igjen").onclick = () => { visSteg(0); $("sokTekst").textContent = "Dette tar bare litt tid."; vis("soker"); send({ type: "sok", nvd: $("nvd").checked, historikk: $("historikk").checked }); };
+function start() { $("feil").textContent = ""; vis("soker"); send({ type: "sok", nvd: $("nvd").checked, historikk: $("historikk").checked }); }
+$("sok").onclick = $("igjen").onclick = start;
 $("lagre").onclick = () => send({ type: "lagre" });
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------
-function demo(m) {
-  if (m.type !== "sok") return;
-  let n = 0;
-  const t = setInterval(() => { motta({ type: "steg", nr: ++n }); if (n >= STEG.length) { clearInterval(t); motta({ type: "resultat", funn: window.DEMO || [] }); } }, 350);
-}
+function demo(m) { if (m.type === "sok") setTimeout(() => motta({ type: "resultat", funn: window.DEMO || [], info: window.DEMOINFO }), 1200); }
 const p = new URLSearchParams(location.search);
-if (p.get("side") === "soker") { vis("soker"); visSteg(4); }
-if (p.get("side") === "resultat") setTimeout(() => { visResultat(window.DEMO || []); if (p.get("apen")) document.querySelectorAll("#liste .rad")[+p.get("apen")]?.classList.add("apen"); }, 0);
+if (p.get("side") === "soker") vis("soker");
+if (p.get("side") === "resultat") setTimeout(() => { visResultat(window.DEMO || [], window.DEMOINFO); if (p.get("valgt")) { valgt = filtrert()[+p.get("valgt")]; tegnListe(); tegnDetalj(); } }, 0);
 </script>
 </body>
 </html>

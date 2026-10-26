@@ -40,6 +40,8 @@ public sealed class Funn
     public List<string> Merknader { get; } = new();
     public List<string> Detaljer { get; } = new();
     public Produkt? Regel { get; init; }
+    /// <summary>Hvor programmet er koblet til akkurat nå. Målt fra Windows, ikke anslått.</summary>
+    public List<Mal> Trafikk { get; } = new();
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }
@@ -62,4 +64,19 @@ public sealed class Funn
 
     public void Merknad(string s) { lock (this) if (!Merknader.Contains(s)) Merknader.Add(s); }
     public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 50) Detaljer.Add(s); }
+}
+
+/// <summary>
+/// Ett mål på nettet som et AI-program er koblet til nå.
+/// Ut og Inn er målte byte i måleperioden, eller null når datamengde ikke kunne måles (krever administrator).
+/// </summary>
+public sealed class Mal
+{
+    public required string Adresse { get; init; }
+    public string? Tjeneste { get; set; }
+    public string? Land { get; set; }
+    public string? EierLand { get; set; }
+    public int Antall { get; set; }
+    public long? Ut { get; set; }
+    public long? Inn { get; set; }
 }

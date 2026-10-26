@@ -27,9 +27,13 @@ public sealed class AiNettsted
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
     [JsonPropertyName("domener")] public List<string> Domener { get; set; } = new();
     [JsonPropertyName("risiko")] public string Risiko { get; set; } = "gul";
+    /// <summary>Landet selskapet bak tjenesten hører hjemme i (to bokstaver). Viktig når dataene havner hos dem.</summary>
+    [JsonPropertyName("land")] public string? Land { get; set; }
     [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
     [JsonPropertyName("rad")] public string? Rad { get; set; }
+
+    public bool Treffer(string vert) => Domener.Any(d => vert.Equals(d, StringComparison.OrdinalIgnoreCase) || vert.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
 }
 
 public sealed class InnebygdAI
@@ -54,6 +58,10 @@ public sealed class Regelsett
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;
     [JsonPropertyName("nettleserInnebygd")] public List<InnebygdAI> NettleserInnebygd { get; set; } = new();
     [JsonPropertyName("aiNettsteder")] public List<AiNettsted> AiNettsteder { get; set; } = new();
+    /// <summary>AI-tjenester programmer snakker med i bakgrunnen (API-er), gjenkjent på vertsnavn.</summary>
+    [JsonPropertyName("aiTjenester")] public List<AiNettsted> AiTjenester { get; set; } = new();
+    /// <summary>Land der data om bedriften ikke bør havne. AI som sender hit blir rødt.</summary>
+    [JsonPropertyName("hoyrisikoLand")] public List<string> HoyrisikoLand { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>

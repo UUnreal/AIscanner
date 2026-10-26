@@ -123,6 +123,7 @@ public sealed partial class Skanner
         var f = regel != null ? FraRegel(regel, "AI-motor", null!) : LeggTil(navn, "Lokal AI", risiko, hvorfor, "AI-motor", null);
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         f.Detalj($"Program: {exe} (AI-motor: {string.Join(", ", motorer)})");
+        if (kjorer) HuskMappe(exe, f);
         if (fraNedlasting) f.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
         if (kjorer && f.Bruk == null) f.Bruk = "Kjører nå.";
     }
@@ -154,6 +155,7 @@ public sealed partial class Skanner
                 : LeggTil(navn, "Lokal AI", Risiko.Rod, "Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.", "AI-server", null,
                           rad: "Finn ut hva programmet er. Slå det av hvis du ikke bruker det.");
             f.Detalj($"Nettverksport {l.Port} på {l.Adresse}, program: {(sti.Length > 0 ? sti : prosess)}");
+            HuskMappe(sti, f);
             if (modeller.Count > 0) f.Detalj($"Modeller: {string.Join(", ", modeller.Take(10))}");
             if (modeller.Count > 0) f.Bruk = $"Har {modeller.Count} {(modeller.Count == 1 ? "modell" : "modeller")} lastet: {string.Join(", ", modeller.Take(3))}{(modeller.Count > 3 ? " …" : "")}.";
             if (apen)
