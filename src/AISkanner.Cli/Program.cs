@@ -20,6 +20,11 @@ if (args.Length == 2 && args[0] == "--test-server")
     return 0;
 }
 
+// Regresjonstester for risikologikken (kjør: AISkanner.Cli --selvtest). Returnerer 0 når alt er grønt, ellers 1.
+// Sikrer at IT-godkjentlisten ikke kan lures av angriper-styrte navn (se v2.13.1).
+if (args.Length == 1 && args[0] == "--selvtest")
+    return Selvtest.Kjor();
+
 bool nvd = args.Contains("--nvd");
 bool historikk = !args.Contains("--uten-historikk");
 int i = Array.IndexOf(args, "--regler");
@@ -61,5 +66,57 @@ static class TestNett
         }
         if (doc.RootElement.TryGetProperty("dnsNavn", out var dn)) foreach (var n in dn.EnumerateArray()) nb.DnsNavn.Add(n.GetString()!);
         return nb;
+    }
+}
+
+/// <summary>
+/// Regresjonstester for IT-godkjentlisten (v2.13.1): et visningsnavn en angriper kan styre
+/// (utvidelsesnavn, mappenavn, filsti) skal aldri gjøre et funn grønt, men ekte gjenkjente
+/// produkter og nettsteder skal fortsatt kunne godkjennes.
+/// </summary>
+static class Selvtest
+{
+    public static int Kjor()
+    {
+        int feil = 0;
+        void Sjekk(string hva, bool faktisk, bool forventet)
+        {
+            Console.WriteLine($"{(faktisk == forventet ? "OK  " : "FEIL")} {hva}: {faktisk} (forventet {forventet})");
+            if (faktisk != forventet) feil++;
+        }
+
+        var liste = new[] { "Microsoft 365 Copilot", "openai.com" };
+
+        // Angriper-styrte navn skal IKKE kunne godkjennes
+        var spoofUtv = new Funn { Navn = "Microsoft 365 Copilot (Chrome-utvidelse)", Kategori = "Nettleser-AI", Risiko = Risiko.Rod, Hvorfor = "x" };
+        Sjekk("spoof: ukjent utvidelse navngitt som godkjent produkt", Risikoregler.Godkjent(spoofUtv, liste), false);
+
+        var spoofProsjekt = new Funn { Navn = "Python-prosjekt med AI: Microsoft 365 Copilot", Kategori = "Skygge-AI (utvikling)", Risiko = Risiko.Rod, Hvorfor = "x" };
+        Sjekk("spoof: prosjektmappe navngitt som godkjent produkt", Risikoregler.Godkjent(spoofProsjekt, liste), false);
+
+        var spoofModell = new Funn { Navn = "AI-modell: Llama", Kategori = "Lokal AI (modell)", Risiko = Risiko.Rod, Hvorfor = "x" };
+        spoofModell.Detalj(@"Fil: C:\Users\x\openai.com\llama.gguf · GGUF · 4,7 GB");
+        Sjekk("spoof: modell i mappe navngitt som godkjent domene", Risikoregler.Godkjent(spoofModell, liste), false);
+
+        // Ekte gjenkjente ting skal fortsatt kunne godkjennes
+        var ekteProdukt = new Funn
+        {
+            Navn = "Microsoft 365 Copilot", Kategori = "Nettleser-AI", Risiko = Risiko.Rod, Hvorfor = "x",
+            Regel = new Produkt { Navn = "Microsoft 365 Copilot", Kategori = "Nettleser-AI", Risiko = "gul", Hvorfor = "y" },
+        };
+        Sjekk("ekte: gjenkjent produkt fra regelsettet", Risikoregler.Godkjent(ekteProdukt, liste), true);
+
+        var ekteNettsted = new Funn { Navn = "ChatGPT", Kategori = "Nettleser-AI (nettsted)", Risiko = Risiko.Rod, Hvorfor = "x" };
+        ekteNettsted.Trafikk.Add(new Mal { Adresse = "api.openai.com" });
+        Sjekk("ekte: nettsted godkjent på målt forbindelse", Risikoregler.Godkjent(ekteNettsted, liste), true);
+
+        // Ukjent lokal AI-server skal merkes "Ukjent AI" og være rød (død gren rettet i v2.13.1)
+        var server = new Funn { Navn = "Lokal AI-server (ukjent)", Kategori = "Lokal AI", Risiko = Risiko.Rod, Hvorfor = "x" };
+        Risikoregler.Bruk(new[] { server }, new Regelsett());
+        Sjekk("lokal server: type = Ukjent AI", server.Type == "Ukjent AI", true);
+        Sjekk("lokal server: forblir rød", server.Risiko == Risiko.Rod, true);
+
+        Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
+        return feil == 0 ? 0 : 1;
     }
 }
