@@ -19,7 +19,7 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
 - Lyttende TCP-porter med eierprosess (`GetExtendedTcpTable`). For porter på localhost/0.0.0.0 eid av vanlige brukerprosesser
   sendes maks tre lesende `GET`-kall til `127.0.0.1` (`/api/tags`, `/v1/models`, `/sdapi/v1/sd-models`) for å se om programmet er en AI-server.
 - Navn (aldri verdier) på miljøvariabler som `OPENAI_API_KEY`, og om `%USERPROFILE%\.cache\huggingface\token` finnes (åpnes ikke)
-- Gjennomgang av brukerprofilen og andre faste disker (ikke Windows, Program Files eller ProgramData):
+- Gjennomgang av brukerprofilen (utenom AppData) og andre faste disker (ikke Windows, Program Files eller ProgramData):
   - for filer over 20 MB leses de første 64 bytene for å kjenne igjen AI-modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras).
     For GGUF og safetensors leses også metadata-hodet (modellnavn, arkitektur, antall parametre). Selve modellvektene leses ikke.
   - mappenavn i `site-packages` og `node_modules` for å finne AI-biblioteker
@@ -34,6 +34,17 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
 - Policyverdien `GenAILocalFoundationalModelSettings` for Chrome og Edge
 - AI-modeller nettleserne laster ned (nytt i 2.4): mappenavn, størrelser og datoer i nettleserdata for Chrome, Edge (alle kanaler), Brave, Vivaldi og Opera,
   f.eks. `OptGuideOnDeviceModel` (Gemini Nano), `TranslateKit`, `screen_ai`, `SODA`. Ukjente mapper med modellfiler kjennes igjen på de første bytene.
+- **AI lagt inn av leverandører** (nytt i 2.5): `%LOCALAPPDATA%`, `%APPDATA%`, `AppData\LocalLow`, `%ProgramData%`, `Program Files`, `Program Files (x86)`,
+  `Program Files\WindowsApps` og `Windows\SystemApps` gås gjennom (Defender-mapper, cacher, nettleserdata og spillbiblioteker hoppes over, maks 40 sekunder).
+  AI kjennes igjen på innholdet: modellfiler (`.onnx`, `.ort`, `.tflite`, `.litertlm`, `.dlc`, `.engine`, `.pte`, OpenVINO `.xml`+`.bin`, og store filer med
+  modellformat i de første bytene) og AI-motorer (`onnxruntime`, `DirectML`, `openvino`, `ggml`, `Qnn*` m.fl.). Funnene samles per program.
+  Leverandøren bekreftes med **gyldig Authenticode-signatur** (`WinVerifyTrust`, uten tilbakekallingssjekk over nettet) eller med `AppxManifest.xml` i
+  mapper bare Windows kan skrive til. Firmanavnet i filinfo alene regnes ikke som bekreftet. Dato lagt inn = eldste opprettelsesdato på AI-filene.
+  Ukjent eller ubekreftet leverandør = høy risiko. Kjent leverandør = lav, eller middels hvis modellene er over 500 MB.
+- **AI-API-er i Chrome og Edge** (nytt i 2.5): status for Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM-motoren.
+  Bygger på policyene `GenAILocalFoundationalModelSettings` og `BuiltInAIAPIsEnabled` (HKLM/HKCU), nettleserversjonen (mappenavnet under `Application`),
+  og hvilke modellmapper som finnes. Flagg i `chrome://flags` leses ikke som standard, fordi de ligger i filen `Local State` sammen med nettleserens
+  krypterte nøkkel. Slås det på, leses bare lista `browser.enabled_labs_experiments` med en strømleser som hopper over alt annet, og bytene nulles ut etterpå.
 - **Nettverksforbindelser nå** (nytt i 2.2): etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`).
   Vertsnavn hentes fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme kilde som `ipconfig /displaydns`).
   Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag. Land slås opp i en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).

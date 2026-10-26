@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-26c",
+  "versjon": "2026-10-26d",
   "produkter": [
     {
       "navn": "Ollama",
@@ -443,6 +443,263 @@
       "enkelt": "AI bygd inn i Edge",
       "hvorforEnkelt": "Edge har lastet ned sin egen AI-modell. Det du skriver blir på PC-en, men nettsider og utvidelser kan bruke den.",
       "rad": "Greit for privat bruk. På jobb bør IT bestemme om den skal være på."
+    }
+  ],
+  "leverandorAi": [
+    {
+      "ord": [
+        "microsoftwindows.client.aix"
+      ],
+      "navn": "Windows AI: Recall og Click to Do",
+      "utgiver": "Microsoft",
+      "hva": "Recall, Click to Do og AI-søk i Windows",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "microsoftwindows.client.coreai",
+        "windowsworkload",
+        "microsoft.windows.ai",
+        "phisilica",
+        "phi silica"
+      ],
+      "navn": "Windows AI-plattform (Phi Silica)",
+      "utgiver": "Microsoft",
+      "hva": "språkmodell og bildemodeller innebygd i Windows",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "microsoft.windows.photos"
+      ],
+      "navn": "Bilder (Photos)",
+      "utgiver": "Microsoft",
+      "hva": "AI for bildesøk, fjerne bakgrunn og forbedre bilder",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "microsoft.paint"
+      ],
+      "navn": "Paint",
+      "utgiver": "Microsoft",
+      "hva": "AI for bildegenerering og fjerning av bakgrunn",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "microsoft.screensketch"
+      ],
+      "navn": "Utklippsverktøy",
+      "utgiver": "Microsoft",
+      "hva": "tekstgjenkjenning (OCR) i skjermbilder",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "clipchamp"
+      ],
+      "navn": "Clipchamp",
+      "utgiver": "Microsoft",
+      "hva": "AI for video, tale og teksting",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "msteams",
+        "microsoft\\teams"
+      ],
+      "navn": "Microsoft Teams",
+      "utgiver": "Microsoft",
+      "hva": "AI for støyfjerning, bakgrunn og teksting",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "microsoft office",
+        "\\office16",
+        "root\\vfs"
+      ],
+      "navn": "Microsoft Office",
+      "utgiver": "Microsoft",
+      "hva": "AI-funksjoner i Office (Copilot, diktering, designforslag)",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "microsoft.copilot",
+        "microsoft.windows.copilot"
+      ],
+      "navn": "Microsoft Copilot",
+      "utgiver": "Microsoft",
+      "hva": "Copilot-appen",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "windowsstudio",
+        "studio effects"
+      ],
+      "navn": "Windows Studio Effects",
+      "utgiver": "Microsoft",
+      "hva": "kamera-AI på NPU (bakgrunn, øyekontakt)",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "nvidia broadcast"
+      ],
+      "navn": "NVIDIA Broadcast",
+      "utgiver": "NVIDIA",
+      "hva": "AI for støyfjerning og bakgrunn",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "chatrtx",
+        "chatwithrtx",
+        "chat with rtx"
+      ],
+      "navn": "NVIDIA ChatRTX",
+      "utgiver": "NVIDIA",
+      "hva": "lokal språkmodell (chat med egne filer)",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "g-assist",
+        "gassist"
+      ],
+      "navn": "NVIDIA G-Assist",
+      "utgiver": "NVIDIA",
+      "hva": "lokal AI-assistent",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "nvidia app"
+      ],
+      "navn": "NVIDIA app",
+      "utgiver": "NVIDIA",
+      "hva": "AI-funksjoner for spill og video",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "\\zoom"
+      ],
+      "navn": "Zoom",
+      "utgiver": "Zoom",
+      "hva": "AI for støyfjerning, bakgrunn og oppsummering",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "adobe"
+      ],
+      "navn": "Adobe",
+      "utgiver": "Adobe",
+      "hva": "AI-funksjoner (Firefly, Sensei)",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "grammarly"
+      ],
+      "navn": "Grammarly",
+      "utgiver": "Grammarly",
+      "hva": "AI-skrivehjelp",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "openvino"
+      ],
+      "navn": "Intel OpenVINO",
+      "utgiver": "Intel",
+      "hva": "motor for AI-modeller på Intel-maskinvare",
+      "bekreftet": true
+    },
+    {
+      "ord": [
+        "intel\\ai",
+        "intel ai",
+        "intel(r) ai"
+      ],
+      "navn": "Intel AI",
+      "utgiver": "Intel",
+      "hva": "AI-funksjoner fra Intel",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "ryzen ai",
+        "ryzenai",
+        "amd\\ai"
+      ],
+      "navn": "AMD Ryzen AI",
+      "utgiver": "AMD",
+      "hva": "AI på AMD-prosessoren (NPU)",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "qualcomm",
+        "snapdragon"
+      ],
+      "navn": "Qualcomm AI",
+      "utgiver": "Qualcomm",
+      "hva": "AI på Snapdragon-prosessoren (NPU)",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "lenovo"
+      ],
+      "navn": "Lenovo",
+      "utgiver": "Lenovo",
+      "hva": "AI-funksjoner fra PC-produsenten",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "\\dell"
+      ],
+      "navn": "Dell",
+      "utgiver": "Dell",
+      "hva": "AI-funksjoner fra PC-produsenten (Optimizer)",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "\\hp\\",
+        "hp ai",
+        "hewlett"
+      ],
+      "navn": "HP",
+      "utgiver": "HP",
+      "hva": "AI-funksjoner fra PC-produsenten",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "asus",
+        "armoury"
+      ],
+      "navn": "ASUS",
+      "utgiver": "ASUS",
+      "hva": "AI-funksjoner fra PC-produsenten",
+      "bekreftet": false
+    },
+    {
+      "ord": [
+        "logitech",
+        "logi "
+      ],
+      "navn": "Logitech",
+      "utgiver": "Logitech",
+      "hva": "AI-funksjoner (AI Prompt Builder)",
+      "bekreftet": false
     }
   ],
   "innebygdMappeOrd": [

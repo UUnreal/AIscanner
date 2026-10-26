@@ -52,6 +52,7 @@ public sealed partial class Skanner
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
             ("Sjekker registeret...", Register),
+            ("Leter etter AI som leverandører har lagt inn...", LeverandorAi),
         };
         // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
         Tider.Clear();

@@ -49,6 +49,18 @@ public sealed class ModellFamilie
     [JsonPropertyName("type")] public string? Type { get; set; }
 }
 
+/// <summary>AI som leverandører legger inn i egne programmer. Gir bare navn: funnet gjøres på innholdet.</summary>
+public sealed class LeverandorAi
+{
+    /// <summary>Biter av mappestien (små bokstaver) som peker på programmet.</summary>
+    [JsonPropertyName("ord")] public List<string> Ord { get; set; } = new();
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    [JsonPropertyName("utgiver")] public string Utgiver { get; set; } = "";
+    [JsonPropertyName("hva")] public string? Hva { get; set; }
+    /// <summary>false når mappenavnet ikke er bekreftet på en ekte PC ennå.</summary>
+    [JsonPropertyName("bekreftet")] public bool Bekreftet { get; set; }
+}
+
 public sealed class InnebygdAI
 {
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
@@ -76,6 +88,7 @@ public sealed class Regelsett
     /// <summary>Land der data om bedriften ikke bør havne. AI som sender hit blir rødt.</summary>
     [JsonPropertyName("hoyrisikoLand")] public List<string> HoyrisikoLand { get; set; } = new();
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
+    [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>

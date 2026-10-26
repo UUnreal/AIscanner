@@ -142,6 +142,15 @@
   .sidevalg button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
   .ident span { flex: 1; min-width: 0; font-size: 13px; color: var(--tekst); user-select: text; overflow-wrap: anywhere; }
   .ident span b { font-weight: 600; }
+  .detalj ul.apiListe { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 4px; }
+  .detalj li.api { padding: 4px 10px; }
+  .apiKompakt { display: flex; flex-wrap: wrap; gap: 2px 14px; background: var(--fyll); border-radius: 10px; padding: 6px 10px; flex: none; }
+  .apiKompakt .api { display: inline-flex; font-size: 12.5px; color: var(--dempet); }
+  .apiKompakt .api b { font-weight: 600; color: var(--tekst); margin-right: 4px; }
+  .api span { flex: 1; min-width: 0; font-size: 12.5px; color: var(--dempet); overflow-wrap: anywhere; }
+  .api span b { font-weight: 600; color: var(--tekst); }
+  .api::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--dempet); margin: 6px 8px 0 0; align-self: flex-start; }
+  .api.paa::before { background: var(--gul); } .api.manuelt::before { background: var(--rod); } .api.av::before { background: var(--gronn); }
   .vis { border: 0; background: none; color: var(--bla); font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
   .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
   .mal .vert small { color: var(--dempet); font-weight: 400; font-size: 12.5px; }
@@ -335,8 +344,15 @@ function tegnDetalj(beholdSide) {
   if (!beholdSide) stedSide = 0;
   if (!f) { d.innerHTML = `<div class="tom">${alle.length ? "Velg et funn." : "Ingen AI funnet."}</div>`; return; }
   const mal = f.trafikk || [];
-  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type):?/;
-  const ident = (f.steder || []).filter(t => ID.test(t)), steder = (f.steder || []).filter(t => !ID.test(t));
+  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type|Utgiver):?/, API = /^AI-API: /;
+  const ident = (f.steder || []).filter(t => ID.test(t)), api = (f.steder || []).filter(t => API.test(t)),
+        steder = (f.steder || []).filter(t => !ID.test(t) && !API.test(t));
+  const identTittel = ident.some(t => !t.startsWith("Utgiver")) ? "Hvem er modellen" : "Hvem står bak";
+  const apiLinje = t => { const [navn, ...rest] = t.slice(8).split(" · "); const st = rest.join(" · ");
+    const [kl, kort] = /blokkert/.test(st) ? ["av", "blokkert av IT"] : /manuelt/.test(st) ? ["manuelt", "slått på manuelt"]
+      : /^ukjent/.test(st) ? ["", "ukjent"] : /^av|ingen modell|ikke funnet|ikke slått/.test(st) ? ["av", "av"]
+      : /utvidelser/.test(st) && !/nettsider/.test(st) ? ["paa", "på for utvidelser"] : ["paa", /PC-en/.test(st) ? "på PC-en" : "på"];
+return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc(kort)}</span></li>`; };
   const identLinje = t => { const i = t.indexOf(":"); return `<li class="ident"><span>${i > 0 ? `<b>${esc(t.slice(0, i))}</b>${esc(t.slice(i))}` : esc(t)}</span></li>`; };
   const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}</span>` +
     `<span class="land ${m.farlig ? "farlig" : ""}">${esc(m.land || "ukjent land")}</span>` +
@@ -349,6 +365,8 @@ function tegnDetalj(beholdSide) {
       `${s.sti && vert ? `<button class="vis" data-sti="${esc(s.sti)}">Vis</button>` : ""}</li>`;
   };
   const tider = [GRUPPER[gruppeNr(f)][1], f.forst ? `Først ${f.forst}` : "", f.sist ? (f.sist === "nå" ? "Aktiv nå" : `Sist ${f.sist}`) : ""].filter(Boolean);
+  let kompakt = false;
+  const apiKompakt = () => `<div class="apiKompakt">${api.map(t => { const li = apiLinje(t); return li.replace(/^<li class="api ([^"]*)"[^>]*><span>/, '<span class="api $1">').replace(/<\/span><\/li>$/, "</span>"); }).join("")}</div>`;
   const tegn = per => {
     const sider = Math.max(1, Math.ceil(steder.length / per));
     stedSide = Math.min(stedSide, sider - 1);
@@ -356,7 +374,8 @@ function tegnDetalj(beholdSide) {
     d.innerHTML = `<div class="navnRad ${f.risiko}"><button class="tilbake" id="tilbake">‹</button><h2 title="${esc(f.navn)}">${esc(f.navn)}</h2><span class="merke">${MERKE[f.risiko]}</span></div>
       <p>${esc(f.kort)}</p>
       <div class="brikker">${tider.map(t => `<span>${esc(t)}</span>`).join("")}</div>
-      ${ident.length ? `<h3>Hvem er modellen</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
+      ${ident.length ? `<h3>${identTittel}</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
+      ${api.length ? `<h3>AI-funksjoner for nettsider</h3>${kompakt ? apiKompakt() : `<ul class="apiListe">${api.map(apiLinje).join("")}</ul>`}` : ""}
       ${mal.length ? `<h3>Sender til nå</h3><ul id="malListe">${mal.map(malLinje).join("")}</ul>` : ""}
       ${steder.length ? `<h3 class="medSider"><span>Funnet her · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} av ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
       ${(f.merk || []).length ? `<h3>Merk</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
@@ -367,6 +386,8 @@ function tegnDetalj(beholdSide) {
   // Ingen scrolling: så mange steder per side som får plass, resten på neste side
   let per = Math.max(1, steder.length);
   while (!tegn(per) && per > 1) per--;
+  // Fortsatt for høyt: AI-funksjonene på én tett blokk i stedet for en liste
+  if (api.length && !tegn(per)) { kompakt = true; per = Math.max(1, steder.length); while (!tegn(per) && per > 1) per--; }
   const ml = $("malListe");
   while (ml && d.scrollHeight > d.clientHeight + 1 && ml.children.length > 1) ml.lastElementChild.remove();
   const fs = $("stedForrige"), ns = $("stedNeste");

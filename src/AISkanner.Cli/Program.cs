@@ -18,7 +18,7 @@ int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
-var skanner = new Skanner(regler, historikk);
+var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg") };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);

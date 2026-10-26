@@ -103,37 +103,63 @@ public sealed partial class Skanner
             var policy = regel != null ? LesPolicy(regel.PolicyNokkel, regel.PolicyVerdi) : null;
             bool blokkert = policy?.Verdi == 1;
 
+            // Status for AI-API-ene (bare Chrome og Edge har dem)
+            ApiStatus? api = familie is "Chrome" or "Edge"
+                ? NettleserApiStatus(nettleser, rot, sprak.Count > 0, mapper.Any(m => Path.GetFileName(m).Equals("OptGuideOnDeviceClassifierModel", StringComparison.OrdinalIgnoreCase)), blokkert)
+                : null;
+            Funn? hoved = null;
+
             if (sprak.Count > 0)
             {
                 var navn = regel != null ? regel.Navn.Replace(familie, nettleser) : $"Språkmodell i {nettleser}";
-                var f = LeggTil(navn, "Lokal AI (i nettleseren)", Risiko.Gul,
+                var f = LeggTil(navn, LeverandorKategori + " (nettleser)", Risiko.Gul,
                     regel?.HvorforEnkelt ?? $"{nettleser} har lastet ned sin egen AI-modell. Nettsider og utvidelser kan bruke den.", nettleser, null,
                     enkelt: regel?.Enkelt, rad: regel?.Rad ?? "På jobb bør IT bestemme om den skal være på.");
                 f.Bruk = $"Ligger på PC-en ({Rapport.Storrelse(sprakStorrelse)}), lastet ned {Tid(forst)}.";
                 f.Tidspunkt(forst, sist);
                 foreach (var l in sprak) f.Detalj(l);
+                hoved = f;
                 if (blokkert) f.Advarsel("IT har blokkert modellen, men den ligger fortsatt på disk.");
                 else if (policy == null) f.Merknad("Ingen regel fra IT. Nettleseren bestemmer selv om AI-modellen lastes ned.");
                 else f.Merknad($"IT tillater lokal AI ({regel!.PolicyVerdi}={policy.Value.Verdi}).");
             }
             else if (regel != null && blokkert)
             {
-                var f = LeggTil(regel.Navn.Replace(familie, nettleser), "Lokal AI (i nettleseren)", Risiko.Gronn, regel.HvorforEnkelt ?? regel.Hvorfor, nettleser, null, enkelt: regel.Enkelt, rad: regel.Rad);
+                var f = LeggTil(regel.Navn.Replace(familie, nettleser), LeverandorKategori + " (nettleser)", Risiko.Gronn, regel.HvorforEnkelt ?? regel.Hvorfor, nettleser, null, enkelt: regel.Enkelt, rad: regel.Rad);
                 f.Bruk = "Blokkert av IT, og ingen modell ligger på PC-en.";
+                hoved = f;
             }
 
             if (andre.Count > 0)
             {
-                var f = LeggTil($"Andre AI-modeller i {nettleser}", "Lokal AI (i nettleseren)", Risiko.Gronn,
+                var f = LeggTil($"Andre AI-modeller i {nettleser}", LeverandorKategori + " (nettleser)", Risiko.Gronn,
                     $"{nettleser} har lastet ned små AI-modeller som kjører på PC-en, f.eks. for tale, oversettelse og tekstgjenkjenning.", nettleser, null,
                     enkelt: "Små AI-modeller i nettleseren", rad: "Ingenting å gjøre. Dette er vanlige funksjoner i nettleseren.");
                 f.Bruk = $"{andre.Count} {(andre.Count == 1 ? "funksjon" : "funksjoner")}: {string.Join(", ", andre.Select(a => a.Split(new[] { " · " }, StringSplitOptions.None)[1]).Take(3))}{(andre.Count > 3 ? " …" : "")}.";
                 foreach (var l in andre) f.Detalj(l);
+                hoved ??= f;
+            }
+
+            if (api != null && hoved != null)
+            {
+                foreach (var l in api.Linjer) hoved.Detalj(l);
+                foreach (var m in api.Merk) hoved.Merknad(m);
+                var pa = api.Linjer.Where(l => Regex.IsMatch(l, @"· (på|slått på)")).Select(l => l.Substring(8, l.IndexOf(" · ") - 8)).ToList();
+                if (pa.Count > 0 && sprak.Count > 0) hoved.Bruk += $" Nettsider kan bruke: {string.Join(", ", pa)}.";
+            }
+            if (api != null && api.Manuelt.Count > 0)
+            {
+                var f = LeggTil($"AI slått på manuelt i {nettleser}", "Skygge-AI (nettleserflagg)", Risiko.Rod,
+                    $"Noen har slått på AI-funksjoner i {nettleser} som ikke er på som standard. De kjører lokalt uten at IT styrer dem.", nettleser, null,
+                    enkelt: "AI-flagg slått på i nettleseren", rad: $"Sett flaggene tilbake til Default i {(familie == "Edge" ? "edge" : "chrome")}://flags, eller la IT styre det med policy.");
+                f.Bruk = $"{api.Manuelt.Count} {(api.Manuelt.Count == 1 ? "flagg" : "flagg")} endret: {string.Join(", ", api.Manuelt.Select(m => m.Substring(7, m.IndexOf(" · ") - 7)).Take(3))}{(api.Manuelt.Count > 3 ? " …" : "")}.";
+                foreach (var l in api.Manuelt) f.Detalj(l);
+                foreach (var l in api.Linjer) f.Detalj(l);
             }
 
             if (ukjente.Count > 0)
             {
-                var f = LeggTil($"Ukjent AI-modell i {nettleser}", "Lokal AI (i nettleseren)", Risiko.Rod,
+                var f = LeggTil($"Ukjent AI-modell i {nettleser}", LeverandorKategori + " (nettleser)", Risiko.Rod,
                     "AI-modellfiler i nettleserdataene som ikke hører til nettleserens kjente funksjoner. Kan komme fra en utvidelse eller et nettsted.", nettleser, null,
                     enkelt: "Ukjent AI i nettleseren", rad: "Sjekk utvidelsene i nettleseren. Fjern dem du ikke kjenner.");
                 f.Bruk = $"{ukjente.Count} {(ukjente.Count == 1 ? "modellfil" : "modellfiler")}.";

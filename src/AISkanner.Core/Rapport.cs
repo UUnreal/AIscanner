@@ -24,6 +24,12 @@ public static class Rapport
         if (skanner != null)
             L(skanner.DataMalt ? $"Datamengde: målt av Windows i {skanner.MaleSekunder:0} sekunder under søket."
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");
+        if (skanner != null && skanner.Tider.TryGetValue("Totalt", out var totalt))
+        {
+            var treg = skanner.Tider.Where(t => t.Key != "Totalt").OrderByDescending(t => t.Value).Take(3)
+                              .Select(t => $"{t.Key.ToLowerInvariant()} {t.Value.TotalSeconds:0.0} s");
+            L($"Søketid: {totalt.TotalSeconds:0.0} sekunder (tregest: {string.Join(", ", treg)}).");
+        }
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         L(new string('=', 60));

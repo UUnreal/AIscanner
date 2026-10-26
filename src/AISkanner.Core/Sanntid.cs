@@ -70,7 +70,7 @@ public sealed partial class Skanner
                 var sti = ProsessSti.Hent(p);
                 if (sti == null || p.Id == Plattform.EgenPid) continue;
                 var mappe = Path.GetDirectoryName(sti);
-                if (mappe == null || ErSystemmappe(mappe) || !sett.Add(mappe)) continue;
+                if (mappe == null || ErSystemmappe(mappe) || UnderLeverandorRot(mappe) || !sett.Add(mappe)) continue;
                 var motorer = FinnMotorer(mappe, 2);
                 if (motorer.Count > 0) LeggTilMotorFunn(sti, motorer, kjorer: true);
             }
@@ -237,9 +237,8 @@ public sealed partial class Skanner
         long minLengde = Math.Max(20, _regler.ModellfilMinMB / 10) * 1024L * 1024L;
         var hopp = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            Utvid(@"%LOCALAPPDATA%\Microsoft"), Utvid(@"%LOCALAPPDATA%\Packages"), Utvid(@"%LOCALAPPDATA%\Temp"),
-            Utvid(@"%LOCALAPPDATA%\Google\Chrome\User Data"), Utvid(@"%LOCALAPPDATA%\Microsoft\Edge\User Data"),
-            Utvid(@"%APPDATA%\Microsoft"), Utvid(@"%APPDATA%\Mozilla"),
+            // AppData gås gjennom av LeverandorAi, som også finner hvem som har lagt AI-en der
+            Utvid(@"%LOCALAPPDATA%"), Utvid(@"%APPDATA%"), Utvid(@"%USERPROFILE%\AppData\LocalLow"),
         };
         var rotter = new List<(string Sti, int Dybde)> { (Utvid("%USERPROFILE%"), 10) };
         if (Plattform.ErWindows)
