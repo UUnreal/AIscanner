@@ -18,7 +18,8 @@ public static class Rapport
         void L(string s = "") => sb.Append(s).Append("\r\n");
         string strek = new('-', 60);
         L("AI-SKANNER RAPPORT");
-        L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}   Tid: {DateTime.Now:dd.MM.yyyy HH:mm}");
+        L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}");
+        L($"Søket kjørt: {(skanner?.Startet ?? DateTime.Now):dd.MM.yyyy HH:mm:ss}   Rapport laget: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
         L($"Funnet: {Oversikt.TellingTekst(liste)}");

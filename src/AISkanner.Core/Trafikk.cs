@@ -115,6 +115,8 @@ public sealed partial class Skanner
             if (!liste.TryGetValue(adresse, out var m))
                 liste[adresse] = m = new Mal { Adresse = adresse, Tjeneste = tj?.Navn, Land = IpLand.Finn(t.Fjern), EierLand = tj?.Land };
             m.Antall++;
+            var ip = t.Fjern.ToString();
+            if (m.Ip.Count < 8 && !m.Ip.Contains(ip)) m.Ip.Add(ip);
             if (nb.Bytes != null && nb.Bytes.TryGetValue(t.Nokkel, out var b))
             {
                 m.Ut = (m.Ut ?? 0) + b.Ut;

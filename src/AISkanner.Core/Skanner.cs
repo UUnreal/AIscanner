@@ -36,10 +36,14 @@ public sealed partial class Skanner
         _historikk = historikk;
     }
 
+    /// <summary>Når søket startet, for rapporten.</summary>
+    public DateTime? Startet { get; private set; }
+
     public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null)
     {
         _funn.Clear();
         _status = status;
+        Startet = DateTime.Now;
         var stegliste = new (string Tekst, Action Gjor)[]
         {
             ("Ser etter AI som kjører nå...", () => { Prosesser(); MotorerIProsesser(); }),

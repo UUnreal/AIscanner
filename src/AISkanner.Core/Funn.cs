@@ -114,4 +114,6 @@ public sealed class Mal
     public int Antall { get; set; }
     public long? Ut { get; set; }
     public long? Inn { get; set; }
+    /// <summary>IP-adressene forbindelsene gikk til (høyst 8).</summary>
+    public List<string> Ip { get; } = new();
 }

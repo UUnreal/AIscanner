@@ -176,7 +176,7 @@ public sealed class Hovedvindu : Form
                     kommerFra = f.OpprinnelseLand == null ? null : IpLand.Navn(f.OpprinnelseLand),
                     selskap = f.Opprinnelse,
                     kommerFraFarlig = f.OpprinnelseLand != null && farlige.Contains(f.OpprinnelseLand),
-                    senderTil = Risikoregler.SenderTil(f).Select(k => new { land = IpLand.Navn(k), farlig = farlige.Contains(k) }),
+                    senderTil = Risikoregler.SenderTil(f).Select(k => new { land = IpLand.Navn(k), kode = k, farlig = farlige.Contains(k) }),
                     ingenLand = Risikoregler.IngenLand(f),
                     kort = f.Kort,
                     merk = f.Advarsler.Skip(1).Concat(f.Merknader).ToList(),
@@ -186,6 +186,7 @@ public sealed class Hovedvindu : Form
                         adresse = m.Adresse,
                         tjeneste = m.Tjeneste,
                         landKode = m.Land,
+                        ip = m.Ip,
                         tilLand = m.Land == "LAN" ? null : IpLand.Navn(m.EierLand ?? (m.Land == "CDN" ? null : m.Land)),
                         land = m.Land == "CDN" ? (m.EierLand != null ? $"Cloudflare · {IpLand.Navn(m.EierLand)}" : "Cloudflare") : IpLand.Navn(m.Land),
                         farlig = (m.Land != null && farlige.Contains(m.Land)) || (m.EierLand != null && farlige.Contains(m.EierLand)),
@@ -253,11 +254,19 @@ public sealed class Hovedvindu : Form
         using var dlg = new SaveFileDialog
         {
             Filter = "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json",
-            FileName = $"AI-skanner-{Environment.MachineName}-{DateTime.Now:yyyy-MM-dd}",
+            // Tidsstempel med sekunder, så hver rapport får et eget navn
+            FileName = $"AI-rapport_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+            OverwritePrompt = false,
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
         var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat, _skanner) : Rapport.Tekst(_resultat, _skanner);
-        File.WriteAllText(dlg.FileName, innhold, new UTF8Encoding(true));
+        // Skriver aldri over en rapport som finnes: legg til (2), (3) ...
+        var sti = dlg.FileName;
+        for (int n = 2; File.Exists(sti); n++)
+            sti = Path.Combine(Path.GetDirectoryName(dlg.FileName)!, $"{Path.GetFileNameWithoutExtension(dlg.FileName)} ({n}){Path.GetExtension(dlg.FileName)}");
+        using var fs = new FileStream(sti, FileMode.CreateNew, FileAccess.Write);
+        using var w = new StreamWriter(fs, new UTF8Encoding(true));
+        w.Write(innhold);
     }
 }
