@@ -5,11 +5,13 @@ Kartlegger AI-verktøy på én Windows-PC (lokal AI, skygge-AI, nettleser-AI) og
 Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste, ingen persistens, ingen admin-rettigheter.
 
 ## Hvordan den kjører
-`AISkanner.exe` er ett frittstående .NET 8-program. Det starter ingen andre prosesser (ingen PowerShell,
+`AISkanner.exe` er ett frittstående .NET 8-program. Det pakker ikke ut noe til `%TEMP%` og er ikke komprimert. Det starter ingen andre prosesser (ingen PowerShell,
 cmd eller skript) og kjører som vanlig bruker (`asInvoker` i manifestet). Ingen kode lastes ned.
 
 ## Hva den leser (kun lesing, ingenting endres)
-- Prosessliste og prosessenes filsti (`System.Diagnostics.Process`)
+- Prosessliste og prosessenes filsti. Filstien hentes med `PROCESS_QUERY_LIMITED_INFORMATION` og
+  `QueryFullProcessImageName`. Minnet til andre prosesser leses aldri, og systemprosesser som lsass,
+  csrss, winlogon og Defender-prosessene åpnes ikke i det hele tatt.
 - Installerte programmer: Uninstall-nøkler i HKLM/HKCU, og Store-apper for innlogget bruker
   (`HKCU\Software\Classes\Local Settings\...\AppModel\Repository\Packages`, bare nøkkelnavn)
 - Tjenester: `HKLM\SYSTEM\CurrentControlSet\Services` (DisplayName, ImagePath, Start)

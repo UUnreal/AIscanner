@@ -14,14 +14,17 @@
 
     <Product>AI-skanner</Product>
     <Description>Finner lokal AI, skygge-AI og nettleser-AI. Leser bare.</Description>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
+    <Company>AI-skanner (åpen kildekode)</Company>
+    <Copyright>Copyright (c) 2026 Jørund og bidragsytere. MIT-lisens.</Copyright>
 
     <!-- Én frittstående exe: ingen .NET-installasjon, ingen PowerShell -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- Ingen selvutpakking til %TEMP% og ingen komprimering: begge ligner på skadevare for antivirus -->
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
     <DebugType>embedded</DebugType>
     <Deterministic>true</Deterministic>
   </PropertyGroup>

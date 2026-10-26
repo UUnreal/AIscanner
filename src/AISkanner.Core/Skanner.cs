@@ -122,8 +122,7 @@ public sealed class Skanner
         {
             using (p)
             {
-                string? sti = null;
-                try { sti = p.MainModule?.FileName; } catch { }
+                var sti = ProsessSti.Hent(p);
                 var r = FinnRegel($"{p.ProcessName} {sti}");
                 if (r == null) continue;
                 FraRegel(r, "Kjører nå", $"Prosess: {p.ProcessName} (PID {p.Id}) {sti}").Merknad("Kjører akkurat nå.");
