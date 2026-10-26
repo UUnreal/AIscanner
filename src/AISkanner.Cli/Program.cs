@@ -3,6 +3,14 @@
 //   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt]
 using AISkanner;
 
+// Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
+if (args.Length >= 2 && args[0] == "--yara")
+{
+    var y = YaraRegler.Les(File.ReadAllText(args[1]));
+    foreach (var f in args.Skip(2))
+        Console.WriteLine($"{f}: {string.Join(" ", y.Sjekk(f, int.MaxValue, 0).Select(r => r.Navn).OrderBy(n => n, StringComparer.Ordinal))}");
+    return 0;
+}
 if (args.Length == 2 && args[0] == "--test-server")
 {
     // Intern test: spør én lokal port om den svarer som en AI-tjeneste

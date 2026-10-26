@@ -13,6 +13,7 @@ Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI f�
 - **AI-API-er i Chrome og Edge**: om Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM er på, av eller blokkert av IT.
 - **YARA-regler for AI-modeller** i en åpen fil (`ai-modeller.yar`): finner modeller som kjører kode når de lastes (pickle med `os.system`, Keras Lambda,
   GGUF-maler med kode) og programmer gjemt i modellfiler. Fungerer også med vanlig `yara.exe`.
+  Egen YARA-motor i C# (ingen libyara): full YARA 4-syntaks og modulene pe, math, hash, time, string og console. Testet likt med YARA 4.5.4.
 - **AI-motorer** i programmer (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML m.fl.).
 - **Lokale AI-servere**: programmer som svarer som en AI-tjeneste, med modellene de har lastet. Rød hvis åpen mot nettverket.
 - **AI-kode**: Python- og Node-prosjekter med AI- og agentbiblioteker.

@@ -21,11 +21,6 @@
     <Using Include="System.Net.Http" />
   </ItemGroup>
 
-  <!-- MIDLERTIDIG: ny YARA-motor under arbeid -->
-  <ItemGroup>
-    <Compile Remove="Yara/Leksikon.cs;Yara/Strenger.cs;Yara/Kontekst.cs;Yara/Moduler.cs;Yara/Parser.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="regler.json" LogicalName="AISkanner.regler.json" />
     <!-- YARA-regler for AI-modeller. Åpen tekst, kan også kjøres med yara.exe -->

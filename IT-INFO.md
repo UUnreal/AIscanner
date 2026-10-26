@@ -46,6 +46,14 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
   modell som blir funnet. Små filer med endelser som `.pt`, `.pth`, `.pkl`, `.ckpt`, `.bin`, `.keras`, `.h5`, `.npy` sjekkes bare hvis de 8 første bytene viser
   pickle, zip, HDF5 eller NumPy, og da bare første 1 MB. Reglene finner pickle som kaller `os.system`/`subprocess`/`exec`/`eval`/nettverk, Keras Lambda-lag,
   GGUF-chatmaler med Python-internals (CVE-2024-34359) og Windows-programmer gjemt i modellfiler. Treff gir rødt funn. Ingenting kjøres, lastes eller endres.
+- **Full YARA-motor** (nytt i 2.9): egen C#-motor, fortsatt uten libyara og uten ekstra DLL. Støtter YARA 4-syntaksen: tekst (`nocase`, `wide`, `ascii`,
+  `fullword`, `xor`, `base64`, `base64wide`, `private`), hex med jokertegn, nibbles, `~`, hopp og alternativer, regex (`/i`, `/s`, også `wide`),
+  alle betingelser (`of`, `for … of`, `for … in`, `at`, `in`, `#`, `@`, `!`, regning, bitoperasjoner, `contains`/`matches` m.fl., regelreferanser og
+  regelsett, `global`/`private`) og modulene `pe`, `math`, `hash`, `time`, `string` og `console`. Alle strenger i alle regler søkes i én runde
+  (Aho-Corasick), betingelsene er ferdig oversatt før søket, og hex med lange hopp deles i kjeder som i YARA. Testet mot YARA 4.5.4 med 134 regler:
+  ingen avvik (`verktoy/sammenlign-yara.py`, `tests/yara/test.yar`). Ikke støttet: modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`
+  (gir «udefinert», som i YARA uten modulen), `pe.version_info` er tom, og signaturfeltene i `pe` er forenklet. Har `ai-modeller.yar` ved siden av
+  programmet en feil, brukes de innebygde reglene, og rapporten sier hvorfor.
 - **AI-API-er i Chrome og Edge** (nytt i 2.5): status for Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM-motoren.
   Bygger på policyene `GenAILocalFoundationalModelSettings` og `BuiltInAIAPIsEnabled` (HKLM/HKCU), nettleserversjonen (mappenavnet under `Application`),
   og hvilke modellmapper som finnes. Flagg i `chrome://flags` leses ikke som standard, fordi de ligger i filen `Local State` sammen med nettleserens
