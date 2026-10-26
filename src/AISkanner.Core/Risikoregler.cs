@@ -61,7 +61,9 @@ public static class Risikoregler
         var k = f.Kategori;
         var d = f.Detaljer;
         if (f.Navn == "AI-regler fra IT") return "IT-regel";
-        if (f.Navn.StartsWith("Farlig AI-modellfil") || f.Navn.StartsWith("Ukjent") || k == "AI-server") return "Ukjent AI";
+        // "Lokal AI-server (...)" er navnet på et ukjent program som svarer som en AI-tjeneste (gjenkjente servere får sitt eget navn).
+        // (k == "AI-server" slo aldri til: "AI-server" settes som lokasjon, ikke kategori.)
+        if (f.Navn.StartsWith("Farlig AI-modellfil") || f.Navn.StartsWith("Ukjent") || f.Navn.StartsWith("Lokal AI-server", StringComparison.Ordinal)) return "Ukjent AI";
         if (f.Navn.StartsWith("Mulige AI-nettsteder")) return "Ukjent AI-nettsted";
         if (d.Any(x => x.StartsWith("Utgiver: ukjent"))) return "Ukjent AI";
         if (d.Any(x => x.StartsWith("Utgiver:") && x.Contains("ikke bekreftet"))) return "Ukjent AI";
@@ -86,14 +88,23 @@ public static class Risikoregler
     public static bool Godkjent(Funn f, IReadOnlyCollection<string> liste)
     {
         if (liste.Count == 0) return false;
+        // Sikkerhet: godkjenn bare på navn vi stoler på, altså navn fra regelsettet (gjenkjent produkt/utvidelse)
+        // eller et gjenkjent nettsted. Et visningsnavn som kommer fra et filnavn, mappenavn eller en utvidelses
+        // egen manifest.json kan en angriper styre – da kunne en ukjent utvidelse som kaller seg «<godkjent navn>»
+        // blitt grønn. Slike navn godtas ikke her; de forblir røde (ukjent/skygge-AI).
+        bool nettsted = f.Kategori.Contains("(nettsted)") && !f.Navn.StartsWith("Mulige AI-nettsteder", StringComparison.Ordinal);
+        bool trygtNavn = f.Regel != null || nettsted;
         var navn = Oversikt.Navn(f);
         foreach (var g in liste)
         {
-            if (string.Equals(g, f.Navn, StringComparison.OrdinalIgnoreCase) || string.Equals(g, navn, StringComparison.OrdinalIgnoreCase)) return true;
+            if (trygtNavn && (string.Equals(g, f.Navn, StringComparison.OrdinalIgnoreCase) || string.Equals(g, navn, StringComparison.OrdinalIgnoreCase))) return true;
             if (g.Contains('.') && !g.Contains(' '))
             {
-                var re = new Regex(@"(?<![\w.-])(?:[\w-]+\.)*" + Regex.Escape(g) + @"(?![\w-])", RegexOptions.IgnoreCase);
-                if (f.Detaljer.Any(x => re.IsMatch(x)) || f.Trafikk.Any(m => re.IsMatch(m.Adresse))) return true;
+                var re = new Regex(@"(?<![\w.-])(?:[\w-]+\.)*" + Regex.Escape(g) + @"(?![\w-])", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+                // Domene bare mot målte forbindelser (og nettstedsbevis), aldri mot filstier i Detaljer –
+                // en modell i en mappe som tilfeldigvis heter et godkjent domene skal ikke bli grønn.
+                if (f.Trafikk.Any(m => re.IsMatch(m.Adresse))) return true;
+                if (nettsted && f.Detaljer.Any(x => re.IsMatch(x))) return true;
             }
         }
         return false;
