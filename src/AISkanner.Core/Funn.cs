@@ -41,8 +41,8 @@ public sealed class Funn
     public List<string> Detaljer { get; } = new();
     public Produkt? Regel { get; init; }
 
-    public void LeggTilHvor(string s) { if (!Hvor.Contains(s)) Hvor.Add(s); }
-    public void Advarsel(string s) { if (!Advarsler.Contains(s)) Advarsler.Add(s); }
+    public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
+    public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }
 
     /// <summary>Én setning til vanlige folk: hvordan det brukes, og den viktigste grunnen.</summary>
     public string Kort
@@ -57,9 +57,9 @@ public sealed class Funn
     private static string ForsteSetning(string s)
     {
         int i = s.IndexOf(". ", StringComparison.Ordinal);
-        return i > 0 ? s[..(i + 1)] : s;
+        return i > 0 ? s.Substring(0, i + 1) : s;
     }
 
-    public void Merknad(string s) { if (!Merknader.Contains(s)) Merknader.Add(s); }
-    public void Detalj(string s) { if (!Detaljer.Contains(s) && Detaljer.Count < 50) Detaljer.Add(s); }
+    public void Merknad(string s) { lock (this) if (!Merknader.Contains(s)) Merknader.Add(s); }
+    public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 50) Detaljer.Add(s); }
 }

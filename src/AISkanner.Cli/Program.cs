@@ -18,7 +18,9 @@ int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
-var funn = await new Skanner(regler, historikk).KjorAsync(nvd, status);
+var skanner = new Skanner(regler, historikk);
+var funn = await skanner.KjorAsync(nvd, status);
+foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 Console.WriteLine(Rapport.Json(funn));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;

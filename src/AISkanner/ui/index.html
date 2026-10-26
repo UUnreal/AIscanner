@@ -105,6 +105,11 @@
   .rad.apen .radInnhold { grid-template-rows: 1fr; }
   .radInnhold > div { overflow: hidden; }
   .kort { padding: 0 18px 15px 46px; color: var(--dempet); font-size: 15px; }
+  .kort h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; margin: 12px 0 6px; color: var(--dempet); }
+  .steder { list-style: none; display: grid; gap: 6px; }
+  .steder li { display: flex; align-items: center; gap: 10px; background: rgba(120,120,128,.08); border-radius: 10px; padding: 7px 10px; }
+  .steder span { flex: 1; min-width: 0; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 12px; color: var(--tekst); word-break: break-all; user-select: text; }
+  .vis { border: 0; background: none; color: var(--bla); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
   .knapper { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 28px; }
   .knapp { border: 0; border-radius: 14px; padding: 14px 0; width: 100%; max-width: 320px; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; }
   .knapp.primar { background: var(--bla); color: #fff; }
@@ -171,15 +176,25 @@ function visSteg(n) {
 }
 
 const MERKE = { rod: "Høy", gul: "Middels", gronn: "Lav" };
+const STI = /[A-Za-z]:\\[^:*?"<>|()]+[^:*?"<>|()\s]/;
+function stedLinje(t) {
+  const m = t.match(STI);
+  const knapp = m && vert ? `<button class="vis" data-sti="${esc(m[0])}">Vis</button>` : "";
+  return `<li><span>${esc(t)}</span>${knapp}</li>`;
+}
 function visResultat(funn) {
   $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
   $("liste").style.display = funn.length ? "" : "none";
   $("liste").innerHTML = funn.map(f => `
     <div class="rad ${f.risiko}">
       <div class="radHode"><span class="prikk"></span><b>${esc(f.navn)}</b><span class="merke">${MERKE[f.risiko]}</span></div>
-      <div class="radInnhold"><div><p class="kort">${esc(f.kort)}</p></div></div>
+      <div class="radInnhold"><div><div class="kort">
+        <p>${esc(f.kort)}</p>
+        ${(f.steder || []).length ? `<h3>Funnet her</h3><ul class="steder">${f.steder.map(stedLinje).join("")}</ul>` : ""}
+      </div></div></div>
     </div>`).join("");
   document.querySelectorAll(".radHode").forEach(h => h.onclick = () => h.parentElement.classList.toggle("apen"));
+  document.querySelectorAll(".vis").forEach(b => b.onclick = e => { e.stopPropagation(); send({ type: "vis", sti: b.dataset.sti }); });
   vis("resultat");
 }
 

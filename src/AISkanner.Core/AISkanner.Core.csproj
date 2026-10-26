@@ -1,15 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    net48: det som leveres. .NET Framework 4.8 følger med Windows 10 og 11, så programmet blir bare noen få MB.
+    net8.0: brukes bare til å teste skannemotoren på Linux (AISkanner.Cli).
+  -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AISkanner</RootNamespace>
-    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- Windows-kall er beskyttet med Plattform.ErWindows -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Net.Http" />
+    <Using Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup>

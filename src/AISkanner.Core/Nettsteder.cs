@@ -23,6 +23,8 @@ public sealed partial class Skanner
         public bool LagretData;
         public bool App;
         public int Besok;
+        /// <summary>Nettleser, profil og nettstedsnavn, f.eks. "Chrome (Default): chatgpt.com". Aldri hele adresser.</summary>
+        public readonly SortedSet<string> Steder = new();
         public long Lagret;
         public readonly SortedSet<string> Nettlesere = new();
     }
@@ -43,10 +45,12 @@ public sealed partial class Skanner
                     {
                         foreach (var p in eng.EnumerateObject())
                         {
-                            var n = FinnNettsted(VertFraOpprinnelse(p.Name));
+                            var vert = VertFraOpprinnelse(p.Name);
+                            var n = FinnNettsted(vert);
                             if (n == null) continue;
                             var s = For(n);
                             s.Nettlesere.Add(nettleser);
+                            s.Steder.Add($"{nettleser} ({Path.GetFileName(profil)}): {vert}");
                             if (p.Value.TryGetProperty("setting", out var set) && set.ValueKind == JsonValueKind.Object)
                             {
                                 if (set.TryGetProperty("rawScore", out var rs) && rs.TryGetDouble(out var score)) s.Score = Math.Max(s.Score, score);
@@ -72,6 +76,7 @@ public sealed partial class Skanner
                     s.LagretData = true;
                     s.Lagret += MappeStorrelse(d);
                     s.Nettlesere.Add(nettleser);
+                    s.Steder.Add($"{nettleser} ({Path.GetFileName(profil)}): {m.Groups[1].Value}");
                     var endret = Directory.GetLastWriteTime(d);
                     if (s.Sist == null || endret > s.Sist) s.Sist = endret;
                 }
@@ -91,30 +96,32 @@ public sealed partial class Skanner
                 s.LagretData = true;
                 s.Lagret += MappeStorrelse(d);
                 s.Nettlesere.Add("Firefox");
+                s.Steder.Add($"Firefox ({Path.GetFileName(profil)}): {m.Groups[1].Value}");
                 var endret = Directory.GetLastWriteTime(d);
                 if (s.Sist == null || endret > s.Sist) s.Sist = endret;
             }
         }
 
         // Installerte nettapper (Start-meny-snarveier fra Chrome/Edge, f.eks. "ChatGPT.lnk")
-        var valg = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 3, IgnoreInaccessible = true };
         foreach (var meny in new[] { @"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Chrome Apps", @"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Edge Apps" })
         {
             var sti = Utvid(meny);
             if (!Directory.Exists(sti)) continue;
-            foreach (var lnk in Directory.EnumerateFiles(sti, "*.lnk", valg))
+            foreach (var lnk in Plattform.Filer(sti, "*.lnk", 3))
             {
-                var tittel = Path.GetFileNameWithoutExtension(lnk);
-                var n = _regler.AiNettsteder.FirstOrDefault(x => AppOrd(x).Any(o => tittel.Contains(o, StringComparison.OrdinalIgnoreCase)));
+                var tittel = Path.GetFileNameWithoutExtension(lnk.Name);
+                var n = _regler.AiNettsteder.FirstOrDefault(x => AppOrd(x).Any(o => tittel.Inneholder(o)));
                 if (n == null) continue;
                 var s = For(n);
                 s.App = true;
                 s.Nettlesere.Add(meny.Contains("Edge") ? "Edge" : "Chrome");
+                s.Steder.Add($"Nettapp: {lnk.FullName}");
             }
         }
 
         var ukjente = new Dictionary<string, (int Besok, SortedSet<string> Nettlesere)>(StringComparer.OrdinalIgnoreCase);
-        if (_historikk) Historikk(For, ukjente);
+        var ukjenteSteder = new Dictionary<string, SortedSet<string>>(StringComparer.OrdinalIgnoreCase);
+        if (_historikk) Historikk(For, ukjente, ukjenteSteder);
 
         foreach (var (vert, (besok, nettlesere)) in ukjente.Where(u => u.Value.Besok >= 2).OrderByDescending(u => u.Value.Besok).Take(10))
         {
@@ -123,6 +130,7 @@ public sealed partial class Skanner
                 string.Join(", ", nettlesere), null, enkelt: "Ukjent AI-nettsted", rad: "Ikke lim inn noe viktig før du vet hvem som står bak.");
             f.Bruk = $"Besøkt {besok} ganger i {string.Join(", ", nettlesere)}.";
             f.Privat = true;
+            if (ukjenteSteder.TryGetValue(vert, out var st)) foreach (var x in st) f.Detalj(x);
         }
 
         foreach (var (n, s) in spor)
@@ -136,26 +144,28 @@ public sealed partial class Skanner
             if (s.Lagret > 300L * 1024 * 1024)
                 f.Advarsel($"Nettstedet har lagret {Gb(s.Lagret)} i nettleseren. Det kan være en AI-modell som kjører i nettleseren.");
             f.Bruk = $"{hyppighet} i {hvor}{(s.Sist is { } t ? ", sist " + t.ToString("d. MMMM", Norsk) : "")}.";
-            f.Detalj($"Brukspor: bruksscore {s.Score:0.0}, {s.Besok} besøk siste 90 dager{(s.LagretData ? ", har lagret data" : "")}{(s.App ? ", installert som nettapp" : "")}.");
+            foreach (var x in s.Steder) f.Detalj(x);
         }
     }
 
     // ---------- Nettleserhistorikk: leses bare i minnet, bare vertsnavn beholdes, ingenting lagres ----------
     private static readonly Regex AiLignende = new(@"(^|\.)[a-z0-9-]+\.ai$|(^|\.)[a-z0-9-]*(gpt|llm|chatbot)[a-z0-9-]*\.", RegexOptions.IgnoreCase);
 
-    private void Historikk(Func<AiNettsted, Brukspor> forNettsted, Dictionary<string, (int Besok, SortedSet<string> Nettlesere)> ukjente)
+    private void Historikk(Func<AiNettsted, Brukspor> forNettsted, Dictionary<string, (int Besok, SortedSet<string> Nettlesere)> ukjente,
+                           Dictionary<string, SortedSet<string>> ukjenteSteder)
     {
         var grense = DateTime.UtcNow.AddDays(-90);
-        void Tell(string nettleser, string? url, long antall, DateTime? sist)
+        void Tell(string nettleser, string profil, string? url, long antall, DateTime? sist)
         {
             if (url == null || !Uri.TryCreate(url, UriKind.Absolute, out var u) || (u.Scheme != "https" && u.Scheme != "http")) return;
-            var vert = u.Host.StartsWith("www.") ? u.Host[4..] : u.Host;
+            var vert = u.Host.StartsWith("www.") ? u.Host.Substring(4) : u.Host;
             var n = FinnNettsted(vert);
             if (n != null)
             {
                 var s = forNettsted(n);
                 s.Besok += (int)Math.Min(antall, 100_000);
                 s.Nettlesere.Add(nettleser);
+                s.Steder.Add($"{nettleser} ({profil}), historikk: {vert}");
                 if (sist != null && (s.Sist == null || sist > s.Sist)) s.Sist = sist;
             }
             else if (AiLignende.IsMatch(vert))
@@ -164,6 +174,8 @@ public sealed partial class Skanner
                 e.Nettlesere ??= new SortedSet<string>();
                 e.Nettlesere.Add(nettleser);
                 ukjente[vert] = (e.Besok + (int)Math.Min(antall, 100_000), e.Nettlesere);
+                if (!ukjenteSteder.TryGetValue(vert, out var st)) ukjenteSteder[vert] = st = new SortedSet<string>();
+                st.Add($"{nettleser} ({profil}), historikk: {vert}");
             }
         }
 
@@ -172,39 +184,22 @@ public sealed partial class Skanner
             foreach (var profil in Mapper(Utvid(rotSti)))
                 LesSqlite(Path.Combine(profil, "History"),
                     "SELECT url, visit_count, last_visit_time FROM urls WHERE last_visit_time > $g", chromeGrense,
-                    r => Tell(nettleser, r.GetString(0), r.GetInt64(1), ChromeTid(r.GetInt64(2))));
+                    r => Tell(nettleser, Path.GetFileName(profil), r.Tekst(0), r.Tall(1), ChromeTid(r.Tall(2))));
 
         long firefoxGrense = new DateTimeOffset(grense).ToUnixTimeMilliseconds() * 1000;
         foreach (var profil in Mapper(Utvid(@"%APPDATA%\Mozilla\Firefox\Profiles")))
             LesSqlite(Path.Combine(profil, "places.sqlite"),
                 "SELECT url, visit_count, last_visit_date FROM moz_places WHERE last_visit_date > $g", firefoxGrense,
-                r => Tell("Firefox", r.GetString(0), r.GetInt64(1), DateTimeOffset.FromUnixTimeMilliseconds(r.GetInt64(2) / 1000).LocalDateTime));
+                r => Tell("Firefox", Path.GetFileName(profil), r.Tekst(0), r.Tall(1), DateTimeOffset.FromUnixTimeMilliseconds(r.Tall(2) / 1000).LocalDateTime));
     }
 
-    /// <summary>
-    /// Åpner en nettleserdatabase direkte, skrivebeskyttet og uten låser (immutable). Filen kopieres aldri.
-    /// </summary>
-    private static void LesSqlite(string sti, string sql, long grense, Action<Microsoft.Data.Sqlite.SqliteDataReader> rad)
+    private static void LesSqlite(string sti, string sql, long grense, Action<WinSqlite.IRad> rad)
     {
         if (!LovligeFiler.Contains(Path.GetFileName(sti)) || !File.Exists(sti)) return;
         try
         {
-            var cs = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
-            {
-                DataSource = new Uri(sti).AbsoluteUri + "?immutable=1",
-                Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
-                Pooling = false,
-            };
-            using var con = new Microsoft.Data.Sqlite.SqliteConnection(cs.ToString());
-            con.Open();
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = sql;
-            cmd.Parameters.AddWithValue("$g", grense);
-            using var r = cmd.ExecuteReader();
-            while (r.Read())
-            {
-                try { if (!r.IsDBNull(0)) rad(r); } catch { }
-            }
+            using var db = new WinSqlite(sti);
+            db.Les(sql, grense, r => { try { if (!r.ErTom(0)) rad(r); } catch { } });
         }
         catch (Exception e) { Debug.WriteLine($"Kunne ikke lese {Path.GetFileName(sti)}: {e.Message}"); }
     }
@@ -218,7 +213,7 @@ public sealed partial class Skanner
     {
         if (string.IsNullOrEmpty(vert)) return null;
         vert = vert.ToLowerInvariant().TrimEnd('.');
-        if (vert.StartsWith("www.")) vert = vert[4..];
+        if (vert.StartsWith("www.")) vert = vert.Substring(4);
         return _regler.AiNettsteder.FirstOrDefault(n => n.Domener.Any(d => vert == d || vert.EndsWith("." + d)));
     }
 

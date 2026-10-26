@@ -83,6 +83,7 @@ public sealed class Hovedvindu : Form
             await SokAsync(nvd, historikk);
         }
         else if (type == "lagre") Lagre();
+        else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
     }
 
     private async Task SokAsync(bool nvd, bool historikk)
@@ -96,7 +97,7 @@ public sealed class Hovedvindu : Form
             Send(new
             {
                 type = "resultat",
-                funn = _resultat.Select(f => new { risiko = f.Risiko.ToString().ToLowerInvariant(), navn = f.Navn, kort = f.Kort }),
+                funn = _resultat.Select(f => new { risiko = f.Risiko.ToString().ToLowerInvariant(), navn = f.Navn, kort = f.Kort, steder = f.Detaljer }),
             });
         }
         catch (Exception e)
@@ -104,6 +105,16 @@ public sealed class Hovedvindu : Form
             Send(new { type = "feil", tekst = "Søket stoppet: " + e.Message });
         }
         finally { _soker = false; }
+    }
+
+    /// <summary>Åpner Utforsker med fila eller mappa markert. Bare stier som faktisk står i et funn godtas.</summary>
+    private void VisIUtforsker(string? sti)
+    {
+        if (string.IsNullOrWhiteSpace(sti) || !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
+        sti = sti!.Trim();
+        if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
+        if (sti == null || (!File.Exists(sti) && !Directory.Exists(sti))) return;
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{sti}\"") { UseShellExecute = false });
     }
 
     private void Lagre()

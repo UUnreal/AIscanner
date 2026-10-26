@@ -29,8 +29,13 @@ Se [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses, og [CODE_SIGNING.md](CO
 Skanneren finner kjente spor, ikke alt. AI brukt i en vanlig nettleserfane (chatgpt.com osv.) oppdages ikke.
 Et tomt resultat betyr ikke at PC-en er fri for AI. Den skanner bare innlogget bruker.
 
+## Liten og rask
+- Hele programmet er rundt 2 MB, som 7-Zip. Det bruker .NET Framework 4.8 og SQLite-motoren som allerede finnes i Windows,
+  og Microsoft Edge WebView2 for vinduet. Byggeløypa stopper hvis programmet blir større enn 10 MB.
+- Alle sjekkene kjører samtidig. Det som tar tid er å gå gjennom filene på disken; den stopper uansett etter 45 sekunder.
+
 ## Bygge selv
-Krever .NET 8 SDK på Windows.
+Krever .NET 8 SDK (bygger .NET Framework 4.8-programmet).
 
 ```
 dotnet publish src/AISkanner -c Release -o publish

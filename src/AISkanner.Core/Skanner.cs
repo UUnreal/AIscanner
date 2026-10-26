@@ -21,10 +21,13 @@ public sealed partial class Skanner
     /// Sikkerhetssperre: de eneste filene skanneren åpner og leser innholdet i.
     /// Passord, informasjonskapsler, historikk og lommebøker i nettleseren blir aldri åpnet.
     /// </summary>
-    public static readonly IReadOnlySet<string> LovligeFiler =
+    public static readonly ISet<string> LovligeFiler =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json", "Preferences", "History", "places.sqlite" };
 
     private readonly bool _historikk;
+
+    /// <summary>Hvor lang tid hver sjekk tok i siste søk.</summary>
+    public Dictionary<string, TimeSpan> Tider { get; } = new();
 
     /// <param name="historikk">Søk etter AI-nettsteder i nettleserhistorikken (bare i minnet, lagres aldri).</param>
     public Skanner(Regelsett regler, bool historikk = true)
@@ -49,15 +52,21 @@ public sealed partial class Skanner
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
         };
-        for (int i = 0; i < stegliste.Length; i++)
+        // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
+        Tider.Clear();
+        var klokke = Stopwatch.StartNew();
+        int ferdig = 0;
+        steg?.Report(0);
+        await Task.WhenAll(stegliste.Select(x => Task.Run(() =>
         {
-            var (tekst, gjor) = stegliste[i];
             ct.ThrowIfCancellationRequested();
-            _status?.Report(tekst);
-            steg?.Report(i);
-            try { gjor(); } catch (Exception e) { Debug.WriteLine($"{tekst} feilet: {e.Message}"); }
-        }
-        steg?.Report(stegliste.Length);
+            var tid = Stopwatch.StartNew();
+            try { x.Gjor(); } catch (Exception e) { Debug.WriteLine($"{x.Tekst} feilet: {e.Message}"); }
+            lock (Tider) Tider[x.Tekst.TrimEnd('.')] = tid.Elapsed;
+            steg?.Report(Interlocked.Increment(ref ferdig));
+            _status?.Report(x.Tekst);
+        }, ct)));
+        Tider["Totalt"] = klokke.Elapsed;
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
@@ -68,7 +77,7 @@ public sealed partial class Skanner
     internal static string Utvid(string sti)
     {
         var s = Environment.ExpandEnvironmentVariables(sti);
-        return OperatingSystem.IsWindows() ? s : s.Replace('\\', '/');   // bare for testing utenfor Windows
+        return Plattform.ErWindows ? s : s.Replace('\\', '/');   // bare for testing utenfor Windows
     }
 
     private static bool Treffer(string tekst, string ord) =>
@@ -87,9 +96,13 @@ public sealed partial class Skanner
     private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj,
                          Produkt? regel = null, string? enkelt = null, string? rad = null)
     {
-        if (!_funn.TryGetValue(navn, out var f))
-            _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt, Rad = rad };
-        f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
+        Funn? f;
+        lock (_funn)
+        {
+            if (!_funn.TryGetValue(navn, out f))
+                _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt, Rad = rad };
+            f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
+        }
         if (hvor != null) f.LeggTilHvor(hvor);
         if (detalj != null) f.Detalj(detalj);
         return f;
@@ -120,7 +133,7 @@ public sealed partial class Skanner
         catch { return null; }
     }
 
-    private static string Kutt(string s, int maks) => s.Length <= maks ? s : s[..(maks - 1)].TrimEnd() + "…";
+    private static string Kutt(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1).TrimEnd() + "…";
 
     private static string? Str(JsonElement e, string navn) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(navn, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
@@ -139,7 +152,7 @@ public sealed partial class Skanner
                 var sti = ProsessSti.Hent(p);
                 var r = FinnRegel($"{p.ProcessName} {sti}");
                 if (r == null) continue;
-                FraRegel(r, "Kjører nå", $"Prosess: {p.ProcessName} (PID {p.Id}) {sti}").Bruk = "Kjører nå.";
+                FraRegel(r, "Kjører nå", $"Program som kjører: {sti ?? p.ProcessName} (PID {p.Id})").Bruk = "Kjører nå.";
             }
         }
     }
@@ -147,7 +160,7 @@ public sealed partial class Skanner
     // ---------- 2. Installerte programmer ----------
     private void Installert()
     {
-        if (!OperatingSystem.IsWindows()) return;
+        if (!Plattform.ErWindows) return;
         var steder = new (RegistryKey Rot, string Sti)[]
         {
             (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
@@ -178,7 +191,7 @@ public sealed partial class Skanner
     // ---------- 3. Tjenester, oppstart og planlagte oppgaver ----------
     private void Oppstart()
     {
-        if (OperatingSystem.IsWindows())
+        if (Plattform.ErWindows)
         {
             using (var tjenester = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services"))
             {
@@ -226,7 +239,6 @@ public sealed partial class Skanner
         }
     }
 
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     private void Oppgaver(RegistryKey k, string sti)
     {
         foreach (var navn in k.GetSubKeyNames())
@@ -243,8 +255,8 @@ public sealed partial class Skanner
     // ---------- 4. Kjente mapper, kommandoer, npm og kodeeditorer ----------
     private void Spor()
     {
-        var path = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
-        var endelser = OperatingSystem.IsWindows() ? new[] { ".exe", ".cmd", ".bat", ".ps1" } : new[] { "" };
+        var path = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+        var endelser = Plattform.ErWindows ? new[] { ".exe", ".cmd", ".bat", ".ps1" } : new[] { "" };
         foreach (var r in _regler.Produkter)
         {
             foreach (var m in r.Mapper)
@@ -263,11 +275,11 @@ public sealed partial class Skanner
         foreach (var d in Mapper(Utvid(@"%APPDATA%\npm\node_modules")))
         {
             var navn = Path.GetFileName(d);
-            var pakker = navn.StartsWith('@') ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
+            var pakker = navn.StartsWith("@") ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
             foreach (var n in pakker)
             {
                 var r = FinnRegel(n);
-                if (r != null) FraRegel(r, "npm-pakke", $"npm: {n}");
+                if (r != null) FraRegel(r, "npm-pakke", $"npm-pakke: {Path.Combine(Utvid(@"%APPDATA%\npm\node_modules"), n)}");
             }
         }
 
@@ -277,7 +289,7 @@ public sealed partial class Skanner
             {
                 var id = Regex.Replace(Path.GetFileName(d), @"-\d+(\.\d+)*.*$", "");
                 var r = FinnRegel(id);
-                if (r != null) FraRegel(r, "Utvidelse i kodeeditor", $"Editor-utvidelse: {id}");
+                if (r != null) FraRegel(r, "Utvidelse i kodeeditor", $"Editor-utvidelse: {d}");
             }
         }
     }
@@ -295,7 +307,7 @@ public sealed partial class Skanner
                 // Generiske porter (8080, 5001 osv.) teller bare hvis prosessen ligner på verktøyet
                 if (FinnRegel(prosess)?.Navn != r.Navn) continue;
                 bool apen = l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any);
-                var f = FraRegel(r, "Lytter på nettverksport", $"Port {l.Port} på {l.Adresse} ({prosess})");
+                var f = FraRegel(r, "Lytter på nettverksport", $"Nettverksport {l.Port} på {l.Adresse} ({prosess})");
                 if (apen)
                 {
                     f.Risiko = Risiko.Rod;
@@ -338,7 +350,7 @@ public sealed partial class Skanner
                     var tilg = Liste(m, "permissions").Concat(Liste(m, "host_permissions"))
                         .Concat(Liste(m, "content_scripts").SelectMany(cs => Liste(cs, "matches")))
                         .Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!);
-                    VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg);
+                    VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg, idMappe);
                 }
             }
         }
@@ -352,7 +364,8 @@ public sealed partial class Skanner
                 if (Str(a, "type") != "extension" || Str(a, "location") != "app-profile") continue;
                 a.TryGetProperty("defaultLocale", out var dl);
                 var tilg = a.TryGetProperty("userPermissions", out var up) ? Liste(up, "origins").Select(e => e.GetString() ?? "") : Enumerable.Empty<string>();
-                VurderUtvidelse($"Firefox ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg);
+                VurderUtvidelse($"Firefox ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg,
+                    Path.Combine(profil, "extensions", (Str(a, "id") ?? "") + ".xpi"));
             }
         }
     }
@@ -371,7 +384,7 @@ public sealed partial class Skanner
         return tekst;
     }
 
-    private void VurderUtvidelse(string hvor, string? navn, string? beskrivelse, IEnumerable<string> tilganger)
+    private void VurderUtvidelse(string hvor, string? navn, string? beskrivelse, IEnumerable<string> tilganger, string mappe)
     {
         if (string.IsNullOrWhiteSpace(navn)) return;
         bool alleSider = tilganger.Any(t => t == "<all_urls>" || Regex.IsMatch(t, @"^(\*|https?)://\*/\*$"));
@@ -380,14 +393,14 @@ public sealed partial class Skanner
         Funn f;
         var r = FinnRegel(navn, utvidelse: true);
         if (r != null)
-            f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {navn}", r, r.Enkelt, r.Rad);
+            f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {mappe}", r, r.Enkelt, r.Rad);
         else
         {
             var tekst = $" {navn} {beskrivelse} ".ToLowerInvariant();
             if (!_regler.UkjentUtvidelseOrd.Any(tekst.Contains)) return;
             f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
                 "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
-                $"Utvidelse i {hvor}", $"{hvor}: {navn}", rad: "Fjern den hvis du ikke vet hva den gjør.");
+                $"Utvidelse i {hvor}", $"{hvor}: {mappe}", rad: "Fjern den hvis du ikke vet hva den gjør.");
         }
         if (alleSider)
         {
@@ -402,7 +415,7 @@ public sealed partial class Skanner
         foreach (var r in _regler.NettleserInnebygd)
         {
             var rot = Utvid(r.Brukerdata);
-            var modeller = Mapper(rot).Where(d => _regler.InnebygdMappeOrd.Any(o => Path.GetFileName(d).Contains(o, StringComparison.OrdinalIgnoreCase))).ToList();
+            var modeller = Mapper(rot).Where(d => _regler.InnebygdMappeOrd.Any(o => Path.GetFileName(d).Inneholder(o))).ToList();
             long storrelse = modeller.Sum(MappeStorrelse);
             bool harModell = storrelse > 50L * 1024 * 1024;
             var policy = LesPolicy(r.PolicyNokkel, r.PolicyVerdi);
@@ -429,15 +442,14 @@ public sealed partial class Skanner
     {
         try
         {
-            var valg = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
-            return new DirectoryInfo(sti).EnumerateFiles("*", valg).Sum(f => f.Length);
+            return Plattform.Filer(sti).Sum(f => f.Length);
         }
         catch { return 0; }
     }
 
     private static (int Verdi, string Hvor)? LesPolicy(string nokkel, string verdi)
     {
-        if (!OperatingSystem.IsWindows()) return null;
+        if (!Plattform.ErWindows) return null;
         foreach (var (rot, navn) in new[] { (Registry.LocalMachine, "HKLM"), (Registry.CurrentUser, "HKCU") })
         {
             using var k = rot.OpenSubKey(nokkel);

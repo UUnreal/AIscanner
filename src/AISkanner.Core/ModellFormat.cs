@@ -35,7 +35,7 @@ public static class ModellFormat
                 int navnLengde = BitConverter.ToUInt16(hode, 26);
                 fs.Position = 30;
                 var navn = new byte[Math.Min(navnLengde, 512)];
-                fs.ReadExactly(navn);
+                fs.LesAlt(navn);
                 var s = Encoding.UTF8.GetString(navn);
                 if (s.EndsWith("data.pkl") || s.Contains("/data/") || s.EndsWith("/version") || s.EndsWith("/byteorder"))
                     return new Modell("PyTorch", null, null, null, true);
@@ -86,7 +86,7 @@ public static class ModellFormat
         }
         catch { }
         var visning = navn ?? basenavn;
-        if (visning != null && storrelse != null && !visning.Contains(storrelse, StringComparison.OrdinalIgnoreCase)) visning += " " + storrelse;
+        if (visning != null && storrelse != null && !visning.Inneholder(storrelse)) visning += " " + storrelse;
         return new Modell("GGUF", visning, arkitektur, null, false);
     }
 
@@ -123,7 +123,7 @@ public static class ModellFormat
         if (hodeLengde > 20_000_000) return new Modell("safetensors", null, null, null, false);
         fs.Position = 8;
         var buf = new byte[hodeLengde];
-        fs.ReadExactly(buf);
+        fs.LesAlt(buf);
         using var doc = JsonDocument.Parse(buf);
         if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
         long parametre = 0;

@@ -68,7 +68,7 @@ public sealed partial class Skanner
             using (p)
             {
                 var sti = ProsessSti.Hent(p);
-                if (sti == null || p.Id == Environment.ProcessId) continue;
+                if (sti == null || p.Id == Plattform.EgenPid) continue;
                 var mappe = Path.GetDirectoryName(sti);
                 if (mappe == null || ErSystemmappe(mappe) || !sett.Add(mappe)) continue;
                 var motorer = FinnMotorer(mappe, 2);
@@ -88,12 +88,11 @@ public sealed partial class Skanner
         var funnet = new SortedSet<string>();
         try
         {
-            var valg = new EnumerationOptions { RecurseSubdirectories = dybde > 0, MaxRecursionDepth = dybde, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
             int teller = 0;
-            foreach (var fil in Directory.EnumerateFiles(mappe, "*.dll", valg))
+            foreach (var fil in Plattform.Filer(mappe, "*.dll", dybde))
             {
                 if (++teller > 5000) break;
-                var navn = Path.GetFileName(fil);
+                var navn = fil.Name;
                 foreach (var (m, motor) in Motorer) if (m.IsMatch(navn)) funnet.Add(motor);
             }
         }
@@ -114,7 +113,7 @@ public sealed partial class Skanner
         // Kjente produkter får navnet fra regelfila
         var regel = FinnRegel($"{produkt} {exe}");
         var navn = regel?.Navn ?? produkt;
-        bool kjentUtgiver = KjenteUtgivere.Any(u => utgiver.Contains(u, StringComparison.OrdinalIgnoreCase));
+        bool kjentUtgiver = KjenteUtgivere.Any(u => utgiver.Inneholder(u));
         bool fraNedlasting = ErRisikabelPlass(exe);
         // Ukjent = høy risiko. Kjente produkter og store kjente utgivere får lavere.
         var risiko = fraNedlasting ? Risiko.Rod : kjentUtgiver ? Risiko.Gronn : regel != null ? RisikoTekst.Fra(regel.Risiko) : Risiko.Rod;
@@ -123,7 +122,7 @@ public sealed partial class Skanner
             : "Ukjent program med egen AI-motor. Det kan kjøre AI-modeller på PC-en uten at noen vet hva det gjør.";
         var f = regel != null ? FraRegel(regel, "AI-motor", null!) : LeggTil(navn, "Lokal AI", risiko, hvorfor, "AI-motor", null);
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
-        f.Detalj($"{exe}: {string.Join(", ", motorer)}");
+        f.Detalj($"Program: {exe} (AI-motor: {string.Join(", ", motorer)})");
         if (fraNedlasting) f.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
         if (kjorer && f.Bruk == null) f.Bruk = "Kjører nå.";
     }
@@ -135,7 +134,7 @@ public sealed partial class Skanner
     private void LokaleServere()
     {
         var lyttere = TcpTabell.Hent()
-            .Where(l => l.Pid > 4 && l.Pid != Environment.ProcessId && l.Port >= 1024)
+            .Where(l => l.Pid > 4 && l.Pid != Plattform.EgenPid && l.Port >= 1024)
             .Where(l => IPAddress.IsLoopback(l.Adresse) || l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any))
             .GroupBy(l => l.Port).Select(g => g.OrderBy(l => IPAddress.IsLoopback(l.Adresse) ? 1 : 0).First())
             .Take(80).ToList();
@@ -154,7 +153,8 @@ public sealed partial class Skanner
             var f = regel != null ? FraRegel(regel, "AI-server", null!)
                 : LeggTil(navn, "Lokal AI", Risiko.Rod, "Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.", "AI-server", null,
                           rad: "Finn ut hva programmet er. Slå det av hvis du ikke bruker det.");
-            f.Detalj($"Port {l.Port} ({l.Adresse}) svarer som AI-tjeneste. Modeller: {string.Join(", ", modeller.Take(10))}");
+            f.Detalj($"Nettverksport {l.Port} på {l.Adresse}, program: {(sti.Length > 0 ? sti : prosess)}");
+            if (modeller.Count > 0) f.Detalj($"Modeller: {string.Join(", ", modeller.Take(10))}");
             if (modeller.Count > 0) f.Bruk = $"Har {modeller.Count} {(modeller.Count == 1 ? "modell" : "modeller")} lastet: {string.Join(", ", modeller.Take(3))}{(modeller.Count > 3 ? " …" : "")}.";
             if (apen)
             {
@@ -198,19 +198,21 @@ public sealed partial class Skanner
         var navn = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
             if (e.Key is string k && NokkelNavn.IsMatch(k)) navn.Add(k);
-        if (OperatingSystem.IsWindows())
+        if (Plattform.ErWindows)
         {
             using var env = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Environment");
             foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
         }
         // Filer som bare finnes når man har logget inn med en nøkkel (vi sjekker at de finnes, åpner dem ikke)
-        if (File.Exists(Utvid(@"%USERPROFILE%\.cache\huggingface\token"))) navn.Add("Hugging Face-innlogging");
+        var hfToken = Utvid(@"%USERPROFILE%\.cache\huggingface\token");
+        if (File.Exists(hfToken)) navn.Add("Hugging Face-innlogging");
         if (navn.Count == 0) return;
         var f = LeggTil("AI-nøkler lagret på PC-en", "Skygge-AI", Risiko.Gul,
             "Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.", null, null,
             rad: "Fjern nøkler du ikke bruker. På jobb: bruk bare nøkler bedriften har godkjent.");
         f.Bruk = $"{navn.Count} {(navn.Count == 1 ? "nøkkel" : "nøkler")}: {string.Join(", ", navn.Take(4))}{(navn.Count > 4 ? " …" : "")}.";
-        foreach (var n in navn) f.Detalj($"Funnet: {n} (verdien er ikke lest)");
+        foreach (var n in navn)
+            f.Detalj(n == "Hugging Face-innlogging" ? $"Fil: {hfToken} (innholdet er ikke lest)" : $"Miljøvariabel: {n} (verdien er ikke lest)");
     }
 
     // ---------- Gjennomgang av filer: modeller, AI-motorer, Python/Node ----------
@@ -235,7 +237,7 @@ public sealed partial class Skanner
             Utvid(@"%APPDATA%\Microsoft"), Utvid(@"%APPDATA%\Mozilla"),
         };
         var rotter = new List<(string Sti, int Dybde)> { (Utvid("%USERPROFILE%"), 10) };
-        if (OperatingSystem.IsWindows())
+        if (Plattform.ErWindows)
         {
             foreach (var d in DriveInfo.GetDrives())
             {
@@ -253,7 +255,15 @@ public sealed partial class Skanner
                 catch { }
             }
         }
-        foreach (var (rot, dybde) in rotter) Gaa(rot, dybde, ff, hopp, minLengde, frist);
+        // Hver toppmappe gjennomgås parallelt. Diskene er raskest med noen få samtidige lesere.
+        var jobber = new List<(string Sti, int Dybde)>();
+        foreach (var (rot, dybde) in rotter)
+        {
+            GaaFiler(rot, ff, minLengde);
+            foreach (var d in Mapper(rot)) jobber.Add((d, dybde - 1));
+        }
+        Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) },
+            j => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist));
 
         // Modeller
         var modeller = ff.Modeller.OrderByDescending(m => m.Lengde).ToList();
@@ -263,7 +273,7 @@ public sealed partial class Skanner
             var resten = modeller.Skip(15).ToList();
             var f = LeggTil($"Flere AI-modeller ({resten.Count})", "Lokal AI", Risiko.Rod, "Flere AI-modeller ligger lagret på PC-en.", "Disk", null);
             f.Bruk = $"Til sammen {Gb(resten.Sum(x => x.Lengde))}.";
-            foreach (var r in resten) f.Detalj($"{r.Sti} ({r.Modell.Format}, {Gb(r.Lengde)})");
+            foreach (var r in resten) f.Detalj($"Fil: {r.Sti} ({r.Modell.Format}, {Gb(r.Lengde)})");
         }
 
         // AI-motorer i programmer som ikke kjører nå
@@ -280,7 +290,7 @@ public sealed partial class Skanner
             var prosjekt = Prosjektnavn(sti);
             var f = LeggTil($"{sprak}-prosjekt med AI: {prosjekt}", "Skygge-AI (utvikling)", agent ? Risiko.Rod : Risiko.Gul,
                 agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-                sprak, $"{sti}: {string.Join(", ", pakker)}",
+                sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})",
                 rad: agent ? "Sjekk hva agenten har tilgang til, og at den ikke bruker jobbdata uten avtale." : "Ingenting å gjøre hvis du vet hva prosjektet er.");
             f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
         }
@@ -288,7 +298,13 @@ public sealed partial class Skanner
 
     private void Gaa(string mappe, int dybde, FilFunn ff, HashSet<string> hopp, long minLengde, Stopwatch frist)
     {
-        if (dybde < 0 || frist.Elapsed > TimeSpan.FromSeconds(120) || hopp.Contains(mappe)) return;
+        if (dybde < 0 || frist.Elapsed > TimeSpan.FromSeconds(45) || hopp.Contains(mappe)) return;
+        var navn = Path.GetFileName(mappe);
+        if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
+        if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda")) return;
+        if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") return;
+
         IEnumerable<FileSystemInfo> innhold;
         try { innhold = new DirectoryInfo(mappe).EnumerateFileSystemInfos(); } catch { return; }
         try
@@ -298,39 +314,48 @@ public sealed partial class Skanner
                 FileAttributes a;
                 try { a = e.Attributes; } catch { continue; }
                 if ((a & FileAttributes.ReparsePoint) != 0 || (a & Skyfil) != 0) continue;   // aldri last ned skyfiler (OneDrive)
-                if (e is DirectoryInfo d)
-                {
-                    var navn = d.Name;
-                    if (navn is "site-packages" or "dist-packages") { Miljo(d.FullName, PythonAi, "Python", ff); continue; }
-                    if (navn == "node_modules") { Miljo(d.FullName, NodeAi, "Node", ff); continue; }
-                    if (navn.StartsWith('.') && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda")) continue;
-                    if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") continue;
-                    Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
-                }
-                else if (e is FileInfo fil)
-                {
-                    var ext = fil.Extension.ToLowerInvariant();
-                    if (ext == ".dll")
-                    {
-                        foreach (var (m, motor) in Motorer)
-                        {
-                            if (!m.IsMatch(fil.Name)) continue;
-                            if (!ff.Motorer.TryGetValue(mappe, out var s)) ff.Motorer[mappe] = s = new SortedSet<string>();
-                            s.Add(motor);
-                        }
-                        continue;
-                    }
-                    long lengde;
-                    try { lengde = fil.Length; } catch { continue; }
-                    bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
-                    if (lengde < minLengde && !liten) continue;
-                    if (ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") continue;
-                    var modell = ModellFormat.Gjenkjenn(fil.FullName);
-                    if (modell != null) ff.Modeller.Add((fil.FullName, lengde, modell));
-                }
+                if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
+                else if (e is FileInfo fil) SjekkFil(fil, mappe, ff, minLengde);
             }
         }
         catch { }
+    }
+
+    /// <summary>Bare filene i selve mappa (brukes for rotmappene, der undermappene gås gjennom parallelt).</summary>
+    private void GaaFiler(string mappe, FilFunn ff, long minLengde)
+    {
+        FileInfo[] filer;
+        try { filer = new DirectoryInfo(mappe).GetFiles(); } catch { return; }
+        foreach (var fil in filer)
+        {
+            try { if ((fil.Attributes & (FileAttributes.ReparsePoint | Skyfil)) != 0) continue; } catch { continue; }
+            SjekkFil(fil, mappe, ff, minLengde);
+        }
+    }
+
+    private static void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
+    {
+        var ext = fil.Extension.ToLowerInvariant();
+        if (ext == ".dll")
+        {
+            foreach (var (m, motor) in Motorer)
+            {
+                if (!m.IsMatch(fil.Name)) continue;
+                lock (ff)
+                {
+                    if (!ff.Motorer.TryGetValue(mappe, out var s)) ff.Motorer[mappe] = s = new SortedSet<string>();
+                    s.Add(motor);
+                }
+            }
+            return;
+        }
+        long lengde;
+        try { lengde = fil.Length; } catch { return; }
+        bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
+        if (lengde < minLengde && !liten) return;
+        if (ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
+        var modell = ModellFormat.Gjenkjenn(fil.FullName);
+        if (modell != null) lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell));
     }
 
     private static void Miljo(string sti, Dictionary<string, bool> kjente, string sprak, FilFunn ff)
@@ -340,7 +365,7 @@ public sealed partial class Skanner
         foreach (var d in Mapper(sti))
         {
             var navn = Path.GetFileName(d);
-            var kandidater = navn.StartsWith('@') ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
+            var kandidater = navn.StartsWith("@") ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
             foreach (var k in kandidater)
             {
                 if (!kjente.TryGetValue(k, out var erAgent)) continue;
@@ -350,13 +375,13 @@ public sealed partial class Skanner
             }
         }
         if (pakker.Count == 0 || pakker.All(p => p is "ai" or "agents")) return;
-        ff.Miljoer[sti] = (pakker, agent, sprak);
+        lock (ff) ff.Miljoer[sti] = (pakker, agent, sprak);
     }
 
     /// <summary>Gir et forståelig prosjektnavn: mappa over venv/node_modules, ikke "Lib" eller ".venv".</summary>
     private static string Prosjektnavn(string sti)
     {
-        var deler = sti.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        var deler = sti.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
         var stopp = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "site-packages", "dist-packages", "node_modules", "lib", "Lib", ".venv", "venv", "env", "Scripts" };
         for (int i = deler.Length - 1; i >= 0; i--)
             if (!stopp.Contains(deler[i]) && !deler[i].StartsWith("python3", StringComparison.OrdinalIgnoreCase)) return deler[i];
@@ -375,7 +400,7 @@ public sealed partial class Skanner
         var hvorfor = m.KanKjoreKode
             ? "AI-modell i et format som kan kjøre skjult kode når den åpnes."
             : "AI-modell som kan kjøres på PC-en uten internett og uten kontroll.";
-        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"{sti} ({m.Format}, {Gb(lengde)})",
+        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} ({m.Format}, {Gb(lengde)})",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
         var info = new List<string> { Gb(lengde) };
         if (ModellFormat.ParametreTekst(m.Parametre) is { } p) info.Add(p);
@@ -399,9 +424,9 @@ public sealed partial class Skanner
     {
         if (Regex.IsMatch(sti, @"[\\/](Downloads|Nedlastinger)[\\/]", RegexOptions.IgnoreCase)) return "i Nedlastinger";
         if (Regex.IsMatch(sti, @"[\\/](Desktop|Skrivebord)[\\/]", RegexOptions.IgnoreCase)) return "på skrivebordet";
-        if (sti.Contains(".ollama", StringComparison.OrdinalIgnoreCase)) return "i Ollama";
-        if (sti.Contains("lmstudio", StringComparison.OrdinalIgnoreCase) || sti.Contains("lm-studio", StringComparison.OrdinalIgnoreCase)) return "i LM Studio";
-        if (sti.Contains("huggingface", StringComparison.OrdinalIgnoreCase)) return "i Hugging Face-lageret";
+        if (sti.Inneholder(".ollama")) return "i Ollama";
+        if (sti.Inneholder("lmstudio") || sti.Inneholder("lm-studio")) return "i LM Studio";
+        if (sti.Inneholder("huggingface")) return "i Hugging Face-lageret";
         return "i " + (Path.GetFileName(Path.GetDirectoryName(sti)) ?? "en mappe");
     }
 }

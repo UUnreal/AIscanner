@@ -32,7 +32,7 @@ public static class ProsessSti
 
     public static string? Hent(Process p)
     {
-        if (!OperatingSystem.IsWindows() || p.Id <= 4 || Urorlige.Contains(p.ProcessName)) return null;
+        if (!Plattform.ErWindows || p.Id <= 4 || Urorlige.Contains(p.ProcessName)) return null;
         var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
         if (h == IntPtr.Zero) return null;
         try

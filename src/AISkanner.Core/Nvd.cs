@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace AISkanner;
@@ -24,8 +23,8 @@ public static class Nvd
                 var url = "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&keywordSearch=" + Uri.EscapeDataString(ord);
                 using var svar = await Klient.GetAsync(url, ct);
                 svar.EnsureSuccessStatusCode();
-                var json = await svar.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
-                int antall = json.TryGetProperty("totalResults", out var t) ? t.GetInt32() : 0;
+                using var doc = JsonDocument.Parse(await svar.Content.ReadAsStringAsync());
+                int antall = doc.RootElement.TryGetProperty("totalResults", out var t) ? t.GetInt32() : 0;
                 f.Merknad(antall > 0
                     ? $"NVD: {antall} kjente sårbarheter (CVE) nevner \"{ord}\". Hold programmet oppdatert."
                     : $"NVD: ingen kjente sårbarheter funnet for \"{ord}\".");

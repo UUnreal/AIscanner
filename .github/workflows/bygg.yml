@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.x'   # SDK-en bygger både .NET Framework 4.8-programmet og testene
 
       - name: Bygg alt
         run: dotnet build AISkanner.sln -c Release
@@ -30,20 +30,26 @@ jobs:
           if ($LASTEXITCODE -gt 2) { exit 1 }
           Get-Content skann.json | ConvertFrom-Json | Out-Null
 
-      - name: Lag én exe
+      - name: Bygg programmet
         run: dotnet publish src/AISkanner -c Release -o publish
+
+      # Størrelsesgrense: programmet skal være lite, som 7-Zip. Bygget stopper hvis det blir for stort.
+      - name: Sjekk størrelse (maks 10 MB)
+        shell: pwsh
+        run: |
+          $mb = [math]::Round(((Get-ChildItem publish -Recurse -File | Measure-Object Length -Sum).Sum) / 1MB, 2)
+          "Størrelse: $mb MB"
+          if ($mb -gt 10) { Write-Error "For stort: $mb MB (grense 10 MB)"; exit 1 }
 
       - name: SHA256
         shell: pwsh
-        run: Get-FileHash publish/AISkanner.exe -Algorithm SHA256 | Format-List | Tee-Object publish/SHA256.txt
+        run: Get-ChildItem publish -Recurse -File | Get-FileHash -Algorithm SHA256 | Format-Table Hash, Path -AutoSize | Out-String -Width 400 | Tee-Object publish/SHA256.txt
 
       - uses: actions/upload-artifact@v4
         id: last-opp
         with:
           name: AISkanner-usignert
-          path: |
-            publish/AISkanner.exe
-            publish/SHA256.txt
+          path: publish/
 
       # Kodesignering via SignPath Foundation (gratis for åpen kildekode).
       # Slås på når prosjektet er godkjent og SIGNPATH_API_TOKEN er lagt inn som secret.

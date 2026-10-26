@@ -5,8 +5,8 @@ Kartlegger AI-verktøy på én Windows-PC (lokal AI, skygge-AI, nettleser-AI) og
 Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste, ingen persistens, ingen admin-rettigheter.
 
 ## Hvordan den kjører
-`AISkanner.exe` er et frittstående .NET 8-program (mappe med exe og noen få DLL-er). Det pakker ikke ut noe til `%TEMP%`,
-er ikke komprimert, starter ingen skript eller kommandolinjer, og kjører som vanlig bruker (`asInvoker`).
+`AISkanner.exe` er et .NET Framework 4.8-program (følger med Windows 10 og 11). Hele mappa er rundt 2 MB.
+Det installeres ikke, pakker ikke ut noe til `%TEMP%`, er ikke komprimert, starter ingen skript eller kommandolinjer, og kjører som vanlig bruker (`asInvoker`).
 Vinduet vises med Microsoft Edge WebView2 (som nye Outlook og Teams). WebView2 starter sine egne `msedgewebview2.exe`-prosesser
 og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er bygd inn i programmet, laster ingenting fra nett og kan ikke navigere bort.
 
@@ -28,7 +28,7 @@ og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er byg
   - `Preferences` (bare nettstedenes bruksscore, `site_engagement`)
   - mappenavn og størrelse under `IndexedDB` og Firefox `storage\default`
   - **historikk** (`History` og `places.sqlite`), hvis brukeren lar bryteren stå på. Filen åpnes direkte, skrivebeskyttet og uten låser.
-    Den kopieres aldri. Bare vertsnavn som matcher AI-tjenester beholdes i minnet. Fulle adresser og titler beholdes ikke.
+    Den kopieres aldri. Lesingen bruker SQLite-motoren som følger med Windows (`winsqlite3.dll`). Bare vertsnavn som matcher AI-tjenester beholdes i minnet. Fulle adresser og titler beholdes ikke.
     Ingenting fra nettleserdata lagres i rapporten.
 - Policyverdien `GenAILocalFoundationalModelSettings` for Chrome og Edge
 

@@ -16,7 +16,7 @@ public static class TcpTabell
     public static List<Lytter> Hent()
     {
         var liste = new List<Lytter>();
-        if (!OperatingSystem.IsWindows()) return liste;
+        if (!Plattform.ErWindows) return liste;
         Les(AF_INET, liste);
         Les(AF_INET6, liste);
         return liste;
