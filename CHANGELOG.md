@@ -27,6 +27,48 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.13.1] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Sikkerhet
+- **Middels: godkjentlista kunne lures med navn som en angriper styrer.** En ukjent AI-utvidelse fikk typen
+  «Nettleserutvidelse» og ikke «Ukjent AI». En utvidelse som kalte seg det samme som et godkjent produkt, for eksempel
+  «Microsoft 365 Copilot», kunne derfor bli grønn, også med tilgang til alle nettsider. Det samme gjaldt navn på
+  prosjektmapper og modeller i mapper med samme navn som et godkjent domene. Nå godkjennes navn bare når de kommer
+  fra regelsettet eller fra et gjenkjent nettsted, og domener godkjennes bare mot målte forbindelser og nettstedsfunn,
+  aldri mot filstier (`Risikoregler.Godkjent`).
+- Regex i godkjentlista har en tidsgrense på 1 sekund. Den gjelder også `AISkanner.Cli`.
+
+### Rettet
+- Ukjente lokale AI-servere får nå typen «Ukjent AI». Sjekken `k == "AI-server"` i `Risikoregler.Type` slo aldri til
+  og er fjernet. Serverne var røde også før, men som skygge-AI.
+
+## [2.13.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Endret
+- Overskriften teller AI-modeller, og under står nettsteder, utvidelser og apper, for eksempel «N AI-modeller,
+  N AI-nettsteder, N nettleserutvidelser og N AI-apper og agenter» (`Oversikt.Telling`). Samme telling står i rapporten.
+- Rapporten får et eget filnavn med tidspunkt ned til sekundet (`AI-rapport_<PC>_<dato>_<tid>.txt`) og skriver aldri
+  over en rapport som finnes fra før. Da legges (2), (3) osv. til.
+- Toppen av rapporten viser når søket ble kjørt og når rapporten ble laget.
+
+### Lagt til
+- IP-adressene hver forbindelse gikk til (høyst 8 per mål), i detaljvisningen.
+
+## [2.12.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Lagt til
+- Startskjermen har to valg i én knapp: den runde knappen i midten søker som bruker, og ringen rundt søker som
+  administrator. Søk som administrator starter programmet på nytt med Windows' godkjenning (UAC) og gir mer data:
+  datamengde, og programmer som kjører som administrator.
+- Resultatet og rapporten viser om søket ble kjørt som bruker eller som administrator («Søkt som»).
+- Melding når brukeren sier nei i godkjenningen.
+
 ## [2.11.0] - 2026-10-26
 
 Sikkerhetsherding etter en gjennomgang av koden i 2.10. Brukeren ser ingen endring. Ikke testet på Windows.
@@ -47,9 +89,7 @@ Sikkerhetsherding etter en gjennomgang av koden i 2.10. Brukeren ser ingen endri
 - Parserne for GGUF, safetensors, ONNX og pickle er testet med misformede og store filer. De hang ikke og krasjet ikke.
 
 ### Kjente svakheter som ikke er rettet
-- Godkjentlista sammenligner med navn og stier som brukeren selv kan styre. En ukjent AI-utvidelse eller et
-  AI-prosjekt med samme navn som en godkjent AI kan derfor bli grønn (middels). Se
-  [SECURITY.md](SECURITY.md#kjente-svakheter).
+- Godkjentlista sammenlignet med navn og stier som brukeren selv kan styre (middels). Rettet i 2.13.1.
 - Programmet er ikke signert.
 
 ## [2.10.0] - 2026-10-26
@@ -328,7 +368,10 @@ PowerShell-prototype. Utgått.
 - Risikoregler i en egen fil som kan redigeres.
 - Valgfri sjekk av kjente sårbarheter mot NVD. Den sender bare produktnavnet.
 
-[Ikke utgitt]: https://github.com/OWNER/ai-skanner/compare/v2.11.0...HEAD
+[Ikke utgitt]: https://github.com/OWNER/ai-skanner/compare/v2.13.1...HEAD
+[2.13.1]: https://github.com/OWNER/ai-skanner/compare/v2.13.0...v2.13.1
+[2.13.0]: https://github.com/OWNER/ai-skanner/compare/v2.12.0...v2.13.0
+[2.12.0]: https://github.com/OWNER/ai-skanner/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/OWNER/ai-skanner/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/OWNER/ai-skanner/compare/v2.9.1...v2.10.0
 [2.9.1]: https://github.com/OWNER/ai-skanner/compare/v2.9.0...v2.9.1

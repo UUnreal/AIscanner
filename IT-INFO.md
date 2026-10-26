@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.11. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.13.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -8,7 +8,7 @@ står i [SECURITY.md](SECURITY.md).
 - Kartlegger AI på én Windows-PC (lokal AI, skygge-AI og nettleser-AI) og sorterer funnene etter risiko.
 - Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste og ingen persistens.
 - Leser bare. Endrer, sletter og installerer ingenting.
-- Trenger ikke administrator. Bare måling av datamengde ber om det, og bare når brukeren trykker på den.
+- Trenger ikke administrator. Bare søk som administrator ber om det, og bare når brukeren velger det.
 - Sender bare produktord (for eksempel `ollama`) til NVD. Ellers bare `127.0.0.1`.
 - Lagrer ingenting mellom søk.
 
@@ -21,7 +21,7 @@ står i [SECURITY.md](SECURITY.md).
 | Vindu | Microsoft Edge WebView2, som nye Outlook og Teams. Starter egne `msedgewebview2.exe`-prosesser. |
 | Side | Bygget inn i programmet. Laster ingenting fra nett, kan ikke navigere bort, ingen utviklerverktøy. |
 | Utpakking | Ingen. Programmet er ikke komprimert og pakker ingenting ut til `%TEMP%`. |
-| Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt som administrator når brukeren trykker «Mål datamengde». |
+| Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt når brukeren velger å søke som administrator. |
 | DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. |
 
 ## Hva den leser
@@ -139,17 +139,20 @@ PC-navn, brukernavn, stier og funn sendes aldri. Det gjøres ingen DNS-oppslag o
 | Hva | Hvor | Hvor lenge |
 |---|---|---|
 | WebView2-data | `%LOCALAPPDATA%\AISkanner\Vindu-<pid>` | Slettes når programmet lukkes. Rester etter avbrutte kjøringer slettes ved neste start. |
-| Rapport | Der brukeren velger | Bare når brukeren trykker «Last ned rapport» |
+| Rapport | Der brukeren velger, som `AI-rapport_<PC>_<dato>_<tid>.txt`. Skriver aldri over en fil som finnes. | Bare når brukeren trykker «Last ned rapport» |
 
 Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk. Rapporten inneholder nettleserfunn
 bare som nettleser, profil og domenenavn, aldri hele adresser.
 
-## Måling av datamengde (valgfritt, krever administrator)
+## Søk som administrator (valgfritt)
 
 Uten administrator viser skanneren hvor AI-programmene er koblet, men ikke hvor mye de sender. Windows gir ikke
 vanlige brukere tilgang til tellerne.
 
-Når brukeren trykker «Mål datamengde», startes programmet på nytt med vanlig UAC-spørsmål (`runas`, argument `--sok`).
+Startskjermen har to valg: knappen i midten søker som bruker, og ringen rundt søker som administrator. Velger brukeren
+administrator, eller trykker «Mål datamengde» etter et søk, startes programmet på nytt med vanlig UAC-spørsmål
+(`runas`, argument `--sok`). Sier brukeren nei, skjer ingenting annet enn en melding. Resultatet og rapporten viser
+«Søkt som bruker» eller «Søkt som admin». Som administrator ser skanneren også filstien til programmer som kjører som administrator.
 Som administrator slår skanneren på Windows' egne TCP-tellere (`SetPerTcpConnectionEStats`, `TcpConnectionEstatsData`,
 samme som Ressursovervåking) for forbindelsene som er åpne når søket starter. Den leser dem når søket er ferdig
 (`GetPerTcpConnectionEStats`) og slår dem av igjen.
