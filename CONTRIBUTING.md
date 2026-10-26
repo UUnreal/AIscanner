@@ -5,7 +5,7 @@ alle endringer: bare lesing, innhold før navn, ukjent er rødt, ingenting lagre
 
 ## Hva vi gjerne vil ha hjelp med
 
-- **Testing på ekte Windows**, særlig 2.8–2.11. Send rapporten (.txt) og et skjermbilde.
+- **Testing på ekte Windows**, særlig 2.8–2.13. Send rapporten (.txt) og et skjermbilde.
 - **Bekrefte mappenavn** for oppføringer i `leverandorAi` med `bekreftet: false` og for Edges lokale modell.
 - **Nye regler** i `regler.json` (AI-nettsteder, AI-tjenester, modellfamilier) og i `ai-modeller.yar`.
 - **Feilrapporter** med versjon, Windows-versjon og hva du forventet.
@@ -25,7 +25,7 @@ dotnet publish src/AISkanner -c Release -o publish
 
 ## Teste
 
-Prosjektet har ennå ingen enhetstester. Dette er det som finnes:
+Prosjektet har ennå ingen enhetstester i repoet. Dette er det som finnes:
 
 | Test | Kommando | Hvor |
 |---|---|---|
@@ -96,7 +96,7 @@ Endringer bare i `regler.json` eller `ai-modeller.yar` (nye produkter, nettstede
 2. Oppdater `<Version>` i `src/AISkanner/AISkanner.csproj` og `assemblyIdentity version` i `src/AISkanner/app.manifest`.
    (Manifestet står på `2.1.0.0` og er ikke fulgt med siden 2.1.)
 3. Oppdater versjonen og [Status](README.md#status)-tabellen i [README.md](README.md).
-4. Merk utgivelsen: `git tag v2.11.0 && git push origin v2.11.0`.
+4. Merk utgivelsen, for eksempel `git tag v2.13.1 && git push origin v2.13.1`.
 5. Byggeløypa bygger, sjekker størrelsen og laster opp `AISkanner-usignert` med `SHA256.txt`.
 6. Når SignPath er godkjent, signeres utgivelsen etter manuell godkjenning, se [CODE_SIGNING.md](CODE_SIGNING.md).
 7. Legg ved zip-fila og innholdet i `SHA256.txt` i GitHub-utgivelsen.

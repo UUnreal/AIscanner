@@ -30,7 +30,7 @@ En oppføring kan være:
 
 - **Et navn**, skrevet slik det står i skanneren eller rapporten. Både fullt navn og kort navn virker. For
   nettleserutvidelser er kortnavnet uten «(Chrome-utvidelse)».
-- **Et domene**, for eksempel `copilot.microsoft.com`. Det treffer også underdomener. En oppføring regnes som domene
+- **Et domene**, for eksempel `copilot.microsoft.com`. Det treffer også underdomener, men bare i målte forbindelser og nettstedsfunn, ikke i filstier. En oppføring regnes som domene
   når den inneholder punktum og ikke mellomrom.
 
 Regler:
@@ -39,9 +39,9 @@ Regler:
 - Ukjent AI, farlige modellfiler og AI som sender data til høyrisikoland blir 🔴 røde uansett.
 - Oppføringene legges sammen med `godkjentAi` i `regler.json`.
 
-**Bruk eksakte produktnavn og offisielle domener.** Navn og domener sammenlignes med tekst i funnet, og noe av den
-teksten kan brukeren styre, for eksempel navnet på en utvidelse eller en mappe. Se
-[SECURITY.md](../SECURITY.md#kjente-svakheter).
+**Bruk eksakte produktnavn og offisielle domener.** Fra 2.13.1 godkjennes et navn bare når funnet er gjenkjent fra
+`regler.json` eller er et kjent nettsted. En ukjent utvidelse eller mappe som kaller seg det samme som en godkjent AI,
+blir ikke grønn. Et domene godkjennes bare mot forbindelser skanneren har målt, og mot nettstedsfunn.
 
 ## regler.json
 

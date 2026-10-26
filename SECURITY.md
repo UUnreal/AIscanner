@@ -10,8 +10,8 @@ Bare siste versjon får sikkerhetsrettinger.
 
 | Versjon | Støttet |
 |---|---|
-| 2.11.x | Ja |
-| 2.10 og eldre | Nei |
+| 2.13.x | Ja |
+| 2.12 og eldre | Nei |
 | 0.1–0.4 (PowerShell og .NET 8) | Nei, utgått |
 
 ## Melde fra om en sårbarhet
@@ -41,6 +41,7 @@ Vedlikeholder: Jørund. Prosjektet har ingen dusørordning (bug bounty).
 | Ondsinnede filer på disken | Modellfil, utvidelsesmanifest eller SQLite-fil laget for å krasje eller lure parseren | Leser bare begrensede deler (64 byte, metadata-hode, 8 MB + 1 MB for YARA, og hele fila bare hvis den er under 64 MB og en regel trenger det), grenser på størrelse og antall, ingen kodekjøring, misformede filer testet (2.11) |
 | Ondsinnet lokalt program | Lytter på en port og svarer med et enormt eller falskt svar | Maks tre `GET` til `127.0.0.1`, kort tidsgrense, maks 4 MB svar, ingen omdirigering, ingen proxy |
 | Filer ved siden av programmet | Falsk DLL, `explorer.exe` eller regelfil i samme mappe eller arbeidsmappa | Arbeidsmappa er tatt ut av DLL-søket, full sti til Utforsker, 2 s tidsgrense på regex (2.11) |
+| Navn brukeren styrer | Utvidelse eller mappe som kaller seg det samme som en godkjent AI | Godkjenning bare på navn fra regelsettet og domener fra målte forbindelser (2.13.1) |
 | Innhold i resultatet | Utvidelsesnavn eller modellnavn med HTML eller skript | All tekst fra funn escapes (`esc()` i `index.html`) før den vises. Siden er bygget inn, kan ikke navigere bort eller åpne nye vinduer, og utviklerverktøy og høyreklikkmeny er av |
 | Nettverket | Avlytting av NVD-oppslaget | HTTPS, og bare produktord sendes |
 
@@ -84,30 +85,22 @@ hopper over alt annet uten å tolke det, og nuller ut bytene etterpå. Vinduet h
 | Arbeidsmappa er tatt ut av DLL-søket. | `src/AISkanner/Program.cs` |
 | Svar fra lokale porter er begrenset til 4 MB. | `Sanntid.cs` |
 | Språkkoder fra utvidelser valideres før de brukes i stier. | `Skanner.cs` |
-| Regex har en tidsgrense på 2 sekunder. | `src/AISkanner/Program.cs` |
+| Regex har en tidsgrense på 2 sekunder i vinduet, og 1 sekund i godkjentlista (også i kommandolinjen). | `src/AISkanner/Program.cs`, `Risikoregler.cs` |
+| Godkjentlista godtar bare navn fra regelsettet og domener fra målte forbindelser. | `Risikoregler.cs` |
 | Byggeløypa skriver SHA-256 for hver fil. Bygget er deterministisk. | `bygg.yml`, `AISkanner.csproj` |
 
 ## Kjente svakheter
 
-Disse er kjent og ikke rettet i 2.11.
+Disse er kjent og ikke rettet i 2.13.1.
 
 1. **Programmet er ikke signert.** Windows og EDR kan ikke vite at fila kommer fra prosjektet, og en falsk
    `AISkanner.exe` eller DLL i samme mappe kan ikke oppdages. Planen er SignPath Foundation, se
    [CODE_SIGNING.md](CODE_SIGNING.md). Inntil da bør IT godkjenne på SHA-256 fra `SHA256.txt` og legge programmet
    i en mappe vanlige brukere ikke kan skrive til, ikke i Nedlastinger.
-2. **Godkjentlista stoler på navn og tekst som brukeren kan styre** (alvorlighet: middels). Lista virker som den
-   skal for ekte produkter, og den gjør aldri ukjent AI, farlige modellfiler eller data til høyrisikoland grønne.
-   Men `Risikoregler.Godkjent` sammenligner med visningsnavnet og med all tekst i detaljene, og noen av disse kommer
-   fra brukeren selv:
-   - En ukjent AI-utvidelse får typen «Nettleserutvidelse», ikke «Ukjent AI». Hvis utvidelsen kaller seg det samme
-     som en godkjent AI, for eksempel «Microsoft 365 Copilot», blir den grønn. Det gjelder også om den kan lese alle nettsider.
-   - Det samme gjelder et Python- eller Node-prosjekt i en mappe med samme navn som en godkjent AI.
-   - Et godkjent domene matches også mot filstier. En lokal modell med kjent familie som ligger i en mappe som heter
-     for eksempel `m365.cloud.microsoft`, blir grønn.
-
-   Den som skannes, kan altså gjøre egen skygge-AI grønn. Inntil dette er strammet inn, bør IT bruke eksakte
-   produktnavn og bare domener som ikke er lette å gjette. Foreslått retting: godkjenn på regelnavn fra `regler.json`
-   og på domener bare mot målte forbindelser og nettstedsfunn, ikke mot filstier eller navn fra utvidelser.
+2. **Godkjentlista er en tillitsbeslutning IT tar.** Fra 2.13.1 godkjennes navn bare når de kommer fra regelsettet
+   eller et gjenkjent nettsted, og domener bare mot målte forbindelser og nettstedsfunn. Navn fra utvidelser, mapper og
+   filer godtas ikke. Ukjent AI, skygge-AI uten godkjenning, farlige modellfiler og data til høyrisikoland er alltid
+   røde. IT bør likevel bare føre opp eksakte produktnavn og offisielle domener.
 3. **Herdingen av DLL-søk og regex-tidsgrense gjelder bare vinduet** (`AISkanner.exe`), ikke `AISkanner.Cli`. Det er
    med vilje. Kommandolinjen er et verktøy for IT og utrulling i kontrollerte miljøer, ikke noe vanlige brukere laster
    ned og starter fra Nedlastinger. Taket på 4 MB for lokale HTTP-svar gjelder begge.

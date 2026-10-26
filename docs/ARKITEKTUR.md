@@ -126,14 +126,12 @@ lokal modell, lokal AI-app, AI-nøkler og «Skygge-AI» (program som snakker med
 Typer som **beholder risikoen fra trinn 1**: Fra Windows (Recall, Copilot), Fra leverandør, Innebygd i nettleser og IT-regel.
 
 **Ukjent AI**: funn som heter «Ukjent …» eller «Farlig AI-modellfil», leverandør-AI med ukjent eller ubekreftet
-utgiver, modeller der familien er ukjent, og «Mulige AI-nettsteder». Ukjente AI-utvidelser og ukjente lokale
-AI-servere får typen «Nettleserutvidelse» og «Lokal AI-app». De er røde fordi de er skygge-AI, ikke fordi de er ukjente.
+utgiver, modeller der familien er ukjent, ukjente lokale AI-servere («Lokal AI-server (…)») og «Mulige AI-nettsteder».
+Ukjente AI-utvidelser får typen «Nettleserutvidelse» og er røde fordi de er skygge-AI.
 
-> Merk: sjekken `k == "AI-server"` i `Risikoregler.Type` slår aldri til, fordi lokale AI-servere har kategorien
-> `"Lokal AI"` eller kategorien fra regelen. «AI-server» er feltet `hvor`, ikke kategorien.
-
-**Godkjentlista** (`Risikoregler.Godkjent`) matcher på navn, uten forskjell på store og små bokstaver, eller på domene
-mot detaljer og forbindelser. Se [SECURITY.md](../SECURITY.md#kjente-svakheter) for svakheten i dette.
+**Godkjentlista** (`Risikoregler.Godkjent`) matcher på navn bare når navnet kommer fra regelsettet (`f.Regel != null`)
+eller er et gjenkjent nettsted. Domener matches bare mot målte forbindelser, og mot detaljene i nettstedsfunn. Navn fra
+filer, mapper og utvidelsesmanifester godtas aldri, fordi brukeren kan styre dem (rettet i 2.13.1).
 
 **Kommer fra** tas fra utgiveren i signaturen, ellers fra første kjente selskap eller produkt i navnet
 (`selskapsland` i `regler.json`). **Sender data til** er målte forbindelser, tjenestens land og oppslag i DNS-bufferen.
@@ -196,9 +194,10 @@ Vinduet og siden snakker med JSON-meldinger:
 |---|---|---|
 | Side → program | `sok` | Start søk |
 | Side → program | `lagre` | Lagre rapport |
-| Side → program | `admin` | Start på nytt som administrator for å måle datamengde |
+| Side → program | `admin` | Søk som administrator. Starter på nytt med UAC hvis programmet ikke allerede er administrator. |
 | Side → program | `vis` | Åpne `sti` i Utforsker. Stien må stå i et funn. |
-| Program → side | `start` | Siden er lastet |
+| Program → side | `modus` | Om programmet kjører som administrator |
+| Program → side | `start` | Start søket med en gang (etter omstart som administrator) |
 | Program → side | `resultat` | Alle funn og søkeinfo |
 | Program → side | `nvd` | NVD-merknader for ett funn |
 | Program → side | `nvdFerdig` | NVD-oppslaget er ferdig |
