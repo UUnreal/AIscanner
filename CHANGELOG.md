@@ -24,6 +24,8 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
+- `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
+  navn eller domener i filstier. Kjøres ikke i byggeløypa ennå.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
@@ -33,11 +35,13 @@ Ikke testet på Windows.
 
 ### Lagt til
 - **Kart og IP-adresser.** Trykk på en AI etter søket: «Hvor dataene går» viser et verdenskart med landene
-  dataene går til (rødt for høyrisikoland, blått ellers), en nål med antall forbindelser per land, og hver
+  dataene går til (rødt for høyrisikoland, blått ellers), en nål med antall IP-adresser per land, og hver
   IP-adresse med sitt land og datamengde. Kartet er innebygd (Natural Earth via world-atlas, 82 kB) og henter
   ingenting fra nettet. Kartet viser land, ikke by. `verktoy/lag-kart.py` lager kartdataene.
-- IP-adresser bak Cloudflare, Fastly, Amazon CloudFront, Akamai, Azure Front Door og Googles frontservere får ikke
-  noe land. Der står det «Tjenesten skjuler IP-en (bak X)», fordi adressen bare er nærmeste kantserver.
+- **CDN-er.** IP-adresser bak Cloudflare, Fastly og Amazon CloudFront (kjente adresseblokker), og bak Akamai,
+  Azure Front Door og Google (navn i DNS-bufferen), får ikke noe land. Der står det «Tjenesten skjuler IP-en»
+  og hvilken CDN, fordi adressen bare er nærmeste kantserver.
+- Selvtesten (`--selvtest`) kjører i byggeløypa.
 
 ## [2.13.1] - 2026-10-26
 

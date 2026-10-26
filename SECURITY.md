@@ -91,7 +91,7 @@ hopper over alt annet uten å tolke det, og nuller ut bytene etterpå. Vinduet h
 
 ## Kjente svakheter
 
-Disse er kjent og ikke rettet i 2.14.
+Disse er kjent og ikke rettet i 2.13.1.
 
 1. **Programmet er ikke signert.** Windows og EDR kan ikke vite at fila kommer fra prosjektet, og en falsk
    `AISkanner.exe` eller DLL i samme mappe kan ikke oppdages. Planen er SignPath Foundation, se
