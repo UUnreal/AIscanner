@@ -14,7 +14,7 @@ if (args.Length >= 2 && args[0] == "--yara")
 if (args.Length == 2 && args[0] == "--test-server")
 {
     // Intern test: spør én lokal port om den svarer som en AI-tjeneste
-    using var klient = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
+    using var klient = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
     var m = Skanner.Spor(klient, int.Parse(args[1]));
     Console.WriteLine(m == null ? "ikke AI" : "AI: " + string.Join(", ", m));
     return 0;

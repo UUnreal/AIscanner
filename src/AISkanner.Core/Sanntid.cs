@@ -141,7 +141,8 @@ public sealed partial class Skanner
             .Take(80).ToList();
         if (lyttere.Count == 0) return;
 
-        using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(800) };
+        // MaxResponseContentBufferSize: et ondsinnet lokalt program kan ikke svare med et svar på flere GB og spise opp minnet.
+        using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(800), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
         foreach (var l in lyttere)
         {
             var modeller = Spor(klient, l.Port);

@@ -210,7 +210,10 @@ public sealed class Hovedvindu : Form
         sti = sti!.Trim();
         if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
         if (sti == null || (!File.Exists(sti) && !Directory.Exists(sti))) return;
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{sti}\"") { UseShellExecute = false });
+        // Full sti til Windows' egen Utforsker, så en falsk explorer.exe i programmappa eller arbeidsmappa ikke kan kjøres i stedet.
+        var explorer = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+        if (!File.Exists(explorer)) return;
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(explorer, $"/select,\"{sti}\"") { UseShellExecute = false });
     }
 
     /// <summary>

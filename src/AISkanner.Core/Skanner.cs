@@ -395,6 +395,9 @@ public sealed partial class Skanner
         if (tekst == null) return null;
         var m = Regex.Match(tekst, "^__MSG_(.+)__$");
         if (!m.Success) return tekst;
+        // lokale kommer fra utvidelsens egen manifest.json og er ikke til å stole på. Tillat bare vanlige språkkoder,
+        // så den ikke kan peke ut av mappa (f.eks. "..\\..\\") med Path.Combine.
+        if (string.IsNullOrEmpty(lokale) || !Regex.IsMatch(lokale, @"^[A-Za-z0-9_-]{1,35}$")) return tekst;
         using var doc = LesJson(Path.Combine(mappe, "_locales", lokale, "messages.json"));
         if (doc == null || doc.RootElement.ValueKind != JsonValueKind.Object) return tekst;
         foreach (var p in doc.RootElement.EnumerateObject())
