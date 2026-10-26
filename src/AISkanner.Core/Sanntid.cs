@@ -281,7 +281,7 @@ public sealed partial class Skanner
             foreach (var r in resten)
             {
                 var id = ModellGjenkjenning.Finn(r.Modell, r.Sti, _regler, Kildenavn(r.Sti));
-                f.Detalj($"Fil: {r.Sti} ({r.Modell.Format}, {Gb(r.Lengde)}{(id.FamilieTekst != null ? ", " + id.FamilieTekst : "")}, ID {id.Sha256?.Substring(0, 16) ?? id.Fingeravtrykk})");
+                f.Detalj($"Fil: {r.Sti} · {r.Modell.Format} · {Gb(r.Lengde)}{(id.FamilieTekst != null ? " · " + id.FamilieTekst : "")} · ID {id.Sha256?.Substring(0, 16) ?? id.Fingeravtrykk}");
             }
         }
 
@@ -311,7 +311,7 @@ public sealed partial class Skanner
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda")) return;
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker")) return;
         if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") return;
 
         IEnumerable<FileSystemInfo> innhold;
@@ -426,14 +426,17 @@ public sealed partial class Skanner
                        ? $"uten navn ({id.FamilieTekst})" : ollamaBlob ? "Ollama-modell" : filnavn);
         bool farligPlass = ErRisikabelPlass(sti);
         // Modeller i kjente programmer (Ollama, LM Studio, GPT4All, Hugging Face-lageret) er gule. Alle andre er ukjente og røde.
-        bool kjentSted = Regex.IsMatch(sti, @"\.ollama|lmstudio|lm-studio|nomic\.ai|huggingface", RegexOptions.IgnoreCase);
+        bool kjentSted = Regex.IsMatch(sti, @"\.ollama|lmstudio|lm-studio|nomic\.ai|huggingface|\.foundry", RegexOptions.IgnoreCase);
         var risiko = kjentSted && !m.KanKjoreKode ? Risiko.Gul : Risiko.Rod;
         var hvorfor = m.KanKjoreKode
             ? "AI-modell i et format som kan kjøre skjult kode når den åpnes."
             : "AI-modell som kan kjøres på PC-en uten internett og uten kontroll.";
-        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} ({m.Format}, {Gb(lengde)})",
+        DateTime? opprettet = null, endret = null;
+        try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
+        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
 
+        f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
         var info = new List<string>();
         var fam = id.Familie ?? id.NavneFamilie;
         if (id.Familie != null && id.NavneFamilie != null && id.Familie != id.NavneFamilie)

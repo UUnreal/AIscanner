@@ -29,9 +29,11 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
   - `Preferences` (bare nettstedenes bruksscore, `site_engagement`)
   - mappenavn og størrelse under `IndexedDB` og Firefox `storage\default`
   - **historikk** (`History` og `places.sqlite`), hvis brukeren lar bryteren stå på. Filen åpnes direkte, skrivebeskyttet og uten låser.
-    Den kopieres aldri. Lesingen bruker SQLite-motoren som følger med Windows (`winsqlite3.dll`). Bare vertsnavn som matcher AI-tjenester beholdes i minnet. Fulle adresser og titler beholdes ikke.
+    Den kopieres aldri. Lesingen bruker SQLite-motoren som følger med Windows (`winsqlite3.dll`). Bare vertsnavn som matcher AI-tjenester, antall besøk og tidspunkt for første og siste besøk (fra `visits`/`moz_historyvisits`) beholdes i minnet. Fulle adresser og titler beholdes ikke.
     Ingenting fra nettleserdata lagres automatisk. Hvis brukeren selv laster ned tekstrapporten, står nettleserfunn med nettleser, profil og nettstedsnavn (aldri hele adresser).
 - Policyverdien `GenAILocalFoundationalModelSettings` for Chrome og Edge
+- AI-modeller nettleserne laster ned (nytt i 2.4): mappenavn, størrelser og datoer i nettleserdata for Chrome, Edge (alle kanaler), Brave, Vivaldi og Opera,
+  f.eks. `OptGuideOnDeviceModel` (Gemini Nano), `TranslateKit`, `screen_ai`, `SODA`. Ukjente mapper med modellfiler kjennes igjen på de første bytene.
 - **Nettverksforbindelser nå** (nytt i 2.2): etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`).
   Vertsnavn hentes fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme kilde som `ipconfig /displaydns`).
   Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag. Land slås opp i en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).

@@ -427,34 +427,6 @@ public sealed partial class Skanner
     }
 
     // ---------- 8. Innebygd AI i nettleseren ----------
-    private void InnebygdAi()
-    {
-        foreach (var r in _regler.NettleserInnebygd)
-        {
-            var rot = Utvid(r.Brukerdata);
-            var modeller = Mapper(rot).Where(d => _regler.InnebygdMappeOrd.Any(o => Path.GetFileName(d).Inneholder(o))).ToList();
-            long storrelse = modeller.Sum(MappeStorrelse);
-            bool harModell = storrelse > 50L * 1024 * 1024;
-            var policy = LesPolicy(r.PolicyNokkel, r.PolicyVerdi);
-            if (!harModell && policy == null) continue;
-
-            bool blokkert = policy?.Verdi == 1;
-            var hvor = harModell ? $"Modell lastet ned ({Math.Round(storrelse / 1073741824.0, 1)} GB)" : "Ingen modell funnet";
-            var f = LeggTil(r.Navn, "Nettleser-AI (innebygd)", blokkert && !harModell ? Risiko.Gronn : Risiko.Gul, r.HvorforEnkelt ?? r.Hvorfor, hvor, null,
-                            enkelt: r.Enkelt, rad: r.Rad);
-            if (harModell) f.Bruk = $"Modellen er lastet ned ({Math.Round(storrelse / 1073741824.0, 1).ToString(new System.Globalization.CultureInfo("nb-NO"))} GB).";
-            else if (blokkert) f.Bruk = "Blokkert av bedriften.";
-            foreach (var m in modeller) f.Detalj($"Mappe: {m}");
-            if (policy == null) f.Merknad("Ingen bedriftspolicy er satt. Nettleseren bestemmer selv om AI-modellen lastes ned.");
-            else if (blokkert)
-            {
-                f.Merknad($"Bedriftspolicy blokkerer nedlasting ({r.PolicyVerdi}=1, {policy.Value.Hvor}).");
-                if (harModell) f.Merknad("Policy er satt, men modellen ligger fortsatt på disk.");
-            }
-            else f.Merknad($"Bedriftspolicy tillater lokal AI ({r.PolicyVerdi}={policy.Value.Verdi}).");
-        }
-    }
-
     private static long MappeStorrelse(string sti)
     {
         try

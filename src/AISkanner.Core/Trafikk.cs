@@ -131,6 +131,7 @@ public sealed partial class Skanner
                 f.Trafikk.AddRange(liste.Values.OrderByDescending(x => x.Ut ?? 0).ThenByDescending(x => x.Tjeneste != null).ThenByDescending(x => x.Antall).Take(15));
             }
             if (f.Bruk == null) f.Bruk = "Koblet til nettet nå.";
+            f.Tidspunkt(null, DateTime.Now);
             foreach (var m in liste.Values)
             {
                 var land = m.EierLand != null && farlige.Contains(m.EierLand) ? m.EierLand : m.Land;

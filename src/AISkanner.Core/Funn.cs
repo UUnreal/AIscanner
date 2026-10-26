@@ -69,7 +69,21 @@ public sealed class Funn
     }
 
     public void Merknad(string s) { lock (this) if (!Merknader.Contains(s)) Merknader.Add(s); }
-    public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 50) Detaljer.Add(s); }
+    public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 500) Detaljer.Add(s); }
+
+    /// <summary>Første og siste spor etter bruk, når det finnes (besøk, filer endret, forbindelse nå).</summary>
+    public DateTime? Forst { get; set; }
+    public DateTime? Sist { get; set; }
+
+    public void Tidspunkt(DateTime? forst, DateTime? sist)
+    {
+        lock (this)
+        {
+            forst ??= sist;
+            if (forst != null && (Forst == null || forst < Forst)) Forst = forst;
+            if (sist != null && (Sist == null || sist > Sist)) Sist = sist;
+        }
+    }
 }
 
 /// <summary>

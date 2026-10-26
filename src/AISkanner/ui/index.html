@@ -78,33 +78,33 @@
   @keyframes snurr { to { transform: rotate(360deg); } }
 
   /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
-  #resultat { padding: 18px 22px 18px; gap: 14px; max-width: 1240px; width: 100%; margin: 0 auto; }
+  #resultat { padding: 14px 18px 14px; gap: 10px; max-width: 1240px; width: 100%; margin: 0 auto; }
   .topp { display: flex; align-items: center; gap: 12px; flex: none; }
   .topp .tittel { flex: 1; min-width: 0; }
-  .topp h1 { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  .topp h1 { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
   .topp small { color: var(--dempet); font-size: 13px; }
   .knapp { border: 0; border-radius: 12px; padding: 9px 16px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
   .knapp.primar { background: var(--bla); color: #fff; }
   .knapp.sekundar { background: var(--bla-myk); color: var(--bla); }
 
   .fliser { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; flex: none; }
-  .flis { background: var(--kort); border-radius: 14px; box-shadow: var(--skygge); padding: 10px 14px; text-align: left; border: 2px solid transparent; cursor: pointer; min-width: 0; color: inherit; }
+  .flis { background: var(--kort); border-radius: 12px; box-shadow: var(--skygge); padding: 7px 12px; text-align: left; border: 2px solid transparent; cursor: pointer; min-width: 0; color: inherit; }
   .flis:hover { background: var(--fyll); }
   .flis.valgt { border-color: var(--bla); }
-  .flis .tall { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flis .tall { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .flis .tall.liten { font-size: 17px; line-height: 1.75; }
   .flis .etikett { font-size: 12.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .flis.rod .tall { color: var(--rod); } .flis.gul .tall { color: var(--gul-tekst); } .flis.gronn .tall { color: var(--gronn-tekst); }
 
-  .hoved { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.25fr); gap: 14px; }
+  .hoved { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 1fr) minmax(340px, 1.4fr); gap: 10px; }
   .panel { background: var(--kort); border-radius: 16px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
   .liste { flex: 1; min-height: 0; overflow: hidden; }
   .segment { flex: none; display: flex; margin: 10px 10px 6px; background: var(--fyll); border-radius: 9px; padding: 2px; gap: 2px; }
   .segment button { flex: 1; min-width: 0; border: 0; background: none; padding: 5px 4px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--tekst); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .segment button small { color: var(--dempet); font-weight: 400; }
   .segment button.valgt { background: var(--kort); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
-  .seksjon { display: flex; align-items: flex-end; height: 46px; padding: 0 14px 7px; font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--dempet); border-bottom: 1px solid var(--linje); }
-  .rad { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; cursor: pointer; border-bottom: 1px solid var(--linje); }
+  .seksjon { display: flex; align-items: flex-end; height: 42px; padding: 0 14px 7px; font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--dempet); border-bottom: 1px solid var(--linje); }
+  .rad { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 14px; cursor: pointer; border-bottom: 1px solid var(--linje); }
   .rad:hover { background: var(--fyll); }
   .rad.valgt { background: var(--bla-myk); }
   .rad .prikk { width: 12px; height: 12px; border-radius: 50%; flex: none; }
@@ -119,16 +119,27 @@
   .sider button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
   .tom { margin: auto; text-align: center; color: var(--dempet); padding: 24px; }
 
-  .detalj { padding: 16px 18px; gap: 4px; }
+  .detalj { padding: 14px 16px; gap: 2px; }
   .detalj .navnRad { display: flex; align-items: center; gap: 10px; flex: none; }
   .detalj h2 { font-size: 20px; font-weight: 650; letter-spacing: -.01em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .detalj .tilbake { display: none; border: 0; background: none; color: var(--bla); cursor: pointer; font-size: 15px; padding-right: 4px; }
-  .detalj p { color: var(--dempet); flex: none; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .detalj h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin: 12px 0 6px; color: var(--dempet); flex: none; }
-  .detalj ul { list-style: none; display: grid; gap: 5px; flex: none; }
+  .detalj p { color: var(--dempet); flex: none; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .detalj h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin: 10px 0 5px; color: var(--dempet); flex: none; }
+  .detalj ul { list-style: none; display: grid; gap: 4px; flex: none; }
   .detalj li { display: flex; align-items: center; gap: 10px; background: var(--fyll); border-radius: 10px; padding: 6px 10px; min-width: 0; }
   .detalj li.mer { background: none; color: var(--dempet); font-size: 13px; padding: 2px 10px; }
-  .sted span { flex: 1; min-width: 0; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+  .sted > div { flex: 1; min-width: 0; }
+  .sted .l1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .sted .l1 b { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; max-width: 60%; }
+  .sted .l1 small { color: var(--dempet); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .sted .l2 { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+  .rad-tekst { flex: none; font-size: 14px; color: var(--tekst); }
+  .brikker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; flex: none; }
+  .brikker span { background: var(--fyll); border-radius: 20px; padding: 2px 10px; font-size: 12.5px; color: var(--dempet); }
+  .medSider { display: flex; align-items: center; justify-content: space-between; }
+  .sidevalg { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .sidevalg button { border: 0; background: var(--fyll); color: var(--bla); width: 26px; height: 22px; border-radius: 7px; cursor: pointer; font-size: 15px; line-height: 1; }
+  .sidevalg button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
   .ident span { flex: 1; min-width: 0; font-size: 13px; color: var(--tekst); user-select: text; overflow-wrap: anywhere; }
   .ident span b { font-weight: 600; }
   .vis { border: 0; background: none; color: var(--bla); font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
@@ -207,7 +218,7 @@ const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentC
 
 let alle = [], info = {}, filter = null, gruppe = null, side = 0, valgt = null;
 // Fra AI som kjører på PC-en, til nettleseren, til det som ligger skjult
-const GRUPPER = [["lokal", "Lokal AI", "Kjører på PC-en"], ["nettleser", "Nettleser", "AI i nettleseren"], ["skjult", "Skjult på PC", "Apper, agenter og bakgrunnsprogrammer"]];
+const GRUPPER = [["lokal", "Lokal AI", "Kjører på PC-en", "Lokal"], ["nettleser", "Nettleser", "AI i nettleseren", "Nettleser"], ["skjult", "Skjult på PC", "Apper, agenter og bakgrunnsprogrammer", "Skjult"]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
 function visResultat(funn, inf) {
@@ -226,7 +237,7 @@ function visResultat(funn, inf) {
 function tegnSegment() {
   const ant = g => alle.filter(f => f.gruppe === g && passerFilter(f)).length;
   $("segment").innerHTML = `<button data-g="" class="${gruppe ? "" : "valgt"}">Alle</button>` +
-    GRUPPER.map(([id, navn]) => `<button data-g="${id}" class="${gruppe === id ? "valgt" : ""}">${navn} <small>${ant(id)}</small></button>`).join("");
+    GRUPPER.map(([id, navn, forklaring, kort]) => `<button data-g="${id}" title="${forklaring}" class="${gruppe === id ? "valgt" : ""}">${kort} <small>${ant(id)}</small></button>`).join("");
   document.querySelectorAll("#segment button").forEach(b => b.onclick = () => {
     gruppe = b.dataset.g || null; side = 0;
     const synlige = filtrert(); if (!synlige.includes(valgt)) valgt = synlige[0] || null;
@@ -261,21 +272,26 @@ function tegnFliser() {
 const passerFilter = f => !filter || (filter === "nett" ? (f.trafikk || []).length : f.risiko === filter);
 const filtrert = () => alle.filter(f => passerFilter(f) && (!gruppe || f.gruppe === gruppe));
 
-function radeneSomFar() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / 47)); }
+function radeneSomFar() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / 43)); }
 
 function tegnListe() {
   const liste = filtrert();
   $("liste").innerHTML = "";
   if (!liste.length) { $("liste").innerHTML = `<div class="tom">${alle.length ? "Ingen funn her." : "Fant ingen spor etter AI på denne PC-en."}</div>`; $("sider").innerHTML = ""; return; }
   // Under «Alle» får hver gruppe en overskrift
-  const rader = [];
+  const rader = [], per = radeneSomFar();
   liste.forEach((f, i) => {
-    if (!gruppe && (i === 0 || liste[i - 1].gruppe !== f.gruppe)) rader.push({ overskrift: GRUPPER[gruppeNr(f)], antall: liste.filter(x => x.gruppe === f.gruppe).length });
+    if (!gruppe && (i === 0 || liste[i - 1].gruppe !== f.gruppe)) {
+      // En overskrift skal aldri stå alene nederst på en side
+      if (rader.length % per === per - 1) rader.push({ tom: true });
+      rader.push({ overskrift: GRUPPER[gruppeNr(f)], antall: liste.filter(x => x.gruppe === f.gruppe).length });
+    }
     rader.push(f);
   });
-  const per = radeneSomFar(), sider = Math.ceil(rader.length / per);
+  const sider = Math.ceil(rader.length / per);
   side = Math.min(side, sider - 1);
   rader.slice(side * per, side * per + per).forEach(f => {
+    if (f.tom) return;
     const r = document.createElement("div");
     if (f.overskrift) {
       r.className = "seksjon";
@@ -294,8 +310,29 @@ function tegnListe() {
   if (sider > 1) { $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); }; }
 }
 
-function tegnDetalj() {
+let stedSide = 0;
+
+// "Fil: C:\...\x.gguf · GGUF · 4,7 GB · endret …" -> tittel, sti, detaljer
+function delOpp(t) {
+  const deler = t.split(" · "), hode = deler[0], meta = deler.slice(1).join(" · ");
+  const m = hode.match(STI);
+  const i = hode.indexOf(": ");
+  const type = i > 0 ? hode.slice(0, i) : "";
+  if (m) {
+    const sti = m[0].replace(/\\$/, ""), navn = sti.split("\\").pop();
+    return { tittel: navn, under: sti, meta: [type && !/^(Fil|Mappe)$/.test(type) ? type : "", meta].filter(Boolean).join(" · "), sti };
+  }
+  return { tittel: i > 0 ? hode.slice(i + 2) : hode, under: type, meta };
+}
+
+function kortSti(sti, plass) {
+  const maks = Math.max(24, Math.floor(plass / 6.6));
+  return sti.length <= maks ? sti : "…" + sti.slice(sti.length - maks + 1);
+}
+
+function tegnDetalj(beholdSide) {
   const d = $("detalj"), f = valgt;
+  if (!beholdSide) stedSide = 0;
   if (!f) { d.innerHTML = `<div class="tom">${alle.length ? "Velg et funn." : "Ingen AI funnet."}</div>`; return; }
   const mal = f.trafikk || [];
   const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type):?/;
@@ -304,26 +341,63 @@ function tegnDetalj() {
   const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}</span>` +
     `<span class="land ${m.farlig ? "farlig" : ""}">${esc(m.land || "ukjent land")}</span>` +
     `<span class="data">${esc(m.data || (info.dataMalt ? "ikke målt" : m.antall + (m.antall === 1 ? " forbindelse" : " forbindelser")))}</span></li>`;
-  const stedLinje = t => { const m = t.match(STI); return `<li class="sted"><span title="${esc(t)}">${esc(t)}</span>${m && vert ? `<button class="vis" data-sti="${esc(m[0])}">Vis</button>` : ""}</li>`; };
-  d.innerHTML = `<div class="navnRad ${f.risiko}"><button class="tilbake" id="tilbake">‹</button><h2 title="${esc(f.navn)}">${esc(f.navn)}</h2><span class="merke">${MERKE[f.risiko]}</span></div>
-    <p>${esc(f.kort)}</p>
-    ${ident.length ? `<h3>Hvem er modellen</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
-    ${mal.length ? `<h3>Sender til nå</h3><ul id="malListe">${mal.map(malLinje).join("")}</ul>` : ""}
-    ${steder.length ? `<h3>Funnet her</h3><ul id="stedListe">${steder.map(stedLinje).join("")}</ul>` : ""}
-    ${mal.length ? `<div class="kilde">Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).</div>` : ""}`;
-  // Ingen scrolling: vis så mange linjer som får plass, resten står i rapporten
-  for (const id of ["stedListe", "malListe"]) {
-    const ul = $(id); if (!ul) continue;
-    let skjult = 0;
-    while (d.scrollHeight > d.clientHeight + 1 && ul.children.length > 1) { ul.lastElementChild.remove(); skjult++; }
-    if (skjult) {
-      const li = document.createElement("li"); li.className = "mer"; li.textContent = `+ ${skjult} til i rapporten`;
-      ul.appendChild(li);
-      while (d.scrollHeight > d.clientHeight + 1 && ul.children.length > 2) { ul.children[ul.children.length - 2].remove(); li.textContent = `+ ${++skjult} til i rapporten`; }
-    }
-  }
+  const bredde = d.clientWidth - 110;
+  const stedLinje = t => {
+    const s = delOpp(t);
+    return `<li class="sted" title="${esc(t)}"><div><div class="l1"><b>${esc(s.tittel)}</b>${s.meta ? `<small>${esc(s.meta)}</small>` : ""}</div>` +
+      `${s.under ? `<div class="l2">${esc(s.sti ? kortSti(s.under, bredde) : s.under)}</div>` : ""}</div>` +
+      `${s.sti && vert ? `<button class="vis" data-sti="${esc(s.sti)}">Vis</button>` : ""}</li>`;
+  };
+  const tider = [GRUPPER[gruppeNr(f)][1], f.forst ? `Først ${f.forst}` : "", f.sist ? (f.sist === "nå" ? "Aktiv nå" : `Sist ${f.sist}`) : ""].filter(Boolean);
+  const tegn = per => {
+    const sider = Math.max(1, Math.ceil(steder.length / per));
+    stedSide = Math.min(stedSide, sider - 1);
+    const vis = steder.slice(stedSide * per, stedSide * per + per);
+    d.innerHTML = `<div class="navnRad ${f.risiko}"><button class="tilbake" id="tilbake">‹</button><h2 title="${esc(f.navn)}">${esc(f.navn)}</h2><span class="merke">${MERKE[f.risiko]}</span></div>
+      <p>${esc(f.kort)}</p>
+      <div class="brikker">${tider.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+      ${ident.length ? `<h3>Hvem er modellen</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
+      ${mal.length ? `<h3>Sender til nå</h3><ul id="malListe">${mal.map(malLinje).join("")}</ul>` : ""}
+      ${steder.length ? `<h3 class="medSider"><span>Funnet her · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} av ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
+      ${(f.merk || []).length ? `<h3>Merk</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
+      ${f.rad ? `<h3>Hva bør du gjøre</h3><div class="rad-tekst">${esc(f.rad)}</div>` : ""}
+      ${mal.length ? `<div class="kilde">Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).</div>` : ""}`;
+    return d.scrollHeight <= d.clientHeight + 1;
+  };
+  // Ingen scrolling: så mange steder per side som får plass, resten på neste side
+  let per = Math.max(1, steder.length);
+  while (!tegn(per) && per > 1) per--;
+  const ml = $("malListe");
+  while (ml && d.scrollHeight > d.clientHeight + 1 && ml.children.length > 1) ml.lastElementChild.remove();
+  const fs = $("stedForrige"), ns = $("stedNeste");
+  if (fs) fs.onclick = () => { stedSide--; tegnDetalj(true); };
+  if (ns) ns.onclick = () => { stedSide++; tegnDetalj(true); };
   d.querySelectorAll(".vis").forEach(b => b.onclick = () => send({ type: "vis", sti: b.dataset.sti }));
   const t = $("tilbake"); if (t) t.onclick = () => $("hoved").classList.remove("detaljVises");
+}
+
+// Tastatur: piltast opp/ned bytter funn, venstre/høyre blar i stedene
+document.addEventListener("keydown", e => {
+  if (!$("resultat").classList.contains("aktiv")) return;
+  const liste = filtrert(), i = liste.indexOf(valgt);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const ny = liste[Math.min(liste.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];
+    if (ny && ny !== valgt) { valgt = ny; visValgtSide(); tegnListe(); tegnDetalj(); }
+    e.preventDefault();
+  } else if (e.key === "ArrowRight" && $("stedNeste") && !$("stedNeste").disabled) { stedSide++; tegnDetalj(true); }
+  else if (e.key === "ArrowLeft" && $("stedForrige") && !$("stedForrige").disabled) { stedSide--; tegnDetalj(true); }
+});
+
+// Bla listen til siden der det valgte funnet står
+function visValgtSide() {
+  const liste = filtrert(), per = radeneSomFar();
+  let rad = 0;
+  for (let i = 0; i < liste.length; i++) {
+    if (!gruppe && (i === 0 || liste[i - 1].gruppe !== liste[i].gruppe)) rad += rad % per === per - 1 ? 2 : 1;
+    if (liste[i] === valgt) break;
+    rad++;
+  }
+  side = Math.floor(rad / per);
 }
 
 let venter;

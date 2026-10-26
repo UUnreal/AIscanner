@@ -39,6 +39,8 @@ public static class Rapport
             L();
             L($"[{Merke(f.Risiko)}] {f.Navn}");
             L($"  {f.Kort}");
+            if (f.Sist != null)
+                L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
             if (!string.IsNullOrEmpty(f.Rad)) L($"  Råd: {f.Rad}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
             if (f.Trafikk.Count > 0)
