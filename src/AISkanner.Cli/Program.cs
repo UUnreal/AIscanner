@@ -116,6 +116,14 @@ static class Selvtest
         Sjekk("lokal server: type = Ukjent AI", server.Type == "Ukjent AI", true);
         Sjekk("lokal server: forblir rød", server.Risiko == Risiko.Rod, true);
 
+        // CDN: adressen er bare nærmeste kantserver, så den skal ikke få land
+        var ip = (string a) => System.Net.IPAddress.Parse(a);
+        Sjekk("cdn: Cloudflare-adresse", IpLand.Cdn(ip("104.18.32.47")) == "Cloudflare", true);
+        Sjekk("cdn: Fastly-adresse", IpLand.Cdn(ip("151.101.1.140")) == "Fastly", true);
+        Sjekk("cdn: Akamai fra CNAME-kjeden", IpLand.Cdn(ip("23.50.1.1"), new[] { "api.x.com", "e123.a.akamaiedge.net" }) == "Akamai", true);
+        Sjekk("cdn: Cloudflare gir landkode CDN", IpLand.Finn(ip("172.64.155.209")) == "CDN", true);
+        Sjekk("cdn: vanlig adresse er ikke CDN", IpLand.Cdn(ip("101.42.18.7"), new[] { "api.deepseek.com" }) == null, true);
+
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
         return feil == 0 ? 0 : 1;
     }
