@@ -33,34 +33,53 @@ Ikke testet på Windows.
 
 ### Lagt til
 - **Kart og IP-adresser.** Trykk på en AI etter søket: «Hvor dataene går» viser et verdenskart med landene
-  dataene går til (rødt for høyrisikoland, blått ellers), en nål med antall forbindelser per land, og lista over
-  IP-adressene (opptil 8 per tjeneste) med land og datamengde. Kartet er innebygd (Natural Earth via world-atlas,
-  78 kB) og henter ingenting fra nettet. Kartet viser land, ikke by: Cloudflare-adresser vises som «via Cloudflare
-  (sted ukjent)». `verktoy/lag-kart.py` lager kartdataene.
-- Rapporten får alltid et unikt filnavn: `AI-rapport_<PC>_<åååå-MM-dd_TT-mm-ss>`. Finnes fila, legges « (2)» til.
-  Programmet overskriver aldri en fil. Rapporten viser når søket ble kjørt og når rapporten ble laget.
+  dataene går til (rødt for høyrisikoland, blått ellers), en nål med antall forbindelser per land, og hver
+  IP-adresse med sitt land og datamengde. Kartet er innebygd (Natural Earth via world-atlas, 82 kB) og henter
+  ingenting fra nettet. Kartet viser land, ikke by. `verktoy/lag-kart.py` lager kartdataene.
+- IP-adresser bak Cloudflare, Fastly, Amazon CloudFront, Akamai, Azure Front Door og Googles frontservere får ikke
+  noe land. Der står det «Tjenesten skjuler IP-en (bak X)», fordi adressen bare er nærmeste kantserver.
 
 ## [2.13.1] - 2026-10-26
 
+Ikke testet på Windows.
+
 ### Sikkerhet
-- Godkjentlista godkjenner bare navn fra regelsettet og gjenkjente nettsteder, ikke navn fra filer, mapper eller
-  manifester som brukeren styrer. Domener sammenlignes bare med målte forbindelser og nettstedsbevis, ikke filstier.
-  Retter den kjente svakheten fra 2.11.
+- **Middels: godkjentlista kunne lures med navn som en angriper styrer.** En ukjent AI-utvidelse fikk typen
+  «Nettleserutvidelse» og ikke «Ukjent AI». En utvidelse som kalte seg det samme som et godkjent produkt, for eksempel
+  «Microsoft 365 Copilot», kunne derfor bli grønn, også med tilgang til alle nettsider. Det samme gjaldt navn på
+  prosjektmapper og modeller i mapper med samme navn som et godkjent domene. Nå godkjennes navn bare når de kommer
+  fra regelsettet eller fra et gjenkjent nettsted, og domener godkjennes bare mot målte forbindelser og nettstedsfunn,
+  aldri mot filstier (`Risikoregler.Godkjent`).
+- Regex i godkjentlista har en tidsgrense på 1 sekund. Den gjelder også `AISkanner.Cli`.
 
 ### Rettet
-- Ukjente lokale AI-servere får typen «Ukjent AI» (sjekken på «AI-server» var død kode).
+- Ukjente lokale AI-servere får nå typen «Ukjent AI». Sjekken `k == "AI-server"` i `Risikoregler.Type` slo aldri til
+  og er fjernet. Serverne var røde også før, men som skygge-AI.
 
 ## [2.13.0] - 2026-10-26
 
+Ikke testet på Windows.
+
 ### Endret
-- Resultatet sier hvor mange AI-modeller som ble funnet («N AI-modeller funnet»), med AI-nettsteder,
-  nettleserutvidelser og AI-apper talt opp under. Det samme står i rapporten.
+- Overskriften teller AI-modeller, og under står nettsteder, utvidelser og apper, for eksempel «N AI-modeller,
+  N AI-nettsteder, N nettleserutvidelser og N AI-apper og agenter» (`Oversikt.Telling`). Samme telling står i rapporten.
+- Rapporten får et eget filnavn med tidspunkt ned til sekundet (`AI-rapport_<PC>_<dato>_<tid>.txt`) og skriver aldri
+  over en rapport som finnes fra før. Da legges (2), (3) osv. til.
+- Toppen av rapporten viser når søket ble kjørt og når rapporten ble laget.
+
+### Lagt til
+- IP-adressene hver forbindelse gikk til (høyst 8 per mål), i detaljvisningen.
 
 ## [2.12.0] - 2026-10-26
 
-### Endret
-- Startsiden har to valg i én runding: den lille sirkelen søker som bruker, ringen rundt søker som admin
-  (én godkjenning). Kortene under forklarer at admin gir mer data og bruker gir mindre.
+Ikke testet på Windows.
+
+### Lagt til
+- Startskjermen har to valg i én knapp: den runde knappen i midten søker som bruker, og ringen rundt søker som
+  administrator. Søk som administrator starter programmet på nytt med Windows' godkjenning (UAC) og gir mer data:
+  datamengde, og programmer som kjører som administrator.
+- Resultatet og rapporten viser om søket ble kjørt som bruker eller som administrator («Søkt som»).
+- Melding når brukeren sier nei i godkjenningen.
 
 ## [2.11.0] - 2026-10-26
 
@@ -82,9 +101,7 @@ Sikkerhetsherding etter en gjennomgang av koden i 2.10. Brukeren ser ingen endri
 - Parserne for GGUF, safetensors, ONNX og pickle er testet med misformede og store filer. De hang ikke og krasjet ikke.
 
 ### Kjente svakheter som ikke er rettet
-- Godkjentlista sammenligner med navn og stier som brukeren selv kan styre. En ukjent AI-utvidelse eller et
-  AI-prosjekt med samme navn som en godkjent AI kan derfor bli grønn (middels). Se
-  [SECURITY.md](SECURITY.md#kjente-svakheter).
+- Godkjentlista sammenlignet med navn og stier som brukeren selv kan styre (middels). Rettet i 2.13.1.
 - Programmet er ikke signert.
 
 ## [2.10.0] - 2026-10-26
@@ -363,7 +380,10 @@ PowerShell-prototype. Utgått.
 - Risikoregler i en egen fil som kan redigeres.
 - Valgfri sjekk av kjente sårbarheter mot NVD. Den sender bare produktnavnet.
 
-[Ikke utgitt]: https://github.com/OWNER/ai-skanner/compare/v2.11.0...HEAD
+[Ikke utgitt]: https://github.com/OWNER/ai-skanner/compare/v2.13.1...HEAD
+[2.13.1]: https://github.com/OWNER/ai-skanner/compare/v2.13.0...v2.13.1
+[2.13.0]: https://github.com/OWNER/ai-skanner/compare/v2.12.0...v2.13.0
+[2.12.0]: https://github.com/OWNER/ai-skanner/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/OWNER/ai-skanner/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/OWNER/ai-skanner/compare/v2.9.1...v2.10.0
 [2.9.1]: https://github.com/OWNER/ai-skanner/compare/v2.9.0...v2.9.1

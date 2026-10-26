@@ -6,10 +6,10 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.11 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.13.1 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
-- **Status:** testversjon, ikke signert. 2.8–2.11 er ikke kjørt på ekte Windows (se [Status](#status)).
+- **Status:** testversjon, ikke signert. 2.8–2.13.1 er ikke kjørt på ekte Windows (se [Status](#status)).
 
 ## Innhold
 
@@ -51,7 +51,9 @@ For hver AI viser skanneren:
 
 1. Last ned zip-fila og pakk den ut til en mappe.
 2. Start `AISkanner.exe`. Programmet trenger ikke installasjon eller administrator.
-3. Trykk **Søk**. Filgjennomgangen stopper etter 45 sekunder uansett.
+3. Trykk den runde knappen i midten for å søke som bruker, eller ringen rundt for å søke som administrator.
+   Som administrator får du også datamengde og programmer som kjører som administrator, men Windows ber om godkjenning.
+   Søket starter. Filgjennomgangen stopper etter 45 sekunder uansett.
 4. Trykk på en AI for å se detaljer. **Last ned rapport** lagrer en tekstfil (.txt) som åpnes i Notisblokk.
 
 Krav: .NET Framework 4.8 og Microsoft Edge WebView2 Runtime. Begge følger med Windows 10 og 11.
@@ -77,7 +79,7 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
 ## Personvern og sikkerhet
 
 - **Leser bare.** Programmet endrer, sletter og installerer ingenting. Det kjører som vanlig bruker (`asInvoker`).
-  Bare måling av datamengde ber om administrator, og bare når du trykker på den.
+  Bare søk som administrator ber om det, og bare når du velger det.
 - **Starter ingen skript eller kommandolinjer**, og pakker seg ikke ut til `%TEMP%`.
 - **Åpner aldri** passord, informasjonskapsler, `Web Data`, lommebøker i nettleseren eller verdien av API-nøkler.
   Det håndheves i koden (`Skanner.LovligeFiler`).
@@ -162,7 +164,7 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 | Vindu (WebView2) | Kjørt på Windows i 2.3, 2.5 og 2.7. Tabellvisningen fra 2.8 og 2.10 er bare testet i nettleser med eksempeldata. |
 | YARA-motor | Testet mot YARA 4.5.4 med 134 regler, uten avvik. |
 | NVD-oppslag | Ikke testet, fordi byggemiljøet stenger for nettet. |
-| Datamengde (admin og UAC) | Ikke testet på Windows. |
+| Søk som admin, datamengde og UAC | Ikke testet på Windows. |
 | Edge-modellmappe og `leverandorAi` med `bekreftet: false` | Mappenavnene er antatt, ikke sjekket på en ekte PC. |
 | Kodesignering | Ikke på plass. Planen er SignPath Foundation ([CODE_SIGNING.md](CODE_SIGNING.md)). |
 
