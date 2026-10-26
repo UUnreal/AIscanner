@@ -18,6 +18,11 @@ public sealed class Hovedvindu : Form
     private Skanner? _skanner;
     private bool _soker;
     private CancellationTokenSource? _nvdStopp;
+    // Språk: følger Windows til brukeren trykker på et flagg. Lagres ikke mellom kjøringer.
+    private bool _engelsk = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("nb" or "nn" or "no");
+    private bool _vist;
+    private double _sekunder;
+    private string _nvdStatus = "av";
     private readonly string[] _args;
 
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -74,7 +79,7 @@ public sealed class Hovedvindu : Form
         // Siden får vite om vi kjører som administrator, så startknappene viser riktig valg
         w.NavigationCompleted += (_, _) =>
         {
-            Send(new { type = "modus", admin = Nettverk.ErAdmin() });
+            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no" });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
 
@@ -134,6 +139,12 @@ public sealed class Hovedvindu : Form
             else StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         }
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
+        else if (type == "sprak" && m.TryGetProperty("sprak", out var sp))
+        {
+            // Bytter språk uten nytt søk: samme funn sendes på nytt, oversatt
+            _engelsk = sp.GetString() == "en";
+            if (_vist && !_soker) SendResultat(behold: true);
+        }
     }
 
     private async Task SokAsync(bool nvd, bool historikk)
@@ -146,60 +157,14 @@ public sealed class Hovedvindu : Form
             _skanner = new Skanner(_regler, historikk);
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _resultat = await Task.Run(() => _skanner.KjorAsync(false));
-            var farlige = new HashSet<string>(_regler.HoyrisikoLand, StringComparer.OrdinalIgnoreCase);
-            long sendt = _resultat.SelectMany(f => f.Trafikk).Sum(m => m.Ut ?? 0);
-            Send(new
-            {
-                type = "resultat",
-                info = new
-                {
-                    sekunder = klokke.Elapsed.TotalSeconds,
-                    dataMalt = _skanner.DataMalt,
-                    maleSekunder = _skanner.MaleSekunder,
-                    sendtTekst = Rapport.Storrelse(sendt),
-                    nvd = nvd ? "sjekker" : "av",
-                    admin = Nettverk.ErAdmin(),
-                    telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper } : null,
-                },
-                funn = _resultat.Select(f => new
-                {
-                    risiko = f.Risiko.ToString().ToLowerInvariant(),
-                    gruppe = f.Gruppe,
-                    forst = f.Forst != null && f.Sist != null && f.Forst.Value.Date != f.Sist.Value.Date ? Skanner.Tid(f.Forst) : null,
-                    sist = f.Sist == null ? null : (DateTime.Now - f.Sist.Value).TotalMinutes < 2 ? "nå" : Skanner.Tid(f.Sist),
-                    navn = f.Navn,
-                    kortnavn = Oversikt.Navn(f),
-                    punkt = Oversikt.Punkt(f),
-                    lokasjon = Oversikt.Lokasjon(f),
-                    type = f.Type,
-                    grunn = f.RisikoGrunn,
-                    kommerFra = f.OpprinnelseLand == null ? null : IpLand.Navn(f.OpprinnelseLand),
-                    selskap = f.Opprinnelse,
-                    kommerFraFarlig = f.OpprinnelseLand != null && farlige.Contains(f.OpprinnelseLand),
-                    senderTil = Risikoregler.SenderTil(f).Select(k => new { land = IpLand.Navn(k), kode = k, farlig = farlige.Contains(k) }),
-                    ingenLand = Risikoregler.IngenLand(f),
-                    kort = f.Kort,
-                    merk = f.Advarsler.Skip(1).Concat(f.Merknader).ToList(),
-                    steder = f.Detaljer,
-                    trafikk = f.Trafikk.Select(m => new
-                    {
-                        adresse = m.Adresse,
-                        tjeneste = m.Tjeneste,
-                        landKode = m.Land,
-                        cdn = m.Cdn,
-                        ip = m.Ip.Select(x => new { ip = x.Ip, kode = x.Land, cdn = x.Cdn, land = x.Cdn != null ? $"skjult bak {x.Cdn}" : IpLand.Navn(x.Land), farlig = x.Land != null && farlige.Contains(x.Land) }),
-                        tilLand = m.Land == "LAN" ? null : IpLand.Navn(m.EierLand ?? (m.Land == "CDN" ? null : m.Land)),
-                        land = m.Land == "CDN" ? $"Skjult bak {m.Cdn ?? "CDN"}" : IpLand.Navn(m.Land),
-                        farlig = (m.Land != null && farlige.Contains(m.Land)) || (m.EierLand != null && farlige.Contains(m.EierLand)),
-                        antall = m.Antall,
-                        data = m.Ut == null ? null : $"↑ {Rapport.Storrelse(m.Ut.Value)}  ↓ {Rapport.Storrelse(m.Inn ?? 0)}",
-                    }),
-                }),
-            });
+            _sekunder = klokke.Elapsed.TotalSeconds;
+            _nvdStatus = nvd ? "sjekker" : "av";
+            _vist = true;
+            SendResultat(behold: false);
         }
         catch (Exception e)
         {
-            Send(new { type = "feil", tekst = "Søket stoppet: " + e.Message });
+            Send(new { type = "feil", tekst = (_engelsk ? "The scan stopped: " : "Søket stoppet: ") + e.Message });
             return;
         }
         finally { _soker = false; }
@@ -209,10 +174,71 @@ public sealed class Hovedvindu : Form
         try
         {
             await Nvd.SjekkAsync(_resultat, null, stopp.Token,
-                f => Send(new { type = "nvd", navn = f.Navn, merk = f.Advarsler.Skip(1).Concat(f.Merknader).ToList() }));
+                f => Send(new { type = "nvd", id = _resultat.IndexOf(f), merk = f.Advarsler.Skip(1).Concat(f.Merknader).Select(x => _engelsk ? Engelsk.Til(x) : x).ToList() }));
+            _nvdStatus = "ferdig";
             Send(new { type = "nvdFerdig" });
         }
         catch { }
+    }
+
+    /// <summary>Sender funnene til vinduet på valgt språk. Brukes etter søket og når brukeren bytter språk.</summary>
+    private void SendResultat(bool behold)
+    {
+        string? T(string? s) => _engelsk ? Engelsk.Til(s) : s;
+        var farlige = new HashSet<string>(_regler.HoyrisikoLand, StringComparer.OrdinalIgnoreCase);
+        long sendt = _resultat.SelectMany(f => f.Trafikk).Sum(m => m.Ut ?? 0);
+        Send(new
+        {
+            type = "resultat",
+            behold,
+            info = new
+            {
+                sekunder = _sekunder,
+                dataMalt = _skanner.DataMalt,
+                maleSekunder = _skanner.MaleSekunder,
+                sendtTekst = T(Rapport.Storrelse(sendt)),
+                nvd = _nvdStatus,
+                admin = Nettverk.ErAdmin(),
+                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper } : null,
+            },
+            funn = _resultat.Select((f, id) => new
+            {
+                id,
+                risiko = f.Risiko.ToString().ToLowerInvariant(),
+                gruppe = f.Gruppe,
+                forst = f.Forst != null && f.Sist != null && f.Forst.Value.Date != f.Sist.Value.Date ? T(Skanner.Tid(f.Forst)) : null,
+                sist = f.Sist == null ? null : (DateTime.Now - f.Sist.Value).TotalMinutes < 2 ? T("nå") : T(Skanner.Tid(f.Sist)),
+                naa = f.Sist != null && (DateTime.Now - f.Sist.Value).TotalMinutes < 2,
+                navn = T(f.Navn),
+                kortnavn = T(Oversikt.Navn(f)),
+                punkt = T(Oversikt.Punkt(f)),
+                lokasjon = T(Oversikt.Lokasjon(f)),
+                type = T(f.Type),
+                grunn = T(f.RisikoGrunn),
+                kommerFra = f.OpprinnelseLand == null ? null : T(IpLand.Navn(f.OpprinnelseLand)),
+                selskap = T(f.Opprinnelse),
+                kommerFraFarlig = f.OpprinnelseLand != null && farlige.Contains(f.OpprinnelseLand),
+                senderTil = Risikoregler.SenderTil(f).Select(k => new { land = T(IpLand.Navn(k)), kode = k, farlig = farlige.Contains(k) }),
+                ingenLand = T(Risikoregler.IngenLand(f)),
+                lokalt = Risikoregler.IngenLand(f).StartsWith("Ingen", StringComparison.Ordinal),
+                kort = T(f.Kort),
+                merk = f.Advarsler.Skip(1).Concat(f.Merknader).Select(T).ToList(),
+                steder = f.Detaljer.Select(T).ToList(),
+                trafikk = f.Trafikk.Select(m => new
+                {
+                    adresse = m.Adresse,
+                    tjeneste = T(m.Tjeneste),
+                    landKode = m.Land,
+                    cdn = m.Cdn,
+                    ip = m.Ip.Select(x => new { ip = x.Ip, kode = x.Land, cdn = x.Cdn, land = T(x.Cdn != null ? $"skjult bak {x.Cdn}" : IpLand.Navn(x.Land)), farlig = x.Land != null && farlige.Contains(x.Land) }),
+                    tilLand = m.Land == "LAN" ? null : T(IpLand.Navn(m.EierLand ?? (m.Land == "CDN" ? null : m.Land))),
+                    land = T(m.Land == "CDN" ? $"Skjult bak {m.Cdn ?? "CDN"}" : IpLand.Navn(m.Land)),
+                    farlig = (m.Land != null && farlige.Contains(m.Land)) || (m.EierLand != null && farlige.Contains(m.EierLand)),
+                    antall = m.Antall,
+                    data = m.Ut == null ? null : T($"↑ {Rapport.Storrelse(m.Ut.Value)}  ↓ {Rapport.Storrelse(m.Inn ?? 0)}"),
+                }),
+            }),
+        });
     }
 
     /// <summary>Åpner Utforsker med fila eller mappa markert. Bare stier som faktisk står i et funn godtas.</summary>
@@ -246,7 +272,7 @@ public sealed class Hovedvindu : Form
         catch (System.ComponentModel.Win32Exception)
         {
             // Brukeren sa nei i Windows sin godkjenning
-            Send(new { type = "feil", tekst = "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen." });
+            Send(new { type = "feil", tekst = _engelsk ? "Admin was not approved. Scan as user, or try again." : "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen." });
         }
     }
 
@@ -254,14 +280,14 @@ public sealed class Hovedvindu : Form
     {
         using var dlg = new SaveFileDialog
         {
-            Filter = "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json",
+            Filter = _engelsk ? "Report (*.txt)|*.txt|Data for IT (*.json)|*.json" : "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json",
             // Tidsstempel med sekunder, så hver rapport får et eget navn
-            FileName = $"AI-rapport_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}",
+            FileName = $"{(_engelsk ? "AI-report" : "AI-rapport")}_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
             OverwritePrompt = false,
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat, _skanner) : Rapport.Tekst(_resultat, _skanner);
+        var innhold = dlg.FilterIndex == 2 ? (_engelsk ? Engelsk.Json(Rapport.Json(_resultat, _skanner)) : Rapport.Json(_resultat, _skanner)) : Rapport.Tekst(_resultat, _skanner, _engelsk);
         // Skriver aldri over en rapport som finnes: legg til (2), (3) ...
         var sti = dlg.FileName;
         for (int n = 2; File.Exists(sti); n++)

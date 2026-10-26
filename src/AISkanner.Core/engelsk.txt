@@ -1,0 +1,788 @@
+# Engelsk oversettelse av tekstene skanneren lager. Format: norsk|english
+# Lengste tekst vinner. Linjer som starter med ~ er regulære uttrykk (mønster|erstatning) og kjøres først.
+# Stier (C:\...) og nettadresser oversettes aldri. Ord som mangler her, står igjen på norsk.
+
+# ---------- Mønstre: datoer og tall ----------
+~(\d{1,2})\. jan\.? (\d{4})|$1 Jan $2
+~(\d{1,2})\. feb\.? (\d{4})|$1 Feb $2
+~(\d{1,2})\. mars? ?\.? (\d{4})|$1 Mar $2
+~(\d{1,2})\. apr\.? (\d{4})|$1 Apr $2
+~(\d{1,2})\. mai\.? (\d{4})|$1 May $2
+~(\d{1,2})\. juni?\.? (\d{4})|$1 Jun $2
+~(\d{1,2})\. juli?\.? (\d{4})|$1 Jul $2
+~(\d{1,2})\. aug\.? (\d{4})|$1 Aug $2
+~(\d{1,2})\. sep[t]?\.? (\d{4})|$1 Sep $2
+~(\d{1,2})\. okt\.? (\d{4})|$1 Oct $2
+~(\d{1,2})\. nov\.? (\d{4})|$1 Nov $2
+~(\d{1,2})\. des\.? (\d{4})|$1 Dec $2
+~(\d{1,2})\. (januar|februar|mars|april|mai|juni|juli|august|september|oktober|november|desember)\b|$1 $2
+~(\d{4}) kl\. (\d\d:\d\d)|$1 $2
+~\bkl\. (\d\d:\d\d)|at $1
+~(\d),(\d)|$1.$2
+~(\d) mrd\. parametre|$1 billion parameters
+~(\d) mill\. parametre|$1 million parameters
+
+# ---------- Måneder alene ----------
+januar|January
+februar|February
+mars|March
+april|April
+juni|June
+juli|July
+august|August
+september|September
+oktober|October
+november|November
+desember|December
+
+# ---------- Risiko og grupper ----------
+Høy risiko|High risk
+Middels risiko|Medium risk
+Lav risiko|Low risk
+🔴 HØY|🔴 HIGH
+🟡 MIDDELS|🟡 MEDIUM
+🟢 LAV|🟢 LOW
+🔴 høy risiko:|🔴 high risk:
+🟡 middels:|🟡 medium:
+🟢 lav:|🟢 low:
+Lokal AI (kjører på PC-en)|Local AI (runs on the PC)
+Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)|Hidden on the PC (apps, agents and background programs)
+Nettleser|Browser
+Lokal AI|Local AI
+Lokal|Local
+Skjult|Hidden
+
+# ---------- Typer ----------
+Godkjent av IT|Approved by IT
+IT-regel|IT rule
+Ukjent AI-nettsted|Unknown AI website
+Ukjent AI-agent|Unknown AI agent
+Ukjent AI-utvidelse|Unknown AI extension
+Ukjent AI-modell|Unknown AI model
+Ukjent AI i nettleseren|Unknown AI in the browser
+Ukjent AI|Unknown AI
+Innebygd i nettleser|Built into browser
+Fra leverandør|From vendor
+Fra Windows|From Windows
+AI-nettsted|AI website
+Nettleserutvidelse|Browser extension
+AI-agent|AI agent
+AI i kode|AI in code
+AI i kodeeditor|AI in code editor
+Nettleserflagg|Browser flag
+AI-nøkler|AI keys
+AI-app|AI app
+Lokal modell|Local model
+Lokal AI-app|Local AI app
+Lokal AI-server|Local AI server
+Skygge-AI|Shadow AI
+Lokal AI (modell)|Local AI (model)
+Innebygd AI fra leverandør (nettleser)|Built-in AI from vendor (browser)
+Innebygd AI fra leverandør|Built-in AI from vendor
+Nettleser-AI (nettsted)|Browser AI (website)
+Skygge-AI (agent)|Shadow AI (agent)
+Skygge-AI (utvikling)|Shadow AI (development)
+Skygge-AI (nettleserflagg)|Shadow AI (browser flag)
+Regler fra IT|Rules from IT
+Ingen · lokalt|None · local
+Ikke sett|Not seen
+
+# ---------- Telling ----------
+AI-modeller funnet|AI models found
+1 AI-modell funnet|1 AI model found
+AI-modeller|AI models
+AI-modell|AI model
+AI-nettsteder|AI websites
+nettleserutvidelser|browser extensions
+nettleserutvidelse|browser extension
+AI-apper og agenter|AI apps and agents
+AI-app eller agent|AI app or agent
+
+# ---------- Rapport ----------
+Skanneren finner kjente spor. Forbindelser vises bare mens programmene er åpne, og et tomt resultat betyr ikke at PC-en er fri for AI.|The scanner finds known traces. Connections are only visible while the programs are open, and an empty result does not mean the PC is free of AI.
+Søket kjørt:|Scan run:
+Rapport laget:|Report created:
+Søkt som:|Scanned as:
+Funn i lista:|Findings in the list:
+Funnet:|Found:
+Datamengde: målt av Windows i|Data volume: measured by Windows for
+sekunder under søket.|seconds during the scan.
+Datamengde: ikke målt (krever at programmet kjøres som administrator).|Data volume: not measured (requires running the program as administrator).
+Søketid:|Scan time:
+sekunder|seconds
+tregest:|slowest:
+YARA-regler for AI-modeller:|YARA rules for AI models:
+innebygde|built-in
+AI-regler fra IT: ingen funnet.|AI rules from IT: none found.
+AI-regler fra IT|AI rules from IT
+Ingen funn.|No findings.
+Tid: først|Time: first
+Sender til nå:|Sending to now:
+Funnet her:|Found here:
+Land for IP-adresser: IP to Country Lite fra DB-IP.com (CC BY 4.0). For store skytjenester viser landet hvor serveren står.|Country for IP addresses: IP to Country Lite from DB-IP.com (CC BY 4.0). For large cloud services the country shows where the server is.
+tjenesten skjuler IP-en|the service hides the IP
+server i|server in
+selskap i|company in
+forbindelser|connections
+forbindelse|connection
+sendt|sent
+mottatt|received
+administrator|administrator
+Søkt som: bruker|Scanned as: user
+Søkt som: administrator|Scanned as: administrator
+Bruker|Uses
+AI-RAPPORT|AI REPORT
+Oversikt|Overview
+Risiko|Risk
+Ligger her|Located here
+Sender data til|Sends data to
+Kommer fra|Comes from
+Hvorfor|Why
+Type|Type
+
+# ---------- IT-regler ----------
+Windows Copilot: slått av|Windows Copilot: turned off
+Windows Recall: skjermbilder slått av|Windows Recall: screenshots turned off
+Klikk for å gjøre (Click to Do): slått av|Click to Do: turned off
+Copilot i Edge-sidepanelet: slått av|Copilot in the Edge sidebar: turned off
+Copilot i Edge-sidepanelet: tillatt|Copilot in the Edge sidebar: allowed
+Copilot i Edge kan ikke lese nettsiden|Copilot in Edge cannot read the web page
+Copilot i Edge kan lese nettsiden|Copilot in Edge can read the web page
+AI-modell i Edge: blokkert|AI model in Edge: blocked
+AI-modell i Edge: tillatt|AI model in Edge: allowed
+Gemini Nano i Chrome: blokkert|Gemini Nano in Chrome: blocked
+Gemini Nano i Chrome: tillatt|Gemini Nano in Chrome: allowed
+Gemini i Chrome: slått av|Gemini in Chrome: turned off
+Gemini i Chrome: tillatt|Gemini in Chrome: allowed
+AI-funksjoner i Chrome: slått av|AI features in Chrome: turned off
+AI-funksjoner i Chrome: tillatt|AI features in Chrome: allowed
+Copilot i Office: slått av|Copilot in Office: turned off
+IT har satt regler for innebygd AI på denne PC-en.|IT has set rules for built-in AI on this PC.
+Ingenting å gjøre. Reglene viser hva bedriften har bestemt.|Nothing to do. The rules show what the company has decided.
+Regel:|Rule:
+regler|rules
+Regler|Rules
+
+# ---------- Steder og detaljer ----------
+Fil:|File:
+Mappe:|Folder:
+Utgiver: ukjent|Publisher: unknown
+Utgiver:|Publisher:
+Ukjent utgiver|Unknown publisher
+Utgiver ikke bekreftet|Publisher not verified
+filinfo, ikke bekreftet med signatur|file info, not verified by signature
+ikke bekreftet|not verified
+mappe beskyttet av Windows|folder protected by Windows
+Windows-pakke|Windows package
+Gjenkjent som:|Identified as:
+Gjenkjent som|Identified as
+Familie ukjent|Family unknown
+av ukjent familie|of unknown family
+Modell-ID (SHA-256, lik på alle PC-er):|Model ID (SHA-256, same on every PC):
+Modell-ID (fingeravtrykk, likt på alle PC-er):|Model ID (fingerprint, same on every PC):
+Modell-ID|Model ID
+arkitektur|architecture
+ordforråd|vocabulary
+ord|tokens
+lag|layers
+bredde|width
+sikker|certain
+sannsynlig|likely
+mulig|possible
+bygget på|based on
+laget fra|made from
+laget med|made with
+bare navnet|name only
+lastet ned|downloaded
+lagt inn|installed
+endret|modified
+oppdatert|updated
+innholdet er ikke lest|contents not read
+verdien er ikke lest|value not read
+historikk|history
+besøk|visits
+første|first
+sist|last
+Først|First
+Sist|Last
+Aktiv nå|Active now
+i bruk:|in use:
+Program som kjører:|Running program:
+Program som kjører|Running program
+Installert program|Installed program
+Installert som app|Installed as app
+Starter automatisk som tjeneste.|Starts automatically as a service.
+Starter med Windows|Starts with Windows
+Starter automatisk når PC-en slås på.|Starts automatically when the PC is turned on.
+Har en planlagt oppgave i Windows.|Has a scheduled task in Windows.
+Mappe på disk|Folder on disk
+Kommando i terminal|Command in terminal
+Utvidelse i kodeeditor|Extension in code editor
+Editor-utvidelse:|Editor extension:
+Lytter på nettverksport|Listening on network port
+Nettverksport|Network port
+er åpen mot nettverket|is open to the network
+lytter bare lokalt (OK).|listens locally only (OK).
+Port|Port
+program:|program:
+Utvidelse i|Extension in
+Registrert i Windows|Registered in Windows
+Registeret: lenker som starter med|Registry: links starting with
+åpner|opens
+Registeret: åpner|Registry: opens
+-filer:|files:
+Registeret: kan startes som|Registry: can be started as
+Registeret: høyreklikkmeny|Registry: right-click menu
+Program for AI-modeller:|Program for AI models:
+Miljøvariabel:|Environment variable:
+Windows har nylig slått opp:|Windows recently looked up:
+Windows har nylig|Windows recently
+AI-API:|AI API:
+AI-motor:|AI engine:
+Modeller:|Models:
+Til sammen|In total
+uten navn|unnamed
+Og|And
+modellfiler til i|more model files in
+i Nedlastinger|in Downloads
+på skrivebordet|on the desktop
+i Ollama|in Ollama
+i LM Studio|in LM Studio
+i Hugging Face-lageret|in the Hugging Face cache
+en mappe|a folder
+i arkiv|in archive
+i prosjekt|in project
+Nedlastinger|Downloads
+Skrivebord|Desktop
+Dokumenter|Documents
+Programfiler|Program Files
+ukjent program|unknown program
+Ukjent modell|Unknown model
+Kjent modell|Known model
+Ukjent|Unknown
+ukjent|unknown
+Ingen|None
+Fra|From
+og|and
+eller|or
+i|in
+på|on
+av|of
+fra|from
+til|to
+med|with
+nå|now
+
+# ---------- Punkt (tre ord) ----------
+Skjult kode|Hidden code
+AI slått på manuelt|AI turned on manually
+Slått på manuelt|Turned on manually
+Sender til|Sends to
+Data til|Data to
+AI-API åpent|AI API open
+Laget i Kina|Made in China
+Kjører nå|Running now
+Kjører lokalt|Runs locally
+Brukt i nettleser|Used in browser
+Bilder|Photos
+Bilder (Photos)|Photos
+Utklippsverktøy|Snipping Tool
+
+# ---------- Leverandør og lokale programmer ----------
+-prosjekt med AI:|project with AI:
+Python-prosjekt med AI:|Python project with AI:
+Ukjent AI-agent: kode som kan handle på egen hånd med AI.|Unknown AI agent: code that can act on its own with AI.
+Kode som bruker AI-biblioteker.|Code that uses AI libraries.
+AI-modeller som kjører lokalt i programmet|AI models that run locally in the program
+AI-motor som kan kjøre AI-modeller lokalt|AI engine that can run AI models locally
+har lagt AI inn i programmet:|has built AI into the program:
+Kom med programmet eller en oppdatering, uten at noen ble spurt.|Came with the program or an update, without anyone being asked.
+Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.|Unknown program with its own AI models or AI engine. We cannot verify who made it.
+AI lagt inn av|AI added by
+Ukjent program med AI|Unknown program with AI
+Kjører nå.|Running now.
+Navnet kommer fra en liste over kjente mapper som ikke er bekreftet på alle PC-er. Selve funnet er gjort på innholdet.|The name comes from a list of known folders that is not verified on every PC. The finding itself is based on the contents.
+Programmet sier at det er fra|The program says it is from
+men det er ikke bekreftet med en gyldig signatur.|but this is not verified by a valid signature.
+Innebygd AI fra|Built-in AI from
+Kjører lokalt i programmet.|Runs locally in the program.
+Ukjent program med egen AI-motor. Det kan kjøre AI-modeller på PC-en uten at noen vet hva det gjør.|Unknown program with its own AI engine. It can run AI models on the PC without anyone knowing what it does.
+Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.|Runs from a download or temporary folder, not from a normal installation.
+Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.|Unknown program that responds like an AI service. Other programs can use it.
+Er åpen mot nettverket. Andre på samme nett kan bruke den uten passord.|Is open to the network. Others on the same network can use it without a password.
+Har|Has
+modell|model
+modeller|models
+AI-nøkler lagret på PC-en|AI keys stored on the PC
+Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.|Programs on the PC can use AI services with these keys, at the owner's expense and with the owner's data.
+Flere AI-modeller|More AI models
+Flere AI-modeller ligger lagret på PC-en.|More AI models are stored on the PC.
+AI-modell i et format som kan kjøre skjult kode når den åpnes.|AI model in a format that can run hidden code when opened.
+AI-modell som kan kjøres på PC-en uten internett og uten kontroll.|AI model that can run on the PC without internet and without oversight.
+AI-modell:|AI model:
+Farlig AI-modellfil:|Dangerous AI model file:
+Kan kjøre skjult kode, og ligger i en nedlastingsmappe.|Can run hidden code, and is in a download folder.
+Laget av|Made by
+i Kina. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.|in China. Runs locally, so data is not sent there, but check whether the company allows the model.
+i Kina.|in China.
+søkemodell (embedding)|search model (embedding)
+Søkemodell (embedding)|Search model (embedding)
+søkemodell|search model
+bildeforståelse (CLIP)|image understanding (CLIP)
+språkmodell|language model
+Språkmodell|Language model
+LoRA-tillegg (endrer en annen modell)|LoRA add-on (modifies another model)
+Llama 2 eller eldre Llama-type|Llama 2 or older Llama type
+Ollama er satt opp til å være åpen mot nettverket. Andre kan bruke den uten passord.|Ollama is set up to be open to the network. Others can use it without a password.
+Ollama tillater forespørsler fra alle nettsider (OLLAMA_ORIGINS=*). En hvilken som helst nettside kan bruke den.|Ollama allows requests from all websites (OLLAMA_ORIGINS=*). Any website can use it.
+Windows tar skjermbilder av alt du gjør og lar AI søke i dem. Det kan fange passord, kundedata og meldinger.|Windows takes screenshots of everything you do and lets AI search them. This can capture passwords, customer data and messages.
+Skjermbilder av alt du gjør|Screenshots of everything you do
+Har vært i bruk, men IT har slått av skjermbildene.|Has been in use, but IT has turned off the screenshots.
+Er satt opp på denne PC-en.|Is set up on this PC.
+Ukjent program som er satt opp til å åpne AI-modellfiler. Det kan kjøre AI på PC-en.|Unknown program set up to open AI model files. It can run AI on the PC.
+
+# ---------- Nettleser ----------
+nettsider og utvidelser snakker fritt med språkmodellen|websites and extensions talk freely with the language model
+oppsummerer tekst|summarizes text
+skriver ny tekst|writes new text
+skriver om tekst|rewrites text
+korrekturleser|proofreads
+oversetter|translates
+finner språket|detects the language
+slått på manuelt i|turned on manually in
+slått på|turned on
+slått av|turned off
+manuelt|manually
+fant ikke versjonen av|could not find the version of
+blokkert av IT|blocked by IT
+blokkert|blocked
+tillatt|allowed
+modellen lastes ned første gang noen bruker den|the model downloads the first time someone uses it
+fant ikke nettleserversjonen|could not find the browser version
+på for nettsider og utvidelser|on for websites and extensions
+på for utvidelser|on for extensions
+på for nettsider|on for websites
+av (krever flagg)|off (requires flag)
+av, med mindre det er slått på i|off, unless turned on in
+ikke sjekket|not checked
+ikke funnet på disk|not found on disk
+kan være slått på av Google som forsøk|may be turned on by Google as an experiment
+modellen ligger på PC-en og kjører i bakgrunnen|the model is on the PC and runs in the background
+dekker trolig ikke denne|probably does not cover this
+Ingen IT-regel for AI-API-ene. Nettsider kan bruke dem. Kan stenges med policyen BuiltInAIAPIsEnabled = 0.|No IT rule for the AI APIs. Websites can use them. Can be closed with the policy BuiltInAIAPIsEnabled = 0.
+Flagg i nettleseren er ikke lest (filen Local State åpnes ikke).|Browser flags were not read (the Local State file is not opened).
+versjon|version
+Chrome versjon|Chrome version
+Edge versjon|Edge version
+AI som vurderer innhold (svindel og sikkerhet)|AI that assesses content (scams and security)
+små AI-modeller for nettleserfunksjoner|small AI models for browser features
+AI for søkeforslag|AI for search suggestions
+oversettelse på PC-en|translation on the PC
+tekstgjenkjenning i bilder og PDF (OCR)|text recognition in images and PDF (OCR)
+tekstgjenkjenning (OCR) i skjermbilder|text recognition (OCR) in screenshots
+tale til tekst (Live Caption)|speech to text (Live Caption)
+språkpakker for tale til tekst|language packs for speech to text
+tekst til tale|text to speech
+Språkmodell i|Language model in
+har lastet ned sin egen AI-modell. Nettsider og utvidelser kan bruke den.|has downloaded its own AI model. Websites and extensions can use it.
+Ligger på PC-en|Stored on the PC
+IT har blokkert modellen, men den ligger fortsatt på disk.|IT has blocked the model, but it is still on disk.
+Ingen regel fra IT. Nettleseren bestemmer selv om AI-modellen lastes ned.|No rule from IT. The browser decides on its own whether the AI model is downloaded.
+IT tillater lokal AI|IT allows local AI
+Blokkert av IT, og ingen modell ligger på PC-en.|Blocked by IT, and no model is on the PC.
+Andre AI-modeller i|Other AI models in
+har lastet ned små AI-modeller som kjører på PC-en, f.eks. for tale, oversettelse og tekstgjenkjenning.|has downloaded small AI models that run on the PC, e.g. for speech, translation and text recognition.
+Små AI-modeller i nettleseren|Small AI models in the browser
+Nettsider kan bruke:|Websites can use:
+AI slått på manuelt i|AI turned on manually in
+Noen har slått på AI-funksjoner i|Someone has turned on AI features in
+som ikke er på som standard. De kjører lokalt uten at IT styrer dem.|that are not on by default. They run locally without IT controlling them.
+AI-flagg slått på i nettleseren|AI flags turned on in the browser
+AI-modellfiler i nettleserdataene som ikke hører til nettleserens kjente funksjoner. Kan komme fra en utvidelse eller et nettsted.|AI model files in the browser data that do not belong to the browser's known features. May come from an extension or a website.
+funksjoner|features
+Mulige AI-nettsteder|Possible AI websites
+Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.|The address looks like AI (.ai or «gpt» in the name), but the service is not on the list of known AI services. Could be AI, could be something else.
+Brukes av og til|Used now and then
+Brukes mye|Used a lot
+Brukes ofte|Used often
+Er brukt|Has been used
+Nettstedet har lagret|The website has stored
+i nettleseren. Det kan være en AI-modell som kjører i nettleseren.|in the browser. It may be an AI model running in the browser.
+Kunne ikke lese|Could not read
+Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.|Unknown AI extension. We do not know who makes it or where the data ends up.
+Kan se alt på alle nettsider du besøker, også nettbanken.|Can see everything on every website you visit, including online banking.
+Åpen i|Open in
+Koblet til nettet nå.|Connected to the internet now.
+Sender data til et selskap i|Sends data to a company in
+Åpnet nylig.|Opened recently.
+AI-tjenester kontaktet nylig|AI services contacted recently
+AI-tjenester kontaktet|AI services contacted
+Et program på PC-en har nylig snakket med AI-tjenester. Windows forteller ikke hvilket program, bare at navnet ble slått opp.|A program on the PC has recently talked to AI services. Windows does not say which program, only that the name was looked up.
+Minst én av tjenestene hører hjemme i et land der dataene ikke bør havne.|At least one of the services is based in a country where the data should not end up.
+Programmet snakker med|The program talks to
+i bakgrunnen. Det kan sende innhold fra PC-en til en AI-tjeneste.|in the background. It can send content from the PC to an AI service.
+Snakker med AI|Talks to AI
+Program som bruker AI i det stille|Program that uses AI silently
+Funnet av YARA-regelen|Found by the YARA rule
+Ligger i en nedlastings- eller midlertidig mappe.|Located in a download or temporary folder.
+Modellfilen inneholder kode som kjører når den lastes.|The model file contains code that runs when it is loaded.
+
+# ---------- Risikogrunner ----------
+AI som ikke er lagt inn av Windows, en signert leverandør eller IT.|AI not installed by Windows, a signed vendor or IT.
+Står på IT sin liste over godkjent AI.|Is on IT's list of approved AI.
+Ukjent AI: vi vet ikke hvem som har laget den eller hva den gjør.|Unknown AI: we do not know who made it or what it does.
+Skygge-AI: ikke lagt inn av Windows, en signert leverandør eller IT.|Shadow AI: not installed by Windows, a signed vendor or IT.
+Sender data til|Sends data to
+
+# ---------- NVD ----------
+Sjekker kjente sårbarheter for|Checking known vulnerabilities for
+kjente sårbarheter (CVE) nevner|known vulnerabilities (CVE) mention
+Hold programmet oppdatert.|Keep the program updated.
+NVD: ingen kjente sårbarheter funnet for|NVD: no known vulnerabilities found for
+NVD: oppslaget feilet (ingen nett eller for mange forespørsler).|NVD: the lookup failed (no network or too many requests).
+
+# ---------- Fremdrift og feil ----------
+Ser etter AI som kjører nå...|Looking for AI running now...
+Sjekker installerte programmer...|Checking installed programs...
+Sjekker hva som starter av seg selv...|Checking what starts on its own...
+Ser etter AI-verktøy og AI-nøkler...|Looking for AI tools and AI keys...
+Spør lokale programmer om de er AI...|Asking local programs if they are AI...
+Sjekker utvidelser i nettleserne...|Checking browser extensions...
+Ser etter AI-nettsteder du har brukt...|Looking for AI websites you have used...
+Sjekker innebygd AI i Chrome og Edge...|Checking built-in AI in Chrome and Edge...
+Leter gjennom filene etter AI-modeller og AI-kode...|Searching files for AI models and AI code...
+Leter etter AI som leverandører har lagt inn...|Looking for AI added by vendors...
+Ser hvor AI sender data|Checking where AI sends data
+Søket stoppet:|The scan stopped:
+Admin ble ikke godkjent. Søk som bruker, eller prøv igjen.|Admin was not approved. Scan as user, or try again.
+
+# ---------- Land ----------
+lokalt nett|local network
+ukjent land|unknown country
+skjult bak CDN|hidden behind CDN
+skjult bak|hidden behind
+Norge|Norway
+Sverige|Sweden
+Danmark|Denmark
+Island|Iceland
+Storbritannia|United Kingdom
+Irland|Ireland
+Tyskland|Germany
+Frankrike|France
+Nederland|Netherlands
+Belgia|Belgium
+Sveits|Switzerland
+Østerrike|Austria
+Spania|Spain
+Italia|Italy
+Polen|Poland
+Tsjekkia|Czechia
+Estland|Estonia
+Latvia|Latvia
+Litauen|Lithuania
+Kina|China
+Hongkong|Hong Kong
+Sør-Korea|South Korea
+Nord-Korea|North Korea
+Russland|Russia
+Hviterussland|Belarus
+Ukraina|Ukraine
+De forente arabiske emirater|United Arab Emirates
+Saudi-Arabia|Saudi Arabia
+Tyrkia|Turkey
+Brasil|Brazil
+Sør-Afrika|South Africa
+Ukjent selskap|Unknown company
+
+# ---------- regler.json: hva (kort) ----------
+Kjører AI lokalt på PC-en|Runs AI locally on the PC
+Kjører AI-modeller på selve PC-en, uten internett. Det du skriver blir på maskinen.|Runs AI models on the PC itself, without internet. What you type stays on the machine.
+Et program for å laste ned og kjøre AI-modeller på PC-en. Modellene kommer fra internett uten kontroll.|A program for downloading and running AI models on the PC. The models come from the internet without oversight.
+Lokal chat-app med språkmodeller. Kan lese lokale dokumenter (LocalDocs).|Local chat app with language models. Can read local documents (LocalDocs).
+Et AI-chatprogram som kjører på PC-en og kan lese dokumentene dine hvis du ber om det.|An AI chat program that runs on the PC and can read your documents if you ask it to.
+Kjører AI fra kommandolinjen|Runs AI from the command line
+Et teknisk verktøy for å kjøre AI-modeller. Ofte lastet ned som løse filer.|A technical tool for running AI models. Often downloaded as loose files.
+Et AI-chatprogram som kjører på PC-en.|An AI chat program that runs on the PC.
+Lager bilder med AI på PC-en|Makes images with AI on the PC
+Et program som lager bilder med AI. Tillegg fra andre har tidligere inneholdt skadevare.|A program that makes images with AI. Add-ons from others have contained malware in the past.
+AI-assistent som kan styre PC-en|AI assistant that can control the PC
+Den kan lese filene dine, kjøre programmer og sende innhold til Anthropic på nett.|It can read your files, run programs and send content to Anthropic online.
+Den kan endre filer og kjøre programmer, og sender innhold til OpenAI.|It can change files and run programs, and sends content to OpenAI.
+Den kan lese filer og kjøre programmer, og sender innhold til Google.|It can read files and run programs, and sends content to Google.
+AI som skriver kode for deg|AI that writes code for you
+Den endrer filer på egen hånd og sender koden til en AI-tjeneste.|It changes files on its own and sends the code to an AI service.
+Kodeprogram med innebygd AI|Code program with built-in AI
+Koden du jobber med sendes til en AI-tjeneste på nett.|The code you work on is sent to an online AI service.
+AI-assistent inne i VS Code|AI assistant inside VS Code
+Kan endre filer og kjøre programmer fra kodeeditoren.|Can change files and run programs from the code editor.
+AI som foreslår kode|AI that suggests code
+Foreslår kode mens du skriver. Koden sendes til GitHub.|Suggests code as you type. The code is sent to GitHub.
+Alt du skriver eller limer inn sendes til OpenAI. Gratiskontoer kan brukes til å trene AI-en.|Everything you type or paste is sent to OpenAI. Free accounts can be used to train the AI.
+Alt du skriver eller limer inn sendes til Anthropic. Appen kan kobles til filer og andre systemer.|Everything you type or paste is sent to Anthropic. The app can be connected to files and other systems.
+Del av Windows|Part of Windows
+Microsofts egen AI. Når jobben bruker Microsoft 365, er den dekket av avtalen.|Microsoft's own AI. When work uses Microsoft 365, it is covered by the agreement.
+AI-søkemotor|AI search engine
+Spørsmålene dine og det du limer inn sendes til Perplexity.|Your questions and what you paste are sent to Perplexity.
+Kinesisk AI-tjeneste|Chinese AI service
+Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.|What you type is stored in China. Several countries have warned against using it for sensitive data.
+Skrivehjelp i nettleseren|Writing assistant in the browser
+Leser alt du skriver, også e-post og interne systemer.|Reads everything you type, including email and internal systems.
+AI-sidepanel i nettleseren|AI sidebar in the browser
+Leser sidene du besøker og sender innholdet til en AI-tjeneste.|Reads the pages you visit and sends the content to an AI service.
+Gemini / Claude / ChatGPT i nettleser|Gemini / Claude / ChatGPT in the browser
+AI-utvidelse i nettleseren|AI extension in the browser
+En AI-utvidelse som kan lese det som står på nettsider.|An AI extension that can read what is on web pages.
+AI bygd inn i Chrome|AI built into Chrome
+Chrome har lastet ned sin egen AI-modell. Det du skriver blir på PC-en, men nettsider og utvidelser kan bruke den.|Chrome has downloaded its own AI model. What you type stays on the PC, but websites and extensions can use it.
+AI innebygd i Edge|AI built into Edge
+AI bygd inn i Edge|AI built into Edge
+Edge har lastet ned sin egen AI-modell. Det du skriver blir på PC-en, men nettsider og utvidelser kan bruke den.|Edge has downloaded its own AI model. What you type stays on the PC, but websites and extensions can use it.
+Windows AI: Recall og Click to Do|Windows AI: Recall and Click to Do
+Recall, Click to Do og AI-søk i Windows|Recall, Click to Do and AI search in Windows
+språkmodell og bildemodeller innebygd i Windows|language model and image models built into Windows
+AI for bildesøk, fjerne bakgrunn og forbedre bilder|AI for image search, background removal and photo enhancement
+AI for bildegenerering og fjerning av bakgrunn|AI for image generation and background removal
+AI for video, tale og teksting|AI for video, speech and captions
+AI for støyfjerning, bakgrunn og teksting|AI for noise removal, background and captions
+AI-funksjoner i Office (Copilot, diktering, designforslag)|AI features in Office (Copilot, dictation, design suggestions)
+kamera-AI på NPU (bakgrunn, øyekontakt)|camera AI on the NPU (background, eye contact)
+AI for støyfjerning og bakgrunn|AI for noise removal and background
+lokal språkmodell (chat med egne filer)|local language model (chat with your own files)
+lokal AI-assistent|local AI assistant
+AI-funksjoner for spill og video|AI features for games and video
+AI for støyfjerning, bakgrunn og oppsummering|AI for noise removal, background and summaries
+motor for AI-modeller på Intel-maskinvare|engine for AI models on Intel hardware
+AI-funksjoner fra Intel|AI features from Intel
+AI på AMD-prosessoren (NPU)|AI on the AMD processor (NPU)
+AI på Snapdragon-prosessoren (NPU)|AI on the Snapdragon processor (NPU)
+AI-funksjoner fra PC-produsenten (Optimizer)|AI features from the PC maker (Optimizer)
+AI-funksjoner fra PC-produsenten|AI features from the PC maker
+AI-programmerer fra Cognition|AI programmer from Cognition
+Agent som skriver og kjører kode på egen hånd. Alt du skriver eller limer inn sendes til selskapet bak.|Agent that writes and runs code on its own. Everything you type or paste is sent to the company behind it.
+Sjekker om tekst er laget av AI|Checks whether text was made by AI
+Teksten du limer inn sendes til tjenesten.|The text you paste is sent to the service.
+AI fra Mistral (Frankrike)|AI from Mistral (France)
+Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i EU.|Everything you type or paste is sent to the company behind it. The company is in the EU.
+AI-kodeverktøy|AI coding tool
+Alt du skriver eller limer inn sendes til selskapet bak. Videresender til mange ulike selskaper.|Everything you type or paste is sent to the company behind it. Forwards to many different companies.
+Alt du skriver eller limer inn sendes til selskapet bak. Tar opp møter.|Everything you type or paste is sent to the company behind it. Records meetings.
+Alt du skriver eller limer inn sendes til selskapet bak. Kan ta opp møter.|Everything you type or paste is sent to the company behind it. Can record meetings.
+Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.|Everything you type or paste is sent to the company behind it. The company is in China.
+Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.|Everything you type or paste is sent to the company behind it. Free accounts can be used to train the AI.
+Alt du skriver eller limer inn sendes til selskapet bak.|Everything you type or paste is sent to the company behind it.
+AI-chat og API|AI chat and API
+AI-modeller i skyen|AI models in the cloud
+Tilgang til mange AI-modeller|Access to many AI models
+AI-møtenotater|AI meeting notes
+AI for møter|AI for meetings
+AI fra Kina|AI from China
+AI-video fra Kina|AI video from China
+AI-chat fra OpenAI|AI chat from OpenAI
+AI-chat fra Anthropic|AI chat from Anthropic
+AI-chat fra Google|AI chat from Google
+AI-chat fra xAI|AI chat from xAI
+AI-chat fra Meta|AI chat from Meta
+AI-chat fra Mistral|AI chat from Mistral
+Google-AI som leser dokumentene dine|Google AI that reads your documents
+Dokumentene du laster opp sendes til Google.|The documents you upload are sent to Google.
+Gratisversjonen av Copilot|The free version of Copilot
+Forbrukerversjonen av Copilot er ikke dekket av bedriftens Microsoft 365-avtale.|The consumer version of Copilot is not covered by the company's Microsoft 365 agreement.
+Dekket av bedriftens Microsoft 365-avtale.|Covered by the company's Microsoft 365 agreement.
+Samleside for mange AI-er|One site for many AIs
+Det du skriver sendes videre til flere AI-selskaper.|What you type is passed on to several AI companies.
+AI-figurer å prate med|AI characters to chat with
+Samtalene lagres hos selskapet. Ofte brukt av barn og unge.|The conversations are stored by the company. Often used by children and teens.
+Kinesisk AI-chat fra Alibaba|Chinese AI chat from Alibaba
+Kinesisk AI-chat fra ByteDance|Chinese AI chat from ByteDance
+Kinesisk AI-chat|Chinese AI chat
+Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.|What you type is stored in China. Several countries, including Norway, have warned against using Chinese AI services for sensitive data.
+AI-agent som gjør oppgaver på nett for deg|AI agent that does tasks online for you
+En agent som logger inn og handler på dine vegne. Selskapet har kinesiske røtter.|An agent that logs in and acts on your behalf. The company has Chinese roots.
+Nettsted for AI-modeller|Website for AI models
+Her lastes AI-modeller ned. Modeller fra ukjente kilder kan inneholde skadelig kode.|AI models are downloaded here. Models from unknown sources can contain malicious code.
+Utviklertilgang til OpenAI|Developer access to OpenAI
+Brukes til å koble egne programmer til AI. Kan føre til at bedriftsdata sendes til OpenAI.|Used to connect your own programs to AI. Can lead to company data being sent to OpenAI.
+Utviklertilgang til Anthropic|Developer access to Anthropic
+Brukes til å koble egne programmer til AI.|Used to connect your own programs to AI.
+Teksten og dokumentene du oversetter sendes til DeepL. Gratisversjonen kan bruke dem til trening.|The text and documents you translate are sent to DeepL. The free version may use them for training.
+Teksten du limer inn sendes til QuillBot.|The text you paste is sent to QuillBot.
+Otter / Fireflies (møtenotater)|Otter / Fireflies (meeting notes)
+AI som tar opp møter|AI that records meetings
+Tar opp og skriver ned møter, ofte uten at alle i møtet vet det.|Records and transcribes meetings, often without everyone in the meeting knowing.
+AI som lager presentasjoner|AI that makes presentations
+Innholdet du gir den sendes til Gamma.|The content you give it is sent to Gamma.
+AI som lager nettsider og apper|AI that makes websites and apps
+Koden og beskrivelsene dine sendes til tjenesten.|Your code and descriptions are sent to the service.
+Koding med AI i nettleseren|Coding with AI in the browser
+AI som lager bilder|AI that makes images
+Bildene og beskrivelsene dine lagres hos tjenesten, ofte offentlig.|Your images and descriptions are stored by the service, often publicly.
+AI som lager stemmer|AI that makes voices
+Kan kopiere stemmer. Brukes også til svindel.|Can copy voices. Also used for fraud.
+AI som lager musikk|AI that makes music
+Lav risiko for data.|Low risk for data.
+AI-søk brukt av et program|AI search used by a program
+AI-søk|AI search
+AI fra OpenAI (ChatGPT) brukt av et program|AI from OpenAI (ChatGPT) used by a program
+Programmet sender innhold til en AI-tjeneste i USA. Sjekk at bruken er godkjent og at ingen sensitive data sendes.|The program sends content to an AI service in the USA. Check that the use is approved and that no sensitive data is sent.
+AI fra OpenAI via Microsoft Azure|AI from OpenAI via Microsoft Azure
+Programmet bruker OpenAI-modeller via Microsoft Azure. Ofte bedriftens egen avtale, men sjekk at den er godkjent.|The program uses OpenAI models via Microsoft Azure. Often the company's own agreement, but check that it is approved.
+AI fra Anthropic (Claude) brukt av et program|AI from Anthropic (Claude) used by a program
+AI fra Google brukt av et program|AI from Google used by a program
+AI fra Mistral brukt av et program|AI from Mistral used by a program
+Programmet sender innhold til Mistral i Frankrike (EU).|The program sends content to Mistral in France (EU).
+AI fra xAI (Grok) brukt av et program|AI from xAI (Grok) used by a program
+AI-tjeneste brukt av et program|AI service used by a program
+Mellomledd til mange AI-tjenester|Middleman for many AI services
+Programmet sender innhold via OpenRouter, som videresender til mange ukjente AI-leverandører.|The program sends content via OpenRouter, which forwards it to many unknown AI providers.
+Programmet sender innhold til Cohere i Canada.|The program sends content to Cohere in Canada.
+AI fra Meta brukt av et program|AI from Meta used by a program
+Kjører AI-modeller i skyen for et program|Runs AI models in the cloud for a program
+Hugging Face (API og modeller)|Hugging Face (API and models)
+AI-modeller fra Hugging Face|AI models from Hugging Face
+Programmet laster ned AI-modeller eller bruker AI fra Hugging Face. Modeller derfra kan være laget av hvem som helst.|The program downloads AI models or uses AI from Hugging Face. Models from there can be made by anyone.
+Stemme-AI brukt av et program|Voice AI used by a program
+Bilde-AI brukt av et program|Image AI used by a program
+Programmet lager bilder med AI hos Stability AI.|The program makes images with AI at Stability AI.
+Nedlasting av AI-modeller|Download of AI models
+Programmet laster ned AI-modeller fra Ollama.|The program downloads AI models from Ollama.
+Logg fra AI-agenter|Logs from AI agents
+En AI-agent sender logger av alt den gjør til LangChain. Loggene kan inneholde data fra PC-en.|An AI agent sends logs of everything it does to LangChain. The logs can contain data from the PC.
+Kinesisk AI brukt av et program|Chinese AI used by a program
+Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene.|The program sends content to a Chinese AI service. Chinese law can give the authorities access to the data.
+
+# ---------- regler.json: hvorfor (teknisk) ----------
+Kjører språkmodeller lokalt. Data blir på maskinen, men API-et har ingen innlogging. Blir rødt hvis porten er åpen mot nettverket.|Runs language models locally. Data stays on the machine, but the API has no login. Turns red if the port is open to the network.
+Kjører språkmodeller lokalt med valgfri server. Modeller lastes ned fra internett uten kontroll fra IT.|Runs language models locally with an optional server. Models are downloaded from the internet without IT oversight.
+Kjører språkmodeller fra kommandolinjen. Ofte lastet ned som løse filer uten installasjon.|Runs language models from the command line. Often downloaded as loose files without installation.
+Lokal chat-app med innebygd API-server.|Local chat app with a built-in API server.
+Bildegenerering lokalt. Tredjeparts tillegg (custom nodes) har tidligere inneholdt skadevare.|Local image generation. Third-party add-ons (custom nodes) have contained malware in the past.
+AI-agent som kan lese filer, kjøre kommandoer og sende kode til skyen. Høy risiko uten avtale og retningslinjer.|AI agent that can read files, run commands and send code to the cloud. High risk without an agreement and guidelines.
+AI-agent som kan kjøre kommandoer og endre filer. Kode sendes til OpenAI.|AI agent that can run commands and change files. Code is sent to OpenAI.
+AI-agent som kan kjøre kommandoer og lese filer. Data sendes til Google.|AI agent that can run commands and read files. Data is sent to Google.
+AI-kodeagent som endrer filer og bruker valgfri skytjeneste.|AI coding agent that changes files and uses an optional cloud service.
+Kodeeditor med innebygd AI-agent. Kildekode sendes til skyen.|Code editor with a built-in AI agent. Source code is sent to the cloud.
+Kodeeditor med AI-agent. Kildekode sendes til skyen.|Code editor with an AI agent. Source code is sent to the cloud.
+AI-agenter inne i VS Code som kan endre filer og kjøre kommandoer.|AI agents inside VS Code that can change files and run commands.
+Kodeassistent. Grønn hvis bedriften har Copilot Business med avtale, ellers gul.|Coding assistant. Green if the company has Copilot Business with an agreement, otherwise yellow.
+Alt som limes inn sendes til OpenAI. Gratis- og Plus-kontoer kan brukes til trening.|Everything pasted is sent to OpenAI. Free and Plus accounts can be used for training.
+Alt som limes inn sendes til Anthropic. MCP-tilkoblinger kan gi appen tilgang til filer og systemer.|Everything pasted is sent to Anthropic. MCP connections can give the app access to files and systems.
+Del av Windows/Microsoft 365. Lav risiko når bedriften styrer den via Microsoft 365-avtale.|Part of Windows/Microsoft 365. Low risk when the company manages it via a Microsoft 365 agreement.
+AI-søk. Spørsmål og innlimt tekst sendes til tredjepart.|AI search. Questions and pasted text are sent to a third party.
+Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.|Data is stored in China. Several countries and the Norwegian Data Protection Authority have warned against use with sensitive data.
+Leser tekst du skriver i alle felt, også e-post og interne systemer.|Reads text you type in every field, including email and internal systems.
+AI-sidepaneler som leser innholdet på sidene du besøker og sender det til tredjeparts AI.|AI sidebars that read the content of the pages you visit and send it to third-party AI.
+AI-utvidelse i nettleseren. Sjekk hvilke sider den har tilgang til.|AI extension in the browser. Check which sites it has access to.
+Chrome har lastet ned en lokal språkmodell (flere GB). Nettsider og utvidelser kan bruke den via Chromes AI-API-er uten at IT ser det. Data blir på maskinen, men modellen er ikke styrt av bedriften. Kan slås av med policyen GenAILocalFoundationalModelSettings = 1.|Chrome has downloaded a local language model (several GB). Websites and extensions can use it through Chrome's AI APIs without IT seeing it. Data stays on the machine, but the model is not managed by the company. Can be turned off with the policy GenAILocalFoundationalModelSettings = 1.
+Edge har lastet ned en lokal språkmodell. Nettsider og utvidelser kan bruke den via nettleserens AI-API-er. Ikke styrt av bedriften med mindre policy er satt.|Edge has downloaded a local language model. Websites and extensions can use it through the browser's AI APIs. Not managed by the company unless a policy is set.
+Kodeassistent som sender kode fra PC-en til GitHub/Microsoft.|Coding assistant that sends code from the PC to GitHub/Microsoft.
+Kodeeditor som sender kode til AI i skyen.|Code editor that sends code to AI in the cloud.
+Kodeassistent som sender kode til AI i skyen.|Coding assistant that sends code to AI in the cloud.
+
+# ---------- YARA ----------
+GGUF-modell (llama.cpp, Ollama, LM Studio, GPT4All)|GGUF model (llama.cpp, Ollama, LM Studio, GPT4All)
+safetensors-modell (Hugging Face). Kan ikke kjøre kode.|safetensors model (Hugging Face). Cannot run code.
+PyTorch-modell (zip med pickle). Pickle kan kjøre kode når modellen lastes.|PyTorch model (zip with pickle). Pickle can run code when the model is loaded.
+Rå pickle-fil (Python). Kan kjøre kode når den åpnes.|Raw pickle file (Python). Can run code when opened.
+Keras/TensorFlow-modell i HDF5-format|Keras/TensorFlow model in HDF5 format
+Keras 3-modell (.keras)|Keras 3 model (.keras)
+TensorFlow Lite / LiteRT-modell|TensorFlow Lite / LiteRT model
+OpenVINO-modell (Intel)|OpenVINO model (Intel)
+Modellen kaller os, subprocess, exec eller eval. Den kjører kommandoer på PC-en når den lastes.|The model calls os, subprocess, exec or eval. It runs commands on the PC when loaded.
+Modellen åpner nettverkstilkoblinger når den lastes (socket, urllib, requests, webbrowser).|The model opens network connections when loaded (socket, urllib, requests, webbrowser).
+Keras-modell med Lambda-lag. Lambda-lag kan inneholde Python-kode som kjører når modellen lastes.|Keras model with Lambda layers. Lambda layers can contain Python code that runs when the model is loaded.
+GGUF-modellens chat-mal prøver å nå Python-internals. Kjent angrep mot llama-cpp-python (CVE-2024-34359).|The GGUF model's chat template tries to reach Python internals. Known attack on llama-cpp-python (CVE-2024-34359).
+Modellfila har et Windows-program gjemt inni seg.|The model file has a Windows program hidden inside it.
+Pickle-modell som inneholder kommandoer for skall eller PowerShell.|Pickle model containing shell or PowerShell commands.
+AI-SKANNER RAPPORT|AI SCANNER REPORT
+OVERSIKT|OVERVIEW
+LOKAL AI (KJØRER PÅ PC-EN)|LOCAL AI (RUNS ON THE PC)
+AI I NETTLESEREN|AI IN THE BROWSER
+SKJULT PÅ PC-EN (APPER, AGENTER OG BAKGRUNNSPROGRAMMER)|HIDDEN ON THE PC (APPS, AGENTS AND BACKGROUND PROGRAMS)
+Advarsel:|Warning:
+Merk:|Note:
+Tid:|Time:
+bruker (mindre data, uten datamengde og programmer som kjører som administrator)|user (less data, without data volume and programs running as administrator)
+administrator (mer data)|administrator (more data)
+Innebygd AI|Built-in AI
+Lokasjon|Location
+Viktigst|Key point
+Leter gjennom filene etter AI-modeller og AI-kode|Searching files for AI models and AI code
+Ser etter AI som kjører nå|Looking for AI running now
+Ser etter AI-nettsteder du har brukt|Looking for AI websites you have used
+Sjekker innebygd AI i Chrome og Edge|Checking built-in AI in Chrome and Edge
+Leter etter AI som leverandører har lagt inn|Looking for AI added by vendors
+Ser etter AI-verktøy og AI-nøkler|Looking for AI tools and AI keys
+Sjekker utvidelser i nettleserne|Checking browser extensions
+Sjekker hva som starter av seg selv|Checking what starts on its own
+Spør lokale programmer om de er AI|Asking local programs if they are AI
+Sjekker installerte programmer|Checking installed programs
+Sjekker registeret|Checking the registry
+
+# ---------- Tillegg ----------
+~\((\w[\w ]*)-utvidelse\)|($1 extension)
+~(\d)\s?mrd\.\s?parametre|$1 billion parameters
+~(\d)\s?mill\.\s?parametre|$1 million parameters
+~\b1 modellfil\b|1 model file
+~(\d) modellfiler\b|$1 model files
+~\b1 funksjon\b|1 feature
+~(\d) funksjoner\b|$1 features
+lagret data:|stored data:
+lagret|stored
+Nettapp:|Web app:
+Kommando:|Command:
+npm-pakke:|npm package:
+npm-pakke|npm package
+Program:|Program:
+AI-skrivehjelp|AI writing assistant
+ingen modell på PC-en|no model on the PC
+Land for IP-adresser: IP to Country Lite fra|Country for IP addresses: IP to Country Lite from
+For store skytjenester viser landet hvor serveren står.|For large cloud services the country shows where the server is.
+Sjekker registeret...|Checking the registry...
+Installert app (Microsoft Store)|Installed app (Microsoft Store)
+Planlagt oppgave|Scheduled task
+Farlig AI-modellfil|Dangerous AI model file
+Sender data ut|Sends data out
+Kjent utgiver|Known publisher
+1 nettleserutvidelse|1 browser extension
+Gjenkjent|Identified
+Familie|Family
+Registeret|Registry
+Nettverk|Network
+Videoer|Videos
+Musikk|Music
+Startmenyen|Start menu
+Hjemmemappen|Home folder
+🟡 middels:|🟡 medium:
+🟢 lav:|🟢 low:
+Totalt|Total
+1 forbindelse|1 connection
+Windows Recall: tillatt|Windows Recall: allowed
+Windows Recall: fjernet|Windows Recall: removed
+Hugging Face-innlogging|Hugging Face login
+lastet:|loaded:
+pakker|packages
+Trafikk feilet:|Traffic failed:
+retter skrivefeil|fixes spelling
+endret (valg|changed (setting
+bildemodell (FLUX)|image model (FLUX)
+bildemodell (Stable Diffusion)|image model (Stable Diffusion)
+bildemodell|image model
+Brukes ofte|Used often
+sender kun ordet|sends only the word
+AI-funksjoner|AI features
+Copilot via jobbkontoen|Copilot via the work account
+Koden din ligger hos Replit.|Your code is stored at Replit.
+AI via Amazon Bedrock|AI via Amazon Bedrock
+Kjører AI-modeller på selve PC-en, uten internett.|Runs AI models on the PC itself, without internet.
+Programmet sier at det er fra|The program says it is from
+egne|own
+AI-motor|AI engine
+nettleserdataene|the browser data
+Advarsel|Warning
+Merk|Note
+Mappe|Folder
+Fil|File
+Program|Program
+Utvidelse|Extension
+~\b(GGUF|PyTorch|Keras|ONNX|OpenVINO|safetensors|TensorFlow Lite|LiteRT|Keras 3)-modell\b|$1 model
+har lastet ned små AI-modeller som kjører på PC-en, f.eks.|has downloaded small AI models that run on the PC, e.g.

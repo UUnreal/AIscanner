@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -17,6 +17,14 @@ if (args.Length == 2 && args[0] == "--test-server")
     using var klient = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
     var m = Skanner.Spor(klient, int.Parse(args[1]));
     Console.WriteLine(m == null ? "ikke AI" : "AI: " + string.Join(", ", m));
+    return 0;
+}
+
+// Oversetter JSON fra standard inn til engelsk (for testing av ordlista): AISkanner.Cli --oversett < fil.json
+if (args.Length == 1 && args[0] == "--oversett")
+{
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+    Console.WriteLine(Engelsk.Json(Console.In.ReadToEnd()));
     return 0;
 }
 
@@ -37,7 +45,7 @@ if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner) : Rapport.Json(funn, skanner));
+Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;
 
 /// <summary>Intern test: falskt nettverksbilde fra en JSON-fil, så trafikklogikken kan testes uten Windows.</summary>
@@ -122,6 +130,10 @@ static class Selvtest
         Sjekk("cdn: Fastly-adresse", IpLand.Cdn(ip("151.101.1.140")) == "Fastly", true);
         Sjekk("cdn: Akamai fra CNAME-kjeden", IpLand.Cdn(ip("23.50.1.1"), new[] { "api.x.com", "e123.a.akamaiedge.net" }) == "Akamai", true);
         Sjekk("cdn: Cloudflare gir landkode CDN", IpLand.Finn(ip("172.64.155.209")) == "CDN", true);
+        // Engelsk: tekst oversettes, stier og domener røres ikke
+        Sjekk("engelsk: type", Engelsk.Til("Ukjent AI") == "Unknown AI", true);
+        Sjekk("engelsk: sti røres ikke", Engelsk.Til(@"Fil: C:\Users\x\Nedlastinger\modell.gguf · GGUF") == @"File: C:\Users\x\Nedlastinger\modell.gguf · GGUF", true);
+        Sjekk("engelsk: land og domene", Engelsk.Til("Sender data til Kina (api.deepseek.com).") == "Sends data to China (api.deepseek.com).", true);
         Sjekk("cdn: vanlig adresse er ikke CDN", IpLand.Cdn(ip("101.42.18.7"), new[] { "api.deepseek.com" }) == null, true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");

@@ -69,6 +69,14 @@
   .tillit svg { width: 15px; height: 15px; }
   .inkludert { margin-top: 22px; max-width: 470px; color: var(--dempet); font-size: 13px; line-height: 1.45; }
   .feil { color: var(--rod); font-size: 14px; min-height: 20px; }
+  .tillit i { font-style: normal; }
+  /* Språkvalg: øverst til høyre før søket, ved knappene i resultatet. Ett trykk bytter all tekst. */
+  .sprak { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; z-index: 5; }
+  body > .sprak { position: fixed; top: 14px; right: 18px; }
+  .sprak button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--dempet); border-radius: 980px; padding: 5px 11px 5px 8px; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: .02em; }
+  .sprak button svg { width: 20px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex: none; }
+  .sprak button.valgt { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
+  .topp .sprak { align-self: flex-end; margin-bottom: 3px; }
 
   /* ---------- Søker ---------- */
   #soker { align-items: center; justify-content: center; text-align: center; gap: 10px; }
@@ -197,44 +205,47 @@
     .tr > :nth-child(3), .tr > :nth-child(4) { display: none; }
     .flyt { grid-template-columns: 1fr 1fr; } .flyt .pil2 { display: none; } .flyt .flis2:last-child { grid-column: 1 / -1; }
     #bunnHoyre { display: none; }
+    .topp { flex-wrap: wrap; } .topp .tittel { flex-basis: 100%; }
   }
 </style>
 </head>
 <body>
 
+<div class="sprak" id="sprak" role="group" aria-label="Språk / Language"><button data-l="no" title="Norsk"><svg viewBox="0 0 22 16" aria-hidden="true"><rect width="22" height="16" fill="#ba0c2f"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205b"/><rect y="7" width="22" height="2" fill="#00205b"/></svg>NO</button><button data-l="en" title="English"><svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="gbS"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="gbT"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#gbS)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#gbT)" stroke="#c8102e" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#c8102e" stroke-width="6"/></g></svg>EN</button></div>
+
 <section id="start" class="side aktiv">
-  <div class="storTittel">Er det AI på denne PC-en?</div>
-  <div class="undertittel">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
+  <div class="storTittel" data-en="Is there AI on this PC?">Er det AI på denne PC-en?</div>
+  <div class="undertittel" data-en="Find AI programs, AI in the browser and AI that sends data in secret.">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
   <div class="valg" id="valg">
-    <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst" id="ringTekst">SØK SOM ADMIN</span><span class="rliten">Krever godkjenning</span></button>
+    <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst" id="ringTekst">SØK SOM ADMIN</span><span class="rliten" data-en="Requires approval">Krever godkjenning</span></button>
     <button class="sokKnapp" id="sok" title="Søk som vanlig bruker: mindre data">Søk<small>som bruker</small></button>
   </div>
   <div class="modus">
-    <div><b>Bruker · mindre data</b>Rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator.</div>
-    <div class="adm"><b>Admin · mer data</b>Måler hvor mye data hver AI sender, og ser alle programmer som kjører. Windows ber om godkjenning først.</div>
+    <div data-en="&lt;b&gt;User · less data&lt;/b&gt;Fast, no approval. Does not see how much data AI sends, or programs running as administrator."><b>Bruker · mindre data</b>Rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator.</div>
+    <div class="adm" data-en="&lt;b&gt;Admin · more data&lt;/b&gt;Measures how much data each AI sends, and sees every running program. Windows asks for approval first."><b>Admin · mer data</b>Måler hvor mye data hver AI sender, og ser alle programmer som kjører. Windows ber om godkjenning først.</div>
   </div>
   <div class="tillit">
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>Endrer ingenting</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Leser aldri passord</span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg>Sender bare produktnavn</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><i data-en="Changes nothing">Endrer ingenting</i></span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><i data-en="Never reads passwords">Leser aldri passord</i></span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg><i data-en="Sends only product names">Sender bare produktnavn</i></span>
   </div>
-  <div class="inkludert">Søket tar med AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler som finner farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
+  <div class="inkludert" data-en="The scan covers AI programs and models, AI from vendors, the AI APIs in Chrome and Edge, YARA rules that find dangerous AI models, browser history (analysed on the PC and never stored) and known vulnerabilities (only product names such as “ollama” are looked up in NVD).">Søket tar med AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler som finner farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
   <div class="feil" id="feil"></div>
 </section>
 
 <section id="soker" class="side">
   <svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" cx="50" cy="50" r="44"/></svg>
-  <div class="storTittel" style="font-size:26px">Søker etter AI…</div>
+  <div class="storTittel" style="font-size:26px" data-en="Scanning for AI…">Søker etter AI…</div>
 </section>
 
 <section id="resultat" class="side">
   <div class="topp">
     <div class="tittel"><h1 id="hodeTittel"></h1><div class="andreFunn" id="andreFunn"></div><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
-    <button class="knapp sekundar" id="igjen">Søk igjen</button>
-    <button class="knapp primar" id="lagre">Last ned rapport</button>
+    <button class="knapp sekundar" id="igjen" data-en="Scan again">Søk igjen</button>
+    <button class="knapp primar" id="lagre" data-en="Download report">Last ned rapport</button>
   </div>
   <div class="panel hoved" id="hoved">
-    <div class="tr th"><span>AI</span><span>Risiko</span><span>Type</span><span>Ligger her</span><span>Sender data til</span><span></span></div>
+    <div class="tr th"><span>AI</span><span data-en="Risk">Risiko</span><span>Type</span><span data-en="Location">Ligger her</span><span data-en="Sends data to">Sender data til</span><span></span></div>
     <div class="liste" id="liste"></div>
     <div class="sider" id="sider"></div>
     <div class="ark" id="ark"><div class="detalj" id="detalj"></div></div>
@@ -252,9 +263,17 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const vert = window.chrome && window.chrome.webview;   // satt når siden kjører inne i programmet
 const send = m => vert ? vert.postMessage(m) : demo(m);
-function vis(id) { document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id)); }
+function vis(id) {
+  document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id));
+  // Språkvalget står øverst til høyre, og ved knappene når resultatet vises
+  const sp = $("sprak");
+  if (id === "resultat") $("igjen").before(sp); else if (sp.parentElement !== document.body) document.body.prepend(sp);
+}
 
-const MERKE = { rod: "Høy", gul: "Middels", gronn: "Lav" };
+// Språk: følger Windows til brukeren trykker på et flagg. Valget lagres ikke.
+let språk = /^(nb|nn|no)\b/i.test(navigator.language || "") ? "no" : "en";
+const L = (no, en) => språk === "en" ? en : no;
+const merke = r => ({ rod: L("Høy", "High"), gul: L("Middels", "Medium"), gronn: L("Lav", "Low") }[r]);
 const STI = /[A-Za-z]:\\[^:*?"<>|()]+[^:*?"<>|()\s]/;
 const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 20V10M7 20v-5M17 20V4"/></svg>`;
 
@@ -278,74 +297,81 @@ function kart(f) {
     const [x, y] = KART.senter[k];
     return `<g class="nal ${farge[k]}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x}" y="${y + 3.5}">${antall[k] || ""}</text></g>`;
   }).join("");
-  return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${Object.keys(cdn).length ? `<div class="cdn">Tjenesten skjuler IP-en: ${esc(Object.entries(cdn).map(([n, a]) => `${a} bak ${n}`).join(", "))}</div>` : ""}</div>`;
+  return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${Object.keys(cdn).length ? `<div class="cdn">${L("Tjenesten skjuler IP-en", "The service hides the IP")}: ${esc(Object.entries(cdn).map(([n, a]) => `${a} ${L("bak", "behind")} ${n}`).join(", "))}</div>` : ""}</div>`;
 }
-const GRUPPER = [["lokal", "Lokal AI", "Kjører på PC-en", "Lokal"], ["nettleser", "Nettleser", "AI i nettleseren", "Nettleser"], ["skjult", "Skjult på PC", "Apper, agenter og bakgrunnsprogrammer", "Skjult"]];
+const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
+
+// Overskriften teller AI-modeller. Resten (nettsteder, utvidelser, apper) står under.
+function visTelling(antall, t) {
+  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : t.modeller === 1 ? L("1 AI-modell funnet", "1 AI model found") : t.modeller ? L(`${t.modeller} AI-modeller funnet`, `${t.modeller} AI models found`) : L("Ingen AI-modeller funnet", "No AI models found");
+  const andre = [[t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")]]
+    .filter(x => x[0] > 0).map(x => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}`);
+  $("andreFunn").textContent = andre.length ? "+ " + andre.join(" · ") : "";
+}
 
 // Én tabell: høy risiko først. Hver rad: AI-modell (med det viktigste på høyst tre ord), risiko og hvor den ligger.
 function visResultat(funn, inf) {
   const RISIKO = { rod: 0, gul: 1, gronn: 2 };
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO[a[0].risiko] - RISIKO[b[0].risiko] || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null;
-  $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
   const ant = r => alle.filter(f => f.risiko === r).length;
-  // Overskriften teller AI-modeller. Resten (nettsteder, utvidelser, apper) står under.
-  const t = info.telling || { modeller: alle.filter(f => /modell/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0 };
-  $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : t.modeller === 1 ? "1 AI-modell funnet" : t.modeller ? `${t.modeller} AI-modeller funnet` : "Ingen AI-modeller funnet";
-  const andre = [[t.nettsteder, "AI-nettsted", "AI-nettsteder"], [t.utvidelser, "nettleserutvidelse", "nettleserutvidelser"], [t.apper, "AI-app eller agent", "AI-apper og agenter"]]
-    .filter(x => x[0] > 0).map(x => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}`);
-  $("andreFunn").textContent = andre.length ? "+ " + andre.join(" · ") : "";
+  visTelling(funn.length, info.telling || { modeller: alle.filter(f => /modell|model/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0 });
   $("bar").innerHTML = funn.length ? ["rod", "gul", "gronn"].filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
-  $("fordeling").innerHTML = funn.length
-    ? `<span class="rod"><b>${ant("rod")}</b>Høy risiko</span><span class="gul"><b>${ant("gul")}</b>Middels</span><span class="gronn"><b>${ant("gronn")}</b>Lav</span>`
-    : "Ingen spor etter AI";
+  tegnFordeling();
   tegnBunn();
   vis("resultat");
   lukkArk();
   tegnListe();
 }
 
+function tegnFordeling() {
+  const funn = alle, ant = r => alle.filter(f => f.risiko === r).length;
+  $("fordeling").innerHTML = funn.length
+    ? `<span class="rod"><b>${ant("rod")}</b>${L("Høy risiko", "High risk")}</span><span class="gul"><b>${ant("gul")}</b>${merke("gul")}</span><span class="gronn"><b>${ant("gronn")}</b>${merke("gronn")}</span>`
+    : L("Ingen spor etter AI", "No traces of AI");
+}
+
 function tegnBunn() {
   const deler = [];
-  if (info.sekunder) deler.push(`Søketid ${Math.max(1, Math.round(info.sekunder))} s`);
-  deler.push(info.admin ? "Søkt som admin" : "Søkt som bruker");
-  deler.push("Ingenting lagret");
-  deler.push("Rød = ukjent AI eller skygge-AI");
-  deler.push(info.nvd === "ferdig" ? "Sikkerhetshull sjekket" : info.nvd === "av" ? "Sikkerhetshull ikke sjekket" : "Sjekker sikkerhetshull…");
+  if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
+  deler.push(L("Ingenting lagret", "Nothing stored"));
+  deler.push(L("Rød = ukjent AI eller skygge-AI", "Red = unknown AI or shadow AI"));
+  deler.push(info.nvd === "ferdig" ? L("Sikkerhetshull sjekket", "Vulnerabilities checked") : info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
   $("hodeInfo").textContent = deler.join(" · ");
   $("bunnHoyre").innerHTML = info.dataMalt
-    ? esc(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`)
-    : `<button id="maal">Mål datamengde (admin)</button>`;
+    ? esc(L(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
+    : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`;
   const m = $("maal"); if (m) m.onclick = () => send({ type: "admin" });
 }
 
 const RAD_H = 50;
 const landListe = f => (f.senderTil || []).length
   ? f.senderTil.map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
-  : `<span class="ingen">${esc(f.ingenLand || "Ikke sett")}</span>`;
+  : `<span class="ingen">${esc(f.ingenLand || L("Ikke sett", "Not seen"))}</span>`;
 function perSide() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / RAD_H)); }
 
 function tegnListe() {
   const l = $("liste");
   l.innerHTML = "";
-  if (!alle.length) { l.innerHTML = `<div class="tom">Fant ingen spor etter AI på denne PC-en.</div>`; $("sider").innerHTML = ""; return; }
+  if (!alle.length) { l.innerHTML = `<div class="tom">${L("Fant ingen spor etter AI på denne PC-en.", "Found no traces of AI on this PC.")}</div>`; $("sider").innerHTML = ""; return; }
   const per = perSide(), sider = Math.ceil(alle.length / per);
   side = Math.max(0, Math.min(side, sider - 1));
   alle.slice(side * per, side * per + per).forEach(f => {
     const r = document.createElement("div");
     r.className = "tr rad";
-    r.title = "Trykk for detaljer";
+    r.title = L("Trykk for detaljer", "Click for details");
     r.innerHTML = `<div class="ai" title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</div>
-      <div><span class="pille ${f.risiko}">${MERKE[f.risiko]}</span></div>
-      <div class="type">${esc(f.type || GRUPPER[gruppeNr(f)][3])}</div>
+      <div><span class="pille ${f.risiko}">${merke(f.risiko)}</span></div>
+      <div class="type">${esc(f.type || GRUPPER[gruppeNr(f)][1]())}</div>
       <div class="lok" title="${esc(f.lokasjon || "")}">${esc(f.lokasjon || "")}</div>
       <div class="land">${landListe(f)}</div><div class="pil">›</div>`;
     r.onclick = () => apneArk(f);
     l.appendChild(r);
   });
   $("sider").innerHTML = sider > 1
-    ? `<button id="forrige" ${side === 0 ? "disabled" : ""}>‹</button><span>${side + 1} av ${sider}</span><button id="neste" ${side >= sider - 1 ? "disabled" : ""}>›</button>`
+    ? `<button id="forrige" ${side === 0 ? "disabled" : ""}>‹</button><span>${side + 1} ${L("av", "of")} ${sider}</span><button id="neste" ${side >= sider - 1 ? "disabled" : ""}>›</button>`
     : "";
   if (sider > 1) {
     $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); };
@@ -373,7 +399,7 @@ function delOpp(t) {
   const type = i > 0 ? hode.slice(0, i) : "";
   if (m) {
     const sti = m[0].replace(/\\$/, ""), navn = sti.split("\\").pop();
-    return { tittel: navn, under: sti, meta: [type && !/^(Fil|Mappe)$/.test(type) ? type : "", meta].filter(Boolean).join(" · "), sti };
+    return { tittel: navn, under: sti, meta: [type && !/^(Fil|Mappe|File|Folder)$/.test(type) ? type : "", meta].filter(Boolean).join(" · "), sti };
   }
   return { tittel: i > 0 ? hode.slice(i + 2) : hode, under: type, meta };
 }
@@ -386,39 +412,39 @@ function kortSti(sti, plass) {
 function tegnDetalj(beholdSide) {
   const d = $("detalj"), f = valgt;
   if (!beholdSide) stedSide = 0;
-  if (!f) { d.innerHTML = `<div class="tom">${alle.length ? "Velg et funn." : "Ingen AI funnet."}</div>`; return; }
+  if (!f) { d.innerHTML = `<div class="tom">${alle.length ? L("Velg et funn.", "Select a finding.") : L("Ingen AI funnet.", "No AI found.")}</div>`; return; }
   const mal = f.trafikk || [];
-  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type|Utgiver|YARA):?/, API = /^AI-API: /;
+  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type|Utgiver|YARA|Identified as|Family unknown|Model ID|Publisher):?/, API = /^AI[- ]API: /;
   const ident = (f.steder || []).filter(t => ID.test(t)), api = (f.steder || []).filter(t => API.test(t)),
         steder = (f.steder || []).filter(t => !ID.test(t) && !API.test(t));
-  const identTittel = ident.some(t => !t.startsWith("Utgiver")) ? "Hvem er modellen" : "Hvem står bak";
+  const identTittel = ident.some(t => !/^(Utgiver|Publisher)/.test(t)) ? L("Hvem er modellen", "What the model is") : L("Hvem står bak", "Who is behind it");
   const apiLinje = t => { const [navn, ...rest] = t.slice(8).split(" · "); const st = rest.join(" · ");
-    const [kl, kort] = /blokkert/.test(st) ? ["av", "blokkert av IT"] : /manuelt/.test(st) ? ["manuelt", "slått på manuelt"]
-      : /^ukjent/.test(st) ? ["", "ukjent"] : /^av|ingen modell|ikke funnet|ikke slått/.test(st) ? ["av", "av"]
-      : /utvidelser/.test(st) && !/nettsider/.test(st) ? ["paa", "på for utvidelser"] : ["paa", /PC-en/.test(st) ? "på PC-en" : "på"];
+    const [kl, kort] = /blokkert|blocked/.test(st) ? ["av", L("blokkert av IT", "blocked by IT")] : /manuelt|manually/.test(st) ? ["manuelt", L("slått på manuelt", "turned on manually")]
+      : /^(ukjent|unknown)/.test(st) ? ["", L("ukjent", "unknown")] : /^(av|off)\b|ingen modell|no model|ikke funnet|not found|ikke slått|not turned/.test(st) ? ["av", L("av", "off")]
+      : /utvidelser|extensions/.test(st) && !/nettsider|websites/.test(st) ? ["paa", L("på for utvidelser", "on for extensions")] : ["paa", /PC-en|the PC/.test(st) ? L("på PC-en", "on the PC") : L("på", "on")];
 return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc(kort)}</span></li>`; };
   const identLinje = t => { const i = t.indexOf(":"); return `<li class="ident"><span>${i > 0 ? `<b>${esc(t.slice(0, i))}</b>${esc(t.slice(i))}` : esc(t)}</span></li>`; };
   // Hver IP med sitt land. Bak en CDN er landet bare nærmeste kantserver, så der står CDN-en i stedet.
   const ipLinje = m => {
     const l = ipListe(m).filter(x => x.ip !== m.adresse || (m.ip || []).length);
-    if (!l.length || (l.length === 1 && l[0].ip === m.adresse)) return m.landKode === "CDN" ? `<span class="ip">bak ${esc(m.cdn || "CDN")}</span>` : "";
-    const sted = x => x.cdn || x.kode === "CDN" ? `bak ${x.cdn || m.cdn || "CDN"}` : x.land || "ukjent land";
+    if (!l.length || (l.length === 1 && l[0].ip === m.adresse)) return m.landKode === "CDN" ? `<span class="ip">${L("bak", "behind")} ${esc(m.cdn || "CDN")}</span>` : "";
+    const sted = x => x.cdn || x.kode === "CDN" ? `${L("bak", "behind")} ${x.cdn || m.cdn || "CDN"}` : x.land || L("ukjent land", "unknown country");
     // Samme sted for alle står bare én gang, til høyre
     const ulike = new Set(l.map(sted)).size > 1;
     const vis = l.slice(0, 4).map(x => `<span class="${x.farlig ? "farlig" : ""}">${esc(x.ip)}${ulike ? ` · ${esc(sted(x))}` : ""}</span>`).join("");
-    return `<span class="ip">${vis}${l.length > 4 ? `<span>+ ${l.length - 4} til</span>` : ""}</span>`;
+    return `<span class="ip">${vis}${l.length > 4 ? `<span>+ ${l.length - 4} ${L("til", "more")}</span>` : ""}</span>`;
   };
   const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${ipLinje(m)}</span>` +
-    `<span class="land ${m.farlig ? "farlig" : ""} ${m.landKode === "CDN" ? "skjult" : ""}">${m.landKode === "CDN" ? `Tjenesten skjuler IP-en<small>bak ${esc(m.cdn || "CDN")}</small>` : esc(m.land || "ukjent land")}</span>` +
-    `<span class="data">${esc(m.data || (info.dataMalt ? "ikke målt" : m.antall + (m.antall === 1 ? " forbindelse" : " forbindelser")))}</span></li>`;
+    `<span class="land ${m.farlig ? "farlig" : ""} ${m.landKode === "CDN" ? "skjult" : ""}">${m.landKode === "CDN" ? `${L("Tjenesten skjuler IP-en", "The service hides the IP")}<small>${L("bak", "behind")} ${esc(m.cdn || "CDN")}</small>` : esc(m.land || L("ukjent land", "unknown country"))}</span>` +
+    `<span class="data">${esc(m.data || (info.dataMalt ? L("ikke målt", "not measured") : m.antall + (m.antall === 1 ? L(" forbindelse", " connection") : L(" forbindelser", " connections"))))}</span></li>`;
   const bredde = d.clientWidth - 110;
   const stedLinje = t => {
     const s = delOpp(t);
     return `<li class="sted" title="${esc(t)}"><div><div class="l1"><b>${esc(s.tittel)}</b>${s.meta ? `<small>${esc(s.meta)}</small>` : ""}</div>` +
       `${s.under ? `<div class="l2">${esc(s.sti ? kortSti(s.under, bredde) : s.under)}</div>` : ""}</div>` +
-      `${s.sti && vert ? `<button class="vis" data-sti="${esc(s.sti)}">Vis</button>` : ""}</li>`;
+      `${s.sti && vert ? `<button class="vis" data-sti="${esc(s.sti)}">${L("Vis", "Show")}</button>` : ""}</li>`;
   };
-  const tider = [f.forst ? `Først ${f.forst}` : "", f.sist ? (f.sist === "nå" ? "Aktiv nå" : `Sist ${f.sist}`) : ""].filter(Boolean);
+  const tider = [f.forst ? `${L("Først", "First")} ${f.forst}` : "", f.sist ? (f.naa || f.sist === "nå" ? L("Aktiv nå", "Active now") : `${L("Sist", "Last")} ${f.sist}`) : ""].filter(Boolean);
   let kompakt = false;
   const apiKompakt = () => `<div class="apiKompakt">${api.map(t => { const li = apiLinje(t); return li.replace(/^<li class="api ([^"]*)"[^>]*><span>/, '<span class="api $1">').replace(/<\/span><\/li>$/, "</span>"); }).join("")}</div>`;
   const tegn = per => {
@@ -426,22 +452,22 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     stedSide = Math.min(stedSide, sider - 1);
     const vis = steder.slice(stedSide * per, stedSide * per + per);
     const sendt = (f.senderTil || []).length
-      ? f.senderTil.slice(0, 3).map(l => `<div class="stor ${l.farlig ? "fare" : ""}">${esc(l.land)}</div>`).join("") + (f.senderTil.length > 3 ? `<div class="liten">og ${f.senderTil.length - 3} til</div>` : "")
-      : f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">Ingen</div><div class="liten">Kjører lokalt på PC-en</div>` : `<div class="stor">Ikke sett</div><div class="liten">Sendte ingenting under søket</div>`;
-    d.innerHTML = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ Alle AI</button><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2><span class="pille ${f.risiko}">${MERKE[f.risiko]} risiko</span><span class="dtype">${esc(f.type || "")}</span></div>
+      ? f.senderTil.slice(0, 3).map(l => `<div class="stor ${l.farlig ? "fare" : ""}">${esc(l.land)}</div>`).join("") + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
+      : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "None")}</div><div class="liten">${L("Kjører lokalt på PC-en", "Runs locally on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
+    d.innerHTML = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2><span class="pille ${f.risiko}">${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span class="dtype">${esc(f.type || "")}</span></div>
       <div class="flyt">
-        <div class="flis2"><small>Kommer fra</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || "Ukjent")}</div><div class="liten">${esc(f.selskap || "Ukjent selskap")}</div></div>
+        <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
         <div class="pil2">→</div>
-        <div class="flis2"><small>Sender data til</small>${sendt}</div>
-        <div class="flis2"><small>Hvorfor ${MERKE[f.risiko].toLowerCase()} risiko</small><div class="grunn">${esc(f.grunn || f.kort)}</div></div>
+        <div class="flis2"><small>${L("Sender data til", "Sends data to")}</small>${sendt}</div>
+        <div class="flis2"><small>${L(`Hvorfor ${merke(f.risiko).toLowerCase()} risiko`, `Why ${merke(f.risiko).toLowerCase()} risk`)}</small><div class="grunn">${esc(f.grunn || f.kort)}</div></div>
       </div>
       <div class="brikker">${tider.map(t => `<span>${esc(t)}</span>`).join("")}</div>
       ${ident.length ? `<h3>${identTittel}</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
-      ${api.length ? `<h3>AI-funksjoner for nettsider</h3>${kompakt ? apiKompakt() : `<ul class="apiListe">${api.map(apiLinje).join("")}</ul>`}` : ""}
-      ${mal.length || (f.senderTil || []).length ? `<h3>Hvor dataene går</h3><div class="kartRad">${kart(f)}${mal.length ? `<ul id="malListe">${mal.map(malLinje).join("")}</ul>` : `<div class="kartInfo">Tjenesten hører hjemme i ${esc(f.senderTil.map(l => l.land).join(", "))}. IP-adressene vises når den er i bruk under søket.</div>`}</div>` : ""}
-      ${steder.length ? `<h3 class="medSider"><span>Ligger her · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} av ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
-      ${(f.merk || []).length ? `<h3>Merk</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
-      ${mal.length ? `<div class="kilde">Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).</div>` : ""}`;
+      ${api.length ? `<h3>${L("AI-funksjoner for nettsider", "AI features for websites")}</h3>${kompakt ? apiKompakt() : `<ul class="apiListe">${api.map(apiLinje).join("")}</ul>`}` : ""}
+      ${mal.length || (f.senderTil || []).length ? `<h3>${L("Hvor dataene går", "Where the data goes")}</h3><div class="kartRad">${kart(f)}${mal.length ? `<ul id="malListe">${mal.map(malLinje).join("")}</ul>` : `<div class="kartInfo">${esc(L(`Tjenesten hører hjemme i ${f.senderTil.map(l => l.land).join(", ")}. IP-adressene vises når den er i bruk under søket.`, `The service is based in ${f.senderTil.map(l => l.land).join(", ")}. IP addresses show when it is in use during the scan.`))}</div>`}</div>` : ""}
+      ${steder.length ? `<h3 class="medSider"><span>${L("Ligger her", "Located here")} · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} ${L("av", "of")} ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
+      ${(f.merk || []).length ? `<h3>${L("Merk", "Note")}</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
+      ${mal.length ? `<div class="kilde">${L("Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).", "Measured from Windows now. Country: DB-IP.com (CC BY 4.0).")}</div>` : ""}`;
     return d.scrollHeight <= d.clientHeight + 1;
   };
   // Ingen scrolling: så mange steder per side som får plass, resten på neste side
@@ -482,10 +508,15 @@ window.addEventListener("resize", () => { clearTimeout(venter); venter = setTime
 
 // Meldinger fra programmet
 function motta(m) {
-  if (m.type === "resultat") visResultat(m.funn, m.info);
+  if (m.type === "resultat") {
+    // Samme resultat på nytt språk: bli stående på samme side og samme funn
+    const id = valgt && valgt.id, s0 = side, ss = stedSide;
+    visResultat(m.funn, m.info);
+    if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
+  }
   else if (m.type === "nvd") {
     // Svar på sikkerhetshull kommer etter at resultatet vises
-    const f = alle.find(x => x.navn === m.navn);
+    const f = alle.find(x => m.id != null ? x.id === m.id : x.navn === m.navn);
     if (f) { f.merk = m.merk; if (valgt === f) tegnDetalj(true); }
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
@@ -493,25 +524,58 @@ function motta(m) {
   else if (m.type === "start") { sisteValg = "admin"; start(); }
   else if (m.type === "modus") {
     erAdmin = !!m.admin;
-    $("valg").classList.toggle("erAdmin", erAdmin);
-    $("ringTekst").textContent = erAdmin ? "ADMIN ER PÅ" : "SØK SOM ADMIN";
-    if (erAdmin) { $("sok").innerHTML = "Søk<small>som admin</small>"; sisteValg = "admin"; }
+    if (m.sprak) { språk = m.sprak; settSpråk(språk, true); }
+    if (erAdmin) sisteValg = "admin";
+    tegnModus();
   }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
 let erAdmin = false, sisteValg = "sok";
+function tegnModus() {
+  $("valg").classList.toggle("erAdmin", erAdmin);
+  $("ringTekst").textContent = erAdmin ? L("ADMIN ER PÅ", "ADMIN IS ON") : L("SØK SOM ADMIN", "SCAN AS ADMIN");
+  $("sok").innerHTML = erAdmin ? L("Søk<small>som admin</small>", "Scan<small>as admin</small>") : L("Søk<small>som bruker</small>", "Scan<small>as user</small>");
+  $("sok").title = L("Søk som vanlig bruker: mindre data", "Scan as a normal user: less data");
+  $("sokAdmin").title = L("Søk som administrator: mer data", "Scan as administrator: more data");
+}
+
+// Bytter all tekst med en gang, også et resultat som vises. Programmet sender funnene på nytt på riktig språk (uten nytt søk).
+function settSpråk(l, fraProgram) {
+  språk = l;
+  document.documentElement.lang = l === "en" ? "en" : "no";
+  document.querySelectorAll("[data-en]").forEach(el => {
+    if (el.dataset.no == null) el.dataset.no = el.innerHTML;
+    el.innerHTML = l === "en" ? el.dataset.en : el.dataset.no;
+  });
+  document.querySelectorAll("#sprak button").forEach(b => b.classList.toggle("valgt", b.dataset.l === l));
+  tegnModus();
+  if (!fraProgram) send({ type: "sprak", sprak: l });
+  if ($("resultat").classList.contains("aktiv")) {
+    tegnBunn(); tegnListe(); if (valgt) tegnDetalj(true);
+    if (info.telling) visTelling(alle.length, info.telling);
+    tegnFordeling();
+  }
+}
+document.querySelectorAll("#sprak button").forEach(b => b.onclick = () => { if (b.dataset.l !== språk) settSpråk(b.dataset.l); });
 function start() { $("feil").textContent = ""; vis("soker"); send({ type: sisteValg }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
 $("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin" }); } };
 $("igjen").onclick = start;
+settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------
-function demo(m) { if (m.type === "sok") setTimeout(() => motta({ type: "resultat", funn: window.DEMO || [], info: window.DEMOINFO }), 1200); }
+function demo(m) {
+  const demoFunn = () => (språk === "en" && window.DEMO_EN) || window.DEMO || [];
+  if (m.type === "sok") setTimeout(() => motta({ type: "resultat", funn: demoFunn(), info: window.DEMOINFO }), 1200);
+  // Demo: funnene på engelsk, som programmet ville sendt
+  if (m.type === "sprak" && window.DEMO_EN && $("resultat").classList.contains("aktiv"))
+    motta({ type: "resultat", funn: m.sprak === "en" ? window.DEMO_EN : window.DEMO, info: window.DEMOINFO, behold: true });
+}
 const p = new URLSearchParams(location.search);
 if (p.get("side") === "soker") vis("soker");
-if (p.get("side") === "resultat") setTimeout(() => { visResultat(window.DEMO || [], window.DEMOINFO); if (p.get("valgt")) apneArk(alle[+p.get("valgt")]); }, 0);
+if (p.get("side") === "resultat") setTimeout(() => { visResultat((språk === "en" && window.DEMO_EN) || window.DEMO || [], window.DEMOINFO); if (p.get("valgt")) apneArk(alle[+p.get("valgt")]); }, 0);
 </script>
 </body>
 </html>

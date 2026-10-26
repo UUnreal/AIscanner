@@ -12,13 +12,16 @@ public static class Rapport
     /// Rapport som ren tekst, for Notisblokk. Alle AI-funn med risiko og hvor de ble funnet.
     /// Nettleserfunn viser bare nettleser, profil og nettstedsnavn, aldri hele adresser.
     /// </summary>
-    public static string Tekst(IReadOnlyList<Funn> liste, Skanner? skanner = null)
+    public static string Tekst(IReadOnlyList<Funn> liste, Skanner? skanner = null, bool engelsk = false)
     {
         var sb = new StringBuilder();
-        void L(string s = "") => sb.Append(s).Append("\r\n");
+        void L(string s = "") => sb.Append(engelsk ? Engelsk.Til(s) : s).Append("\r\n");
+        // Linjer som allerede er på riktig språk (tabellen og navn), skal ikke gjennom oversettelsen
+        void Ra(string s) => sb.Append(s).Append("\r\n");
+        string T(string s) => engelsk ? Engelsk.Til(s)! : s;
         string strek = new('-', 60);
         L("AI-SKANNER RAPPORT");
-        L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}");
+        Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Environment.UserName}");
         L($"Søket kjørt: {(skanner?.Startet ?? DateTime.Now):dd.MM.yyyy HH:mm:ss}   Rapport laget: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
@@ -30,7 +33,7 @@ public static class Rapport
         if (skanner != null && skanner.Tider.TryGetValue("Totalt", out var totalt))
         {
             var treg = skanner.Tider.Where(t => t.Key != "Totalt").OrderByDescending(t => t.Value).Take(3)
-                              .Select(t => $"{t.Key.ToLowerInvariant()} {t.Value.TotalSeconds:0.0} s");
+                              .Select(t => $"{t.Key} {t.Value.TotalSeconds:0.0} s");
             L($"Søketid: {totalt.TotalSeconds:0.0} sekunder (tregest: {string.Join(", ", treg)}).");
         }
         if (skanner != null)
@@ -43,10 +46,10 @@ public static class Rapport
         {
             L();
             L("OVERSIKT");
-            L($"{"Risiko",-12}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
+            Ra(engelsk ? $"{"Risk",-12}{"AI model",-38}{"Location",-26}Key point" : $"{"Risiko",-12}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
             L(new string('-', 99));
             foreach (var f in liste.OrderBy(f => f.Risiko))
-                L($"{Merke(f.Risiko),-12}{Klipp(Oversikt.Navn(f), 36),-38}{Klipp(Oversikt.Lokasjon(f), 24),-26}{Oversikt.Punkt(f)}");
+                Ra($"{T(Merke(f.Risiko)),-12}{Klipp(T(Oversikt.Navn(f)), 36),-38}{Klipp(T(Oversikt.Lokasjon(f)), 24),-26}{T(Oversikt.Punkt(f))}");
         }
         foreach (var (gruppe, tittel) in Grupper)
         {

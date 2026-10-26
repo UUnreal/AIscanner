@@ -42,6 +42,11 @@ Ikke testet på Windows.
   Azure Front Door og Google (navn i DNS-bufferen), får ikke noe land. Der står det «Tjenesten skjuler IP-en»
   og hvilken CDN, fordi adressen bare er nærmeste kantserver.
 - Selvtesten (`--selvtest`) kjører i byggeløypa.
+- **Norsk og engelsk.** Flagg for NO og EN øverst til høyre på startskjermen og ved knappene i resultatet. Ett trykk
+  bytter all tekst med en gang, også funnene som vises, uten nytt søk. Rapporten lastes ned på valgt språk
+  (`AI-report_…` på engelsk). Språket følger Windows til brukeren velger selv, og valget lagres ikke.
+  Tekstene fra skanneren oversettes med ordlista `src/AISkanner.Core/engelsk.txt`. Tekst som mangler i lista, står
+  igjen på norsk. `AISkanner.Cli --en` gir rapport og JSON på engelsk.
 
 ## [2.13.1] - 2026-10-26
 

@@ -25,6 +25,7 @@
     <EmbeddedResource Include="regler.json" LogicalName="AISkanner.regler.json" />
     <!-- YARA-regler for AI-modeller. Åpen tekst, kan også kjøres med yara.exe -->
     <EmbeddedResource Include="ai-modeller.yar" LogicalName="AISkanner.ai-modeller.yar" />
+    <EmbeddedResource Include="engelsk.txt" LogicalName="AISkanner.engelsk.txt" />
     <!-- IP-land fra DB-IP.com (CC BY 4.0), komprimert. Lages med verktoy/lag-ipland.py -->
     <EmbeddedResource Include="ipland.bin" LogicalName="AISkanner.ipland.bin" />
     <InternalsVisibleTo Include="AISkanner.Cli" />

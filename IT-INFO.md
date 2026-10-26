@@ -120,6 +120,11 @@ Fila åpnes ikke, og verdien leses aldri.
   DNS-bufferen (`DNS_QUERY_NO_WIRE_QUERY`, ingen nye oppslag).
 - Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester. Annen surfing vises ikke.
 
+### Språk
+
+Vinduet og rapporten finnes på norsk og engelsk. Språket følger Windows (`CurrentUICulture`) til brukeren trykker på
+et flagg. Valget lagres ikke. Funnene oversettes i programmet med ordlista `engelsk.txt`, uten nett.
+
 ## Hva den aldri leser
 
 Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State` (unntatt `--flagg` i
