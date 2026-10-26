@@ -111,9 +111,14 @@ public sealed class Mal
     public string? Tjeneste { get; set; }
     public string? Land { get; set; }
     public string? EierLand { get; set; }
+    /// <summary>CDN-en tjenesten skjuler seg bak (Cloudflare, Akamai …). Da er Land "CDN".</summary>
+    public string? Cdn { get; set; }
     public int Antall { get; set; }
     public long? Ut { get; set; }
     public long? Inn { get; set; }
-    /// <summary>IP-adressene forbindelsene gikk til (høyst 8).</summary>
-    public List<string> Ip { get; } = new();
+    /// <summary>IP-adressene forbindelsene gikk til (høyst 8), hver med sitt land.</summary>
+    public List<IpSted> Ip { get; } = new();
 }
+
+/// <summary>En IP-adresse og landet den er registrert i. Cdn er satt når adressen bare er en kantserver.</summary>
+public sealed record IpSted(string Ip, string? Land, string? Cdn);

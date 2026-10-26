@@ -102,7 +102,7 @@ public static class Nettverk
     [DllImport("dnsapi.dll")]
     private static extern void DnsRecordListFree(IntPtr liste, int type);
 
-    private const ushort DNS_TYPE_A = 1, DNS_TYPE_AAAA = 28;
+    private const ushort DNS_TYPE_A = 1, DNS_TYPE_CNAME = 5, DNS_TYPE_AAAA = 28;
     private const uint DNS_QUERY_NO_WIRE_QUERY = 0x10;   // bare fra bufferen, aldri ut på nettet
 
     /// <summary>Navn PC-en nylig har slått opp, og hvilke navn hver IP-adresse hører til. Spør aldri en DNS-server.</summary>
@@ -133,11 +133,17 @@ public static class Nettverk
             foreach (var type in new[] { DNS_TYPE_A, DNS_TYPE_AAAA })
             {
                 if (DnsQuery(n, type, DNS_QUERY_NO_WIRE_QUERY, IntPtr.Zero, out var liste, IntPtr.Zero) != 0 || liste == IntPtr.Zero) continue;
+                var kjede = new List<string>();
+                var ipene = new List<IPAddress>();
                 try
                 {
                     for (var r = liste; r != IntPtr.Zero; r = Marshal.ReadIntPtr(r))
                     {
                         var t = (ushort)Marshal.ReadInt16(r, 2 * IntPtr.Size);
+                        // CNAME-kjeden (f.eks. api.x.com -> x.cdn.cloudflare.net) viser om adressen er en CDN
+                        var postNavn = Marshal.PtrToStringUni(Marshal.ReadIntPtr(r, IntPtr.Size));
+                        if (!string.IsNullOrEmpty(postNavn)) kjede.Add(postNavn!.TrimEnd('.').ToLowerInvariant());
+                        if (t == DNS_TYPE_CNAME && Marshal.PtrToStringUni(Marshal.ReadIntPtr(r, data)) is { Length: > 0 } mal) kjede.Add(mal.TrimEnd('.').ToLowerInvariant());
                         IPAddress? ip = null;
                         if (t == DNS_TYPE_A) ip = new IPAddress((uint)Marshal.ReadInt32(r, data));
                         else if (t == DNS_TYPE_AAAA)
@@ -147,12 +153,16 @@ public static class Nettverk
                             ip = new IPAddress(b);
                         }
                         // Flere navn kan dele samme adresse (f.eks. bak Cloudflare). Alle tas vare på.
-                        if (ip == null) continue;
-                        if (!kart.TryGetValue(ip, out var navnene)) kart[ip] = navnene = new List<string>();
-                        if (!navnene.Contains(n)) navnene.Add(n);
+                        if (ip != null) ipene.Add(ip);
                     }
                 }
                 finally { DnsRecordListFree(liste, 1); }
+                foreach (var ip in ipene)
+                {
+                    if (!kart.TryGetValue(ip, out var navnene)) kart[ip] = navnene = new List<string>();
+                    foreach (var k in kjede.Prepend(n))
+                        if (!navnene.Contains(k)) navnene.Add(k);
+                }
             }
         }
         return kart;

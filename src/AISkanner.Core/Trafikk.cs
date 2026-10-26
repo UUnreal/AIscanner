@@ -112,11 +112,13 @@ public sealed partial class Skanner
 
             var adresse = vert ?? t.Fjern.ToString();
             if (!mal.TryGetValue(f, out var liste)) mal[f] = liste = new Dictionary<string, Mal>(StringComparer.OrdinalIgnoreCase);
+            var cdn = IpLand.Cdn(t.Fjern, nb.Dns.TryGetValue(t.Fjern, out var dnsNavn) ? dnsNavn : null);
+            var land = cdn != null ? "CDN" : IpLand.Finn(t.Fjern);
             if (!liste.TryGetValue(adresse, out var m))
-                liste[adresse] = m = new Mal { Adresse = adresse, Tjeneste = tj?.Navn, Land = IpLand.Finn(t.Fjern), EierLand = tj?.Land };
+                liste[adresse] = m = new Mal { Adresse = adresse, Tjeneste = tj?.Navn, Land = land, Cdn = cdn, EierLand = tj?.Land };
             m.Antall++;
             var ip = t.Fjern.ToString();
-            if (m.Ip.Count < 8 && !m.Ip.Contains(ip)) m.Ip.Add(ip);
+            if (m.Ip.Count < 8 && !m.Ip.Any(x => x.Ip == ip)) m.Ip.Add(new IpSted(ip, land, cdn));
             if (nb.Bytes != null && nb.Bytes.TryGetValue(t.Nokkel, out var b))
             {
                 m.Ut = (m.Ut ?? 0) + b.Ut;

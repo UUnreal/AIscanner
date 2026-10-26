@@ -181,6 +181,8 @@
   .kart .nal text { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; }
   .kart .cdn { position: absolute; left: 12px; bottom: 8px; font-size: 11.5px; color: var(--dempet); }
   .kartInfo { font-size: 13.5px; color: var(--dempet); padding: 8px 4px; }
+  .mal .ip span { display: block; } .mal .ip .farlig { color: var(--rod); }
+  .mal .land.skjult { color: var(--gul-tekst); font-weight: 600; text-align: right; } .mal .land.skjult small { display: block; font-weight: 400; color: var(--dempet); }
   .mal .ip { display: block; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); font-weight: 400; }
   .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
   .mal .vert small { color: var(--dempet); font-weight: 400; font-size: 12.5px; }
@@ -258,23 +260,25 @@ const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentC
 
 let alle = [], info = {}, side = 0, valgt = null;
 
+// IP-adressene til et mål, hver med land. Er det ingen IP-er, brukes målets eget land.
+const ipListe = m => (m.ip && m.ip.length ? m.ip : [m.adresse]).map(x => typeof x === "string" ? { ip: x, kode: m.landKode, land: m.land, cdn: m.landKode === "CDN" ? m.cdn : null, farlig: m.farlig } : x);
 // Kart over landene AI-en sender til. Bare land: IP-databasen sier ikke hvor i landet, og skytjenester (Cloudflare, Azure) svarer fra nærmeste by uansett.
 function kart(f) {
   const farge = {}, antall = {};
   (f.senderTil || []).forEach(l => { if (l.kode) farge[l.kode] = l.farlig ? "fare" : "mal"; });
-  let cdn = 0;
-  (f.trafikk || []).forEach(m => {
-    if (m.landKode === "CDN") { cdn++; return; }
-    if (!m.landKode || m.landKode === "LAN") return;
-    antall[m.landKode] = (antall[m.landKode] || 0) + Math.max(1, (m.ip || []).length);
-    if (!farge[m.landKode]) farge[m.landKode] = m.farlig ? "fare" : "mal";
-  });
+  const cdn = {};
+  (f.trafikk || []).forEach(m => ipListe(m).forEach(x => {
+    if (x.cdn || x.kode === "CDN") { const n = x.cdn || m.cdn || "CDN"; cdn[n] = (cdn[n] || 0) + 1; return; }
+    if (!x.kode || x.kode === "LAN") return;
+    antall[x.kode] = (antall[x.kode] || 0) + 1;
+    if (!farge[x.kode]) farge[x.kode] = x.farlig || m.farlig ? "fare" : "mal";
+  }));
   const stier = Object.entries(KART.land).map(([k, d]) => `<path d="${d}" class="${farge[k] || ""}"><title>${esc(k)}</title></path>`).join("");
   const nåler = Object.keys(farge).filter(k => KART.senter[k]).map(k => {
     const [x, y] = KART.senter[k];
     return `<g class="nal ${farge[k]}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x}" y="${y + 3.5}">${antall[k] || ""}</text></g>`;
   }).join("");
-  return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${cdn ? `<div class="cdn">+ ${cdn} via Cloudflare (sted ukjent)</div>` : ""}</div>`;
+  return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${Object.keys(cdn).length ? `<div class="cdn">Tjenesten skjuler IP-en: ${esc(Object.entries(cdn).map(([n, a]) => `${a} bak ${n}`).join(", "))}</div>` : ""}</div>`;
 }
 const GRUPPER = [["lokal", "Lokal AI", "Kjører på PC-en", "Lokal"], ["nettleser", "Nettleser", "AI i nettleseren", "Nettleser"], ["skjult", "Skjult på PC", "Apper, agenter og bakgrunnsprogrammer", "Skjult"]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
@@ -394,8 +398,18 @@ function tegnDetalj(beholdSide) {
       : /utvidelser/.test(st) && !/nettsider/.test(st) ? ["paa", "på for utvidelser"] : ["paa", /PC-en/.test(st) ? "på PC-en" : "på"];
 return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc(kort)}</span></li>`; };
   const identLinje = t => { const i = t.indexOf(":"); return `<li class="ident"><span>${i > 0 ? `<b>${esc(t.slice(0, i))}</b>${esc(t.slice(i))}` : esc(t)}</span></li>`; };
-  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${(m.ip || []).length && !(m.ip.length === 1 && m.ip[0] === m.adresse) ? `<span class="ip">${esc(m.ip.slice(0, 3).join(", "))}${m.ip.length > 3 ? " …" : ""}</span>` : ""}</span>` +
-    `<span class="land ${m.farlig ? "farlig" : ""}">${esc(m.land || "ukjent land")}</span>` +
+  // Hver IP med sitt land. Bak en CDN er landet bare nærmeste kantserver, så der står CDN-en i stedet.
+  const ipLinje = m => {
+    const l = ipListe(m).filter(x => x.ip !== m.adresse || (m.ip || []).length);
+    if (!l.length || (l.length === 1 && l[0].ip === m.adresse)) return m.landKode === "CDN" ? `<span class="ip">bak ${esc(m.cdn || "CDN")}</span>` : "";
+    const sted = x => x.cdn || x.kode === "CDN" ? `bak ${x.cdn || m.cdn || "CDN"}` : x.land || "ukjent land";
+    // Samme sted for alle står bare én gang, til høyre
+    const ulike = new Set(l.map(sted)).size > 1;
+    const vis = l.slice(0, 4).map(x => `<span class="${x.farlig ? "farlig" : ""}">${esc(x.ip)}${ulike ? ` · ${esc(sted(x))}` : ""}</span>`).join("");
+    return `<span class="ip">${vis}${l.length > 4 ? `<span>+ ${l.length - 4} til</span>` : ""}</span>`;
+  };
+  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${ipLinje(m)}</span>` +
+    `<span class="land ${m.farlig ? "farlig" : ""} ${m.landKode === "CDN" ? "skjult" : ""}">${m.landKode === "CDN" ? `Tjenesten skjuler IP-en<small>bak ${esc(m.cdn || "CDN")}</small>` : esc(m.land || "ukjent land")}</span>` +
     `<span class="data">${esc(m.data || (info.dataMalt ? "ikke målt" : m.antall + (m.antall === 1 ? " forbindelse" : " forbindelser")))}</span></li>`;
   const bredde = d.clientWidth - 110;
   const stedLinje = t => {

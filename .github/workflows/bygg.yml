@@ -30,6 +30,9 @@ jobs:
           if ($LASTEXITCODE -gt 2) { exit 1 }
           Get-Content skann.json | ConvertFrom-Json | Out-Null
 
+      - name: Selvtest (godkjentlista kan ikke lures)
+        run: dotnet run --project src/AISkanner.Cli -c Release --no-build -- --selvtest
+
       - name: Bygg programmet
         run: dotnet publish src/AISkanner -c Release -o publish
 

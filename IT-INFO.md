@@ -115,6 +115,9 @@ Fila åpnes ikke, og verdien leses aldri.
 - Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
 - Kartet i resultatet er innebygd (Natural Earth, fri bruk, via world-atlas, ISC). Det viser land, ikke by, og henter
   ingenting fra nettet. IP-adressene vises i vinduet, men lagres ikke.
+- IP-adresser bak en CDN får ikke land, fordi adressen bare er nærmeste kantserver. Cloudflare, Fastly og Amazon
+  CloudFront kjennes på innebygde adresseblokker. Akamai, Azure Front Door og Google kjennes på navnene i CNAME-kjeden i
+  DNS-bufferen (`DNS_QUERY_NO_WIRE_QUERY`, ingen nye oppslag).
 - Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester. Annen surfing vises ikke.
 
 ## Hva den aldri leser

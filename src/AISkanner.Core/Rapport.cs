@@ -96,7 +96,7 @@ public static class Rapport
     {
         var deler = new List<string> { m.Adresse };
         if (m.Tjeneste != null && !m.Adresse.Contains(m.Tjeneste)) deler.Add(m.Tjeneste);
-        deler.Add(m.Land == "LAN" ? "lokalt nett" : m.Land == "CDN" ? "via Cloudflare" : $"server i {IpLand.Navn(m.Land)}");
+        deler.Add(m.Land == "LAN" ? "lokalt nett" : m.Land == "CDN" ? $"tjenesten skjuler IP-en (bak {m.Cdn ?? "CDN"})" : $"server i {IpLand.Navn(m.Land)}");
         if (m.EierLand != null && m.EierLand != m.Land) deler.Add($"selskap i {IpLand.Navn(m.EierLand)}");
         deler.Add(m.Antall == 1 ? "1 forbindelse" : $"{m.Antall} forbindelser");
         if (m.Ut != null) deler.Add($"sendt {Storrelse(m.Ut.Value)}, mottatt {Storrelse(m.Inn ?? 0)}");
