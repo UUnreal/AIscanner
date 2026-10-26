@@ -202,8 +202,11 @@ public sealed partial class Skanner
             if (e.Key is string k && NokkelNavn.IsMatch(k)) navn.Add(k);
         if (Plattform.ErWindows)
         {
-            using var env = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Environment");
-            foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
+            // Bare navnene på variablene i registeret, aldri verdiene
+            using (var env = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Environment"))
+                foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
+            using (var env = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
+                foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
         }
         // Filer som bare finnes når man har logget inn med en nøkkel (vi sjekker at de finnes, åpner dem ikke)
         var hfToken = Utvid(@"%USERPROFILE%\.cache\huggingface\token");
@@ -275,7 +278,11 @@ public sealed partial class Skanner
             var resten = modeller.Skip(15).ToList();
             var f = LeggTil($"Flere AI-modeller ({resten.Count})", "Lokal AI", Risiko.Rod, "Flere AI-modeller ligger lagret på PC-en.", "Disk", null);
             f.Bruk = $"Til sammen {Gb(resten.Sum(x => x.Lengde))}.";
-            foreach (var r in resten) f.Detalj($"Fil: {r.Sti} ({r.Modell.Format}, {Gb(r.Lengde)})");
+            foreach (var r in resten)
+            {
+                var id = ModellGjenkjenning.Finn(r.Modell, r.Sti, _regler, Kildenavn(r.Sti));
+                f.Detalj($"Fil: {r.Sti} ({r.Modell.Format}, {Gb(r.Lengde)}{(id.FamilieTekst != null ? ", " + id.FamilieTekst : "")}, ID {id.Sha256?.Substring(0, 16) ?? id.Fingeravtrykk})");
+            }
         }
 
         // AI-motorer i programmer som ikke kjører nå
@@ -390,11 +397,33 @@ public sealed partial class Skanner
         return sti;
     }
 
+    private readonly Dictionary<string, Dictionary<string, string>> _ollamaNavn = new(StringComparer.OrdinalIgnoreCase);
+
+    private string? Kildenavn(string sti)
+    {
+        var hf = Regex.Match(sti, @"models--([^\\/]+?)--([^\\/]+)");
+        if (hf.Success) return $"{hf.Groups[1].Value}/{hf.Groups[2].Value}";
+        var blob = Regex.Match(sti, @"^(.*[\\/]blobs)[\\/]sha256[-:]([0-9a-f]{64})$", RegexOptions.IgnoreCase);
+        if (!blob.Success) return null;
+        Dictionary<string, string> kart;
+        lock (_ollamaNavn)
+            if (!_ollamaNavn.TryGetValue(blob.Groups[1].Value, out kart!))
+                _ollamaNavn[blob.Groups[1].Value] = kart = ModellGjenkjenning.OllamaNavn(blob.Groups[1].Value);
+        return kart.TryGetValue(blob.Groups[2].Value, out var navn) ? navn : null;
+    }
+
+    private static string Land(string? kode) => string.IsNullOrEmpty(kode) ? "" : ", " + IpLand.Navn(kode);
+
     private void LeggTilModell(string sti, long lengde, ModellFormat.Modell m)
     {
+        var kilde = Kildenavn(sti);
+        var id = ModellGjenkjenning.Finn(m, sti, _regler, kilde);
         var filnavn = Modellnavn(sti);
         bool ollamaBlob = Regex.IsMatch(sti, @"[\\/]blobs[\\/]sha256", RegexOptions.IgnoreCase);
-        var navn = m.Navn ?? (ollamaBlob ? "Ollama-modell" : filnavn);
+        // Navn: fra programmet som lastet den ned, fra filen selv, ellers familien den tilhører
+        var navn = kilde ?? m.Navn
+                   ?? (id.FamilieTekst != null && (ollamaBlob || Regex.IsMatch(filnavn, @"^[0-9a-f]{16,}$|^(model|weights|out|output|checkpoint)", RegexOptions.IgnoreCase))
+                       ? $"uten navn ({id.FamilieTekst})" : ollamaBlob ? "Ollama-modell" : filnavn);
         bool farligPlass = ErRisikabelPlass(sti);
         // Modeller i kjente programmer (Ollama, LM Studio, GPT4All, Hugging Face-lageret) er gule. Alle andre er ukjente og røde.
         bool kjentSted = Regex.IsMatch(sti, @"\.ollama|lmstudio|lm-studio|nomic\.ai|huggingface", RegexOptions.IgnoreCase);
@@ -404,11 +433,27 @@ public sealed partial class Skanner
             : "AI-modell som kan kjøres på PC-en uten internett og uten kontroll.";
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} ({m.Format}, {Gb(lengde)})",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
-        var info = new List<string> { Gb(lengde) };
+
+        var info = new List<string>();
+        var fam = id.Familie ?? id.NavneFamilie;
+        if (id.Familie != null && id.NavneFamilie != null && id.Familie != id.NavneFamilie)
+            info.Add($"{id.FamilieTekst} ({id.Sikkerhet})");
+        else if (fam != null)
+            info.Add($"{id.FamilieTekst} fra {fam.Utgiver}{Land(fam.Land)} ({id.Sikkerhet})");
+        else if (m.Type != null) info.Add(char.ToUpper(m.Type[0]) + m.Type.Substring(1) + " av ukjent familie");
+        info.Add(Gb(lengde));
         if (ModellFormat.ParametreTekst(m.Parametre) is { } p) info.Add(p);
         info.Add(Mappenavn(sti));
         f.Bruk = string.Join(", ", info) + ".";
+
+        f.Detalj(fam != null
+            ? $"Gjenkjent som: {id.FamilieTekst} ({id.Sikkerhet}){(id.Bevis.Count > 0 ? ": " + string.Join(", ", id.Bevis) : "")}"
+            : $"Familie ukjent{(id.Bevis.Count > 0 ? ": " + string.Join(", ", id.Bevis) : "")}");
+        if (m.Type != null && m.Type != "språkmodell") f.Detalj($"Type: {m.Type}");
+        if (id.Sha256 != null) f.Detalj($"Modell-ID (SHA-256, lik på alle PC-er): {id.Sha256}");
+        else if (id.Fingeravtrykk != null) f.Detalj($"Modell-ID (fingeravtrykk, likt på alle PC-er): {id.Fingeravtrykk}");
         if (m.KanKjoreKode && farligPlass) f.Advarsel("Kan kjøre skjult kode, og ligger i en nedlastingsmappe.");
+        if (id.NavneFamilie?.Land == "CN" || id.Familie?.Land == "CN") f.Merknad($"Laget av {(id.NavneFamilie?.Land == "CN" ? id.NavneFamilie : id.Familie)!.Utgiver} i Kina. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
     }
 
     /// <summary>Gir generiske filnavn ("model", "pytorch_model-00001-of-00004") et bedre navn fra mappene rundt.</summary>

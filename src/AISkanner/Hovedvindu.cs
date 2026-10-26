@@ -39,8 +39,10 @@ public sealed class Hovedvindu : Form
     {
         try
         {
-            // Egen mappe når vi kjører som administrator: WebView2 tåler ikke at to nivåer deler mappe
-            var data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner", Nettverk.ErAdmin() ? "WebView2-admin" : "WebView2");
+            // WebView2 må ha en mappe mens vinduet er åpent. Den er ny for hver kjøring og slettes når programmet lukkes,
+            // så programmet lagrer ingenting mellom søk.
+            RyddVindusdata(alle: true);
+            var data = Path.Combine(Rot, $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}");
             var miljo = await CoreWebView2Environment.CreateAsync(null, data);
             await _web.EnsureCoreWebView2Async(miljo);
         }
@@ -74,6 +76,37 @@ public sealed class Hovedvindu : Form
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.ui.index.html")!;
         using var r = new StreamReader(s, Encoding.UTF8);
         w.NavigateToString(await r.ReadToEndAsync());
+    }
+
+    private static readonly string Rot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner");
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        base.OnFormClosed(e);
+        _web.Dispose();
+        // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
+        for (int i = 0; i < 15 && !RyddVindusdata(alle: false); i++) Thread.Sleep(200);
+    }
+
+    /// <summary>Sletter vindusdata. alle: også rester etter tidligere kjøringer som ble avbrutt. Returnerer true når alt er borte.</summary>
+    private static bool RyddVindusdata(bool alle)
+    {
+        try
+        {
+            if (!Directory.Exists(Rot)) return true;
+            var egen = $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}";
+            foreach (var d in Directory.GetDirectories(Rot))
+            {
+                var navn = Path.GetFileName(d);
+                if (!alle && navn != egen) continue;
+                if (alle && navn == egen) continue;
+                if (navn.StartsWith("Vindu-") || navn.StartsWith("WebView2"))
+                    try { Directory.Delete(d, true); } catch { }
+            }
+            if (Directory.GetFileSystemEntries(Rot).Length == 0) Directory.Delete(Rot);
+            return !Directory.Exists(Path.Combine(Rot, egen));
+        }
+        catch { return false; }
     }
 
     private void Send(object melding) => _web.CoreWebView2?.PostWebMessageAsJson(JsonSerializer.Serialize(melding, Json));
@@ -118,6 +151,7 @@ public sealed class Hovedvindu : Form
                 funn = _resultat.Select(f => new
                 {
                     risiko = f.Risiko.ToString().ToLowerInvariant(),
+                    gruppe = f.Gruppe,
                     navn = f.Navn,
                     kort = f.Kort,
                     steder = f.Detaljer,
@@ -179,7 +213,7 @@ public sealed class Hovedvindu : Form
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat) : Rapport.Tekst(_resultat, _skanner);
+        var innhold = dlg.FilterIndex == 2 ? Rapport.Json(_resultat, _skanner) : Rapport.Tekst(_resultat, _skanner);
         File.WriteAllText(dlg.FileName, innhold, new UTF8Encoding(true));
     }
 }

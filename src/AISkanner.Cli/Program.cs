@@ -24,7 +24,7 @@ if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner) : Rapport.Json(funn));
+Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;
 
 /// <summary>Intern test: falskt nettverksbilde fra en JSON-fil, så trafikklogikken kan testes uten Windows.</summary>

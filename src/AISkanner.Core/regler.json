@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-26b",
+  "versjon": "2026-10-26c",
   "produkter": [
     {
       "navn": "Ollama",
@@ -1131,6 +1131,372 @@
       "land": "CN",
       "enkelt": "Kinesisk AI brukt av et program",
       "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    }
+  ],
+  "_modellfamilier": "Modellfamilier gjenkjennes på arkitektur og størrelsen på ordforrådet (vokab), som følger modellen selv om filen får nytt navn eller finjusteres. 'ord' er tekst i modellnavnet. deltVokab: vokabstørrelsen brukes av mange familier og teller mindre.",
+  "modellfamilier": [
+    {
+      "navn": "Llama 3",
+      "utgiver": "Meta",
+      "land": "US",
+      "arkitekturer": [
+        "llama"
+      ],
+      "vokab": [
+        128256,
+        128257
+      ],
+      "ord": [
+        "llama-3",
+        "llama3",
+        "llama 3",
+        "llama-4",
+        "llama4"
+      ]
+    },
+    {
+      "navn": "Llama 2 eller eldre Llama-type",
+      "utgiver": "Meta m.fl.",
+      "land": "US",
+      "arkitekturer": [
+        "llama"
+      ],
+      "vokab": [
+        32000
+      ],
+      "ord": [
+        "llama-2",
+        "llama2",
+        "vicuna",
+        "tinyllama"
+      ],
+      "deltVokab": true
+    },
+    {
+      "navn": "Qwen",
+      "utgiver": "Alibaba",
+      "land": "CN",
+      "arkitekturer": [
+        "qwen",
+        "qwen2",
+        "qwen3",
+        "qwen2moe",
+        "qwen3moe",
+        "qwen2vl",
+        "qwen25vl",
+        "qwen3vl"
+      ],
+      "vokab": [
+        151936,
+        152064,
+        151646,
+        151665,
+        151643,
+        151680
+      ],
+      "ord": [
+        "qwen",
+        "qwq"
+      ]
+    },
+    {
+      "navn": "DeepSeek",
+      "utgiver": "DeepSeek",
+      "land": "CN",
+      "arkitekturer": [
+        "deepseek",
+        "deepseek2",
+        "deepseekv2",
+        "deepseekv3"
+      ],
+      "vokab": [
+        129280,
+        102400
+      ],
+      "ord": [
+        "deepseek"
+      ]
+    },
+    {
+      "navn": "Gemma",
+      "utgiver": "Google",
+      "land": "US",
+      "arkitekturer": [
+        "gemma",
+        "gemma2",
+        "gemma3",
+        "gemma3n",
+        "gemma3text"
+      ],
+      "vokab": [
+        256000,
+        262144,
+        262208,
+        256128
+      ],
+      "ord": [
+        "gemma"
+      ]
+    },
+    {
+      "navn": "Phi",
+      "utgiver": "Microsoft",
+      "land": "US",
+      "arkitekturer": [
+        "phi",
+        "phi2",
+        "phi3",
+        "phimoe",
+        "phi4"
+      ],
+      "vokab": [
+        32064,
+        100352,
+        51200,
+        200064
+      ],
+      "ord": [
+        "phi-",
+        "phi2",
+        "phi3",
+        "phi4"
+      ]
+    },
+    {
+      "navn": "Mistral",
+      "utgiver": "Mistral AI",
+      "land": "FR",
+      "arkitekturer": [
+        "mistral",
+        "mistral3",
+        "mixtral"
+      ],
+      "vokab": [
+        32768,
+        131072
+      ],
+      "ord": [
+        "mistral",
+        "mixtral",
+        "ministral",
+        "codestral",
+        "devstral",
+        "magistral",
+        "pixtral"
+      ]
+    },
+    {
+      "navn": "GPT-OSS",
+      "utgiver": "OpenAI",
+      "land": "US",
+      "arkitekturer": [
+        "gptoss"
+      ],
+      "vokab": [
+        201088
+      ],
+      "ord": [
+        "gpt-oss"
+      ]
+    },
+    {
+      "navn": "GLM",
+      "utgiver": "Zhipu AI",
+      "land": "CN",
+      "arkitekturer": [
+        "glm4",
+        "chatglm",
+        "glm4moe",
+        "glm"
+      ],
+      "vokab": [
+        151552,
+        65024,
+        151329
+      ],
+      "ord": [
+        "glm",
+        "chatglm"
+      ]
+    },
+    {
+      "navn": "Yi",
+      "utgiver": "01.AI",
+      "land": "CN",
+      "arkitekturer": [
+        "yi"
+      ],
+      "vokab": [
+        64000
+      ],
+      "ord": [
+        "yi-"
+      ]
+    },
+    {
+      "navn": "Kimi",
+      "utgiver": "Moonshot AI",
+      "land": "CN",
+      "arkitekturer": [
+        "kimik2",
+        "kimi"
+      ],
+      "vokab": [
+        163840
+      ],
+      "ord": [
+        "kimi"
+      ]
+    },
+    {
+      "navn": "InternLM",
+      "utgiver": "Shanghai AI Lab",
+      "land": "CN",
+      "arkitekturer": [
+        "internlm2",
+        "internlm3"
+      ],
+      "vokab": [
+        92544
+      ],
+      "ord": [
+        "internlm"
+      ]
+    },
+    {
+      "navn": "Baichuan",
+      "utgiver": "Baichuan",
+      "land": "CN",
+      "arkitekturer": [
+        "baichuan"
+      ],
+      "vokab": [
+        125696
+      ],
+      "ord": [
+        "baichuan"
+      ]
+    },
+    {
+      "navn": "MiniCPM",
+      "utgiver": "OpenBMB",
+      "land": "CN",
+      "arkitekturer": [
+        "minicpm",
+        "minicpm3"
+      ],
+      "vokab": [
+        122753,
+        73448
+      ],
+      "ord": [
+        "minicpm"
+      ]
+    },
+    {
+      "navn": "Command R",
+      "utgiver": "Cohere",
+      "land": "CA",
+      "arkitekturer": [
+        "commandr",
+        "cohere",
+        "cohere2"
+      ],
+      "vokab": [
+        255000,
+        256000
+      ],
+      "ord": [
+        "command-r",
+        "c4ai",
+        "aya"
+      ]
+    },
+    {
+      "navn": "Granite",
+      "utgiver": "IBM",
+      "land": "US",
+      "arkitekturer": [
+        "granite",
+        "granitemoe",
+        "granitehybrid"
+      ],
+      "vokab": [
+        49155
+      ],
+      "ord": [
+        "granite"
+      ]
+    },
+    {
+      "navn": "SmolLM / StarCoder",
+      "utgiver": "Hugging Face",
+      "land": "US",
+      "arkitekturer": [
+        "starcoder2",
+        "smollm3"
+      ],
+      "vokab": [
+        49152
+      ],
+      "ord": [
+        "smollm",
+        "starcoder"
+      ]
+    },
+    {
+      "navn": "OLMo",
+      "utgiver": "Allen AI",
+      "land": "US",
+      "arkitekturer": [
+        "olmo",
+        "olmo2",
+        "olmoe"
+      ],
+      "vokab": [
+        100278,
+        50304
+      ],
+      "ord": [
+        "olmo"
+      ]
+    },
+    {
+      "navn": "Falcon",
+      "utgiver": "TII",
+      "land": "AE",
+      "arkitekturer": [
+        "falcon",
+        "falconh1"
+      ],
+      "vokab": [
+        65024
+      ],
+      "ord": [
+        "falcon"
+      ]
+    },
+    {
+      "navn": "Søkemodell (embedding)",
+      "utgiver": "diverse",
+      "land": "",
+      "arkitekturer": [
+        "bert",
+        "nomicbert",
+        "jinabertv2",
+        "xlmroberta"
+      ],
+      "vokab": [
+        30522,
+        250002
+      ],
+      "ord": [
+        "embed",
+        "bge",
+        "minilm",
+        "e5-"
+      ],
+      "type": "søkemodell"
     }
   ]
 }

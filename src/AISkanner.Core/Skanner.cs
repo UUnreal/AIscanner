@@ -51,6 +51,7 @@ public sealed partial class Skanner
             ("Ser etter AI-nettsteder du har brukt...", Nettsteder),
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
+            ("Sjekker registeret...", Register),
         };
         // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
         Tider.Clear();
@@ -227,6 +228,8 @@ public sealed partial class Skanner
                 (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
                 (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
                 (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
+                (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
+                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
             };
             foreach (var (rot, sti) in run)
             {

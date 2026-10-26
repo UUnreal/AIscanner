@@ -9,7 +9,7 @@ Administrator brukes bare hvis brukeren selv trykker «Mål datamengde» (se und
 `AISkanner.exe` er et .NET Framework 4.8-program (følger med Windows 10 og 11). Hele mappa er rundt 3,5 MB.
 Det installeres ikke, pakker ikke ut noe til `%TEMP%`, er ikke komprimert, starter ingen skript eller kommandolinjer, og kjører som vanlig bruker (`asInvoker`).
 Vinduet vises med Microsoft Edge WebView2 (som nye Outlook og Teams). WebView2 starter sine egne `msedgewebview2.exe`-prosesser
-og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er bygd inn i programmet, laster ingenting fra nett og kan ikke navigere bort.
+og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingenting lagres»). Siden er bygd inn i programmet, laster ingenting fra nett og kan ikke navigere bort.
 
 ## Hva den leser (kun lesing, ingenting endres)
 - Prosessliste og filsti for prosesser (`PROCESS_QUERY_LIMITED_INFORMATION` + `QueryFullProcessImageName`).
@@ -37,6 +37,19 @@ og lagrer sin vanlige profil i `%LOCALAPPDATA%\AISkanner\WebView2`. Siden er byg
   Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag. Land slås opp i en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
   Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester, aldri annen surfing. Programmer som ikke er kjent som AI,
   men som snakker med en AI-tjeneste (`aiTjenester` i `regler.json`), blir et eget funn.
+
+- **Registeret** (nytt i 2.3), bare lesing: AI-regler fra IT under `SOFTWARE\Policies` (Windows Copilot, Recall, Edge, Chrome, Office),
+  lenkeprotokoller (`SOFTWARE\Classes\<navn>` med `URL Protocol`), hvilke programmer som åpner modellfiler (`.gguf`, `.safetensors` m.fl.),
+  `App Paths`, høyreklikkmenyer, `RunOnce`, navn på miljøvariabler for AI-nøkler (aldri verdiene), og verdiene til `OLLAMA_HOST`/`OLLAMA_ORIGINS`
+  (sier om Ollama er åpen mot nettverket). Om mappen for Windows Recall finnes (innholdet leses ikke). SAM, SECURITY og lagret legitimasjon røres aldri.
+- **Modellidentitet** (nytt i 2.3): for hver modellfil leses metadata-hodet (arkitektur, ordforråd, antall lag, «laget fra») og `config.json` ved siden av.
+  Modell-ID er SHA-256 når Ollama eller Hugging Face allerede har lagret filen under hashen (ingen ekstra lesing), ellers et fingeravtrykk
+  av størrelse + første og siste MB (leser 2 MB per modell). Ollamas manifestfiler leses for å finne modellnavn.
+
+## Ingenting lagres
+Hvert søk gjøres fra bunnen av. Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk.
+WebView2 trenger en midlertidig mappe mens vinduet er åpent (`%LOCALAPPDATA%\AISkanner\Vindu-<pid>`). Den slettes når programmet lukkes,
+og rester etter avbrutte kjøringer slettes ved neste start. Det eneste som blir igjen er rapporten brukeren selv velger å laste ned.
 
 ## Måling av datamengde (valgfritt, krever administrator)
 Uten administrator viser skanneren hvor AI-programmene er koblet, men ikke hvor mye de sender. Windows gir ikke vanlige brukere tilgang til tellerne.

@@ -1,14 +1,17 @@
 # AI-skanner
 
-Finner AI på en Windows-PC og sorterer funnene etter risiko: **rød**, **gul**, **grønn**.
+Finner AI på en Windows-PC, deler funnene i **Lokal AI**, **Nettleser** og **Skjult på PC**, og sorterer etter risiko: **rød**, **gul**, **grønn**.
 Ett vindu, én knapp: **Søk**.
 
 Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI får alltid høy risiko.
 
 - **AI-modeller** gjenkjennes på filformatet (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn.
+  Familien (Llama, Qwen, DeepSeek, Gemma, Phi, Mistral m.fl.) leses av modellens arkitektur og ordforråd, også når filen har fått nytt navn.
+  Hver modell får en ID som er lik på alle PC-er (SHA-256 eller fingeravtrykk).
 - **AI-motorer** i programmer (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML m.fl.).
 - **Lokale AI-servere**: programmer som svarer som en AI-tjeneste, med modellene de har lastet. Rød hvis åpen mot nettverket.
 - **AI-kode**: Python- og Node-prosjekter med AI- og agentbiblioteker.
+- **Registeret**: AI-regler fra IT, lenker og høyreklikkmenyer fra AI-apper, programmer som åpner modellfiler, Ollama åpen mot nettverket, Windows Recall.
 - **AI-nøkler**: om nøkler som `OPENAI_API_KEY` finnes (aldri verdien).
 - **Nettleser-AI**: AI-utvidelser, AI-nettsteder du har brukt (bruksspor og historikk, analysert i minnet og aldri lagret),
   ukjente AI-nettsteder, AI-modeller lagret i nettleseren, og innebygd AI i Chrome og Edge.
@@ -26,6 +29,12 @@ Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI f�
   ved siden av exe-filen for å overstyre.
 
 Se [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses, og [CODE_SIGNING.md](CODE_SIGNING.md) for signering og personvern.
+
+## Ingenting lagres
+Hvert søk gjøres fra bunnen av. Programmet lagrer ingenting mellom søk. Bare rapporten du selv laster ned blir igjen.
+
+## På gjøremålslisten
+Skanning av andre enheter på nettverket. Krever mer tilgang og godkjenning, så den er utsatt.
 
 ## Begrensninger
 Skanneren finner spor, ikke alt. Forbindelser vises bare mens programmene er åpne. Land for skytjenester er der serveren står.

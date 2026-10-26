@@ -36,6 +36,19 @@ public sealed class AiNettsted
     public bool Treffer(string vert) => Domener.Any(d => vert.Equals(d, StringComparison.OrdinalIgnoreCase) || vert.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
 }
 
+/// <summary>En modellfamilie som kan kjennes igjen på innholdet i modellfilen, også uten navn.</summary>
+public sealed class ModellFamilie
+{
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    [JsonPropertyName("utgiver")] public string Utgiver { get; set; } = "";
+    [JsonPropertyName("land")] public string? Land { get; set; }
+    [JsonPropertyName("arkitekturer")] public List<string> Arkitekturer { get; set; } = new();
+    [JsonPropertyName("vokab")] public List<int> Vokab { get; set; } = new();
+    [JsonPropertyName("deltVokab")] public bool DeltVokab { get; set; }
+    [JsonPropertyName("ord")] public List<string> Ord { get; set; } = new();
+    [JsonPropertyName("type")] public string? Type { get; set; }
+}
+
 public sealed class InnebygdAI
 {
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
@@ -62,6 +75,7 @@ public sealed class Regelsett
     [JsonPropertyName("aiTjenester")] public List<AiNettsted> AiTjenester { get; set; } = new();
     /// <summary>Land der data om bedriften ikke bør havne. AI som sender hit blir rødt.</summary>
     [JsonPropertyName("hoyrisikoLand")] public List<string> HoyrisikoLand { get; set; } = new();
+    [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>

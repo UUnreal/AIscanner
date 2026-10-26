@@ -24,8 +24,17 @@ public static class Rapport
         if (skanner != null)
             L(skanner.DataMalt ? $"Datamengde: målt av Windows i {skanner.MaleSekunder:0} sekunder under søket."
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");
+        if (skanner != null)
+            L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         L(new string('=', 60));
-        foreach (var f in liste)
+        foreach (var (gruppe, tittel) in Grupper)
+        {
+            var del = liste.Where(f => f.Gruppe == gruppe).OrderBy(f => f.Risiko).ToList();
+            L();
+            L($"{tittel.ToUpperInvariant()} ({del.Count})");
+            L(new string('=', 60));
+            if (del.Count == 0) L("Ingen funn.");
+        foreach (var f in del)
         {
             L();
             L($"[{Merke(f.Risiko)}] {f.Navn}");
@@ -45,11 +54,17 @@ public static class Rapport
             foreach (var m in f.Merknader) L($"  Merk: {m}");
             L(strek);
         }
+        }
         L();
         L(Begrensning);
         L("Land for IP-adresser: IP to Country Lite fra DB-IP.com (CC BY 4.0). For store skytjenester viser landet hvor serveren står.");
         return sb.ToString();
     }
+
+    public static readonly (string Id, string Tittel)[] Grupper =
+    {
+        ("lokal", "Lokal AI (kjører på PC-en)"), ("nettleser", "AI i nettleseren"), ("skjult", "Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)"),
+    };
 
     private static string Merke(Risiko r) => r switch { Risiko.Rod => "HØY", Risiko.Gul => "MIDDELS", _ => "LAV" };
 
@@ -73,14 +88,15 @@ public static class Rapport
         return (b / 1073741824.0).ToString("0.0", nb) + " GB";
     }
 
-    public static string Json(IReadOnlyList<Funn> liste) => JsonSerializer.Serialize(new
+    public static string Json(IReadOnlyList<Funn> liste, Skanner? skanner = null) => JsonSerializer.Serialize(new
     {
         pc = Environment.MachineName,
+        aiRegler = skanner?.AiRegler ?? new List<string>(),
         tid = DateTimeOffset.Now,
         funn = liste.Select(f => new
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
-            navn = f.Navn, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, rad = f.Rad,
+            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, rad = f.Rad,
             advarsler = f.Privat ? new List<string>() : f.Advarsler,
             hvor = f.Privat ? new List<string>() : f.Hvor,
             merknader = f.Privat ? new List<string>() : f.Merknader,

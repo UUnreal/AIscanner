@@ -9,7 +9,21 @@ namespace AISkanner;
 /// </summary>
 public static class ModellFormat
 {
-    public sealed record Modell(string Format, string? Navn, string? Arkitektur, long? Parametre, bool KanKjoreKode);
+    public sealed record Modell(string Format, string? Navn, string? Arkitektur, long? Parametre, bool KanKjoreKode)
+    {
+        /// <summary>Antall ord i ordforrådet (tokenizer). Følger modellfamilien selv når filen får nytt navn eller finjusteres.</summary>
+        public int? Vokab { get; init; }
+        /// <summary>Antall lag og bredde (skjult dimensjon).</summary>
+        public int? Lag { get; init; }
+        public int? Bredde { get; init; }
+        /// <summary>Modellen den er laget fra, hvis filen sier det (finjusteringer).</summary>
+        public string? BaseModell { get; init; }
+        public string? Organisasjon { get; init; }
+        /// <summary>"språkmodell", "bildemodell", "LoRA-tillegg", "søkemodell" osv., når det kan leses av innholdet.</summary>
+        public string? Type { get; init; }
+        /// <summary>Programmet som laget filen (ONNX).</summary>
+        public string? Produsent { get; init; }
+    }
 
     public static Modell? Gjenkjenn(string sti)
     {
@@ -44,7 +58,7 @@ public static class ModellFormat
             if (hode[0] == 0x80 && hode[1] is >= 2 and <= 5 && ext is ".pt" or ".pth" or ".bin" or ".ckpt" or ".pkl")
                 return new Modell("PyTorch (pickle)", null, null, null, true);
 
-            if (ext == ".onnx" && hode[0] == 0x08) return new Modell("ONNX", null, null, null, false);
+            if (ext == ".onnx" && hode[0] == 0x08) return Onnx(fs);
             if (ext is ".h5" or ".keras" && Ascii(hode, 1, 3) == "HDF") return new Modell("Keras", null, null, null, false);
             return null;
         }
@@ -56,7 +70,9 @@ public static class ModellFormat
     // ---------- GGUF ----------
     private static Modell Gguf(FileStream fs)
     {
-        string? navn = null, arkitektur = null, storrelse = null, basenavn = null;
+        string? navn = null, arkitektur = null, storrelse = null, basenavn = null, base0 = null, baseOrg = null, org = null;
+        int? vokab = null, lag = null, bredde = null;
+        var tall = new Dictionary<string, long>();
         try
         {
             fs.Position = 4;
@@ -78,16 +94,36 @@ public static class ModellFormat
                         case "general.architecture": arkitektur = verdi; break;
                         case "general.size_label": storrelse = verdi; break;
                         case "general.basename": basenavn = verdi; break;
+                        case "general.organization": org = verdi; break;
+                        case "general.base_model.0.name": base0 = verdi; break;
+                        case "general.base_model.0.organization": baseOrg = verdi; break;
                     }
                 }
+                else if (type == 9 && nokkel == "tokenizer.ggml.tokens")
+                {
+                    uint elementType = r.ReadUInt32();
+                    ulong n = r.ReadUInt64();
+                    vokab = (int)Math.Min(n, int.MaxValue);
+                    for (ulong k = 0; k < n; k++) HoppOver(r, elementType);
+                }
+                else if (type is 4 or 5 && (nokkel.EndsWith(".block_count") || nokkel.EndsWith(".embedding_length") || nokkel.EndsWith(".vocab_size")))
+                    tall[nokkel.Substring(nokkel.LastIndexOf('.') + 1)] = type == 4 ? r.ReadUInt32() : r.ReadInt32();
                 else HoppOver(r, type);
-                if (navn != null && arkitektur != null && storrelse != null) break;
             }
         }
         catch { }
+        if (tall.TryGetValue("block_count", out var bc)) lag = (int)bc;
+        if (tall.TryGetValue("embedding_length", out var el)) bredde = (int)el;
+        if (vokab == null && tall.TryGetValue("vocab_size", out var vs)) vokab = (int)vs;
         var visning = navn ?? basenavn;
         if (visning != null && storrelse != null && !visning.Inneholder(storrelse)) visning += " " + storrelse;
-        return new Modell("GGUF", visning, arkitektur, null, false);
+        var slag = arkitektur is "bert" or "nomic-bert" or "jina-bert-v2" or "xlm-roberta" ? "søkemodell (embedding)"
+                 : arkitektur is "clip" ? "bildeforståelse (CLIP)" : arkitektur is "whisper" ? "talemodell" : "språkmodell";
+        return new Modell("GGUF", visning, arkitektur, null, false)
+        {
+            Vokab = vokab, Lag = lag, Bredde = bredde, Organisasjon = org, Type = slag,
+            BaseModell = base0 == null ? null : baseOrg != null ? $"{baseOrg}/{base0}" : base0,
+        };
     }
 
     private static string Streng(BinaryReader r)
@@ -118,6 +154,8 @@ public static class ModellFormat
     }
 
     // ---------- safetensors ----------
+    private static readonly System.Text.RegularExpressions.Regex LagNr = new(@"(?:^|\.)(?:layers|h|blocks|layer)\.(\d+)\.", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private static Modell? Safetensors(FileStream fs, long hodeLengde)
     {
         if (hodeLengde > 20_000_000) return new Modell("safetensors", null, null, null, false);
@@ -127,7 +165,10 @@ public static class ModellFormat
         using var doc = JsonDocument.Parse(buf);
         if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
         long parametre = 0;
-        string? navn = null;
+        string? navn = null, type = null;
+        int? vokab = null, bredde = null;
+        int maksLag = -1;
+        bool lora = false, diffusjon = false, flux = false;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
             if (p.Name == "__metadata__")
@@ -137,14 +178,56 @@ public static class ModellFormat
                         if (m.Name is "modelspec.title" or "name" or "ss_output_name" && m.Value.ValueKind == JsonValueKind.String) navn ??= m.Value.GetString();
                 continue;
             }
+            if (p.Name.Contains("lora_")) lora = true;
+            if (p.Name.StartsWith("model.diffusion_model.") || p.Name.StartsWith("down_blocks.")) diffusjon = true;
+            if (p.Name.StartsWith("double_blocks.") || p.Name.StartsWith("transformer_blocks.") && p.Name.Contains("attn.add_q_proj")) flux = true;
+            var lagTreff = LagNr.Match(p.Name);
+            if (lagTreff.Success) maksLag = Math.Max(maksLag, int.Parse(lagTreff.Groups[1].Value));
             if (p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("shape", out var shape) && shape.ValueKind == JsonValueKind.Array)
             {
+                var dims = shape.EnumerateArray().Select(d => d.GetInt64()).ToList();
                 long produkt = 1;
-                foreach (var d in shape.EnumerateArray()) produkt *= d.GetInt64();
+                foreach (var d in dims) produkt *= d;
                 parametre += produkt;
+                // Inndata-tabellen [ordforråd, bredde] avslører modellfamilien
+                if (vokab == null && dims.Count == 2 && (p.Name.EndsWith("embed_tokens.weight") || p.Name.EndsWith("wte.weight") || p.Name.EndsWith("tok_embeddings.weight") || p.Name.EndsWith("word_embeddings.weight")))
+                {
+                    vokab = (int)dims[0];
+                    bredde = (int)dims[1];
+                }
             }
         }
-        return new Modell("safetensors", navn, null, parametre > 0 ? parametre : null, false);
+        type = lora ? "LoRA-tillegg (endrer en annen modell)" : flux ? "bildemodell (FLUX)" : diffusjon ? "bildemodell (Stable Diffusion)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
+        return new Modell("safetensors", navn, null, parametre > 0 ? parametre : null, false)
+        {
+            Vokab = vokab, Bredde = bredde, Lag = maksLag >= 0 ? maksLag + 1 : null, Type = type,
+        };
+    }
+
+    // ---------- ONNX: les produsentnavnet fra starten av filen (protobuf) ----------
+    private static Modell Onnx(FileStream fs)
+    {
+        string? produsent = null;
+        try
+        {
+            fs.Position = 0;
+            var buf = new byte[4096];
+            int n = fs.Read(buf, 0, buf.Length), i = 0;
+            ulong Varint() { ulong v = 0; int skift = 0; while (i < n) { byte b = buf[i++]; v |= (ulong)(b & 0x7F) << skift; if (b < 0x80) break; skift += 7; } return v; }
+            while (i < n)
+            {
+                var nokkel = Varint();
+                int felt = (int)(nokkel >> 3), wire = (int)(nokkel & 7);
+                if (wire == 0) { Varint(); continue; }
+                if (wire != 2) break;
+                int lengde = (int)Varint();
+                if (felt == 2 && lengde < 200 && i + lengde <= n) { produsent = Encoding.UTF8.GetString(buf, i, lengde); break; }
+                if (felt == 7) break;   // selve grafen
+                i += lengde;
+            }
+        }
+        catch { }
+        return new Modell("ONNX", null, null, null, false) { Produsent = produsent };
     }
 
     /// <summary>"7,2 mrd. parametre" o.l.</summary>
