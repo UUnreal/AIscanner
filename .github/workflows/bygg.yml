@@ -36,6 +36,16 @@ jobs:
       - name: Bygg programmet
         run: dotnet publish src/AISkanner -c Release -o publish
 
+      # Brukeren skal bare se én programfil: AISkanner.exe. Ingen .config, DLL-ene ligger i «bibliotek».
+      - name: Sjekk mappa
+        shell: pwsh
+        run: |
+          $topp = Get-ChildItem publish -File | Select-Object -ExpandProperty Name
+          "Øverst: $($topp -join ', ')"
+          if ($topp | Where-Object { $_ -like '*.config' -or $_ -like '*.dll' }) { Write-Error "Bare AISkanner.exe og regelfiler skal ligge øverst"; exit 1 }
+          if (@($topp | Where-Object { $_ -like '*.exe' }).Count -ne 1) { Write-Error "Det skal være nøyaktig én .exe øverst"; exit 1 }
+          if (-not (Test-Path publish/bibliotek/runtimes/win-x64/native/WebView2Loader.dll)) { Write-Error "Mangler WebView2Loader.dll"; exit 1 }
+
       # Størrelsesgrense: programmet skal være lite, som 7-Zip. Bygget stopper hvis det blir for stort.
       - name: Sjekk størrelse (maks 10 MB)
         shell: pwsh

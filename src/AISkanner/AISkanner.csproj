@@ -26,6 +26,9 @@
     <!-- Ikke ta med dokumentasjonsfiler fra pakkene -->
     <AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Ingen AISkanner.exe.config: Program.FinnBibliotek laster bibliotekene fra «bibliotek» uansett versjon -->
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +49,21 @@
   <!-- WPF-delen av WebView2 brukes ikke -->
   <Target Name="FjernUbrukt" AfterTargets="Publish">
     <Delete Files="$(PublishDir)Microsoft.Web.WebView2.Wpf.dll" />
+  </Target>
+
+  <!--
+    Ryddig mappe for brukeren: bare AISkanner.exe og regelfilene øverst, alle DLL-er i «bibliotek».
+    Ingen AISkanner.exe.config (som med skjulte filendelser ser ut som en ekstra AISkanner.exe).
+  -->
+  <Target Name="FlyttBibliotek" AfterTargets="FjernUbrukt">
+    <ItemGroup>
+      <BibliotekDll Include="$(PublishDir)*.dll" />
+      <BibliotekNative Include="$(PublishDir)runtimes\**\*" />
+    </ItemGroup>
+    <Move SourceFiles="@(BibliotekDll)" DestinationFolder="$(PublishDir)bibliotek" />
+    <Move SourceFiles="@(BibliotekNative)" DestinationFiles="@(BibliotekNative->'$(PublishDir)bibliotek\runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <RemoveDir Directories="$(PublishDir)runtimes" />
+    <Delete Files="$(PublishDir)AISkanner.exe.config" />
   </Target>
 
   <ItemGroup>

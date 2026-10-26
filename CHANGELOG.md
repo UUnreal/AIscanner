@@ -29,6 +29,17 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.15.1] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Rettet
+- **Ryddig programmappe, ingen `AISkanner.exe.config`.** Med skjulte filendelser i Windows så `AISkanner.exe.config`
+  ut som en ekstra `AISkanner.exe`, og den kan ikke kjøres. Nå ligger bare `AISkanner.exe`, `ai-modeller.yar` og
+  `godkjent-ai.txt` øverst. Alle DLL-er og `WebView2Loader.dll` ligger i `bibliotek`. Programmet finner dem selv
+  (`Program.FinnBibliotek`), uansett versjon, så `.config`-fila med `bindingRedirect` trengs ikke.
+- Byggeløypa stopper hvis det havner en `.config` eller mer enn én `.exe` øverst i mappa.
+
 ## [2.15.0] - 2026-10-26
 
 Ikke testet på Windows.

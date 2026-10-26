@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.15.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.15.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -23,7 +23,7 @@ står i [SECURITY.md](SECURITY.md).
 | Side | Bygget inn i programmet. Laster ingenting fra nett, kan ikke navigere bort, ingen utviklerverktøy. |
 | Utpakking | Ingen. Programmet er ikke komprimert og pakker ingenting ut til `%TEMP%`. |
 | Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt når brukeren velger å søke som administrator. |
-| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. |
+| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. Fra 2.15.1 ligger programmets egne DLL-er i undermappa `bibliotek`, og det finnes ingen `AISkanner.exe.config`. Øverst ligger bare `AISkanner.exe`, `ai-modeller.yar` og `godkjent-ai.txt`. |
 
 ## Hva den leser
 
