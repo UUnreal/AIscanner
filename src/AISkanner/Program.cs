@@ -1,5 +1,3 @@
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace AISkanner.App;
@@ -15,37 +13,14 @@ internal static class Program
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern bool SetDllDirectory(string? sti);
 
-    /// <summary>
-    /// Bibliotekene (DLL-ene) ligger i undermappa «bibliotek», så AISkanner.exe er den eneste programfila i hovedmappa
-    /// og det ikke trengs en AISkanner.exe.config. Windows finner dem ikke der selv, så vi viser vei.
-    /// Bare filer i vår egen bibliotek-mappe lastes, og bare når .NET ber om dem.
-    /// </summary>
-    internal static readonly string Bibliotek = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bibliotek");
-
-    private static Assembly? FinnBibliotek(object? _, ResolveEventArgs e)
-    {
-        try
-        {
-            var navn = new AssemblyName(e.Name).Name;
-            if (string.IsNullOrEmpty(navn) || navn!.IndexOfAny(new[] { '\\', '/', ':' }) >= 0) return null;
-            var sti = Path.Combine(Bibliotek, navn + ".dll");
-            // Samme bibliotek uansett hvilken versjon som spørres etter (erstatter bindingRedirect i .config)
-            return File.Exists(sti) ? Assembly.LoadFrom(sti) : null;
-        }
-        catch { return null; }
-    }
-
     [STAThread]
     private static void Main(string[] args)
     {
-        // Må skje før noe fra bibliotekene brukes. Resten ligger i Start, så den ikke kompileres før dette er gjort.
-        AppDomain.CurrentDomain.AssemblyResolve += FinnBibliotek;
-        Start(args);
-    }
+        // Programmet skal aldri forsvinne uten å si hvorfor. Feil vises i en melding som kan kopieres (Ctrl+C).
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => VisFeil(e.ExceptionObject as Exception);
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => VisFeil(e.Exception);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void Start(string[] args)
-    {
         // Sikkerhet: systembiblioteker (winsqlite3, iphlpapi, wintrust, dnsapi) lastes bare fra System32 og
         // programmappa, aldri fra arbeidsmappa. Hindrer DLL-kapring der en falsk DLL i mappa programmet startes
         // fra blir kjørt. (WebView2Loader.dll ligger lovlig i programmappa, så den søkes fortsatt.)
@@ -58,6 +33,23 @@ internal static class Program
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new Hovedvindu(args));
+        try { Kjor(args); }
+        catch (Exception e) { VisFeil(e); }
+    }
+
+    // Egen metode: hvis en DLL mangler, feiler den her (når vinduet lages), etter at feilmeldingen er klar.
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static void Kjor(string[] args) => Application.Run(new Hovedvindu(args));
+
+    private static void VisFeil(Exception? e)
+    {
+        try
+        {
+            var tekst = "AI-skanner kunne ikke starte eller stoppet med en feil.\r\n\r\n" +
+                        "Trykk Ctrl+C for å kopiere denne meldingen og send den til IT eller utvikleren.\r\n\r\n" +
+                        $"Versjon: {typeof(Program).Assembly.GetName().Version}\r\nMappe: {AppDomain.CurrentDomain.BaseDirectory}\r\n\r\n{e}";
+            MessageBox.Show(tekst, "AI-skanner: feil", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch { }
     }
 }

@@ -26,9 +26,6 @@
     <!-- Ikke ta med dokumentasjonsfiler fra pakkene -->
     <AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <!-- Ingen AISkanner.exe.config: Program.FinnBibliotek laster bibliotekene fra «bibliotek» uansett versjon -->
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
-    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,25 +48,11 @@
     <Delete Files="$(PublishDir)Microsoft.Web.WebView2.Wpf.dll" />
   </Target>
 
-  <!--
-    Ryddig mappe for brukeren: bare AISkanner.exe og regelfilene øverst, alle DLL-er i «bibliotek».
-    Ingen AISkanner.exe.config (som med skjulte filendelser ser ut som en ekstra AISkanner.exe).
-  -->
-  <Target Name="FlyttBibliotek" AfterTargets="FjernUbrukt">
-    <ItemGroup>
-      <BibliotekDll Include="$(PublishDir)*.dll" />
-      <BibliotekNative Include="$(PublishDir)runtimes\**\*" />
-    </ItemGroup>
-    <Move SourceFiles="@(BibliotekDll)" DestinationFolder="$(PublishDir)bibliotek" />
-    <Move SourceFiles="@(BibliotekNative)" DestinationFiles="@(BibliotekNative->'$(PublishDir)bibliotek\runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <RemoveDir Directories="$(PublishDir)runtimes" />
-    <Delete Files="$(PublishDir)AISkanner.exe.config" />
-  </Target>
-
   <ItemGroup>
     <!-- YARA-reglene ligger også som åpen fil ved siden av programmet, så IT kan lese og endre dem -->
     <!-- IT sin liste over godkjent AI (blir grønt). Tom som standard. -->
     <None Include="godkjent-ai.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="LES-MEG-FORST.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\AISkanner.Core\ai-modeller.yar" Link="ai-modeller.yar" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 

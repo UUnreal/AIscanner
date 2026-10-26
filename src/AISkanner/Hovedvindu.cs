@@ -56,9 +56,6 @@ public sealed class Hovedvindu : Form
             // så programmet lagrer ingenting mellom søk.
             RyddVindusdata(alle: true);
             var data = Path.Combine(Rot, $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}");
-            // WebView2Loader.dll ligger i bibliotek\runtimes\win-x64\native (eller ved siden av programmet når det kjøres fra Visual Studio)
-            var laster = Path.Combine(Program.Bibliotek, "runtimes", "win-x64", "native");
-            if (File.Exists(Path.Combine(laster, "WebView2Loader.dll"))) CoreWebView2Environment.SetLoaderDllFolderPath(laster);
             var miljo = await CoreWebView2Environment.CreateAsync(null, data);
             await _web.EnsureCoreWebView2Async(miljo);
         }

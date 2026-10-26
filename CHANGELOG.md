@@ -29,9 +29,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
-## [2.15.1] - 2026-10-26
+## [2.15.2] - 2026-10-26
 
 Ikke testet på Windows.
+
+### Rettet
+- **2.15.1 startet ikke.** DLL-ene lå i undermappa `bibliotek` og ble lastet med `Assembly.LoadFrom`. Filer fra en
+  nedlastet zip har merket «fra Internett» (Zone.Identifier), og .NET Framework nekter `LoadFrom` på slike filer
+  (`NotSupportedException`), mens vanlig lasting ved siden av programmet virker. Mappa er tilbake til oppsettet fra
+  2.15.0, som er det som har kjørt på Windows: DLL-er og `AISkanner.exe.config` ved siden av `AISkanner.exe`.
+- **Programmet forsvinner aldri uten forklaring.** Alle feil ved oppstart og under kjøring vises i en melding med
+  versjon, mappe og hele feilen. Ctrl+C kopierer teksten.
+- `LES-MEG-FORST.txt` i mappa sier hvilken fil som er programmet (`AISkanner.exe`, type «Program») og at
+  `AISkanner.exe.config` er innstillinger. Byggeløypa sjekker at det er nøyaktig én `.exe`.
+
+## [2.15.1] - 2026-10-26
+
+Ikke testet på Windows. Startet ikke på Windows, se 2.15.2.
 
 ### Rettet
 - **Ryddig programmappe, ingen `AISkanner.exe.config`.** Med skjulte filendelser i Windows så `AISkanner.exe.config`
