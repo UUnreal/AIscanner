@@ -20,7 +20,7 @@ public static class Rapport
         L("AI-SKANNER RAPPORT");
         L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}   Tid: {DateTime.Now:dd.MM.yyyy HH:mm}");
         int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
-        L($"Funnet: {liste.Count} AI   (høy risiko: {Ant(Risiko.Rod)}, middels: {Ant(Risiko.Gul)}, lav: {Ant(Risiko.Gronn)})");
+        L($"Funnet: {liste.Count} AI   (🔴 høy risiko: {Ant(Risiko.Rod)}, 🟡 middels: {Ant(Risiko.Gul)}, 🟢 lav: {Ant(Risiko.Gronn)})");
         if (skanner != null)
             L(skanner.DataMalt ? $"Datamengde: målt av Windows i {skanner.MaleSekunder:0} sekunder under søket."
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");
@@ -40,10 +40,10 @@ public static class Rapport
         {
             L();
             L("OVERSIKT");
-            L($"{"Risiko",-9}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
-            L(new string('-', 96));
+            L($"{"Risiko",-12}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
+            L(new string('-', 99));
             foreach (var f in liste.OrderBy(f => f.Risiko))
-                L($"{Merke(f.Risiko),-9}{Klipp(Oversikt.Navn(f), 36),-38}{Klipp(Oversikt.Lokasjon(f), 24),-26}{Oversikt.Punkt(f)}");
+                L($"{Merke(f.Risiko),-12}{Klipp(Oversikt.Navn(f), 36),-38}{Klipp(Oversikt.Lokasjon(f), 24),-26}{Oversikt.Punkt(f)}");
         }
         foreach (var (gruppe, tittel) in Grupper)
         {
@@ -87,7 +87,7 @@ public static class Rapport
 
     private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";
 
-    private static string Merke(Risiko r) => r switch { Risiko.Rod => "HØY", Risiko.Gul => "MIDDELS", _ => "LAV" };
+    private static string Merke(Risiko r) => r switch { Risiko.Rod => "🔴 HØY", Risiko.Gul => "🟡 MIDDELS", _ => "🟢 LAV" };
 
     public static string MalTekst(Mal m)
     {
