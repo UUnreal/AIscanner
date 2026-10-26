@@ -87,6 +87,8 @@
   .knapp.primar { background: var(--bla); color: #fff; }
   .knapp.sekundar { background: var(--kort); color: var(--bla); box-shadow: var(--skygge); }
   #resultat .hoved { flex: 1; }
+  .andreFunn { font-size: 16px; color: var(--dempet); margin-top: 3px; font-weight: 500; }
+  .andreFunn:empty { display: none; }
   .bar { display: flex; gap: 2px; height: 7px; border-radius: 4px; overflow: hidden; margin: 10px 0 6px; max-width: 460px; }
   .bar:empty { display: none; }
   .bar span { display: block; }
@@ -213,7 +215,7 @@
 
 <section id="resultat" class="side">
   <div class="topp">
-    <div class="tittel"><h1 id="hodeTittel"></h1><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
+    <div class="tittel"><h1 id="hodeTittel"></h1><div class="andreFunn" id="andreFunn"></div><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
     <button class="knapp sekundar" id="igjen">Søk igjen</button>
     <button class="knapp primar" id="lagre">Last ned rapport</button>
   </div>
@@ -249,7 +251,12 @@ function visResultat(funn, inf) {
   info = inf || {}; side = 0; valgt = null;
   $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
   const ant = r => alle.filter(f => f.risiko === r).length;
-  $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : `${funn.length} AI funnet på PC-en`;
+  // Overskriften teller AI-modeller. Resten (nettsteder, utvidelser, apper) står under.
+  const t = info.telling || { modeller: alle.filter(f => /modell/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0 };
+  $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : t.modeller === 1 ? "1 AI-modell funnet" : t.modeller ? `${t.modeller} AI-modeller funnet` : "Ingen AI-modeller funnet";
+  const andre = [[t.nettsteder, "AI-nettsted", "AI-nettsteder"], [t.utvidelser, "nettleserutvidelse", "nettleserutvidelser"], [t.apper, "AI-app eller agent", "AI-apper og agenter"]]
+    .filter(x => x[0] > 0).map(x => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}`);
+  $("andreFunn").textContent = andre.length ? "+ " + andre.join(" · ") : "";
   $("bar").innerHTML = funn.length ? ["rod", "gul", "gronn"].filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
   $("fordeling").innerHTML = funn.length
     ? `<span class="rod"><b>${ant("rod")}</b>Høy risiko</span><span class="gul"><b>${ant("gul")}</b>Middels</span><span class="gronn"><b>${ant("gronn")}</b>Lav</span>`

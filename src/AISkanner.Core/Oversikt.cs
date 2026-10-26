@@ -62,6 +62,33 @@ public static class Oversikt
         };
     }
 
+    /// <summary>Hva som er funnet, telt opp: AI-modeller, AI-nettsteder, nettleserutvidelser og AI-apper/agenter uten egne modeller.</summary>
+    public static (int Modeller, int Nettsteder, int Utvidelser, int Apper) Telling(IEnumerable<Funn> funn)
+    {
+        int modeller = 0, nettsteder = 0, utvidelser = 0, apper = 0;
+        foreach (var f in funn)
+        {
+            if (f.Type == "IT-regel") continue;
+            if (f.Modeller > 0) { modeller += f.Modeller; continue; }
+            if (f.Type is "AI-nettsted" or "Ukjent AI-nettsted" || f.Kategori.Contains("(nettsted)"))
+                nettsteder += Regex.Match(f.Navn, @"\((\d+)\)$") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 1;
+            else if (f.Type == "Nettleserutvidelse") utvidelser++;
+            else apper++;
+        }
+        return (modeller, nettsteder, utvidelser, apper);
+    }
+
+    /// <summary>"N AI-modeller, N AI-nettsteder, N nettleserutvidelser og N AI-apper og agenter"</summary>
+    public static string TellingTekst(IEnumerable<Funn> funn)
+    {
+        var (m, n, u, a) = Telling(funn);
+        var deler = new List<string> { m == 1 ? "1 AI-modell" : $"{m} AI-modeller" };
+        if (n > 0) deler.Add(n == 1 ? "1 AI-nettsted" : $"{n} AI-nettsteder");
+        if (u > 0) deler.Add(u == 1 ? "1 nettleserutvidelse" : $"{u} nettleserutvidelser");
+        if (a > 0) deler.Add(a == 1 ? "1 AI-app eller agent" : $"{a} AI-apper og agenter");
+        return deler.Count == 1 ? deler[0] : string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
+    }
+
     /// <summary>Navnet uten forklarende forstavelse: "AI-modell: Llama" blir "Llama".</summary>
     public static string Navn(Funn f)
     {

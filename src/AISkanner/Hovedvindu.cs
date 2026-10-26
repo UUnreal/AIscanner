@@ -159,6 +159,7 @@ public sealed class Hovedvindu : Form
                     sendtTekst = Rapport.Storrelse(sendt),
                     nvd = nvd ? "sjekker" : "av",
                     admin = Nettverk.ErAdmin(),
+                    telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper } : null,
                 },
                 funn = _resultat.Select(f => new
                 {

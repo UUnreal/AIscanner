@@ -282,6 +282,7 @@ public sealed partial class Skanner
             var resten = modeller.Skip(15).ToList();
             var f = LeggTil($"Flere AI-modeller ({resten.Count})", "Lokal AI", Risiko.Rod, "Flere AI-modeller ligger lagret på PC-en.", "Disk", null);
             f.Bruk = $"Til sammen {Gb(resten.Sum(x => x.Lengde))}.";
+            f.LeggTilModeller(resten.Count);
             foreach (var r in resten)
             {
                 var id = ModellGjenkjenning.Finn(r.Modell, r.Sti, _regler, Kildenavn(r.Sti));
@@ -439,6 +440,7 @@ public sealed partial class Skanner
         try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
+        f.LeggTilModeller(1);
 
         f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
         var info = new List<string>();

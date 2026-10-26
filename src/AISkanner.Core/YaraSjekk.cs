@@ -47,6 +47,7 @@ public sealed partial class Skanner
                 $"Fil: {sti} · {Rapport.Storrelse(lengde)} · endret {Tid(endret)}",
                 rad: "Ikke last inn eller åpne fila. Gi den til IT for analyse, eller slett den.");
             f.Bruk = $"Funnet av YARA-regelen {treff[0].Navn}.";
+            f.LeggTilModeller(1);
             f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
             foreach (var r in treff) f.Detalj($"YARA: {r.Navn} · {r.Beskrivelse}");
             if (ErRisikabelPlass(sti)) f.Advarsel("Ligger i en nedlastings- eller midlertidig mappe.");

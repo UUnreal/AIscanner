@@ -21,7 +21,8 @@ public static class Rapport
         L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}   Tid: {DateTime.Now:dd.MM.yyyy HH:mm}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
-        L($"Funnet: {liste.Count} AI   (🔴 høy risiko: {Ant(Risiko.Rod)}, 🟡 middels: {Ant(Risiko.Gul)}, 🟢 lav: {Ant(Risiko.Gronn)})");
+        L($"Funnet: {Oversikt.TellingTekst(liste)}");
+        L($"Funn i lista: {liste.Count}   (🔴 høy risiko: {Ant(Risiko.Rod)}, 🟡 middels: {Ant(Risiko.Gul)}, 🟢 lav: {Ant(Risiko.Gronn)})");
         if (skanner != null)
             L(skanner.DataMalt ? $"Datamengde: målt av Windows i {skanner.MaleSekunder:0} sekunder under søket."
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");

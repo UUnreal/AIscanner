@@ -118,6 +118,7 @@ public sealed partial class Skanner
                 f.Bruk = $"Ligger på PC-en ({Rapport.Storrelse(sprakStorrelse)}), lastet ned {Tid(forst)}.";
                 f.Tidspunkt(forst, sist);
                 foreach (var l in sprak) f.Detalj(l);
+                f.LeggTilModeller(1);   // én språkmodell, selv om den består av flere filer
                 hoved = f;
                 if (blokkert) f.Advarsel("IT har blokkert modellen, men den ligger fortsatt på disk.");
                 else if (policy == null) f.Merknad("Ingen regel fra IT. Nettleseren bestemmer selv om AI-modellen lastes ned.");
@@ -137,6 +138,7 @@ public sealed partial class Skanner
                     enkelt: "Små AI-modeller i nettleseren", rad: "Ingenting å gjøre. Dette er vanlige funksjoner i nettleseren.");
                 f.Bruk = $"{andre.Count} {(andre.Count == 1 ? "funksjon" : "funksjoner")}: {string.Join(", ", andre.Select(a => a.Split(new[] { " · " }, StringSplitOptions.None)[1]).Take(3))}{(andre.Count > 3 ? " …" : "")}.";
                 foreach (var l in andre) f.Detalj(l);
+                f.LeggTilModeller(andre.Count);
                 hoved ??= f;
             }
 
@@ -164,6 +166,7 @@ public sealed partial class Skanner
                     enkelt: "Ukjent AI i nettleseren", rad: "Sjekk utvidelsene i nettleseren. Fjern dem du ikke kjenner.");
                 f.Bruk = $"{ukjente.Count} {(ukjente.Count == 1 ? "modellfil" : "modellfiler")}.";
                 foreach (var l in ukjente) f.Detalj(l);
+                f.LeggTilModeller(ukjente.Count);
             }
         }
     }

@@ -59,6 +59,10 @@ public sealed class Funn
     public string? RisikoGrunn { get; set; }
     /// <summary>Land (to bokstaver) dataene går til, utenom målte forbindelser: tjenester Windows har slått opp nylig.</summary>
     public List<string> SenderTil { get; } = new();
+    private int _modeller;
+    /// <summary>Hvor mange AI-modeller (modellfiler eller modellmapper) funnet hører til.</summary>
+    public int Modeller => _modeller;
+    public void LeggTilModeller(int n) => Interlocked.Add(ref _modeller, n);
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }

@@ -268,6 +268,7 @@ public sealed partial class Skanner
                 rad: kjent ? "Vanligvis greit. På jobb bør IT vite om det og bestemme om AI-funksjonene skal være på."
                            : "Finn ut hva programmet er. Avinstaller det hvis ingen vet hvorfor det er der.");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
+        f.LeggTilModeller(app.Filer.Count);
 
         // Når kom det på PC-en
         DateTime? lagtInn = null, oppdatert = null;
