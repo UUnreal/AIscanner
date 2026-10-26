@@ -78,8 +78,9 @@ Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local Stat
 Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for lesing av innhold (i tillegg til de første bytene av store filer).
 
 ## Nettverk
-Til `127.0.0.1` som beskrevet over. Ellers ingenting som standard. Ingen DNS-oppslag, ingen IP-oppslag på nett. Hvis brukeren selv slår på sårbarhetssjekk, sendes bare et produktord
-(f.eks. `ollama`) til `services.nvd.nist.gov`.
+Til `127.0.0.1` som beskrevet over. Ingen DNS-oppslag, ingen IP-oppslag på nett. Sårbarhetssjekken er alltid med (fra 2.6): etter at resultatet vises,
+sendes bare produktordet fra regelfila for kjente produkter som ble funnet (f.eks. `ollama`) til `services.nvd.nist.gov`. Aldri PC-navn, brukernavn eller stier.
+Bedriften kan slå den av med `AISkanner.exe --uten-nvd`, og historikken med `--uten-historikk`.
 
 ## Personvern på jobb-PC
 Historikksøket er innsyn i elektronisk lagret materiale. En arbeidsgiver som bruker skanneren på ansattes PC-er må følge e-postforskriften

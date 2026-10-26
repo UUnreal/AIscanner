@@ -3,14 +3,14 @@ using System.Text.Json;
 namespace AISkanner;
 
 /// <summary>
-/// Valgfritt oppslag i NVD (nvd.nist.gov). Sender BARE produktordet fra regelfilen, f.eks. "ollama".
+/// Oppslag i NVD (nvd.nist.gov). Sender BARE produktordet fra regelfilen, f.eks. "ollama".
 /// Aldri PC-navn, brukernavn eller filstier.
 /// </summary>
 public static class Nvd
 {
     private static readonly HttpClient Klient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
-    public static async Task SjekkAsync(IEnumerable<Funn> funn, IProgress<string>? status, CancellationToken ct)
+    public static async Task SjekkAsync(IEnumerable<Funn> funn, IProgress<string>? status, CancellationToken ct, Action<Funn>? ferdig = null)
     {
         var liste = funn.Where(f => !string.IsNullOrWhiteSpace(f.Regel?.Nvd)).ToList();
         for (int i = 0; i < liste.Count; i++)
@@ -31,9 +31,10 @@ public static class Nvd
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
             catch { f.Merknad("NVD: oppslaget feilet (ingen nett eller for mange forespørsler)."); }
+            ferdig?.Invoke(f);
 
-            // NVD tillater 5 forespørsler per 30 sekunder uten API-nøkkel
-            if (i < liste.Count - 1) await Task.Delay(TimeSpan.FromSeconds(6.5), ct);
+            // NVD tillater 5 forespørsler per 30 sekunder uten API-nøkkel: de fem første går med en gang
+            if (i >= 4 && i < liste.Count - 1) await Task.Delay(TimeSpan.FromSeconds(6.5), ct);
         }
     }
 }

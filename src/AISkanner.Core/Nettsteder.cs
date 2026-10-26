@@ -145,15 +145,21 @@ public sealed partial class Skanner
         var ukjente = new Dictionary<string, Brukspor>(StringComparer.OrdinalIgnoreCase);
         if (_historikk) Historikk(For, ukjente);
 
-        foreach (var (vert, s) in ukjente.Where(u => u.Value.Besok >= 2).OrderByDescending(u => u.Value.Besok).Take(10))
+        // Nettsteder som bare ser ut som AI (.ai-adresse eller "gpt" i navnet). Det er en gjetning, så de samles i ett funn.
+        var mulige = ukjente.Where(u => u.Value.Besok >= 2).OrderByDescending(u => u.Value.Besok).Take(40).ToList();
+        if (mulige.Count > 0)
         {
-            var f = LeggTil($"Ukjent AI-nettsted: {vert}", "Nettleser-AI (nettsted)", Risiko.Rod,
-                "Ser ut som en AI-tjeneste vi ikke kjenner. Vi vet ikke hvem som står bak eller hvor dataene havner.",
-                string.Join(", ", s.Nettlesere), null, enkelt: "Ukjent AI-nettsted", rad: "Ikke lim inn noe viktig før du vet hvem som står bak.");
-            f.Bruk = $"Besøkt {s.Besok} ganger i {string.Join(", ", s.Nettlesere)}{(s.Sist != null ? ", sist " + Tid(s.Sist) : "")}.";
+            var f = LeggTil($"Mulige AI-nettsteder ({mulige.Count})", "Nettleser-AI (nettsted)", Risiko.Gul,
+                "Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.",
+                string.Join(", ", mulige.SelectMany(m => m.Value.Nettlesere).Distinct()), null, enkelt: "Mulige AI-nettsteder",
+                rad: "Se over lista. Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.");
+            f.Bruk = $"{string.Join(", ", mulige.Take(4).Select(m => m.Key))}{(mulige.Count > 4 ? $" og {mulige.Count - 4} til" : "")}.";
             f.Privat = true;
-            f.Tidspunkt(s.Forst, s.Sist);
-            foreach (var x in s.Linjer()) f.Detalj(x);
+            foreach (var (vert, sp) in mulige)
+            {
+                f.Tidspunkt(sp.Forst, sp.Sist);
+                foreach (var x in sp.Linjer()) f.Detalj(x);
+            }
         }
 
         foreach (var (n, s) in spor)
@@ -241,7 +247,13 @@ public sealed partial class Skanner
         if (string.IsNullOrEmpty(vert)) return null;
         vert = vert!.ToLowerInvariant().TrimEnd('.');
         if (vert.StartsWith("www.")) vert = vert.Substring(4);
-        return _regler.AiNettsteder.FirstOrDefault(n => n.Treffer(vert));
+        // Mest presise treff vinner: chat.mistral.ai er Le Chat, mistral.ai er selskapet
+        AiNettsted? beste = null; int lengde = 0;
+        foreach (var n in _regler.AiNettsteder)
+            foreach (var d in n.Domener)
+                if (d.Length > lengde && (vert.Equals(d, StringComparison.OrdinalIgnoreCase) || vert.EndsWith("." + d, StringComparison.OrdinalIgnoreCase)))
+                { beste = n; lengde = d.Length; }
+        return beste;
     }
 
     /// <summary>"https://chatgpt.com:443,*" blir "chatgpt.com".</summary>

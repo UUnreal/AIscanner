@@ -17,6 +17,7 @@ public sealed class Hovedvindu : Form
     private List<Funn> _resultat = new();
     private Skanner? _skanner;
     private bool _soker;
+    private CancellationTokenSource? _nvdStopp;
     private readonly string[] _args;
 
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -71,7 +72,7 @@ public sealed class Hovedvindu : Form
         w.NewWindowRequested += (_, e) => e.Handled = true;
         w.WebMessageReceived += async (_, e) => await MottaAsync(e.WebMessageAsJson);
         if (_args.Contains("--sok"))
-            w.NavigationCompleted += (_, _) => Send(new { type = "start", nvd = _args.Contains("--nvd"), historikk = !_args.Contains("--uten-historikk") });
+            w.NavigationCompleted += (_, _) => Send(new { type = "start" });
 
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.ui.index.html")!;
         using var r = new StreamReader(s, Encoding.UTF8);
@@ -118,24 +119,25 @@ public sealed class Hovedvindu : Form
         var type = m.TryGetProperty("type", out var t) ? t.GetString() : null;
         if (type == "sok" && !_soker)
         {
-            bool nvd = m.TryGetProperty("nvd", out var n) && n.ValueKind == JsonValueKind.True;
-            bool historikk = !m.TryGetProperty("historikk", out var h) || h.ValueKind != JsonValueKind.False;
-            await SokAsync(nvd, historikk);
+            // Historikk og sikkerhetshull er alltid med. Bare IT kan slå dem av med --uten-historikk / --uten-nvd.
+            await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         }
         else if (type == "lagre") Lagre();
         else if (type == "admin")
-            StartSomAdmin(m.TryGetProperty("nvd", out var n2) && n2.ValueKind == JsonValueKind.True, !m.TryGetProperty("historikk", out var h2) || h2.ValueKind != JsonValueKind.False);
+            StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
     }
 
     private async Task SokAsync(bool nvd, bool historikk)
     {
         _soker = true;
+        _nvdStopp?.Cancel();
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
             _skanner = new Skanner(_regler, historikk);
-            _resultat = await Task.Run(() => _skanner.KjorAsync(nvd));
+            // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
+            _resultat = await Task.Run(() => _skanner.KjorAsync(false));
             var farlige = new HashSet<string>(_regler.HoyrisikoLand, StringComparer.OrdinalIgnoreCase);
             long sendt = _resultat.SelectMany(f => f.Trafikk).Sum(m => m.Ut ?? 0);
             Send(new
@@ -147,6 +149,7 @@ public sealed class Hovedvindu : Form
                     dataMalt = _skanner.DataMalt,
                     maleSekunder = _skanner.MaleSekunder,
                     sendtTekst = Rapport.Storrelse(sendt),
+                    nvd = nvd ? "sjekker" : "av",
                 },
                 funn = _resultat.Select(f => new
                 {
@@ -176,8 +179,19 @@ public sealed class Hovedvindu : Form
         catch (Exception e)
         {
             Send(new { type = "feil", tekst = "Søket stoppet: " + e.Message });
+            return;
         }
         finally { _soker = false; }
+        if (!nvd) return;
+        // Et nytt søk stopper oppslagene fra forrige
+        var stopp = _nvdStopp = new CancellationTokenSource();
+        try
+        {
+            await Nvd.SjekkAsync(_resultat, null, stopp.Token,
+                f => Send(new { type = "nvd", navn = f.Navn, merk = f.Advarsler.Skip(1).Concat(f.Merknader).ToList() }));
+            Send(new { type = "nvdFerdig" });
+        }
+        catch { }
     }
 
     /// <summary>Åpner Utforsker med fila eller mappa markert. Bare stier som faktisk står i et funn godtas.</summary>
@@ -198,7 +212,7 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? " --nvd" : "") + (historikk ? "" : " --uten-historikk"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk"))
             {
                 UseShellExecute = true,
                 Verb = "runas",

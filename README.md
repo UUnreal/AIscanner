@@ -25,7 +25,7 @@ Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI f�
 ## Sikkerhet først
 - Leser bare. Endrer, sletter eller installerer ingenting. Trenger ikke administrator (`asInvoker`). Bare måling av datamengde ber om det, og bare når du trykker på den.
 - Starter ingen skript eller kommandolinjer. Vinduet bruker Microsoft Edge WebView2.
-- Sender ingenting ut. Valgfri sårbarhetssjekk sender bare produktnavn til NVD.
+- Sender ingenting om deg ut. Sårbarhetssjekken sender bare produktnavn (f.eks. «ollama») til NVD.
 - Åpner aldri nettleserens passord, informasjonskapsler eller lommebøker. Håndhevet i koden (`Skanner.LovligeFiler`).
 - Historikk leses bare hvis bryteren er på, analyseres i minnet og lagres aldri.
 - Risikoreglene ligger åpent i [`regler.json`](src/AISkanner.Core/regler.json). Legg en egen `regler.json`
