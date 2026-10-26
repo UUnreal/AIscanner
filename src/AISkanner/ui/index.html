@@ -38,19 +38,31 @@
   #start { align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 8px; }
   .storTittel { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
   .undertittel { font-size: 17px; color: var(--dempet); max-width: 440px; }
+  /* To søk i én knapp: den lille runde i midten = som bruker, ringen rundt = som admin */
+  .valg { position: relative; width: 260px; height: 260px; margin: 22px 0 16px; flex: none; }
+  .ring2 {
+    position: absolute; inset: 0; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
+    background: radial-gradient(circle, transparent 0 46%, rgba(0,122,255,.10) 46.5% 100%);
+    box-shadow: inset 0 0 0 2px rgba(0,122,255,.35); color: var(--bla); font: inherit; transition: background .15s;
+  }
+  .ring2:hover { background: radial-gradient(circle, transparent 0 46%, rgba(0,122,255,.18) 46.5% 100%); }
+  .ring2 .rtekst { position: absolute; left: 0; right: 0; top: 20px; font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+  .ring2 .rliten { position: absolute; left: 0; right: 0; bottom: 26px; font-size: 12px; font-weight: 500; opacity: .85; }
   .sokKnapp {
-    margin: 28px 0 22px; width: 160px; height: 160px; border-radius: 50%; border: 0; cursor: pointer;
+    position: absolute; left: 50%; top: 50%; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%; border: 0; cursor: pointer;
     background: linear-gradient(160deg, #3d9bff, var(--bla) 55%, #0060df); color: #fff;
-    font-size: 28px; font-weight: 600; letter-spacing: -.01em;
+    font-size: 26px; font-weight: 600; letter-spacing: -.01em; line-height: 1.1;
     box-shadow: 0 12px 32px rgba(0,122,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
-    position: relative; transition: transform .15s ease; flex: none;
+    transition: transform .15s ease; z-index: 1;
   }
-  .sokKnapp:hover { transform: scale(1.03); }
-  .sokKnapp:active { transform: scale(.97); }
-  .sokKnapp::before {
-    content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 2px solid var(--bla); opacity: .25;
-    animation: puls 2.4s ease-out infinite;
-  }
+  .sokKnapp small { display: block; font-size: 13px; font-weight: 500; opacity: .9; margin-top: 4px; }
+  .sokKnapp:hover { transform: scale(1.04); }
+  .sokKnapp:active, .ring2:active { transform: scale(.97); }
+  .modus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; text-align: left; margin-bottom: 14px; }
+  .modus div { background: var(--kort); border-radius: 14px; padding: 10px 14px; box-shadow: var(--skygge); font-size: 13px; color: var(--dempet); line-height: 1.4; }
+  .modus b { display: block; color: var(--tekst); font-size: 14px; margin-bottom: 2px; }
+  .modus .adm b { color: var(--bla); }
+  .erAdmin .ring2 .rliten { display: none; }
   @keyframes puls { 0% { transform: scale(.92); opacity: .35; } 100% { transform: scale(1.18); opacity: 0; } }
   .tillit { display: flex; gap: 18px; color: var(--dempet); font-size: 13px; flex-wrap: wrap; justify-content: center; }
   .tillit span { display: inline-flex; align-items: center; gap: 6px; }
@@ -177,7 +189,14 @@
 <section id="start" class="side aktiv">
   <div class="storTittel">Er det AI på denne PC-en?</div>
   <div class="undertittel">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
-  <button class="sokKnapp" id="sok">Søk</button>
+  <div class="valg" id="valg">
+    <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst" id="ringTekst">SØK SOM ADMIN</span><span class="rliten">Krever godkjenning</span></button>
+    <button class="sokKnapp" id="sok" title="Søk som vanlig bruker: mindre data">Søk<small>som bruker</small></button>
+  </div>
+  <div class="modus">
+    <div><b>Bruker · mindre data</b>Rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator.</div>
+    <div class="adm"><b>Admin · mer data</b>Måler hvor mye data hver AI sender, og ser alle programmer som kjører. Windows ber om godkjenning først.</div>
+  </div>
   <div class="tillit">
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>Endrer ingenting</span>
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Leser aldri passord</span>
@@ -244,6 +263,7 @@ function visResultat(funn, inf) {
 function tegnBunn() {
   const deler = [];
   if (info.sekunder) deler.push(`Søketid ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push(info.admin ? "Søkt som admin" : "Søkt som bruker");
   deler.push("Ingenting lagret");
   deler.push("Rød = ukjent AI eller skygge-AI");
   deler.push(info.nvd === "ferdig" ? "Sikkerhetshull sjekket" : info.nvd === "av" ? "Sikkerhetshull ikke sjekket" : "Sjekker sikkerhetshull…");
@@ -414,12 +434,21 @@ function motta(m) {
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
-  else if (m.type === "start") start();
+  else if (m.type === "start") { sisteValg = "admin"; start(); }
+  else if (m.type === "modus") {
+    erAdmin = !!m.admin;
+    $("valg").classList.toggle("erAdmin", erAdmin);
+    $("ringTekst").textContent = erAdmin ? "ADMIN ER PÅ" : "SØK SOM ADMIN";
+    if (erAdmin) { $("sok").innerHTML = "Søk<small>som admin</small>"; sisteValg = "admin"; }
+  }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
-function start() { $("feil").textContent = ""; vis("soker"); send({ type: "sok" }); }
-$("sok").onclick = $("igjen").onclick = start;
+let erAdmin = false, sisteValg = "sok";
+function start() { $("feil").textContent = ""; vis("soker"); send({ type: sisteValg }); }
+$("sok").onclick = () => { sisteValg = "sok"; start(); };
+$("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin" }); } };
+$("igjen").onclick = start;
 $("lagre").onclick = () => send({ type: "lagre" });
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------

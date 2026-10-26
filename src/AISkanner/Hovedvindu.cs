@@ -71,8 +71,12 @@ public sealed class Hovedvindu : Form
         w.NavigationStarting += (_, e) => { if (!forste) e.Cancel = true; forste = false; };
         w.NewWindowRequested += (_, e) => e.Handled = true;
         w.WebMessageReceived += async (_, e) => await MottaAsync(e.WebMessageAsJson);
-        if (_args.Contains("--sok"))
-            w.NavigationCompleted += (_, _) => Send(new { type = "start" });
+        // Siden får vite om vi kjører som administrator, så startknappene viser riktig valg
+        w.NavigationCompleted += (_, _) =>
+        {
+            Send(new { type = "modus", admin = Nettverk.ErAdmin() });
+            if (_args.Contains("--sok")) Send(new { type = "start" });
+        };
 
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.ui.index.html")!;
         using var r = new StreamReader(s, Encoding.UTF8);
@@ -123,8 +127,12 @@ public sealed class Hovedvindu : Form
             await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         }
         else if (type == "lagre") Lagre();
-        else if (type == "admin")
-            StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
+        else if (type == "admin" && !_soker)
+        {
+            // Allerede administrator: søk med en gang. Ellers starter programmet på nytt via Windows sin godkjenning (UAC).
+            if (Nettverk.ErAdmin()) await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
+            else StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
+        }
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
     }
 
@@ -150,6 +158,7 @@ public sealed class Hovedvindu : Form
                     maleSekunder = _skanner.MaleSekunder,
                     sendtTekst = Rapport.Storrelse(sendt),
                     nvd = nvd ? "sjekker" : "av",
+                    admin = Nettverk.ErAdmin(),
                 },
                 funn = _resultat.Select(f => new
                 {
@@ -231,7 +240,11 @@ public sealed class Hovedvindu : Form
             });
             Close();
         }
-        catch (System.ComponentModel.Win32Exception) { }   // brukeren sa nei
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Brukeren sa nei i Windows sin godkjenning
+            Send(new { type = "feil", tekst = "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen." });
+        }
     }
 
     private void Lagre()

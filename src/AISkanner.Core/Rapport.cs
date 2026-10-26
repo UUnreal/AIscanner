@@ -19,6 +19,7 @@ public static class Rapport
         string strek = new('-', 60);
         L("AI-SKANNER RAPPORT");
         L($"PC: {Environment.MachineName}   Bruker: {Environment.UserName}   Tid: {DateTime.Now:dd.MM.yyyy HH:mm}");
+        L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
         L($"Funnet: {liste.Count} AI   (🔴 høy risiko: {Ant(Risiko.Rod)}, 🟡 middels: {Ant(Risiko.Gul)}, 🟢 lav: {Ant(Risiko.Gronn)})");
         if (skanner != null)
