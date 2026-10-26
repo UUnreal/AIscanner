@@ -75,39 +75,37 @@
   .knapp { border: 0; border-radius: 12px; padding: 9px 16px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
   .knapp.primar { background: var(--bla); color: #fff; }
   .knapp.sekundar { background: var(--bla-myk); color: var(--bla); }
+  #resultat .hoved { flex: 1; }
+  .fordeling { color: var(--dempet); font-size: 14px; margin-top: 2px; }
+  .fordeling b { color: var(--rod); font-weight: 600; }
 
-  .fliser { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; flex: none; }
-  .flis { background: var(--kort); border-radius: 12px; box-shadow: var(--skygge); padding: 7px 12px; text-align: left; border: 0; min-width: 0; color: inherit; font: inherit; }
-  .flis.trykk { cursor: pointer; } .flis.trykk:hover { background: var(--fyll); }
-  .flis .tall { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .flis .tall.liten { font-size: 17px; line-height: 1.75; }
-  .flis .etikett { font-size: 12.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .flis.rod .tall { color: var(--rod); } .flis.gul .tall { color: var(--gul-tekst); } .flis.gronn .tall { color: var(--gronn-tekst); }
-
-  .hoved { flex: 1; min-height: 0; position: relative; padding: 10px; }
-  .panel { background: var(--kort); border-radius: 16px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .liste { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: repeat(var(--kol, 1), minmax(0, 1fr)); grid-auto-rows: 82px; align-content: start; gap: 8px; }
-  .rad { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 14px; cursor: pointer; border-radius: 12px; background: var(--fyll); position: relative; min-width: 0; }
-  .rad:hover { box-shadow: inset 0 0 0 2px var(--bla-myk); }
-  .rad .prikk { flex: none; width: 10px; height: 10px; border-radius: 50%; }
-  .rad .l1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .rad .l1 b { flex: 1; font-weight: 600; font-size: 15px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rad .l1 .naar { flex: none; color: var(--dempet); font-size: 12px; white-space: nowrap; }
-  .rad .l1 .naar.na { color: var(--bla); font-weight: 600; }
-  .rad .l2, .rad .l3 { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rad .l2 { color: var(--dempet); }
-  .rad .l3 { color: var(--tekst); }
-  .rad .l3 i { font-style: normal; color: var(--bla); font-weight: 600; }
-  .rad .nett { flex: none; color: var(--bla); width: 15px; height: 15px; }
+  /* Tabellen: AI-modell, Risiko, Lokasjon. Én rad per AI, detaljer ved trykk. */
+  .panel { background: var(--kort); border-radius: 16px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .tr { display: grid; grid-template-columns: minmax(0, 1.6fr) 130px minmax(0, 1.2fr) 18px; align-items: center; gap: 12px; padding: 0 18px; }
+  .th { flex: none; height: 36px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--dempet); border-bottom: 1px solid var(--linje); }
+  .liste { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .rad { height: 54px; flex: none; cursor: pointer; border-bottom: 1px solid var(--linje); }
+  .rad:hover { background: var(--fyll); }
+  .rad .ai { min-width: 0; }
+  .rad .ai b { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .ai small { display: block; font-size: 12.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .ai small.na { color: var(--bla); }
+  .rad .risiko { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; }
+  .rad .lok { color: var(--dempet); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .pil { color: var(--dempet); font-size: 18px; text-align: right; }
+  .prikk { flex: none; width: 10px; height: 10px; border-radius: 50%; }
   .ark { position: absolute; inset: 0; background: var(--kort); display: none; flex-direction: column; z-index: 2; }
   .ark.apen { display: flex; }
-  .merke { font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; flex: none; }
+  .merke { flex: none; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
   .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod); }
   .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: var(--gul-tekst); }
   .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: var(--gronn-tekst); }
-  .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 40px; color: var(--dempet); font-size: 13.5px; }
+  .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 38px; color: var(--dempet); font-size: 13.5px; }
+  .sider:empty { display: none; }
   .sider button { border: 0; background: var(--fyll); color: var(--bla); width: 30px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; }
   .sider button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
+  .bunn { flex: none; display: flex; justify-content: space-between; gap: 12px; color: var(--dempet); font-size: 12.5px; padding: 0 4px; }
+  .bunn button { border: 0; background: none; color: var(--bla); font: inherit; cursor: pointer; padding: 0; }
   .tom { margin: auto; text-align: center; color: var(--dempet); padding: 24px; }
 
   .detalj { padding: 14px 16px; gap: 2px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -124,7 +122,6 @@
   .sted .l1 b { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; max-width: 60%; }
   .sted .l1 small { color: var(--dempet); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .sted .l2 { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
-  .rad-tekst { flex: none; font-size: 14px; color: var(--tekst); }
   .brikker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; flex: none; }
   .brikker span { background: var(--fyll); border-radius: 20px; padding: 2px 10px; font-size: 12.5px; color: var(--dempet); }
   .medSider { display: flex; align-items: center; justify-content: space-between; }
@@ -150,11 +147,7 @@
   .mal .data { flex: none; font-size: 12.5px; color: var(--dempet); font-variant-numeric: tabular-nums; text-align: right; min-width: 92px; }
   .kilde { margin-top: auto; padding-top: 8px; color: var(--dempet); font-size: 11px; flex: none; }
 
-  @media (max-width: 760px) {
-    .fliser { grid-template-columns: repeat(3, 1fr); }
-    .fliser .flis:nth-child(n+4) { display: none; }
-  }
-  @media (max-height: 640px) { .fliser .flis .tall { font-size: 20px; } .topp h1 { font-size: 22px; } }
+  @media (max-width: 640px) { .tr { grid-template-columns: minmax(0, 1.5fr) 92px minmax(0, 1fr) 10px; gap: 8px; padding: 0 12px; } #bunnHoyre { display: none; } }
 </style>
 </head>
 <body>
@@ -179,16 +172,17 @@
 
 <section id="resultat" class="side">
   <div class="topp">
-    <div class="tittel"><h1 id="hodeTittel"></h1><small id="hodeInfo"></small></div>
-    <button class="knapp sekundar" id="lagre">Last ned rapport</button>
-    <button class="knapp primar" id="igjen">Søk igjen</button>
+    <div class="tittel"><h1 id="hodeTittel"></h1><div class="fordeling" id="fordeling"></div></div>
+    <button class="knapp sekundar" id="igjen">Søk igjen</button>
+    <button class="knapp primar" id="lagre">Last ned rapport</button>
   </div>
-  <div class="fliser" id="fliser"></div>
   <div class="panel hoved" id="hoved">
+    <div class="tr th"><span>AI-modell</span><span>Risiko</span><span>Lokasjon</span><span></span></div>
     <div class="liste" id="liste"></div>
     <div class="sider" id="sider"></div>
     <div class="ark" id="ark"><div class="detalj" id="detalj"></div></div>
   </div>
+  <div class="bunn"><span id="hodeInfo"></span><span id="bunnHoyre"></span></div>
 </section>
 
 <script>
@@ -207,73 +201,60 @@ let alle = [], info = {}, side = 0, valgt = null;
 const GRUPPER = [["lokal", "Lokal AI", "Kjører på PC-en", "Lokal"], ["nettleser", "Nettleser", "AI i nettleseren", "Nettleser"], ["skjult", "Skjult på PC", "Apper, agenter og bakgrunnsprogrammer", "Skjult"]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
-// Én liste: høy risiko først, så middels, så lav. Hvert kort viser hva, hvor, når og hva du bør gjøre.
+// Én tabell: høy risiko først. Hver rad: AI-modell (med det viktigste på høyst tre ord), risiko og hvor den ligger.
 function visResultat(funn, inf) {
   const RISIKO = { rod: 0, gul: 1, gronn: 2 };
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO[a[0].risiko] - RISIKO[b[0].risiko] || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null;
   $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
-  const deler = [];
-  if (info.sekunder) deler.push(`Søket tok ${Math.max(1, Math.round(info.sekunder))} s`);
-  deler.push(info.dataMalt ? `Datamengde målt i ${Math.round(info.maleSekunder)} s` : "Datamengde ikke målt");
-  deler.push(info.nvd === "ferdig" ? "Sikkerhetshull sjekket" : info.nvd === "av" ? "Sikkerhetshull ikke sjekket" : "Sjekker sikkerhetshull…");
-  $("hodeInfo").textContent = deler.join(" · ");
+  const ant = r => alle.filter(f => f.risiko === r).length;
+  $("fordeling").innerHTML = funn.length ? [ant("rod") ? `<b>${ant("rod")} høy risiko</b>` : "0 høy risiko", `${ant("gul")} middels`, `${ant("gronn")} lav`].join(" · ") : "Ingen spor etter AI";
+  tegnBunn();
   vis("resultat");
   lukkArk();
-  tegnFliser(); tegnListe();
+  tegnListe();
 }
 
-function tegnFliser() {
-  const ant = r => alle.filter(f => f.risiko === r).length;
-  const nett = alle.filter(f => (f.trafikk || []).length);
-  const land = {};
-  nett.forEach(f => f.trafikk.forEach(m => { if (m.tilLand && m.tilLand !== "ukjent land") land[m.tilLand] = (land[m.tilLand] || 0) + (m.farlig ? 1000 : 1); }));
-  const topp = Object.keys(land).sort((a, b) => land[b] - land[a]).slice(0, 2);
-  const flis = (id, klasse, tall, etikett, liten) =>
-    `<button class="flis ${klasse} ${id === "admin" ? "trykk" : ""}" data-f="${id}" ${id === "admin" ? "" : "tabindex=-1"}><div class="tall ${liten ? "liten" : ""}">${esc(tall)}</div><div class="etikett">${esc(etikett)}</div></button>`;
-  const data = info.dataMalt
-    ? flis("data", "", info.sendtTekst || "0 B", `sendt ut på ${Math.round(info.maleSekunder)} s`, (info.sendtTekst || "").length > 6)
-    : flis("admin", "", "Ikke målt", "Trykk for å måle (admin)", true);
-  $("fliser").innerHTML =
-    flis("rod", "rod", ant("rod"), "Høy risiko") + flis("gul", "gul", ant("gul"), "Middels risiko") + flis("gronn", "gronn", ant("gronn"), "Lav risiko") +
-    flis("nett", "", nett.length, topp.length ? "Sender til " + topp.join(", ") : "Koblet til nettet nå") + data;
-  const a = document.querySelector('.flis[data-f="admin"]');
-  if (a) a.onclick = () => send({ type: "admin" });
+function tegnBunn() {
+  const deler = [];
+  if (info.sekunder) deler.push(`Søketid ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push("Ingenting lagret");
+  deler.push(info.nvd === "ferdig" ? "Sikkerhetshull sjekket" : info.nvd === "av" ? "Sikkerhetshull ikke sjekket" : "Sjekker sikkerhetshull…");
+  $("hodeInfo").textContent = deler.join(" · ");
+  $("bunnHoyre").innerHTML = info.dataMalt
+    ? esc(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`)
+    : `<button id="maal">Mål datamengde (admin)</button>`;
+  const m = $("maal"); if (m) m.onclick = () => send({ type: "admin" });
 }
 
-const KORT_H = 82, GAP = 8;
-function kolonner() { return $("liste").clientWidth >= 860 ? 2 : 1; }
-function perSide() {
-  const k = kolonner(), h = $("liste").clientHeight || 400;
-  return k * Math.max(2, Math.floor((h + GAP) / (KORT_H + GAP)));
-}
-
-function naar(f) {
-  if (f.sist === "nå") return `<span class="naar na">Aktiv nå</span>`;
-  return f.sist ? `<span class="naar">${esc(f.sist.replace(/ kl\. .*/, ""))}</span>` : "";
-}
+const RAD_H = 54;
+function perSide() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / RAD_H)); }
 
 function tegnListe() {
   const l = $("liste");
-  l.style.setProperty("--kol", kolonner());
   l.innerHTML = "";
   if (!alle.length) { l.innerHTML = `<div class="tom">Fant ingen spor etter AI på denne PC-en.</div>`; $("sider").innerHTML = ""; return; }
   const per = perSide(), sider = Math.ceil(alle.length / per);
   side = Math.max(0, Math.min(side, sider - 1));
   alle.slice(side * per, side * per + per).forEach(f => {
     const r = document.createElement("div");
-    r.className = `rad ${f.risiko}`;
-    r.title = "Trykk for alle detaljer";
-    r.innerHTML = `<div class="l1"><span class="prikk"></span><b>${esc(f.navn)}</b>${(f.trafikk || []).length ? NETT : ""}${naar(f)}<span class="merke">${MERKE[f.risiko]}</span></div>
-      <div class="l2">${esc(GRUPPER[gruppeNr(f)][1])} · ${esc(f.kort)}</div>
-      ${f.rad ? `<div class="l3"><i>Gjør:</i> ${esc(f.rad)}</div>` : ""}`;
+    r.className = `tr rad ${f.risiko}`;
+    r.title = "Trykk for detaljer";
+    const na = f.punkt === "Kjører nå";
+    r.innerHTML = `<div class="ai"><b>${esc(f.kortnavn || f.navn)}</b><small class="${na ? "na" : ""}">• ${esc(f.punkt || GRUPPER[gruppeNr(f)][3])}</small></div>
+      <div class="risiko"><span class="prikk"></span>${MERKE[f.risiko]}</div>
+      <div class="lok" title="${esc(f.lokasjon || "")}">${esc(f.lokasjon || GRUPPER[gruppeNr(f)][3])}</div><div class="pil">›</div>`;
     r.onclick = () => apneArk(f);
     l.appendChild(r);
   });
   $("sider").innerHTML = sider > 1
     ? `<button id="forrige" ${side === 0 ? "disabled" : ""}>‹</button><span>${side + 1} av ${sider}</span><button id="neste" ${side >= sider - 1 ? "disabled" : ""}>›</button>`
-    : `<span>${alle.length === 1 ? "1 funn" : alle.length + " funn"}</span>`;
-  if (sider > 1) { $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); }; }
+    : "";
+  if (sider > 1) {
+    $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); };
+    // Siden ble lavere med sidevalget: tegn på nytt hvis siste rad ikke får plass
+    if (l.scrollHeight > l.clientHeight + 1 && l.children.length > 3 && !tegnListe.igjen) { tegnListe.igjen = true; tegnListe(); tegnListe.igjen = false; }
+  }
 }
 
 function apneArk(f) { valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
@@ -345,7 +326,6 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
       ${mal.length ? `<h3>Sender til nå</h3><ul id="malListe">${mal.map(malLinje).join("")}</ul>` : ""}
       ${steder.length ? `<h3 class="medSider"><span>Funnet her · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} av ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
       ${(f.merk || []).length ? `<h3>Merk</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
-      ${f.rad ? `<h3>Hva bør du gjøre</h3><div class="rad-tekst">${esc(f.rad)}</div>` : ""}
       ${mal.length ? `<div class="kilde">Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).</div>` : ""}`;
     return d.scrollHeight <= d.clientHeight + 1;
   };
@@ -393,7 +373,7 @@ function motta(m) {
     const f = alle.find(x => x.navn === m.navn);
     if (f) { f.merk = m.merk; if (valgt === f) tegnDetalj(true); }
   }
-  else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; $("hodeInfo").textContent = $("hodeInfo").textContent.replace("Sjekker sikkerhetshull…", "Sikkerhetshull sjekket"); }
+  else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
   else if (m.type === "start") start();
 }

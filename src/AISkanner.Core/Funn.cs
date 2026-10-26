@@ -48,6 +48,8 @@ public sealed class Funn
     public Produkt? Regel { get; init; }
     /// <summary>Hvor programmet er koblet til akkurat nå. Målt fra Windows, ikke anslått.</summary>
     public List<Mal> Trafikk { get; } = new();
+    /// <summary>Landet selskapet bak tjenesten hører hjemme i (to bokstaver), når det er kjent fra listene. Der havner det du skriver.</summary>
+    public string? Land { get; set; }
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }

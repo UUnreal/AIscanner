@@ -35,6 +35,16 @@ public static class Rapport
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         L(new string('=', 60));
+        // Oversikten: én linje per AI, samme som på skjermen. Detaljene følger under.
+        if (liste.Count > 0)
+        {
+            L();
+            L("OVERSIKT");
+            L($"{"Risiko",-9}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
+            L(new string('-', 96));
+            foreach (var f in liste.OrderBy(f => f.Risiko))
+                L($"{Merke(f.Risiko),-9}{Klipp(Oversikt.Navn(f), 36),-38}{Klipp(Oversikt.Lokasjon(f), 24),-26}{Oversikt.Punkt(f)}");
+        }
         foreach (var (gruppe, tittel) in Grupper)
         {
             var del = liste.Where(f => f.Gruppe == gruppe).OrderBy(f => f.Risiko).ToList();
@@ -49,7 +59,6 @@ public static class Rapport
             L($"  {f.Kort}");
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
-            if (!string.IsNullOrEmpty(f.Rad)) L($"  Råd: {f.Rad}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
             if (f.Trafikk.Count > 0)
             {
@@ -75,6 +84,8 @@ public static class Rapport
     {
         ("lokal", "Lokal AI (kjører på PC-en)"), ("nettleser", "AI i nettleseren"), ("skjult", "Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)"),
     };
+
+    private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";
 
     private static string Merke(Risiko r) => r switch { Risiko.Rod => "HØY", Risiko.Gul => "MIDDELS", _ => "LAV" };
 
@@ -106,7 +117,7 @@ public static class Rapport
         funn = liste.Select(f => new
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
-            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, rad = f.Rad,
+            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f),
             advarsler = f.Privat ? new List<string>() : f.Advarsler,
             hvor = f.Privat ? new List<string>() : f.Hvor,
             merknader = f.Privat ? new List<string>() : f.Merknader,

@@ -158,8 +158,10 @@ public sealed class Hovedvindu : Form
                     forst = f.Forst != null && f.Sist != null && f.Forst.Value.Date != f.Sist.Value.Date ? Skanner.Tid(f.Forst) : null,
                     sist = f.Sist == null ? null : (DateTime.Now - f.Sist.Value).TotalMinutes < 2 ? "nå" : Skanner.Tid(f.Sist),
                     navn = f.Navn,
+                    kortnavn = Oversikt.Navn(f),
+                    punkt = Oversikt.Punkt(f),
+                    lokasjon = Oversikt.Lokasjon(f),
                     kort = f.Kort,
-                    rad = f.Rad,
                     merk = f.Advarsler.Skip(1).Concat(f.Merknader).ToList(),
                     steder = f.Detaljer,
                     trafikk = f.Trafikk.Select(m => new

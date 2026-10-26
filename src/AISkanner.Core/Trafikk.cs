@@ -160,6 +160,7 @@ public sealed partial class Skanner
                 var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, "Windows", null, enkelt: tj.Enkelt, rad: tj.Rad);
                 f.Privat = true;
                 f.Bruk ??= "Åpnet nylig.";
+                f.Land ??= tj.Land;
                 foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v}");
             }
             else api.Add((tj, verter));

@@ -169,6 +169,7 @@ public sealed partial class Skanner
             var hvor = string.Join(", ", s.Nettlesere);
             var f = LeggTil(n.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(n.Risiko), n.Hvorfor, hvor, null, enkelt: n.Enkelt, rad: n.Rad);
             f.Privat = true;
+            f.Land ??= n.Land;
             f.Tidspunkt(s.Forst, s.Sist);
             var hyppighet = s.App ? "Installert som app" : s.Score >= 15 || s.Besok >= 30 ? "Brukes ofte" : s.Score >= 3 || s.Besok >= 5 ? "Brukes av og til" : "Er brukt";
             if (s.Lagret > 300L * 1024 * 1024)
