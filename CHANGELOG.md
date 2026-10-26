@@ -1,0 +1,346 @@
+# Endringslogg
+
+Alle merkbare endringer i AI-skanner står her.
+
+Formatet følger [Keep a Changelog 1.1.0](https://keepachangelog.com/no/1.1.0/), og prosjektet bruker
+[Semantisk versjonering](https://semver.org/lang/no/) fra og med neste utgivelse.
+
+Kategoriene er:
+
+- **Lagt til** (Added) for nye funksjoner.
+- **Endret** (Changed) for endringer i funksjoner som fantes fra før.
+- **Fjernet** (Removed) for funksjoner som er tatt bort.
+- **Rettet** (Fixed) for feilrettinger.
+- **Sikkerhet** (Security) for sårbarheter og herding.
+
+> **Om versjonsnumrene før 3.0.** Versjon 0.1 til 2.10 ble laget på én dag (26. oktober 2026) som testutgaver
+> til én PC. Numrene fulgte ikke SemVer strengt: flere 2.x-utgaver endret risikoregler og brukerflate på måter
+> som etter SemVer ville krevd ny hovedversjon. Ingen av dem er publisert som GitHub-utgivelse. Fra første
+> offentlige utgivelse gjelder SemVer slik det står i [CONTRIBUTING.md](CONTRIBUTING.md#versjoner).
+>
+> **«Ikke testet på Windows»** betyr at koden er bygget og testet på Linux med falske PC-profiler,
+> men ikke kjørt på en ekte Windows-PC. Siste versjon som er kjørt på ekte Windows er 2.7.
+
+## [Ikke utgitt]
+
+### Lagt til
+- Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
+  `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
+
+## [2.11.0] - 2026-10-26
+
+Sikkerhetsherding etter en gjennomgang av koden i 2.10. Brukeren ser ingen endring. Ikke testet på Windows.
+
+### Sikkerhet
+- **Høy: DLL-kapring.** Vinduet tar arbeidsmappa ut av DLL-søket (`SetDefaultDllDirectories` og `SetDllDirectory("")`
+  i `src/AISkanner/Program.cs`). En falsk `winsqlite3.dll`, `iphlpapi.dll`, `wintrust.dll` eller `dnsapi.dll` i mappa
+  programmet startes fra, blir ikke lenger lastet. `WebView2Loader.dll` lastes fortsatt fra programmappa.
+- **Middels: falsk Utforsker.** «Vis» starter Utforsker med full sti (`%WINDIR%\explorer.exe`) i stedet for bare
+  `explorer.exe` (`Hovedvindu.cs`).
+- **Middels: minnebruk ved lokal HTTP.** Svar fra lokale porter er begrenset til 4 MB (`MaxResponseContentBufferSize`
+  i `Sanntid.cs` og `AISkanner.Cli`). Et ondsinnet lokalt program kan ikke lenger fylle minnet med et svar på flere GB.
+- **Lav: sti-traversering.** Språkkoden (`default_locale`) fra manifestet til en nettleserutvidelse må være en vanlig
+  språkkode før den brukes i en sti (`Skanner.cs`). `..\..\` kan ikke lenger peke ut av `_locales`.
+- **Lav: ReDoS.** Alle regulære uttrykk i vinduet har en tidsgrense på 2 sekunder. En ondsinnet `ai-modeller.yar`
+  kan ikke lenger henge programmet.
+- DLL-søket og regex-tidsgrensen gjelder bare vinduet. Kommandolinjen er et IT-verktøy for kontrollerte miljøer.
+- Parserne for GGUF, safetensors, ONNX og pickle er testet med misformede og store filer. De hang ikke og krasjet ikke.
+
+### Kjente svakheter som ikke er rettet
+- Godkjentlista sammenligner med navn og stier som brukeren selv kan styre. En ukjent AI-utvidelse eller et
+  AI-prosjekt med samme navn som en godkjent AI kan derfor bli grønn (middels). Se
+  [SECURITY.md](SECURITY.md#kjente-svakheter).
+- Programmet er ikke signert.
+
+## [2.10.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Lagt til
+- Fast risikomodell i `Risikoregler.cs`, som kjøres som siste steg i hvert søk. Hvert funn får **Type**,
+  **Risikogrunn** (én setning) og **Kommer fra** (selskap og land).
+- Godkjentliste fra IT. Filen `godkjent-ai.txt` ligger ved siden av programmet (ett navn eller domene per linje),
+  eller IT kan bruke `godkjentAi` i `regler.json`. AI på lista blir grønn.
+- `selskapsland` i `regler.json`: kobler selskap og produkt til hjemland, for feltet «Kommer fra».
+- Ny resultatskjerm med kolonnene **AI · Risiko · Type · Ligger her · Sender data til**.
+  Over tabellen står antallet og en rød, gul og grønn fordelingslinje.
+- I detaljvisningen står **Kommer fra → Sender data til**, risikogrunnen og hele stien.
+
+### Endret
+- **Ukjent AI og skygge-AI er alltid røde.** Skygge-AI er *AI som ikke er lagt inn av Windows, en signert
+  leverandør eller IT*. Det gjelder AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper,
+  modeller brukeren har lagt inn selv og AI-nøkler. På en jobb-PC uten godkjentliste blir derfor de fleste funn røde.
+- Godkjentlista overstyrer aldri disse: ukjent AI, farlige modellfiler og AI som sender data til høyrisikoland.
+  De er røde uansett.
+- Høyrisikoland i «Sender data til» vises i rødt.
+
+## [2.9.1] - 2026-10-26
+
+### Endret
+- Tekstrapporten viser risiko som 🔴 HØY, 🟡 MIDDELS og 🟢 LAV per AI, både i oversikten og i detaljene,
+  og antallet per farge øverst. Fila lagres som UTF-8 med BOM, så Notisblokk viser fargene. Ellers er rapporten uendret.
+
+## [2.9.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Lagt til
+- Full YARA-motor i C# (`src/AISkanner.Core/Yara/`), uten libyara og uten ekstra DLL:
+  - YARA 4-syntaks: tekststrenger (`nocase`, `wide`, `ascii`, `fullword`, `xor`, `base64`, `base64wide`, `private`),
+    hex med jokertegn, nibbles, `~`, hopp og alternativer, og regex (`/i`, `/s`, også `wide`).
+  - Alle betingelser: `of`, `for … of`, `for … in`, `at`, `in`, `#`, `@`, `!`, regning, bitoperasjoner,
+    `contains` og `matches`, regelreferanser, regelsett, `global` og `private`.
+  - Modulene `pe`, `math`, `hash`, `time`, `string` og `console`.
+  - Alle strenger i alle regler søkes i én runde (Aho-Corasick). Lange hex-hopp deles i kjeder, slik YARA gjør det.
+- `AISkanner.Cli --yara regler.yar fil …`, som skriver samme format som `yara.exe`.
+- `verktoy/sammenlign-yara.py` og `tests/yara/`, som sammenligner motoren med ekte YARA.
+  Testet mot YARA 4.5.4 med 134 regler, uten avvik.
+
+### Endret
+- YARA-leseren fra 2.7 (`Yara.cs`) er erstattet av den nye motoren.
+- Fart: en tung test på en fil på 100 MB gikk ned fra 11 s til 3 s. AI-reglene tar 0,6 s på samme fil.
+
+### Kjente begrensninger
+- Modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo` mangler. De gir «udefinert», slik YARA gjør uten modulen.
+- `pe.version_info` er tom, og signaturfeltene i `pe` er forenklet.
+
+## [2.8.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Lagt til
+- `Oversikt.cs`: én kort linje per funn med det viktigste på høyst tre ord, for eksempel «Skjult kode»,
+  «Sender til Kina», «Ukjent utgiver» eller «AI-API åpent». Det farligste vinner. Lokasjonen vises kort,
+  for eksempel «Chrome», «Nedlastinger» eller «Program Files\Lenovo».
+- Tekstrapporten starter med samme oversiktstabell som skjermen.
+
+### Endret
+- Resultatet er én tabell med kolonnene **AI-modell · Risiko · Lokasjon**. Hele stien vises når du trykker på en rad.
+
+### Fjernet
+- Alle råd («Gjør:» og «Hva du bør gjøre»), både på skjermen og i rapporten. Programmet viser bare data.
+- Fliser og sidebytting i resultatvisningen.
+
+## [2.7.0] - 2026-10-26
+
+Sist kjørt på ekte Windows. Gemini Nano i Chrome og OpenVINO-modeller fra Lenovo ble funnet.
+
+### Lagt til
+- YARA-regler for AI-modeller i den åpne fila `ai-modeller.yar`. Den er bygget inn i programmet, og ligger
+  også ved siden av exe-fila, der IT kan endre den. Den kan kjøres med vanlig `yara.exe`.
+  - Formatregler for GGUF, safetensors, PyTorch, pickle, Keras (HDF5 og v3), TFLite og OpenVINO.
+  - Regler for farlige modeller: pickle som kaller `os.system`, `subprocess`, `exec`, `eval` eller nettverk,
+    Keras Lambda-lag, GGUF-chatmaler med Python-internals (CVE-2024-34359) og Windows-programmer eller skall
+    gjemt i modellfiler.
+- Reglene kjøres på alle modeller som blir funnet (første 8 MB og siste 1 MB). Små pickle-, PyTorch-, Keras- og
+  NumPy-filer sjekkes også (første 1 MB), men bare når de første 8 bytene viser riktig format.
+- Nytt rødt funn: «Farlig AI-modellfil».
+- Startskjermen sier at søket tar med kjente sikkerhetshull, AI-API-er og YARA-regler.
+
+## [2.6.0] - 2026-10-26
+
+### Lagt til
+- 25 flere kjente AI-tjenester i `regler.json`, blant dem Mistral, Devin og ZeroGPT.
+
+### Endret
+- Søket starter rett fra én knapp, uten valg. Sjekken av sårbarheter (NVD) og historikk er alltid med.
+  IT kan slå dem av med `--uten-nvd` og `--uten-historikk`.
+- NVD-oppslaget kjører i bakgrunnen etter at resultatet vises, så søket venter ikke på nettet.
+- Resultatet er én liste sortert etter risiko.
+- Ukjente `.ai`- og «gpt»-nettsteder er samlet i ett gult funn, «Mulige AI-nettsteder (N)». Før ble hvert av dem
+  et eget rødt funn. Et domenenavn alene beviser ikke at et nettsted er AI.
+- Når flere domener i lista passer, vinner det lengste.
+
+### Fjernet
+- Bryterne på startskjermen.
+- Faner og risikofilter i resultatet.
+
+## [2.5.0] - 2026-10-26
+
+Kjørt på ekte Windows.
+
+### Lagt til
+- **AI lagt inn av leverandører** (`Leverandor.cs`). Søket går gjennom AppData (Local, Roaming, LocalLow),
+  ProgramData, Program Files, Program Files (x86), WindowsApps og SystemApps, og stopper etter maks 40 sekunder.
+  AI kjennes igjen på modellfiler (`.onnx`, `.ort`, `.tflite`, `.litertlm`, `.dlc`, `.engine`, `.pte`, OpenVINO og andre)
+  og på AI-motorer. Funnene samles per program.
+- Leverandøren bekreftes med Authenticode (`Signatur.cs`, `WinVerifyTrust` uten nettoppslag) eller med
+  `AppxManifest.xml` i mapper som bare Windows kan skrive til. Firmanavn i filinfo alene regnes ikke som bekreftet,
+  og ubekreftet leverandør gir rødt.
+- `leverandorAi` i `regler.json`. Oppføringer med `bekreftet: false` har mappenavn som ikke er sjekket på en ekte PC.
+- **AI-API-er i Chrome og Edge** (`NettleserApi.cs`): status for Prompt API, Summarizer, Writer, Rewriter,
+  Proofreader, Classifier og LiteRT-LM. Statusen bygger på policyer, nettleserversjon og modellmapper.
+- Lesing av AI-flagg fra `Local State` (`Skanner.LesNettleserflagg`). Funksjonen er **av** som standard, og kan
+  bare slås på med `--flagg` i kommandolinjeversjonen.
+- Rapporten viser søketid og de tregeste sjekkene.
+
+### Endret
+- Nettlesermodeller og leverandør-AI er flyttet til gruppen «Skjult på PC».
+- Filgjennomgangen fra 2.0 hopper over AppData, siden leverandørsøket dekker den.
+
+### Ikke bekreftet
+- At Chrome bruker policyen `BuiltInAIAPIsEnabled` på samme måte som Edge, de eksakte flaggnavnene, og om det
+  finnes et eget «Classifier API».
+
+## [2.4.0] - 2026-10-26
+
+### Lagt til
+- `NettleserModeller.cs`: finner AI-modeller som nettleserne laster ned, i alle Chromium-nettlesere og kanaler.
+  Kjente mapper er blant andre `OptGuideOnDeviceModel` (Gemini Nano), `EdgeLLMOnDeviceModel`, `TranslateKit`,
+  `screen_ai` og `SODA`. Ukjente mapper med modellinnhold blir også funnet.
+- Første og siste besøk per AI-nettsted og profil, fra `visits` og `moz_historyvisits`.
+- Første og siste spor per funn (`Funn.Forst` og `Funn.Sist`), på skjermen og i rapporten.
+- Piltastene blar mellom funn. Funnsteder vises side for side, uten rulling.
+
+### Endret
+- Ryddigere oppsett med mindre tomrom.
+- Maks 500 detaljer per funn.
+
+### Rettet
+- Gemini Nano ble ikke funnet av 2.3. Søket etter nettlesermodeller er skrevet om, og 2.7 finner modellen. Hva som var feil i 2.3, er ikke bekreftet.
+
+## [2.3.0] - 2026-10-26
+
+Kjørt på ekte Windows.
+
+### Lagt til
+- Tre grupper: **Lokal AI**, **Nettleser** og **Skjult på PC** (`Funn.Gruppe`), både i vinduet og i rapporten.
+- Modellidentitet (`ModellGjenkjenning.cs`):
+  - Familien (Llama, Qwen, DeepSeek, Gemma, Phi, Mistral m.fl.) leses av arkitektur og ordforråd, også når fila har fått nytt navn.
+  - Når navnet og innholdet peker på hver sin familie, vises begge, for eksempel «DeepSeek, bygget på Qwen».
+  - Sikkerhetsnivåene er *sikker*, *sannsynlig*, *bare navnet* og *ukjent*.
+  - Modell-ID er SHA-256 når Ollama eller Hugging Face har lagret fila under hashen. Ellers er det et fingeravtrykk
+    av størrelse, første MB og siste MB.
+  - Ollama-manifester gir modellnavn.
+- `modellfamilier` i `regler.json`.
+- Registeret (`Register.cs`): AI-regler fra IT under `SOFTWARE\Policies`, lenkeprotokoller, programmer som åpner
+  modellfiler, `App Paths`, høyreklikkmenyer, `RunOnce`, `OLLAMA_HOST` og `OLLAMA_ORIGINS`, og om mappen til Windows Recall finnes.
+
+### Endret
+- Ingenting lagres mellom søk. WebView2-mappen er unik per kjøring (`%LOCALAPPDATA%\AISkanner\Vindu-<pid>`),
+  slettes når programmet lukkes, og rester ryddes ved neste start.
+
+## [2.2.0] - 2026-10-26
+
+### Lagt til
+- **Hvor AI sender data** (`Trafikk.cs`, `Nettverk.cs`, `IpLand.cs`):
+  - Åpne TCP-forbindelser per prosess hentes med `GetExtendedTcpTable`.
+  - Vertsnavn hentes fra Windows' DNS-buffer, uten nye oppslag.
+  - Land hentes fra en innebygd tabell (DB-IP Lite, CC BY 4.0, `ipland.bin`, bygget med `verktoy/lag-ipland.py`).
+  - Cloudflare-adresser merkes «via Cloudflare».
+- Målt datamengde per forbindelse med administrator (`SetPerTcpConnectionEStats`). Programmet startes på nytt
+  med UAC bare når brukeren trykker på det.
+- Nytt funn «Skygge-AI»: et program som ikke er kjent som AI, men som snakker med en AI-tjeneste.
+- `aiTjenester` og `hoyrisikoLand` (CN, RU, IR, KP, BY) i `regler.json`, og `land` på `aiNettsteder`.
+- Tekstrapport (.txt, åpnes i Notisblokk) og JSON-rapport.
+- `AISkanner.Cli --test-nett fil.json` for å teste trafikklogikken uten Windows.
+
+### Endret
+- Alt på én skjerm uten rulling: fliser, en liste med sider og et detaljpanel.
+- Søkeskjermen viser bare «Søker etter AI…».
+
+## [2.1.0] - 2026-10-26
+
+### Endret
+- Programmet er krympet fra 159 MB (67 MB zip) til rundt 2 MB. Det bruker nå .NET Framework 4.8 i stedet for
+  innebygd .NET 8. Kjernebiblioteket bygges for både `net48` og `net8.0`, og `net8.0` brukes bare til tester på Linux.
+- Nettleserhistorikken leses med SQLite-motoren i Windows (`winsqlite3.dll`, `WinSqlite.cs`), med `immutable`
+  og skrivebeskyttet tilgang. Fila kopieres aldri.
+- Alle sjekker kjører samtidig, og tiden for hver måles (`Skanner.Tider`). Filgjennomgangen stopper etter 45 sekunder.
+
+### Lagt til
+- Hvert funn viser hvor det ble funnet. Knappen «Vis» åpner stien i Utforsker, men bare stier som hører til et funn.
+- Byggeløypa stopper hvis programmet blir større enn 10 MB.
+
+### Fjernet
+- Innebygd .NET 8-kjøretid og `Microsoft.Data.Sqlite`.
+
+## [2.0.0] - 2026-10-26
+
+### Lagt til
+- Nytt utseende i Apple-stil, med HTML i Microsoft Edge WebView2 (`ui/index.html`, bygget inn i programmet).
+  Mørk modus følger Windows.
+- AI gjenkjennes på innhold og oppførsel, ikke på navn (`Sanntid.cs`, `ModellFormat.cs`):
+  - modellfiler gjenkjennes på de første bytene (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), med navn og
+    størrelse fra GGUF- og safetensors-hodet
+  - AI-motorer ved siden av programmer som kjører
+  - lokale AI-servere: maks tre lesende `GET`-kall til `127.0.0.1`
+  - Python- og Node-prosjekter med AI- og agentbiblioteker
+  - AI-nøkler i miljøvariabler (bare navnet, aldri verdien)
+- Nettleser-AI (`Nettsteder.cs`):
+  - AI-nettsteder fra bruksspor (`site_engagement` i `Preferences`) og historikk. Bare AI-domener, antall besøk
+    og tidspunkt beholdes, og bare i minnet.
+  - Ukjente AI-nettsteder.
+  - AI-modeller lagret av nettsider i IndexedDB.
+- Ukjent AI er alltid rød.
+- `Funn.Privat`: funn fra nettleserdata vises på skjermen, men lagres aldri automatisk.
+
+### Endret
+- Lista over kjente produkter gir bare navn og risiko. Den er ikke lenger hovedmåten AI blir funnet på.
+
+### Fjernet
+- Vinduet i WinForms.
+
+## [0.4.0] - 2026-10-26
+
+Kjørt på ekte Windows (jobb-PC, testen var godkjent og IT var varslet).
+
+### Sikkerhet
+- Prosesser åpnes nå med minst mulig tilgang (`PROCESS_QUERY_LIMITED_INFORMATION` og `QueryFullProcessImageName`).
+  Versjon 0.3 åpnet alle prosesser med lesetilgang til minnet, også `lsass`. Det ligner passordtyveri og fikk
+  Microsoft Defender og Sentinel til å stoppe programmet. Systemprosesser og Defender-prosesser røres ikke.
+- Programmet pakker seg ikke lenger ut til `%TEMP%` og er ikke komprimert. Begge deler ligner skadevare.
+
+## [0.3.0] - 2026-10-26
+
+### Lagt til
+- Skrevet om fra PowerShell til C#/.NET 8: `AISkanner.Core` (skannemotoren), `AISkanner` (WinForms-vindu) og
+  `AISkanner.Cli` (JSON, exit-kode 0/1/2).
+- `regler.json` er bygget inn i programmet. En egen `regler.json` ved siden av exe-fila overstyrer den.
+- Kjører alltid som vanlig bruker (`asInvoker`).
+- Kildekoden er gjort klar for åpen kildekode: MIT-lisens, README, `CODE_SIGNING.md` og byggeløype i GitHub Actions.
+- Sjekken av sårbarheter mot NVD er flyttet over fra PowerShell (`Nvd.cs`). Den sender bare produktordet fra regelfila.
+
+### Fjernet
+- PowerShell-skript og `.bat`-oppstart.
+
+### Kjent problem
+- Ble stoppet av Microsoft Defender og Sentinel på en jobb-PC. Rettet i 0.4.
+
+## [0.2.0] - 2026-10-26
+
+PowerShell-prototype. Utgått.
+
+### Lagt til
+- `IT-INFO.txt` med hva skanneren leser, og hasher for godkjenning.
+
+### Sikkerhet
+- Sperre i koden mot å åpne passord, informasjonskapsler og historikk i nettleseren.
+
+## [0.1.0] - 2026-10-26
+
+PowerShell-prototype. Utgått.
+
+### Lagt til
+- Første versjon: ett vindu med én Søk-knapp og funn sortert etter rød, gul og grønn risiko.
+- Finner lokale AI-verktøy, modellfiler, AI-servere åpne mot nettverket, AI-agenter (Claude Code, Codex, Cursor),
+  AI-utvidelser i nettleserne og innebygd AI i Chrome og Edge.
+- Risikoregler i en egen fil som kan redigeres.
+- Valgfri sjekk av kjente sårbarheter mot NVD. Den sender bare produktnavnet.
+
+[Ikke utgitt]: https://github.com/OWNER/ai-skanner/compare/v2.11.0...HEAD
+[2.11.0]: https://github.com/OWNER/ai-skanner/compare/v2.10.0...v2.11.0
+[2.10.0]: https://github.com/OWNER/ai-skanner/compare/v2.9.1...v2.10.0
+[2.9.1]: https://github.com/OWNER/ai-skanner/compare/v2.9.0...v2.9.1
+[2.9.0]: https://github.com/OWNER/ai-skanner/compare/v2.8.0...v2.9.0
+[2.8.0]: https://github.com/OWNER/ai-skanner/compare/v2.7.0...v2.8.0
+[2.7.0]: https://github.com/OWNER/ai-skanner/compare/v2.6.0...v2.7.0
+[2.6.0]: https://github.com/OWNER/ai-skanner/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/OWNER/ai-skanner/compare/v2.4.0...v2.5.0
+[2.4.0]: https://github.com/OWNER/ai-skanner/compare/v2.3.0...v2.4.0
+[2.3.0]: https://github.com/OWNER/ai-skanner/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/OWNER/ai-skanner/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/OWNER/ai-skanner/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/OWNER/ai-skanner/compare/v0.4.0...v2.0.0
+[0.4.0]: https://github.com/OWNER/ai-skanner/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/OWNER/ai-skanner/releases/tag/v0.3.0

@@ -1,70 +1,184 @@
 # AI-skanner
 
-Finner AI på en Windows-PC, deler funnene i **Lokal AI**, **Nettleser** og **Skjult på PC**, og sorterer etter risiko: **rød**, **gul**, **grønn**.
+Finner AI på en Windows-PC og sorterer funnene etter risiko: 🔴 høy, 🟡 middels og 🟢 lav.
 Ett vindu, én knapp: **Søk**.
 
-Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI får alltid høy risiko.
+AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
+å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **AI-modeller** gjenkjennes på filformatet (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn.
-  Familien (Llama, Qwen, DeepSeek, Gemma, Phi, Mistral m.fl.) leses av modellens arkitektur og ordforråd, også når filen har fått nytt navn.
+- **Versjon:** 2.11 (se [CHANGELOG.md](CHANGELOG.md))
+- **Plattform:** Windows 10 og 11, x64
+- **Lisens:** [MIT](LICENSE)
+- **Status:** testversjon, ikke signert. 2.8–2.11 er ikke kjørt på ekte Windows (se [Status](#status)).
+
+## Innhold
+
+- [Hva den finner](#hva-den-finner)
+- [Kom i gang](#kom-i-gang)
+- [Risiko](#risiko)
+- [Personvern og sikkerhet](#personvern-og-sikkerhet)
+- [Tilpasse for en bedrift](#tilpasse-for-en-bedrift)
+- [Kommandolinje](#kommandolinje)
+- [Bygge selv](#bygge-selv)
+- [Begrensninger](#begrensninger)
+- [Status](#status)
+- [Dokumentasjon](#dokumentasjon)
+
+## Hva den finner
+
+Funnene deles i tre grupper.
+
+| Gruppe | Eksempler |
+|---|---|
+| **Lokal AI** | Modellfiler (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn. Lokale AI-servere som Ollama og LM Studio. Programmer med AI-motor (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML). |
+| **Nettleser** | AI-nettsteder som er brukt (bruksspor og historikk), AI-utvidelser og ukjente AI-nettsteder. |
+| **Skjult på PC** | AI-agenter og kodeverktøy, AI lagt inn av leverandører (Microsoft, NVIDIA, Adobe, PC-produsenten), nettlesermodeller som Gemini Nano, AI-API-er i Chrome og Edge, AI-nøkler, registeret og programmer som sender data til AI-tjenester i det skjulte. |
+
+For hver AI viser skanneren:
+
+- **Type**, for eksempel lokal modell, AI-nettsted, AI-agent, fra leverandør eller godkjent av IT.
+- **Ligger her**: kort sted i tabellen og full sti når du trykker. Knappen «Vis» åpner stedet i Utforsker.
+- **Kommer fra**: selskapet og landet bak, fra signatur, modellfamilie eller tjenestelisten.
+- **Sender data til**: land og tjenester programmet er koblet til akkurat nå, fra Windows' egne tabeller.
+  Med administrator måles også hvor mye data som sendes.
+- **Modellidentitet**: familien (Llama, Qwen, DeepSeek, Gemma, Phi, Mistral m.fl.) leses av arkitektur og ordforråd.
   Hver modell får en ID som er lik på alle PC-er (SHA-256 eller fingeravtrykk).
-- **AI lagt inn av leverandører**: modeller og AI-motorer som Microsoft, NVIDIA, Adobe, Zoom, PC-produsenten og andre har lagt i Windows-apper,
-  Program Files, ProgramData og AppData. Hvert funn får leverandør (bekreftet med signatur) og dato det kom på PC-en. Ubekreftet = rød.
-- **AI-API-er i Chrome og Edge**: om Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM er på, av eller blokkert av IT.
-- **YARA-regler for AI-modeller** i en åpen fil (`ai-modeller.yar`): finner modeller som kjører kode når de lastes (pickle med `os.system`, Keras Lambda,
-  GGUF-maler med kode) og programmer gjemt i modellfiler. Fungerer også med vanlig `yara.exe`.
-  Egen YARA-motor i C# (ingen libyara): full YARA 4-syntaks og modulene pe, math, hash, time, string og console. Testet likt med YARA 4.5.4.
-- **AI-motorer** i programmer (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML m.fl.).
-- **Lokale AI-servere**: programmer som svarer som en AI-tjeneste, med modellene de har lastet. Rød hvis åpen mot nettverket.
-- **AI-kode**: Python- og Node-prosjekter med AI- og agentbiblioteker.
-- **Registeret**: AI-regler fra IT, lenker og høyreklikkmenyer fra AI-apper, programmer som åpner modellfiler, Ollama åpen mot nettverket, Windows Recall.
-- **AI-nøkler**: om nøkler som `OPENAI_API_KEY` finnes (aldri verdien).
-- **Nettleser-AI**: AI-utvidelser, AI-nettsteder du har brukt (bruksspor og historikk, analysert i minnet og aldri lagret),
-  ukjente AI-nettsteder, AI-modeller lagret i nettleseren, og innebygd AI i Chrome og Edge.
-- **Hvor AI sender data**: hvilke tjenester og land hvert AI-program er koblet til akkurat nå, fra Windows' egne tabeller.
-  Programmer som snakker med AI-tjenester i det skjulte blir røde. Med administrator måles også hvor mye som sendes.
-- **Kjente produkter** (Ollama, ChatGPT, Claude Code, Cursor, DeepSeek m.fl.) får navn og risiko fra [`regler.json`](src/AISkanner.Core/regler.json).
+- **Farlige modeller**: YARA-regler finner modeller som kjører kode når de lastes. Reglene ligger i den åpne fila
+  [`ai-modeller.yar`](src/AISkanner.Core/ai-modeller.yar).
+- **Kjente sårbarheter**: antall CVE-er i NVD for kjente produkter.
 
-## Sikkerhet først
-- Leser bare. Endrer, sletter eller installerer ingenting. Trenger ikke administrator (`asInvoker`). Bare måling av datamengde ber om det, og bare når du trykker på den.
-- Starter ingen skript eller kommandolinjer. Vinduet bruker Microsoft Edge WebView2.
-- Sender ingenting om deg ut. Sårbarhetssjekken sender bare produktnavn (f.eks. «ollama») til NVD.
-- Åpner aldri nettleserens passord, informasjonskapsler eller lommebøker. Håndhevet i koden (`Skanner.LovligeFiler`).
-- Historikk leses bare hvis bryteren er på, analyseres i minnet og lagres aldri.
-- Risikoreglene ligger åpent i [`regler.json`](src/AISkanner.Core/regler.json). Legg en egen `regler.json`
-  ved siden av exe-filen for å overstyre.
+## Kom i gang
 
-Se [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses, og [CODE_SIGNING.md](CODE_SIGNING.md) for signering og personvern.
+1. Last ned zip-fila og pakk den ut til en mappe.
+2. Start `AISkanner.exe`. Programmet trenger ikke installasjon eller administrator.
+3. Trykk **Søk**. Filgjennomgangen stopper etter 45 sekunder uansett.
+4. Trykk på en AI for å se detaljer. **Last ned rapport** lagrer en tekstfil (.txt) som åpnes i Notisblokk.
 
-## Ingenting lagres
-Hvert søk gjøres fra bunnen av. Programmet lagrer ingenting mellom søk. Bare rapporten du selv laster ned blir igjen.
+Krav: .NET Framework 4.8 og Microsoft Edge WebView2 Runtime. Begge følger med Windows 10 og 11.
+Hele mappa er rundt 3,7 MB.
 
-## På gjøremålslisten
-Skanning av andre enheter på nettverket. Krever mer tilgang og godkjenning, så den er utsatt.
+Programmet er ikke signert ennå, så Windows SmartScreen viser en advarsel. Trykk «Mer info» og «Kjør likevel».
+På en jobb-PC må du spørre IT først (se [IT-INFO.md](IT-INFO.md)).
 
-## Begrensninger
-Skanneren finner spor, ikke alt. Forbindelser vises bare mens programmene er åpne. Land for skytjenester er der serveren står.
-Et tomt resultat betyr ikke at PC-en er fri for AI. Den skanner bare innlogget bruker.
+## Risiko
 
-## Liten og rask
-- Hele programmet er rundt 3,5 MB, som 7-Zip. Det bruker .NET Framework 4.8 og SQLite-motoren som allerede finnes i Windows,
-  og Microsoft Edge WebView2 for vinduet. Byggeløypa stopper hvis programmet blir større enn 10 MB.
-- Alle sjekkene kjører samtidig. Det som tar tid er å gå gjennom filene på disken; den stopper uansett etter 45 sekunder.
-  Rapporten viser hvor lang tid søket tok og hvilke sjekker som var tregest.
+| Farge | Betyr | Eksempler |
+|---|---|---|
+| 🔴 Høy | Ukjent AI, skygge-AI, farlig modellfil, data til høyrisikoland, AI åpen mot nettverket | Modell uten kjent familie, ChatGPT i nettleseren uten godkjenning, pickle med `os.system` |
+| 🟡 Middels | Kjent AI fra Windows, nettleseren eller en signert leverandør, med noe å følge med på | Gemini Nano i Chrome, leverandørmodeller over 500 MB |
+| 🟢 Lav | Kjent og bekreftet, eller godkjent av IT | AI på `godkjent-ai.txt`, signert leverandør-AI under 500 MB |
 
-## Bygge selv
-Krever .NET 8 SDK (bygger .NET Framework 4.8-programmet).
+**Skygge-AI** er AI som ikke er lagt inn av Windows, en signert leverandør eller IT. Det gjelder AI-nettsteder,
+nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt inn selv og AI-nøkler.
+På en jobb-PC blir derfor de fleste funn røde helt til IT har fylt ut godkjentlista.
+
+Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
+
+## Personvern og sikkerhet
+
+- **Leser bare.** Programmet endrer, sletter og installerer ingenting. Det kjører som vanlig bruker (`asInvoker`).
+  Bare måling av datamengde ber om administrator, og bare når du trykker på den.
+- **Starter ingen skript eller kommandolinjer**, og pakker seg ikke ut til `%TEMP%`.
+- **Åpner aldri** passord, informasjonskapsler, `Web Data`, lommebøker i nettleseren eller verdien av API-nøkler.
+  Det håndheves i koden (`Skanner.LovligeFiler`).
+- **Nettleserhistorikken** leses direkte og skrivebeskyttet, og fila kopieres aldri. Bare AI-domener, antall besøk
+  og tidspunkt beholdes, og bare i minnet. Fulle adresser og sidetitler beholdes aldri.
+- **Lagrer ingenting** mellom søk. Det eneste som blir igjen, er rapporten du selv laster ned.
+- **Sender nesten ingenting ut.** Etter søket sendes bare produktord som `ollama` til NVD (nvd.nist.gov).
+  PC-navn, brukernavn og stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
+
+Se [SECURITY.md](SECURITY.md) for trusselmodellen og hvordan du melder fra om sårbarheter, og
+[IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses.
+
+> **Jobb-PC:** Å lese ansattes nettleserhistorikk er innsyn etter e-postforskriften. Arbeidsgiver må følge
+> reglene om kontrolltiltak eller slå av historikken med `--uten-historikk`.
+
+## Tilpasse for en bedrift
+
+Legg filer ved siden av `AISkanner.exe`. Da brukes de i stedet for de innebygde.
+
+| Fil | Hva den gjør |
+|---|---|
+| `godkjent-ai.txt` | AI bedriften har godkjent. Ett navn eller domene per linje. Blir grønt. |
+| `regler.json` | Kjente produkter, AI-nettsteder, AI-tjenester, høyrisikoland, modellfamilier og selskapsland. |
+| `ai-modeller.yar` | YARA-regler for modellfiler. Har fila en feil, brukes de innebygde reglene. |
+
+Se [docs/REGELFILER.md](docs/REGELFILER.md) for format og eksempler.
+
+## Kommandolinje
+
+Vinduet tar disse valgene:
 
 ```
+AISkanner.exe [--uten-nvd] [--uten-historikk]
+```
+
+Kommandolinjeversjonen skriver JSON eller tekst. Den kan brukes til testing, eller til utrulling med for eksempel Intune:
+
+```
+AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.Cli --yara regler.yar fil1 [fil2 …]
+```
+
+| Valg | Virkning |
+|---|---|
+| `--uten-nvd` | Vinduet: slår av NVD-oppslaget. |
+| `--uten-historikk` | Leser ikke nettleserhistorikk. |
+| `--nvd` | Kommandolinjen: slår på NVD-oppslaget, som er av der som standard. |
+| `--regler <sti>` | Bruker en annen `regler.json`. |
+| `--txt` | Skriver tekstrapport i stedet for JSON. |
+| `--flagg` | Leser AI-flagg fra `Local State` i Chrome og Edge. Av som standard (se [SECURITY.md](SECURITY.md)). |
+| `--yara` | Kjører YARA-regler på filer og skriver samme format som `yara.exe`. |
+
+Exit-kode: `0` = ingen funn, `1` = bare gule eller grønne funn, `2` = minst ett rødt funn.
+
+## Bygge selv
+
+Krever .NET 8 SDK. Den bygger også .NET Framework 4.8-programmet, også på Linux.
+
+```
+dotnet build AISkanner.sln -c Release
 dotnet publish src/AISkanner -c Release -o publish
 ```
 
-Kommandolinjeversjon som skriver JSON (for testing eller utrulling via Intune):
+Byggeløypa (`.github/workflows/bygg.yml`) bygger på `windows-latest`, kjører en røyktest, stopper hvis programmet
+er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CONTRIBUTING.md](CONTRIBUTING.md).
 
-```
-dotnet run --project src/AISkanner.Cli -- [--nvd] [--regler sti\regler.json]
-```
-Exit-kode: 0 = ingen funn, 1 = gule/grønne funn, 2 = minst ett rødt funn.
+## Begrensninger
+
+- Skanneren finner spor, ikke alt. Et tomt resultat betyr ikke at PC-en er fri for AI.
+- Den skanner bare innlogget bruker.
+- Forbindelser vises bare mens programmene er åpne. QUIC/UDP vises ikke.
+- «Sender data til» viser hvor serveren står eller hvor selskapet hører hjemme, ikke nødvendigvis hvor dataene lagres.
+- YARA-motoren mangler modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`.
+- Bare Windows. Mac og Linux er ikke støttet.
+- Andre enheter på nettverket skannes ikke. Det står på gjøremålslista, men krever mer tilgang og godkjenning.
+
+## Status
+
+| Del | Status |
+|---|---|
+| Skannemotor | Testet på Linux med falske PC-profiler. Kjørt på ekte Windows til og med 2.7. |
+| Vindu (WebView2) | Kjørt på Windows i 2.3, 2.5 og 2.7. Tabellvisningen fra 2.8 og 2.10 er bare testet i nettleser med eksempeldata. |
+| YARA-motor | Testet mot YARA 4.5.4 med 134 regler, uten avvik. |
+| NVD-oppslag | Ikke testet, fordi byggemiljøet stenger for nettet. |
+| Datamengde (admin og UAC) | Ikke testet på Windows. |
+| Edge-modellmappe og `leverandorAi` med `bekreftet: false` | Mappenavnene er antatt, ikke sjekket på en ekte PC. |
+| Kodesignering | Ikke på plass. Planen er SignPath Foundation ([CODE_SIGNING.md](CODE_SIGNING.md)). |
+
+## Dokumentasjon
+
+| Dokument | For hvem |
+|---|---|
+| [CHANGELOG.md](CHANGELOG.md) | Alle: hva som er endret i hver versjon |
+| [IT-INFO.md](IT-INFO.md) | IT og sikkerhet: nøyaktig hva som leses, nettverk, EDR og godkjenning |
+| [SECURITY.md](SECURITY.md) | Melde fra om sårbarheter, trusselmodell |
+| [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md) | Utviklere: komponenter, søkeflyt, risikomodell og YARA-motor |
+| [docs/REGELFILER.md](docs/REGELFILER.md) | IT og utviklere: `regler.json`, `godkjent-ai.txt` og `ai-modeller.yar` |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Bidragsytere: bygging, testing, kodestil og utgivelser |
+| [CODE_SIGNING.md](CODE_SIGNING.md) | Signeringspolicy |
 
 ## Lisens
-MIT. Landtabellen er IP to Country Lite fra [DB-IP.com](https://db-ip.com) (CC BY 4.0).
+
+MIT, se [LICENSE](LICENSE).
+Landtabellen er IP to Country Lite fra [DB-IP.com](https://db-ip.com), lisensiert under CC BY 4.0.
