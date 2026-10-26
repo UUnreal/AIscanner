@@ -14,7 +14,7 @@
 
     <Product>AI-skanner</Product>
     <Description>Finner lokal AI, skygge-AI og nettleser-AI. Leser bare.</Description>
-    <Version>0.4.0</Version>
+    <Version>2.0.0</Version>
     <Company>AI-skanner (åpen kildekode)</Company>
     <Copyright>Copyright (c) 2026 Jørund og bidragsytere. MIT-lisens.</Copyright>
 
@@ -34,6 +34,11 @@
     <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
     <Using Include="System.Windows.Forms" />
     <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <EmbeddedResource Include="ui\index.html" LogicalName="AISkanner.ui.index.html" />
   </ItemGroup>
 
   <ItemGroup>

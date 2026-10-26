@@ -11,7 +11,7 @@ namespace AISkanner;
 /// Sikkerhet: leser bare, endrer ingenting, trenger ikke admin, starter ingen andre programmer.
 /// Ingenting sendes ut med mindre brukeren slår på sårbarhetssjekk (da sendes bare produktord til NVD).
 /// </summary>
-public sealed class Skanner
+public sealed partial class Skanner
 {
     private readonly Regelsett _regler;
     private readonly Dictionary<string, Funn> _funn = new(StringComparer.OrdinalIgnoreCase);
@@ -22,31 +22,42 @@ public sealed class Skanner
     /// Passord, informasjonskapsler, historikk og lommebøker i nettleseren blir aldri åpnet.
     /// </summary>
     public static readonly IReadOnlySet<string> LovligeFiler =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json", "Preferences", "History", "places.sqlite" };
 
-    public Skanner(Regelsett regler) => _regler = regler;
+    private readonly bool _historikk;
 
-    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default)
+    /// <param name="historikk">Søk etter AI-nettsteder i nettleserhistorikken (bare i minnet, lagres aldri).</param>
+    public Skanner(Regelsett regler, bool historikk = true)
+    {
+        _regler = regler;
+        _historikk = historikk;
+    }
+
+    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null)
     {
         _funn.Clear();
         _status = status;
-        var steg = new (string Tekst, Action Gjor)[]
+        var stegliste = new (string Tekst, Action Gjor)[]
         {
-            ("Sjekker programmer som kjører nå...", Prosesser),
+            ("Ser etter AI som kjører nå...", () => { Prosesser(); MotorerIProsesser(); }),
             ("Sjekker installerte programmer...", Installert),
-            ("Sjekker tjenester og ting som starter automatisk...", Oppstart),
-            ("Sjekker AI-verktøy for utviklere og kjente mapper...", Spor),
-            ("Sjekker om AI-servere lytter på nettverket...", Porter),
-            ("Sjekker nettleserutvidelser...", Nettlesere),
+            ("Sjekker hva som starter av seg selv...", Oppstart),
+            ("Ser etter AI-verktøy og AI-nøkler...", () => { Spor(); Nokler(); }),
+            ("Spør lokale programmer om de er AI...", () => { Porter(); LokaleServere(); }),
+            ("Sjekker utvidelser i nettleserne...", Nettlesere),
+            ("Ser etter AI-nettsteder du har brukt...", Nettsteder),
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
-            ("Leter etter AI-modellfiler (kan ta litt tid)...", Modellfiler),
+            ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
         };
-        foreach (var (tekst, gjor) in steg)
+        for (int i = 0; i < stegliste.Length; i++)
         {
+            var (tekst, gjor) = stegliste[i];
             ct.ThrowIfCancellationRequested();
             _status?.Report(tekst);
+            steg?.Report(i);
             try { gjor(); } catch (Exception e) { Debug.WriteLine($"{tekst} feilet: {e.Message}"); }
         }
+        steg?.Report(stegliste.Length);
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
@@ -73,10 +84,11 @@ public sealed class Skanner
         return kandidater.FirstOrDefault(p => p.Treff.Any(o => Treffer(tekst, o)));
     }
 
-    private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj, Produkt? regel = null)
+    private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj,
+                         Produkt? regel = null, string? enkelt = null, string? rad = null)
     {
         if (!_funn.TryGetValue(navn, out var f))
-            _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel };
+            _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt, Rad = rad };
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         if (hvor != null) f.LeggTilHvor(hvor);
         if (detalj != null) f.Detalj(detalj);
@@ -84,9 +96,9 @@ public sealed class Skanner
     }
 
     private Funn FraRegel(Produkt p, string hvor, string detalj) =>
-        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.Hvorfor, hvor, detalj, p);
+        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt, p.Rad);
 
-    private static IEnumerable<string> Mapper(string sti)
+    internal static IEnumerable<string> Mapper(string sti)
     {
         try { return Directory.EnumerateDirectories(sti); } catch { return Array.Empty<string>(); }
     }
@@ -96,7 +108,7 @@ public sealed class Skanner
         try { return Directory.EnumerateFiles(sti); } catch { return Array.Empty<string>(); }
     }
 
-    private static JsonDocument? LesJson(string sti)
+    internal static JsonDocument? LesJson(string sti)
     {
         if (!LovligeFiler.Contains(Path.GetFileName(sti))) return null;
         try
@@ -107,6 +119,8 @@ public sealed class Skanner
         }
         catch { return null; }
     }
+
+    private static string Kutt(string s, int maks) => s.Length <= maks ? s : s[..(maks - 1)].TrimEnd() + "…";
 
     private static string? Str(JsonElement e, string navn) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(navn, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
@@ -125,7 +139,7 @@ public sealed class Skanner
                 var sti = ProsessSti.Hent(p);
                 var r = FinnRegel($"{p.ProcessName} {sti}");
                 if (r == null) continue;
-                FraRegel(r, "Kjører nå", $"Prosess: {p.ProcessName} (PID {p.Id}) {sti}").Merknad("Kjører akkurat nå.");
+                FraRegel(r, "Kjører nå", $"Prosess: {p.ProcessName} (PID {p.Id}) {sti}").Bruk = "Kjører nå.";
             }
         }
     }
@@ -285,46 +299,16 @@ public sealed class Skanner
                 if (apen)
                 {
                     f.Risiko = Risiko.Rod;
-                    f.Merknad($"Port {l.Port} er ÅPEN mot nettverket. Andre på samme nett kan bruke AI-en uten passord.");
+                    f.Advarsel("Er åpen mot nettverket. Andre på samme nett kan bruke den uten passord.");
+                    f.Detalj($"Port {l.Port} er åpen mot nettverket ({l.Adresse}).");
                 }
                 else f.Merknad($"Port {l.Port} lytter bare lokalt (OK).");
             }
         }
     }
 
-    // ---------- 6. Modellfiler (leser bare navn og størrelse, aldri innhold) ----------
-    private void Modellfiler()
-    {
-        var endelser = new HashSet<string>(_regler.ModellfilEndelser, StringComparer.OrdinalIgnoreCase);
-        long min = _regler.ModellfilMinMB * 1024L * 1024L;
-        var steder = new[] { @"%USERPROFILE%\Downloads", @"%USERPROFILE%\Documents", @"%USERPROFILE%\Desktop", @"%USERPROFILE%\.cache",
-                             @"%USERPROFILE%\.ollama", @"%USERPROFILE%\.lmstudio", @"%LOCALAPPDATA%\nomic.ai", @"%USERPROFILE%\models", @"C:\models" };
-        var valg = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 6, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
-        var funnet = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
-        foreach (var s in steder)
-        {
-            var sti = Utvid(s);
-            if (!Directory.Exists(sti)) continue;
-            foreach (var fil in new DirectoryInfo(sti).EnumerateFiles("*", valg))
-            {
-                long lengde;
-                try { lengde = fil.Length; } catch { continue; }
-                if (lengde < min) continue;
-                bool ollamaBlob = Regex.IsMatch(fil.FullName, @"[\\/]\.ollama[\\/]models[\\/]blobs[\\/]", RegexOptions.IgnoreCase);
-                if (endelser.Contains(fil.Extension) || ollamaBlob) funnet[fil.FullName] = lengde;
-            }
-        }
-        if (funnet.Count == 0) return;
-        var gb = Math.Round(funnet.Values.Sum() / 1073741824.0, 1);
-        var f = LeggTil("AI-modellfiler på disk", "Lokal AI", Risiko.Gul,
-            "Nedlastede språk- eller bildemodeller. De kan kjøres uten internett og uten kontroll fra IT. Modeller fra ukjente kilder kan være manipulert.",
-            $"{funnet.Count} filer, {gb} GB", null);
-        foreach (var (navn, lengde) in funnet.OrderByDescending(x => x.Value))
-            f.Detalj($"{navn} ({Math.Round(lengde / 1073741824.0, 2)} GB)");
-    }
-
     // ---------- 7. Nettleserutvidelser ----------
-    private static readonly (string Navn, string Sti)[] Chromium =
+    internal static readonly (string Navn, string Sti)[] Chromium =
     {
         ("Chrome", @"%LOCALAPPDATA%\Google\Chrome\User Data"),
         ("Edge", @"%LOCALAPPDATA%\Microsoft\Edge\User Data"),
@@ -391,21 +375,24 @@ public sealed class Skanner
     {
         if (string.IsNullOrWhiteSpace(navn)) return;
         bool alleSider = tilganger.Any(t => t == "<all_urls>" || Regex.IsMatch(t, @"^(\*|https?)://\*/\*$"));
+        var nettleser = hvor.Split(' ')[0];
+        var visning = $"{Kutt(navn, 40)} ({nettleser}-utvidelse)";
         Funn f;
         var r = FinnRegel(navn, utvidelse: true);
-        if (r != null) f = FraRegel(r, $"Utvidelse i {hvor}", $"{hvor}: {navn}");
+        if (r != null)
+            f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {navn}", r, r.Enkelt, r.Rad);
         else
         {
             var tekst = $" {navn} {beskrivelse} ".ToLowerInvariant();
             if (!_regler.UkjentUtvidelseOrd.Any(tekst.Contains)) return;
-            f = LeggTil($"Ukjent AI-utvidelse: {navn}", "Nettleser-AI", Risiko.Gul,
-                "Ser ut som en AI-utvidelse, men er ikke i regelfilen. Sjekk hvem som lager den og hva den sender.",
-                $"Utvidelse i {hvor}", $"{hvor}: {navn}");
+            f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
+                "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
+                $"Utvidelse i {hvor}", $"{hvor}: {navn}", rad: "Fjern den hvis du ikke vet hva den gjør.");
         }
         if (alleSider)
         {
             f.Risiko = Risiko.Rod;
-            f.Merknad("Kan lese og endre innholdet på ALLE nettsider du besøker, også nettbank og interne systemer.");
+            f.Advarsel("Kan se alt på alle nettsider du besøker, også nettbanken.");
         }
     }
 
@@ -423,7 +410,10 @@ public sealed class Skanner
 
             bool blokkert = policy?.Verdi == 1;
             var hvor = harModell ? $"Modell lastet ned ({Math.Round(storrelse / 1073741824.0, 1)} GB)" : "Ingen modell funnet";
-            var f = LeggTil(r.Navn, "Nettleser-AI (innebygd)", blokkert && !harModell ? Risiko.Gronn : Risiko.Gul, r.Hvorfor, hvor, null);
+            var f = LeggTil(r.Navn, "Nettleser-AI (innebygd)", blokkert && !harModell ? Risiko.Gronn : Risiko.Gul, r.HvorforEnkelt ?? r.Hvorfor, hvor, null,
+                            enkelt: r.Enkelt, rad: r.Rad);
+            if (harModell) f.Bruk = $"Modellen er lastet ned ({Math.Round(storrelse / 1073741824.0, 1).ToString(new System.Globalization.CultureInfo("nb-NO"))} GB).";
+            else if (blokkert) f.Bruk = "Blokkert av bedriften.";
             foreach (var m in modeller) f.Detalj($"Mappe: {m}");
             if (policy == null) f.Merknad("Ingen bedriftspolicy er satt. Nettleseren bestemmer selv om AI-modellen lastes ned.");
             else if (blokkert)

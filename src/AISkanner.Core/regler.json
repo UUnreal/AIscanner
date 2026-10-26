@@ -17,7 +17,10 @@
         11434
       ],
       "hvorfor": "Kjører språkmodeller lokalt. Data blir på maskinen, men API-et har ingen innlogging. Blir rødt hvis porten er åpen mot nettverket.",
-      "nvd": "ollama"
+      "nvd": "ollama",
+      "enkelt": "Kjører AI lokalt på PC-en",
+      "hvorforEnkelt": "Kjører AI-modeller på selve PC-en, uten internett. Det du skriver blir på maskinen.",
+      "rad": "Hold den oppdatert. Pass på at den ikke er åpen mot nettverket."
     },
     {
       "navn": "LM Studio",
@@ -37,7 +40,10 @@
         1234
       ],
       "hvorfor": "Kjører språkmodeller lokalt med valgfri server. Modeller lastes ned fra internett uten kontroll fra IT.",
-      "nvd": "lm studio"
+      "nvd": "lm studio",
+      "enkelt": "Kjører AI lokalt på PC-en",
+      "hvorforEnkelt": "Et program for å laste ned og kjøre AI-modeller på PC-en. Modellene kommer fra internett uten kontroll.",
+      "rad": "Last bare ned modeller fra kjente kilder. På jobb: spør IT."
     },
     {
       "navn": "GPT4All",
@@ -54,7 +60,10 @@
         4891
       ],
       "hvorfor": "Lokal chat-app med språkmodeller. Kan lese lokale dokumenter (LocalDocs).",
-      "nvd": "gpt4all"
+      "nvd": "gpt4all",
+      "enkelt": "Kjører AI lokalt på PC-en",
+      "hvorforEnkelt": "Et AI-chatprogram som kjører på PC-en og kan lese dokumentene dine hvis du ber om det.",
+      "rad": "Greit for privat bruk. På jobb: spør IT før du gir den tilgang til dokumenter."
     },
     {
       "navn": "llama.cpp / KoboldCpp",
@@ -71,7 +80,10 @@
         5001
       ],
       "hvorfor": "Kjører språkmodeller fra kommandolinjen. Ofte lastet ned som løse filer uten installasjon.",
-      "nvd": "llama.cpp"
+      "nvd": "llama.cpp",
+      "enkelt": "Kjører AI fra kommandolinjen",
+      "hvorforEnkelt": "Et teknisk verktøy for å kjøre AI-modeller. Ofte lastet ned som løse filer.",
+      "rad": "Slett det hvis du ikke vet hva det er."
     },
     {
       "navn": "Jan",
@@ -88,7 +100,10 @@
       "porter": [
         1337
       ],
-      "hvorfor": "Lokal chat-app med innebygd API-server."
+      "hvorfor": "Lokal chat-app med innebygd API-server.",
+      "enkelt": "Kjører AI lokalt på PC-en",
+      "hvorforEnkelt": "Et AI-chatprogram som kjører på PC-en.",
+      "rad": "Hold det oppdatert."
     },
     {
       "navn": "Stable Diffusion / ComfyUI",
@@ -109,7 +124,10 @@
         8188
       ],
       "hvorfor": "Bildegenerering lokalt. Tredjeparts tillegg (custom nodes) har tidligere inneholdt skadevare.",
-      "nvd": "comfyui"
+      "nvd": "comfyui",
+      "enkelt": "Lager bilder med AI på PC-en",
+      "hvorforEnkelt": "Et program som lager bilder med AI. Tillegg fra andre har tidligere inneholdt skadevare.",
+      "rad": "Installer bare tillegg du stoler på."
     },
     {
       "navn": "Claude Code",
@@ -127,7 +145,10 @@
       ],
       "porter": [],
       "hvorfor": "AI-agent som kan lese filer, kjøre kommandoer og sende kode til skyen. Høy risiko uten avtale og retningslinjer.",
-      "nvd": "claude code"
+      "nvd": "claude code",
+      "enkelt": "AI-assistent som kan styre PC-en",
+      "hvorforEnkelt": "Den kan lese filene dine, kjøre programmer og sende innhold til Anthropic på nett.",
+      "rad": "Bruk den bare hvis jobben har godkjent det. Ellers: avinstaller den."
     },
     {
       "navn": "OpenAI Codex CLI",
@@ -145,7 +166,10 @@
       ],
       "porter": [],
       "hvorfor": "AI-agent som kan kjøre kommandoer og endre filer. Kode sendes til OpenAI.",
-      "nvd": "codex cli"
+      "nvd": "codex cli",
+      "enkelt": "AI-assistent som kan styre PC-en",
+      "hvorforEnkelt": "Den kan endre filer og kjøre programmer, og sender innhold til OpenAI.",
+      "rad": "Bruk den bare hvis jobben har godkjent det. Ellers: avinstaller den."
     },
     {
       "navn": "Gemini CLI",
@@ -161,7 +185,10 @@
         "gemini"
       ],
       "porter": [],
-      "hvorfor": "AI-agent som kan kjøre kommandoer og lese filer. Data sendes til Google."
+      "hvorfor": "AI-agent som kan kjøre kommandoer og lese filer. Data sendes til Google.",
+      "enkelt": "AI-assistent som kan styre PC-en",
+      "hvorforEnkelt": "Den kan lese filer og kjøre programmer, og sender innhold til Google.",
+      "rad": "Bruk den bare hvis jobben har godkjent det. Ellers: avinstaller den."
     },
     {
       "navn": "Aider",
@@ -177,7 +204,10 @@
       ],
       "porter": [],
       "hvorfor": "AI-kodeagent som endrer filer og bruker valgfri skytjeneste.",
-      "nvd": "aider"
+      "nvd": "aider",
+      "enkelt": "AI som skriver kode for deg",
+      "hvorforEnkelt": "Den endrer filer på egen hånd og sender koden til en AI-tjeneste.",
+      "rad": "Bruk den bare hvis jobben har godkjent det."
     },
     {
       "navn": "Cursor",
@@ -192,7 +222,10 @@
       ],
       "porter": [],
       "hvorfor": "Kodeeditor med innebygd AI-agent. Kildekode sendes til skyen.",
-      "nvd": "cursor ai"
+      "nvd": "cursor ai",
+      "enkelt": "Kodeprogram med innebygd AI",
+      "hvorforEnkelt": "Koden du jobber med sendes til en AI-tjeneste på nett.",
+      "rad": "På jobb: sjekk at bedriften har avtale med Cursor."
     },
     {
       "navn": "Windsurf",
@@ -207,7 +240,10 @@
         "%USERPROFILE%\\.windsurf"
       ],
       "porter": [],
-      "hvorfor": "Kodeeditor med AI-agent. Kildekode sendes til skyen."
+      "hvorfor": "Kodeeditor med AI-agent. Kildekode sendes til skyen.",
+      "enkelt": "Kodeprogram med innebygd AI",
+      "hvorforEnkelt": "Koden du jobber med sendes til en AI-tjeneste på nett.",
+      "rad": "På jobb: sjekk at bedriften har avtale."
     },
     {
       "navn": "Continue / Cline (VS Code)",
@@ -222,7 +258,10 @@
         "%USERPROFILE%\\.continue"
       ],
       "porter": [],
-      "hvorfor": "AI-agenter inne i VS Code som kan endre filer og kjøre kommandoer."
+      "hvorfor": "AI-agenter inne i VS Code som kan endre filer og kjøre kommandoer.",
+      "enkelt": "AI-assistent inne i VS Code",
+      "hvorforEnkelt": "Kan endre filer og kjøre programmer fra kodeeditoren.",
+      "rad": "Bruk den bare hvis jobben har godkjent det."
     },
     {
       "navn": "GitHub Copilot (VS Code)",
@@ -233,7 +272,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "Kodeassistent. Grønn hvis bedriften har Copilot Business med avtale, ellers gul."
+      "hvorfor": "Kodeassistent. Grønn hvis bedriften har Copilot Business med avtale, ellers gul.",
+      "enkelt": "AI som foreslår kode",
+      "hvorforEnkelt": "Foreslår kode mens du skriver. Koden sendes til GitHub.",
+      "rad": "Greit hvis bedriften har Copilot Business. Ellers: spør IT."
     },
     {
       "navn": "ChatGPT (skrivebordsapp)",
@@ -245,7 +287,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "Alt som limes inn sendes til OpenAI. Gratis- og Plus-kontoer kan brukes til trening."
+      "hvorfor": "Alt som limes inn sendes til OpenAI. Gratis- og Plus-kontoer kan brukes til trening.",
+      "enkelt": "ChatGPT-appen",
+      "hvorforEnkelt": "Alt du skriver eller limer inn sendes til OpenAI. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter."
     },
     {
       "navn": "Claude (skrivebordsapp)",
@@ -260,7 +305,10 @@
         "%APPDATA%\\Claude"
       ],
       "porter": [],
-      "hvorfor": "Alt som limes inn sendes til Anthropic. MCP-tilkoblinger kan gi appen tilgang til filer og systemer."
+      "hvorfor": "Alt som limes inn sendes til Anthropic. MCP-tilkoblinger kan gi appen tilgang til filer og systemer.",
+      "enkelt": "Claude-appen",
+      "hvorforEnkelt": "Alt du skriver eller limer inn sendes til Anthropic. Appen kan kobles til filer og andre systemer.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter."
     },
     {
       "navn": "Microsoft Copilot",
@@ -272,7 +320,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "Del av Windows/Microsoft 365. Lav risiko når bedriften styrer den via Microsoft 365-avtale."
+      "hvorfor": "Del av Windows/Microsoft 365. Lav risiko når bedriften styrer den via Microsoft 365-avtale.",
+      "enkelt": "Del av Windows",
+      "hvorforEnkelt": "Microsofts egen AI. Når jobben bruker Microsoft 365, er den dekket av avtalen.",
+      "rad": "Ingenting å gjøre."
     },
     {
       "navn": "Perplexity",
@@ -283,7 +334,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "AI-søk. Spørsmål og innlimt tekst sendes til tredjepart."
+      "hvorfor": "AI-søk. Spørsmål og innlimt tekst sendes til tredjepart.",
+      "enkelt": "AI-søkemotor",
+      "hvorforEnkelt": "Spørsmålene dine og det du limer inn sendes til Perplexity.",
+      "rad": "Ikke lim inn interne dokumenter."
     },
     {
       "navn": "DeepSeek",
@@ -294,7 +348,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data."
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.",
+      "enkelt": "Kinesisk AI-tjeneste",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
     },
     {
       "navn": "Grammarly",
@@ -305,7 +362,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "Leser tekst du skriver i alle felt, også e-post og interne systemer."
+      "hvorfor": "Leser tekst du skriver i alle felt, også e-post og interne systemer.",
+      "enkelt": "Skrivehjelp i nettleseren",
+      "hvorforEnkelt": "Leser alt du skriver, også e-post og interne systemer.",
+      "rad": "Slå den av på jobbsider, eller fjern den."
     },
     {
       "navn": "Monica / Sider / Merlin (AI-sidepanel)",
@@ -318,7 +378,10 @@
       ],
       "mapper": [],
       "porter": [],
-      "hvorfor": "AI-sidepaneler som leser innholdet på sidene du besøker og sender det til tredjeparts AI."
+      "hvorfor": "AI-sidepaneler som leser innholdet på sidene du besøker og sender det til tredjeparts AI.",
+      "enkelt": "AI-sidepanel i nettleseren",
+      "hvorforEnkelt": "Leser sidene du besøker og sender innholdet til en AI-tjeneste.",
+      "rad": "Fjern utvidelsen hvis du ikke bruker den hver dag."
     },
     {
       "navn": "Gemini / Claude / ChatGPT i nettleser",
@@ -333,7 +396,10 @@
       "kunUtvidelse": true,
       "mapper": [],
       "porter": [],
-      "hvorfor": "AI-utvidelse i nettleseren. Sjekk hvilke sider den har tilgang til."
+      "hvorfor": "AI-utvidelse i nettleseren. Sjekk hvilke sider den har tilgang til.",
+      "enkelt": "AI-utvidelse i nettleseren",
+      "hvorforEnkelt": "En AI-utvidelse som kan lese det som står på nettsider.",
+      "rad": "Sjekk hvilke sider den har tilgang til. Fjern den hvis du ikke bruker den."
     }
   ],
   "ukjentUtvidelseOrd": [
@@ -357,20 +423,26 @@
   "modellfilMinMB": 200,
   "nettleserInnebygd": [
     {
-      "navn": "Chrome innebygd AI (Gemini Nano)",
+      "navn": "Gemini Nano i Chrome",
       "nettleser": "Chrome",
       "brukerdata": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
       "policyNokkel": "SOFTWARE\\Policies\\Google\\Chrome",
       "policyVerdi": "GenAILocalFoundationalModelSettings",
-      "hvorfor": "Chrome har lastet ned en lokal språkmodell (flere GB). Nettsider og utvidelser kan bruke den via Chromes AI-API-er uten at IT ser det. Data blir på maskinen, men modellen er ikke styrt av bedriften. Kan slås av med policyen GenAILocalFoundationalModelSettings = 1."
+      "hvorfor": "Chrome har lastet ned en lokal språkmodell (flere GB). Nettsider og utvidelser kan bruke den via Chromes AI-API-er uten at IT ser det. Data blir på maskinen, men modellen er ikke styrt av bedriften. Kan slås av med policyen GenAILocalFoundationalModelSettings = 1.",
+      "enkelt": "AI bygd inn i Chrome",
+      "hvorforEnkelt": "Chrome har lastet ned sin egen AI-modell. Det du skriver blir på PC-en, men nettsider og utvidelser kan bruke den.",
+      "rad": "Greit for privat bruk. På jobb bør IT bestemme om den skal være på."
     },
     {
-      "navn": "Edge innebygd AI (lokal modell)",
+      "navn": "AI innebygd i Edge",
       "nettleser": "Edge",
       "brukerdata": "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data",
       "policyNokkel": "SOFTWARE\\Policies\\Microsoft\\Edge",
       "policyVerdi": "GenAILocalFoundationalModelSettings",
-      "hvorfor": "Edge har lastet ned en lokal språkmodell. Nettsider og utvidelser kan bruke den via nettleserens AI-API-er. Ikke styrt av bedriften med mindre policy er satt."
+      "hvorfor": "Edge har lastet ned en lokal språkmodell. Nettsider og utvidelser kan bruke den via nettleserens AI-API-er. Ikke styrt av bedriften med mindre policy er satt.",
+      "enkelt": "AI bygd inn i Edge",
+      "hvorforEnkelt": "Edge har lastet ned sin egen AI-modell. Det du skriver blir på PC-en, men nettsider og utvidelser kan bruke den.",
+      "rad": "Greit for privat bruk. På jobb bør IT bestemme om den skal være på."
     }
   ],
   "innebygdMappeOrd": [
@@ -378,5 +450,325 @@
     "OnDeviceLLM",
     "EdgeLLM",
     "GenAI"
+  ],
+  "aiNettsteder": [
+    {
+      "navn": "ChatGPT",
+      "domener": [
+        "chatgpt.com",
+        "chat.openai.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra OpenAI",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Claude",
+      "domener": [
+        "claude.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra Anthropic",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Google Gemini",
+      "domener": [
+        "gemini.google.com",
+        "bard.google.com",
+        "aistudio.google.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra Google",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "NotebookLM",
+      "domener": [
+        "notebooklm.google.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Google-AI som leser dokumentene dine",
+      "hvorfor": "Dokumentene du laster opp sendes til Google.",
+      "rad": "Ikke last opp interne dokumenter uten avtale."
+    },
+    {
+      "navn": "Microsoft Copilot (forbruker)",
+      "domener": [
+        "copilot.microsoft.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Gratisversjonen av Copilot",
+      "hvorfor": "Forbrukerversjonen av Copilot er ikke dekket av bedriftens Microsoft 365-avtale.",
+      "rad": "På jobb: bruk Copilot via jobbkontoen i stedet."
+    },
+    {
+      "navn": "Microsoft 365 Copilot",
+      "domener": [
+        "m365.cloud.microsoft",
+        "copilot.cloud.microsoft"
+      ],
+      "risiko": "gronn",
+      "enkelt": "Copilot via jobbkontoen",
+      "hvorfor": "Dekket av bedriftens Microsoft 365-avtale.",
+      "rad": "Ingenting å gjøre."
+    },
+    {
+      "navn": "Perplexity",
+      "domener": [
+        "perplexity.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-søkemotor",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Grok",
+      "domener": [
+        "grok.com",
+        "x.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra xAI",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Meta AI",
+      "domener": [
+        "meta.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra Meta",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Mistral Le Chat",
+      "domener": [
+        "chat.mistral.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-chat fra Mistral",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Poe",
+      "domener": [
+        "poe.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Samleside for mange AI-er",
+      "hvorfor": "Det du skriver sendes videre til flere AI-selskaper.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Character.AI",
+      "domener": [
+        "character.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-figurer å prate med",
+      "hvorfor": "Samtalene lagres hos selskapet. Ofte brukt av barn og unge.",
+      "rad": "Snakk med barna om hva de deler."
+    },
+    {
+      "navn": "DeepSeek",
+      "domener": [
+        "deepseek.com",
+        "chat.deepseek.com"
+      ],
+      "risiko": "rod",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Kimi",
+      "domener": [
+        "kimi.com",
+        "kimi.moonshot.cn"
+      ],
+      "risiko": "rod",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Qwen",
+      "domener": [
+        "chat.qwen.ai",
+        "tongyi.aliyun.com"
+      ],
+      "risiko": "rod",
+      "enkelt": "Kinesisk AI-chat fra Alibaba",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Doubao",
+      "domener": [
+        "doubao.com"
+      ],
+      "risiko": "rod",
+      "enkelt": "Kinesisk AI-chat fra ByteDance",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Manus",
+      "domener": [
+        "manus.im"
+      ],
+      "risiko": "rod",
+      "enkelt": "AI-agent som gjør oppgaver på nett for deg",
+      "hvorfor": "En agent som logger inn og handler på dine vegne. Selskapet har kinesiske røtter.",
+      "rad": "Ikke gi den tilgang til jobbkontoer."
+    },
+    {
+      "navn": "Hugging Face",
+      "domener": [
+        "huggingface.co"
+      ],
+      "risiko": "gul",
+      "enkelt": "Nettsted for AI-modeller",
+      "hvorfor": "Her lastes AI-modeller ned. Modeller fra ukjente kilder kan inneholde skadelig kode.",
+      "rad": "Last bare ned modeller fra kjente kilder."
+    },
+    {
+      "navn": "OpenAI-utviklerkonto",
+      "domener": [
+        "platform.openai.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Utviklertilgang til OpenAI",
+      "hvorfor": "Brukes til å koble egne programmer til AI. Kan føre til at bedriftsdata sendes til OpenAI.",
+      "rad": "På jobb: sjekk at dette er godkjent."
+    },
+    {
+      "navn": "Anthropic-utviklerkonto",
+      "domener": [
+        "console.anthropic.com",
+        "platform.claude.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Utviklertilgang til Anthropic",
+      "hvorfor": "Brukes til å koble egne programmer til AI.",
+      "rad": "På jobb: sjekk at dette er godkjent."
+    },
+    {
+      "navn": "DeepL",
+      "domener": [
+        "deepl.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-oversetter",
+      "hvorfor": "Teksten og dokumentene du oversetter sendes til DeepL. Gratisversjonen kan bruke dem til trening.",
+      "rad": "Ikke oversett interne dokumenter med gratisversjonen."
+    },
+    {
+      "navn": "QuillBot",
+      "domener": [
+        "quillbot.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-skrivehjelp",
+      "hvorfor": "Teksten du limer inn sendes til QuillBot.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Otter / Fireflies (møtenotater)",
+      "domener": [
+        "otter.ai",
+        "fireflies.ai",
+        "tldv.io",
+        "read.ai"
+      ],
+      "risiko": "rod",
+      "enkelt": "AI som tar opp møter",
+      "hvorfor": "Tar opp og skriver ned møter, ofte uten at alle i møtet vet det.",
+      "rad": "Slå av automatisk opptak. Si alltid fra før et møte tas opp."
+    },
+    {
+      "navn": "Gamma",
+      "domener": [
+        "gamma.app"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI som lager presentasjoner",
+      "hvorfor": "Innholdet du gir den sendes til Gamma.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Lovable / Bolt / v0",
+      "domener": [
+        "lovable.dev",
+        "bolt.new",
+        "v0.dev",
+        "v0.app"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI som lager nettsider og apper",
+      "hvorfor": "Koden og beskrivelsene dine sendes til tjenesten.",
+      "rad": "Ikke lim inn hemmeligheter eller passord i prosjektene."
+    },
+    {
+      "navn": "Replit",
+      "domener": [
+        "replit.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "Koding med AI i nettleseren",
+      "hvorfor": "Koden din ligger hos Replit.",
+      "rad": "Ikke legg inn hemmeligheter eller passord."
+    },
+    {
+      "navn": "Midjourney / Leonardo",
+      "domener": [
+        "midjourney.com",
+        "leonardo.ai"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI som lager bilder",
+      "hvorfor": "Bildene og beskrivelsene dine lagres hos tjenesten, ofte offentlig.",
+      "rad": "Ikke last opp bilder av kunder eller kolleger."
+    },
+    {
+      "navn": "ElevenLabs",
+      "domener": [
+        "elevenlabs.io"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI som lager stemmer",
+      "hvorfor": "Kan kopiere stemmer. Brukes også til svindel.",
+      "rad": "Ikke last opp opptak av andre uten samtykke."
+    },
+    {
+      "navn": "Suno / Udio",
+      "domener": [
+        "suno.com",
+        "udio.com"
+      ],
+      "risiko": "gronn",
+      "enkelt": "AI som lager musikk",
+      "hvorfor": "Lav risiko for data.",
+      "rad": "Ingenting å gjøre."
+    },
+    {
+      "navn": "Phind / You.com",
+      "domener": [
+        "phind.com",
+        "you.com"
+      ],
+      "risiko": "gul",
+      "enkelt": "AI-søk",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    }
   ]
 }

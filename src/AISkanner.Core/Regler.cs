@@ -16,6 +16,20 @@ public sealed class Produkt
     [JsonPropertyName("kunUtvidelse")] public bool KunUtvidelse { get; set; }
     [JsonPropertyName("nvd")] public string? Nvd { get; set; }
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
+    [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
+    [JsonPropertyName("hvorforEnkelt")] public string? HvorforEnkelt { get; set; }
+    [JsonPropertyName("rad")] public string? Rad { get; set; }
+}
+
+/// <summary>Et AI-nettsted som kan gjenkjennes fra spor i nettleserne.</summary>
+public sealed class AiNettsted
+{
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    [JsonPropertyName("domener")] public List<string> Domener { get; set; } = new();
+    [JsonPropertyName("risiko")] public string Risiko { get; set; } = "gul";
+    [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
+    [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
+    [JsonPropertyName("rad")] public string? Rad { get; set; }
 }
 
 public sealed class InnebygdAI
@@ -26,6 +40,9 @@ public sealed class InnebygdAI
     [JsonPropertyName("policyNokkel")] public string PolicyNokkel { get; set; } = "";
     [JsonPropertyName("policyVerdi")] public string PolicyVerdi { get; set; } = "";
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
+    [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
+    [JsonPropertyName("hvorforEnkelt")] public string? HvorforEnkelt { get; set; }
+    [JsonPropertyName("rad")] public string? Rad { get; set; }
 }
 
 public sealed class Regelsett
@@ -36,6 +53,7 @@ public sealed class Regelsett
     [JsonPropertyName("modellfilEndelser")] public List<string> ModellfilEndelser { get; set; } = new();
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;
     [JsonPropertyName("nettleserInnebygd")] public List<InnebygdAI> NettleserInnebygd { get; set; } = new();
+    [JsonPropertyName("aiNettsteder")] public List<AiNettsted> AiNettsteder { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>

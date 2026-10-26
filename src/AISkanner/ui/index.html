@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-skanner</title>
+<style>
+  :root {
+    --bg: #f2f2f7; --kort: #ffffff; --tekst: #1c1c1e; --dempet: #6e6e73; --linje: rgba(60,60,67,.12);
+    --bla: #007aff; --rod: #ff3b30; --gul: #ff9f0a; --gronn: #34c759;
+    --rod-myk: #ffebea; --gul-myk: #fff4e0; --gronn-myk: #e7f8ec;
+    --skygge: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --kort: #1c1c1e; --tekst: #f5f5f7; --dempet: #98989d; --linje: rgba(84,84,88,.45);
+      --bla: #0a84ff; --rod: #ff453a; --gul: #ff9f0a; --gronn: #30d158;
+      --rod-myk: rgba(255,69,58,.16); --gul-myk: rgba(255,159,10,.16); --gronn-myk: rgba(48,209,88,.16);
+      --skygge: none;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--tekst);
+    font-family: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; user-select: none; overflow-x: hidden;
+  }
+  .side { display: none; min-height: 100%; }
+  .side.aktiv { display: flex; flex-direction: column; animation: inn .35s ease; }
+  @keyframes inn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Start ---------- */
+  #start { align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 10px; }
+  .storTittel { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
+  .undertittel { font-size: 17px; color: var(--dempet); max-width: 440px; }
+  .sokKnapp {
+    margin: 36px 0 28px; width: 176px; height: 176px; border-radius: 50%; border: 0; cursor: pointer;
+    background: linear-gradient(160deg, #3d9bff, var(--bla) 55%, #0060df); color: #fff;
+    font: inherit; font-size: 28px; font-weight: 600; letter-spacing: -.01em;
+    box-shadow: 0 12px 32px rgba(0,122,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
+    position: relative; transition: transform .15s ease;
+  }
+  .sokKnapp:hover { transform: scale(1.03); }
+  .sokKnapp:active { transform: scale(.97); }
+  .sokKnapp::before {
+    content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 2px solid var(--bla); opacity: .25;
+    animation: puls 2.4s ease-out infinite;
+  }
+  @keyframes puls { 0% { transform: scale(.92); opacity: .35; } 100% { transform: scale(1.18); opacity: 0; } }
+  .tillit { display: flex; gap: 18px; color: var(--dempet); font-size: 13px; flex-wrap: wrap; justify-content: center; }
+  .tillit span { display: inline-flex; align-items: center; gap: 6px; }
+  .tillit svg { width: 15px; height: 15px; }
+
+  .valg {
+    margin-top: 26px; background: var(--kort); border-radius: 14px; box-shadow: var(--skygge);
+    max-width: 460px; width: 100%; text-align: left; overflow: hidden;
+  }
+  .valgRad { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; }
+  .valgRad + .valgRad { border-top: 1px solid var(--linje); }
+  .valg .tekst { flex: 1; }
+  .valg .tekst b { font-weight: 500; display: block; }
+  .valg .tekst small { color: var(--dempet); font-size: 12.5px; }
+  .bryter { position: relative; width: 51px; height: 31px; flex: none; }
+  .bryter input { opacity: 0; width: 0; height: 0; }
+  .bryter i { position: absolute; inset: 0; border-radius: 31px; background: rgba(120,120,128,.24); transition: .2s; cursor: pointer; }
+  .bryter i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: .2s; }
+  .bryter input:checked + i { background: var(--gronn); }
+  .bryter input:checked + i::after { transform: translateX(20px); }
+
+  /* ---------- Søker ---------- */
+  #soker { align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 8px; }
+  .ring { width: 150px; height: 150px; margin-bottom: 26px; }
+  .ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+  .ring .spor { stroke: var(--linje); }
+  .ring .fremdrift { stroke: var(--bla); transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .5s ease; }
+  .stegliste { margin-top: 22px; display: grid; gap: 10px; text-align: left; }
+  .steg { display: flex; align-items: center; gap: 10px; color: var(--dempet); font-size: 15px; transition: color .3s; }
+  .steg .prikk { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--linje); display: grid; place-items: center; flex: none; transition: .3s; }
+  .steg.ferdig { color: var(--tekst); }
+  .steg.ferdig .prikk { background: var(--gronn); border-color: var(--gronn); }
+  .steg.ferdig .prikk::after { content: ""; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px); }
+  .steg.na { color: var(--tekst); font-weight: 500; }
+  .steg.na .prikk { border-color: var(--bla); border-top-color: transparent; animation: snurr .8s linear infinite; }
+  @keyframes snurr { to { transform: rotate(360deg); } }
+
+  /* ---------- Resultat ---------- */
+  #resultat { padding: 36px 24px 40px; max-width: 620px; width: 100%; margin: 0 auto; }
+  .hode { text-align: center; padding: 8px 0 24px; }
+  .hode h1 { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
+  .liste { background: var(--kort); border-radius: 16px; overflow: hidden; box-shadow: var(--skygge); }
+  .rad { border-top: 1px solid var(--linje); }
+  .rad:first-child { border-top: 0; }
+  .radHode { display: flex; align-items: center; gap: 14px; padding: 15px 18px; cursor: pointer; }
+  .radHode:hover { background: rgba(120,120,128,.06); }
+  .radHode .prikk { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .radHode b { flex: 1; font-weight: 500; font-size: 17px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .merke { font-size: 13px; font-weight: 600; padding: 4px 11px; border-radius: 20px; flex: none; }
+  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod); }
+  .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: #c77700; }
+  .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: #1f9d48; }
+  @media (prefers-color-scheme: dark) { .gul .merke { color: var(--gul); } .gronn .merke { color: var(--gronn); } }
+  .radInnhold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+  .rad.apen .radInnhold { grid-template-rows: 1fr; }
+  .radInnhold > div { overflow: hidden; }
+  .kort { padding: 0 18px 15px 46px; color: var(--dempet); font-size: 15px; }
+  .knapper { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 28px; }
+  .knapp { border: 0; border-radius: 14px; padding: 14px 0; width: 100%; max-width: 320px; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; }
+  .knapp.primar { background: var(--bla); color: #fff; }
+  .knapp.lenke { background: none; color: var(--bla); font-weight: 400; font-size: 15px; padding: 8px 0; }
+</style>
+</head>
+<body>
+
+<section id="start" class="side aktiv">
+  <div class="storTittel">Er det AI på denne PC-en?</div>
+  <div class="undertittel">Finn AI-programmer, AI i nettleseren og AI som kjører i det skjulte. Det tar under ett minutt.</div>
+  <button class="sokKnapp" id="sok">Søk</button>
+  <div class="tillit">
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>Endrer ingenting</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Leser aldri passord</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg>Sender ingenting</span>
+  </div>
+  <div class="valg">
+    <label class="valgRad">
+      <div class="tekst"><b>Sjekk nettleserhistorikken</b><small>Finner AI-nettsteder du har brukt. Analyseres på PC-en og lagres aldri.</small></div>
+      <span class="bryter"><input type="checkbox" id="historikk" checked><i></i></span>
+    </label>
+    <label class="valgRad">
+      <div class="tekst"><b>Sjekk kjente sikkerhetshull</b><small>Slår opp produktnavn i en offentlig database på nett. Ingenting om deg sendes.</small></div>
+      <span class="bryter"><input type="checkbox" id="nvd"><i></i></span>
+    </label>
+  </div>
+</section>
+
+<section id="soker" class="side">
+  <svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="fremdrift" id="ring" cx="50" cy="50" r="44" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg>
+  <div class="storTittel" style="font-size:26px">Søker…</div>
+  <div class="undertittel" id="sokTekst">Dette tar bare litt tid.</div>
+  <div class="stegliste" id="stegliste"></div>
+</section>
+
+<section id="resultat" class="side">
+  <div class="hode">
+    <h1 id="hodeTittel"></h1>
+  </div>
+  <div class="liste" id="liste"></div>
+  <div class="knapper">
+    <button class="knapp primar" id="igjen">Søk igjen</button>
+    <button class="knapp lenke" id="lagre">Lagre</button>
+  </div>
+</section>
+
+<script>
+"use strict";
+const STEG = ["Ser etter AI som kjører nå", "Sjekker installerte programmer", "Sjekker hva som starter av seg selv",
+              "Ser etter AI-verktøy og AI-nøkler", "Spør lokale programmer om de er AI", "Sjekker utvidelser i nettleserne",
+              "Ser etter AI-nettsteder du har brukt", "Sjekker innebygd AI i Chrome og Edge", "Leter gjennom filene etter AI"];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const vert = window.chrome && window.chrome.webview;   // satt når siden kjører inne i programmet
+const send = m => vert ? vert.postMessage(m) : demo(m);
+
+function vis(id) { document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id)); window.scrollTo(0, 0); }
+
+function visSteg(n) {
+  $("stegliste").innerHTML = STEG.map((t, i) =>
+    `<div class="steg ${i < n ? "ferdig" : i === n ? "na" : ""}"><span class="prikk"></span>${esc(t)}</div>`).join("");
+  $("ring").style.strokeDashoffset = 276.5 * (1 - Math.min(n, STEG.length) / STEG.length);
+}
+
+const MERKE = { rod: "Høy", gul: "Middels", gronn: "Lav" };
+function visResultat(funn) {
+  $("hodeTittel").textContent = funn.length === 0 ? "Fant ingen AI" : funn.length === 1 ? "1 AI funnet" : `${funn.length} AI funnet`;
+  $("liste").style.display = funn.length ? "" : "none";
+  $("liste").innerHTML = funn.map(f => `
+    <div class="rad ${f.risiko}">
+      <div class="radHode"><span class="prikk"></span><b>${esc(f.navn)}</b><span class="merke">${MERKE[f.risiko]}</span></div>
+      <div class="radInnhold"><div><p class="kort">${esc(f.kort)}</p></div></div>
+    </div>`).join("");
+  document.querySelectorAll(".radHode").forEach(h => h.onclick = () => h.parentElement.classList.toggle("apen"));
+  vis("resultat");
+}
+
+// Meldinger fra programmet
+function motta(m) {
+  if (m.type === "steg") visSteg(m.nr);
+  else if (m.type === "status") $("sokTekst").textContent = m.tekst;
+  else if (m.type === "resultat") { visSteg(STEG.length); setTimeout(() => visResultat(m.funn), 350); }
+  else if (m.type === "feil") { vis("start"); $("sokTekst").textContent = m.tekst; }
+}
+if (vert) vert.addEventListener("message", e => motta(e.data));
+
+$("sok").onclick = $("igjen").onclick = () => { visSteg(0); $("sokTekst").textContent = "Dette tar bare litt tid."; vis("soker"); send({ type: "sok", nvd: $("nvd").checked, historikk: $("historikk").checked }); };
+$("lagre").onclick = () => send({ type: "lagre" });
+
+// ---------- Demo når siden åpnes i en vanlig nettleser ----------
+function demo(m) {
+  if (m.type !== "sok") return;
+  let n = 0;
+  const t = setInterval(() => { motta({ type: "steg", nr: ++n }); if (n >= STEG.length) { clearInterval(t); motta({ type: "resultat", funn: window.DEMO || [] }); } }, 350);
+}
+const p = new URLSearchParams(location.search);
+if (p.get("side") === "soker") { vis("soker"); visSteg(4); }
+if (p.get("side") === "resultat") setTimeout(() => { visResultat(window.DEMO || []); if (p.get("apen")) document.querySelectorAll("#liste .rad")[+p.get("apen")]?.classList.add("apen"); }, 0);
+</script>
+</body>
+</html>

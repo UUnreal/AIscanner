@@ -3,19 +3,23 @@
 Finner AI på en Windows-PC og sorterer funnene etter risiko: **rød**, **gul**, **grønn**.
 Ett vindu, én knapp: **Søk**.
 
-- **Lokal AI:** Ollama, LM Studio, GPT4All, llama.cpp, Jan, ComfyUI, store modellfiler (.gguf, .safetensors, .onnx),
-  og AI-servere som er åpne mot nettverket.
-- **Skygge-AI:** ChatGPT, Claude, Copilot, Perplexity, DeepSeek, og AI-agenter som Claude Code, Codex, Gemini CLI,
-  Aider, Cursor, Windsurf, Cline og Continue.
-- **Nettleser-AI:** AI-utvidelser i Chrome, Edge, Brave, Vivaldi, Opera og Firefox, og innebygd AI i
-  Chrome (Gemini Nano) og Edge, inkludert om bedriftspolicy blokkerer den.
+Den kjenner igjen AI på innhold og oppførsel, ikke bare på navn. Ukjent AI får alltid høy risiko.
+
+- **AI-modeller** gjenkjennes på filformatet (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn.
+- **AI-motorer** i programmer (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML m.fl.).
+- **Lokale AI-servere**: programmer som svarer som en AI-tjeneste, med modellene de har lastet. Rød hvis åpen mot nettverket.
+- **AI-kode**: Python- og Node-prosjekter med AI- og agentbiblioteker.
+- **AI-nøkler**: om nøkler som `OPENAI_API_KEY` finnes (aldri verdien).
+- **Nettleser-AI**: AI-utvidelser, AI-nettsteder du har brukt (bruksspor og historikk, analysert i minnet og aldri lagret),
+  ukjente AI-nettsteder, AI-modeller lagret i nettleseren, og innebygd AI i Chrome og Edge.
+- **Kjente produkter** (Ollama, ChatGPT, Claude Code, Cursor, DeepSeek m.fl.) får navn og risiko fra [`regler.json`](src/AISkanner.Core/regler.json).
 
 ## Sikkerhet først
 - Leser bare. Endrer, sletter eller installerer ingenting. Ber aldri om administrator (`asInvoker`).
-- Starter ingen andre programmer. Ingen PowerShell, ingen skript.
+- Starter ingen skript eller kommandolinjer. Vinduet bruker Microsoft Edge WebView2.
 - Sender ingenting ut. Valgfri sårbarhetssjekk sender bare produktnavn til NVD.
-- Åpner aldri nettleserens passord, informasjonskapsler, historikk eller lommebøker. Dette er håndhevet i koden
-  (`Skanner.LovligeFiler`): de eneste filene som leses er `manifest.json`, `messages.json` og `extensions.json`.
+- Åpner aldri nettleserens passord, informasjonskapsler eller lommebøker. Håndhevet i koden (`Skanner.LovligeFiler`).
+- Historikk leses bare hvis bryteren er på, analyseres i minnet og lagres aldri.
 - Risikoreglene ligger åpent i [`regler.json`](src/AISkanner.Core/regler.json). Legg en egen `regler.json`
   ved siden av exe-filen for å overstyre.
 

@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="regler.json" LogicalName="AISkanner.regler.json" />
+    <InternalsVisibleTo Include="AISkanner.Cli" />
   </ItemGroup>
 
 </Project>
