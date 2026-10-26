@@ -89,25 +89,14 @@ hopper over alt annet uten å tolke det, og nuller ut bytene etterpå. Vinduet h
 
 ## Kjente svakheter
 
-Disse er kjent og ikke rettet i 2.11.
+Disse er kjent per 2.14. Punkt 2 er rettet og står her for historikkens skyld.
 
 1. **Programmet er ikke signert.** Windows og EDR kan ikke vite at fila kommer fra prosjektet, og en falsk
    `AISkanner.exe` eller DLL i samme mappe kan ikke oppdages. Planen er SignPath Foundation, se
    [CODE_SIGNING.md](CODE_SIGNING.md). Inntil da bør IT godkjenne på SHA-256 fra `SHA256.txt` og legge programmet
    i en mappe vanlige brukere ikke kan skrive til, ikke i Nedlastinger.
-2. **Godkjentlista stoler på navn og tekst som brukeren kan styre** (alvorlighet: middels). Lista virker som den
-   skal for ekte produkter, og den gjør aldri ukjent AI, farlige modellfiler eller data til høyrisikoland grønne.
-   Men `Risikoregler.Godkjent` sammenligner med visningsnavnet og med all tekst i detaljene, og noen av disse kommer
-   fra brukeren selv:
-   - En ukjent AI-utvidelse får typen «Nettleserutvidelse», ikke «Ukjent AI». Hvis utvidelsen kaller seg det samme
-     som en godkjent AI, for eksempel «Microsoft 365 Copilot», blir den grønn. Det gjelder også om den kan lese alle nettsider.
-   - Det samme gjelder et Python- eller Node-prosjekt i en mappe med samme navn som en godkjent AI.
-   - Et godkjent domene matches også mot filstier. En lokal modell med kjent familie som ligger i en mappe som heter
-     for eksempel `m365.cloud.microsoft`, blir grønn.
-
-   Den som skannes, kan altså gjøre egen skygge-AI grønn. Inntil dette er strammet inn, bør IT bruke eksakte
-   produktnavn og bare domener som ikke er lette å gjette. Foreslått retting: godkjenn på regelnavn fra `regler.json`
-   og på domener bare mot målte forbindelser og nettstedsfunn, ikke mot filstier eller navn fra utvidelser.
+2. **Godkjentlista** stolte i 2.11 til 2.13 på navn og stier brukeren kan styre. Rettet i 2.13.1: lista godkjenner
+   bare navn fra regelsettet og gjenkjente nettsteder, og domener bare mot målte forbindelser og nettstedsbevis.
 3. **Herdingen av DLL-søk og regex-tidsgrense gjelder bare vinduet** (`AISkanner.exe`), ikke `AISkanner.Cli`. Det er
    med vilje. Kommandolinjen er et verktøy for IT og utrulling i kontrollerte miljøer, ikke noe vanlige brukere laster
    ned og starter fra Nedlastinger. Taket på 4 MB for lokale HTTP-svar gjelder begge.

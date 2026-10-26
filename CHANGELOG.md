@@ -27,6 +27,41 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.14.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Lagt til
+- **Kart og IP-adresser.** Trykk på en AI etter søket: «Hvor dataene går» viser et verdenskart med landene
+  dataene går til (rødt for høyrisikoland, blått ellers), en nål med antall forbindelser per land, og lista over
+  IP-adressene (opptil 8 per tjeneste) med land og datamengde. Kartet er innebygd (Natural Earth via world-atlas,
+  78 kB) og henter ingenting fra nettet. Kartet viser land, ikke by: Cloudflare-adresser vises som «via Cloudflare
+  (sted ukjent)». `verktoy/lag-kart.py` lager kartdataene.
+- Rapporten får alltid et unikt filnavn: `AI-rapport_<PC>_<åååå-MM-dd_TT-mm-ss>`. Finnes fila, legges « (2)» til.
+  Programmet overskriver aldri en fil. Rapporten viser når søket ble kjørt og når rapporten ble laget.
+
+## [2.13.1] - 2026-10-26
+
+### Sikkerhet
+- Godkjentlista godkjenner bare navn fra regelsettet og gjenkjente nettsteder, ikke navn fra filer, mapper eller
+  manifester som brukeren styrer. Domener sammenlignes bare med målte forbindelser og nettstedsbevis, ikke filstier.
+  Retter den kjente svakheten fra 2.11.
+
+### Rettet
+- Ukjente lokale AI-servere får typen «Ukjent AI» (sjekken på «AI-server» var død kode).
+
+## [2.13.0] - 2026-10-26
+
+### Endret
+- Resultatet sier hvor mange AI-modeller som ble funnet («N AI-modeller funnet»), med AI-nettsteder,
+  nettleserutvidelser og AI-apper talt opp under. Det samme står i rapporten.
+
+## [2.12.0] - 2026-10-26
+
+### Endret
+- Startsiden har to valg i én runding: den lille sirkelen søker som bruker, ringen rundt søker som admin
+  (én godkjenning). Kortene under forklarer at admin gir mer data og bruker gir mindre.
+
 ## [2.11.0] - 2026-10-26
 
 Sikkerhetsherding etter en gjennomgang av koden i 2.10. Brukeren ser ingen endring. Ikke testet på Windows.

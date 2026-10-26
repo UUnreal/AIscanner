@@ -113,6 +113,8 @@ Fila åpnes ikke, og verdien leses aldri.
 - Vertsnavn fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme
   kilde som `ipconfig /displaydns`). Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag.
 - Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
+- Kartet i resultatet er innebygd (Natural Earth, fri bruk, via world-atlas, ISC). Det viser land, ikke by, og henter
+  ingenting fra nettet. IP-adressene vises i vinduet, men lagres ikke.
 - Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester. Annen surfing vises ikke.
 
 ## Hva den aldri leser
