@@ -25,14 +25,17 @@ public sealed partial class Skanner
         {
             var hode = new byte[8];
             using (var s = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            {
+                Tilgangslogg.Tell("Fil", Utfall.Lest);
                 if (s.Read(hode, 0, 8) < 8) return;
+            }
             bool pickle = hode[0] == 0x80 && hode[1] is >= 2 and <= 5;
             bool zip = hode[0] == 0x50 && hode[1] == 0x4B && hode[2] == 3 && hode[3] == 4;
             bool hdf5 = hode[0] == 0x89 && hode[1] == 0x48 && hode[2] == 0x44 && hode[3] == 0x46;
             bool npy = hode[0] == 0x93 && hode[1] == (byte)'N';
             if (!pickle && !zip && !hdf5 && !npy) return;
         }
-        catch { return; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); return; }
         var treff = Yara.Sjekk(fil.FullName, 1 << 20, 0, bareOndsinnede: true);
         if (treff.Count > 0) lock (ff) ff.Farlige.Add((fil.FullName, lengde, treff));
     }

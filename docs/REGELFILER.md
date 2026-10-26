@@ -35,7 +35,9 @@ En oppføring kan være:
 
 Regler:
 
-- AI på lista blir 🟢 grønn med typen «Godkjent av IT».
+- AI på lista blir 🟢 grønn med typen «Godkjent av IT», så lenge den ikke har faresignaler.
+- Godkjent AI som er åpen mot nettverket, blir 🔴 rød. Godkjent AI som kjører fra nedlastinger, kan kjøre skjult kode
+  eller er blokkert av IT, blir 🟡 gul. Godkjenning fjerner bare risikoen ved at AI-en ikke er godkjent.
 - Ukjent AI, farlige modellfiler og AI som sender data til høyrisikoland blir 🔴 røde uansett.
 - Oppføringene legges sammen med `godkjentAi` i `regler.json`.
 

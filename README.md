@@ -6,10 +6,10 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.13.1 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.15.0 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
-- **Status:** testversjon, ikke signert. 2.8–2.13.1 er ikke kjørt på ekte Windows (se [Status](#status)).
+- **Status:** testversjon, ikke signert. 2.8–2.15 er ikke kjørt på ekte Windows (se [Status](#status)).
 
 ## Innhold
 
@@ -84,8 +84,14 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
 - **Åpner aldri** passord, informasjonskapsler, `Web Data`, lommebøker i nettleseren eller verdien av API-nøkler.
   Det håndheves i koden (`Skanner.LovligeFiler`).
 - **Nettleserhistorikken** leses direkte og skrivebeskyttet, og fila kopieres aldri. Bare AI-domener, antall besøk
-  og tidspunkt beholdes, og bare i minnet. Fulle adresser og sidetitler beholdes aldri.
-- **Lagrer ingenting** mellom søk. Det eneste som blir igjen, er rapporten du selv laster ned.
+  og tidspunkt beholdes, og bare i minnet. Fulle adresser og sidetitler beholdes aldri. Ingenting lagres av seg selv:
+  bare rapporten du selv laster ned, viser AI-domenene, besøk og tider, så den viser hvor AI brukes.
+- **Lagrer ingenting** mellom søk. Det eneste som blir igjen, er rapporten du selv laster ned, og revisjonsloggen
+  hvis du velger Ja på startskjermen.
+- **Ingen AI i programmet.** Funnene kommer fra faste regler (filformat, YARA, `regler.json` og kjente adresser),
+  ikke fra en AI-modell. Samme PC og samme regler gir samme svar.
+- **Datagrunnlag.** Knappen nederst i resultatet viser alt søket leste, hva det ikke fikk lest (nektet, låst,
+  stoppet av antivirus, tidsgrense) og SHA-256 av reglene som ga resultatet.
 - **Sender nesten ingenting ut.** Etter søket sendes bare produktord som `ollama` til NVD (nvd.nist.gov).
   PC-navn, brukernavn og stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
 

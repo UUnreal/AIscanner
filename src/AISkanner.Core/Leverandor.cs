@@ -146,13 +146,21 @@ public sealed partial class Skanner
 
     private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist)
     {
-        if (dybde < 0 || frist.Elapsed > TimeSpan.FromSeconds(40) || hopp.Contains(mappe)) return;
+        if (hopp.Contains(mappe)) return;
+        if (dybde < 0) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (frist.Elapsed > TimeSpan.FromSeconds(40))
+        {
+            Tilgangslogg.EnGang("appdata-40", "Mappe", mappe, Utfall.Tidsgrense, "40 sekunder brukt i AppData; resten ble ikke gått gjennom");
+            Tilgangslogg.Tell("Mappe", Utfall.Tidsgrense);
+            return;
+        }
         var navn = Path.GetFileName(mappe);
-        if (LeverandorHopp.Contains(navn)) return;
+        if (LeverandorHopp.Contains(navn)) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;
-        try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch { return; }
+        try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
+        Tilgangslogg.Tell("Mappe", Utfall.Lest);
         foreach (var e in innhold)
         {
             FileAttributes a;
@@ -202,11 +210,12 @@ public sealed partial class Skanner
         try
         {
             using var s = new FileStream(xml, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            Tilgangslogg.Logg("Fil", xml, Utfall.Lest, "filhode (OpenVINO)");
             var buf = new byte[400];
             int n = s.Read(buf, 0, buf.Length);
             return System.Text.Encoding.UTF8.GetString(buf, 0, n).Contains("<net ");
         }
-        catch { return false; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", xml, e); return false; }
     }
 
     private void LeggTilLeverandorFunn(AppAi app, HashSet<string> kjorer)
@@ -303,7 +312,7 @@ public sealed partial class Skanner
         {
             var fil = Path.Combine(rot, "AppxManifest.xml");
             if (!File.Exists(fil) || new FileInfo(fil).Length > 512 * 1024) return null;
-            var t = File.ReadAllText(fil);
+            var t = Tilgangslogg.Prov("Fil", fil, () => File.ReadAllText(fil), "");
             string? Tag(string navn)
             {
                 var m = Regex.Match(t, $"<{navn}>([^<]+)</{navn}>");

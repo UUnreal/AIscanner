@@ -129,6 +129,8 @@ sendt|sent
 mottatt|received
 administrator|administrator
 Søkt som: bruker|Scanned as: user
+Søkt som: bruker (mindre data, uten datamengde og programmer som kjører som administrator)|Scanned as: user (less data, without data volume and programs running as administrator)
+Søkt som: administrator (mer data)|Scanned as: administrator (more data)
 Søkt som: administrator|Scanned as: administrator
 Bruker|Uses
 AI-RAPPORT|AI REPORT
@@ -786,3 +788,107 @@ Program|Program
 Utvidelse|Extension
 ~\b(GGUF|PyTorch|Keras|ONNX|OpenVINO|safetensors|TensorFlow Lite|LiteRT|Keras 3)-modell\b|$1 model
 har lastet ned små AI-modeller som kjører på PC-en, f.eks.|has downloaded small AI models that run on the PC, e.g.
+
+# ---------- 2.15: datagrunnlag, utviklermodus og revisjonslogg ----------
+~Datagrunnlag: (\d+) lest, (\d+) fantes ikke, (\d+) hoppet over|Data basis: $1 read, $2 not found, $3 skipped
+~Ingen hendelser fra Defender om dette programmet under søket \((\d+) hendelser totalt i perioden\)\.|No Defender events about this program during the scan ($1 events in total in the period).
+~Defender stoppet noe under søket \(hendelser: (\d+)\)\.|Defender stopped something during the scan (events: $1).
+~(\d+) hendelser under søket, (\d+) gjelder dette programmet|$1 events during the scan, $2 concern this program
+~måler (\d+) av (\d+) forbindelser|measuring $1 of $2 connections
+~Defender fant «([^»]*)» i\b|Defender found “$1” in
+~Defender klarte ikke å fjerne «([^»]*)»|Defender could not remove “$1”
+~ALT SØKET PRØVDE Å LESE \((\d+)|EVERYTHING THE SCAN TRIED TO READ ($1
+~Windows-feil (\d+)|Windows error $1
+~Defender-hendelse (\d+)|Defender event $1
+~(\d+) forbindelser\b|$1 connections
+~(\d+) porter\b|$1 ports
+~(\d+) navn$|$1 names
+~(\d+) CVE$|$1 CVEs
+lest|read
+finnes ikke|not found
+fantes ikke|not found
+nektet tilgang|access denied
+låst|locked
+stoppet av antivirus|stopped by antivirus
+hoppet over|skipped
+tidsgrense|time limit
+feil|error
+Register|Registry
+Hendelseslogg|Event log
+Database|Database
+Port|Port
+Prosess|Process
+Sjekk|Check
+Søket|The scan
+Antivirus|Antivirus
+filhode (format)|file header (format)
+filhode (OpenVINO)|file header (OpenVINO)
+fingeravtrykk (2 MB)|fingerprint (2 MB)
+config.json ved modellen|config.json next to the model
+bare lista over eksperimentflagg (LesNettleserflagg på)|only the list of experiment flags (LesNettleserflagg on)
+større enn 20 MB|larger than 20 MB
+startpunkt for gjennomgangen|starting point of the search
+hoppes over av regel (systemmappe eller sjekkes av egen sjekk)|skipped by rule (system folder, or covered by its own check)
+45 sekunder brukt på disken; resten av mappene ble ikke gått gjennom|45 seconds spent on the disk; the remaining folders were not searched
+40 sekunder brukt i AppData; resten ble ikke gått gjennom|40 seconds spent in AppData; the rest was not searched
+lest skrivebeskyttet i minnet; ingen adresser logges eller lagres|read read-only in memory; no addresses are logged or stored
+databasen er låst av nettleseren|the database is locked by the browser
+TCP-tabellen (GetExtendedTcpTable)|TCP table (GetExtendedTcpTable)
+lyttende porter (GetExtendedTcpTable)|listening ports (GetExtendedTcpTable)
+DNS-bufferen (bare navn Windows allerede har slått opp)|DNS cache (only names Windows has already looked up)
+DNS-bufferen|DNS cache
+Windows ga ingen DNS-buffer|Windows returned no DNS cache
+Datamengde per forbindelse (EStats)|Data volume per connection (EStats)
+krever administrator|requires administrator
+svarte ikke innen 0.8 s|did not answer within 0.8 s
+svarte ikke som en AI-tjeneste|did not answer as an AI service
+ikke Windows|not Windows
+bare i Windows-programmet|only in the Windows program
+Defender-loggen finnes ikke (annet antivirus?)|the Defender log does not exist (other antivirus?)
+ASR-regel stoppet|ASR rule blocked
+Beskyttet mappe stoppet tilgang til|Controlled folder access blocked access to
+stoppet av antivirus (Defender eller annet)|stopped by antivirus (Defender or other)
+fila ble fjernet av antivirus|the file was removed by antivirus
+fila er i bruk av et annet program|the file is in use by another program
+deler av fila er låst|part of the file is locked
+ingen tilgang|access denied
+Sjekken stoppet|The check stopped
+AI-SKANNER REVISJONSLOGG|AI SCANNER AUDIT TRAIL
+Versjon|Version
+Søkt som|Scanned as
+bruker|user
+Språk|Language
+norsk|Norwegian
+engelsk|English
+Slutt|End
+Nettleserhistorikk|Browser history
+sjekket i minnet, ingen adresser lagret|checked in memory, no addresses stored
+slått av av IT|turned off by IT
+Eksperimentflagg i nettleseren (Local State)|Experiment flags in the browser (Local State)
+lest (slått på av IT)|read (turned on by IT)
+ikke lest|not read
+Ingen AI i programmet: funnene kommer fra faste regler (filformat, YARA, regelfil og kjente adresser), ikke fra en AI-modell.|No AI inside the program: findings come from fixed rules (file formats, YARA, the rule file and known addresses), not from an AI model.
+Søket stoppet|The scan stopped
+REGLER OG PROGRAM (SHA-256)|RULES AND PROGRAM (SHA-256)
+TID PER SJEKK|TIME PER CHECK
+UTFALL|OUTCOMES
+ikke dekket|not covered
+alt søket prøvde å lese, ble lest.|everything the scan tried to read was read.
+Defender-loggen ble ikke lest|The Defender log was not read
+Defender-loggen ble ikke lest.|The Defender log was not read.
+Filer antivirus stoppet, vises likevel som «stoppet av antivirus» under.|Files stopped by antivirus are still shown as “stopped by antivirus” below.
+Filer antivirus stoppet, vises likevel som «stoppet av antivirus».|Files stopped by antivirus are still shown as “stopped by antivirus”.
+ALDRI LEST (MED VILJE)|NEVER READ (BY DESIGN)
+Passord, informasjonskapsler og skjemadata i nettleseren (Login Data, Cookies, Web Data)|Passwords, cookies and form data in the browser (Login Data, Cookies, Web Data)
+Lagrede data fra nettleserutvidelser (Local Extension Settings)|Data stored by browser extensions (Local Extension Settings)
+Verdier av API-nøkler og miljøvariabler (bare navnene)|Values of API keys and environment variables (only the names)
+Minnet til andre programmer, lsass og kommandolinjer|The memory of other programs, lsass and command lines
+Andre brukeres profiler (også som administrator)|Other users' profiles (also as administrator)
+FUNN|FINDINGS
+av flere, lista stopper på|of more, the list stops at
+mapper som ble gått gjennom uten feil er bare talt|folders searched without errors are only counted
+TILLEGG: OPPSLAG ETTER SØKET|ADDENDUM: LOOKUPS AFTER THE SCAN
+innebygd|built-in
+ingen|none
+Program|Program
+Kjerne|Core

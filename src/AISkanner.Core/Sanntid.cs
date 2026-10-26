@@ -175,6 +175,7 @@ public sealed partial class Skanner
             try
             {
                 using var svar = klient.GetAsync($"http://127.0.0.1:{port}{sti}").GetAwaiter().GetResult();
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
                 if (!svar.IsSuccessStatusCode) continue;
                 var tekst = svar.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 if (tekst.Length > 2_000_000) continue;
@@ -190,7 +191,7 @@ public sealed partial class Skanner
                 else continue;
                 return navn;
             }
-            catch { }
+            catch (Exception e) { Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? "svarte ikke innen 0,8 s" : "svarte ikke som en AI-tjeneste"); }
         }
         return null;
     }
@@ -204,9 +205,9 @@ public sealed partial class Skanner
         if (Plattform.ErWindows)
         {
             // Bare navnene på variablene i registeret, aldri verdiene
-            using (var env = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Environment"))
+            using (var env = Tilgangslogg.Nokkel(Microsoft.Win32.Registry.CurrentUser, "Environment"))
                 foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
-            using (var env = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
+            using (var env = Tilgangslogg.Nokkel(Microsoft.Win32.Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
                 foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
         }
         // Filer som bare finnes når man har logget inn med en nøkkel (vi sjekker at de finnes, åpner dem ikke)
@@ -312,34 +313,44 @@ public sealed partial class Skanner
 
     private void Gaa(string mappe, int dybde, FilFunn ff, HashSet<string> hopp, long minLengde, Stopwatch frist)
     {
-        if (dybde < 0 || frist.Elapsed > TimeSpan.FromSeconds(45) || hopp.Contains(mappe)) return;
+        if (hopp.Contains(mappe)) return;
+        if (dybde < 0) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (frist.Elapsed > TimeSpan.FromSeconds(45))
+        {
+            Tilgangslogg.EnGang("disk-45", "Mappe", mappe, Utfall.Tidsgrense, "45 sekunder brukt på disken; resten av mappene ble ikke gått gjennom");
+            Tilgangslogg.Tell("Mappe", Utfall.Tidsgrense);
+            return;
+        }
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker")) return;
-        if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") return;
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
-        try { innhold = new DirectoryInfo(mappe).EnumerateFileSystemInfos(); } catch { return; }
+        try { innhold = new DirectoryInfo(mappe).EnumerateFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
         try
         {
             foreach (var e in innhold)
             {
                 FileAttributes a;
                 try { a = e.Attributes; } catch { continue; }
-                if ((a & FileAttributes.ReparsePoint) != 0 || (a & Skyfil) != 0) continue;   // aldri last ned skyfiler (OneDrive)
+                if ((a & Skyfil) != 0) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); continue; }   // aldri last ned skyfiler (OneDrive)
+                if ((a & FileAttributes.ReparsePoint) != 0) continue;
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
                 else if (e is FileInfo fil) SjekkFil(fil, mappe, ff, minLengde);
             }
+            Tilgangslogg.Tell("Mappe", Utfall.Lest);
         }
-        catch { }
+        catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
     }
 
     /// <summary>Bare filene i selve mappa (brukes for rotmappene, der undermappene gås gjennom parallelt).</summary>
     private void GaaFiler(string mappe, FilFunn ff, long minLengde)
     {
         FileInfo[] filer;
-        try { filer = new DirectoryInfo(mappe).GetFiles(); } catch { return; }
+        try { filer = new DirectoryInfo(mappe).GetFiles(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
+        Tilgangslogg.Logg("Mappe", mappe, Utfall.Lest, "startpunkt for gjennomgangen");
         foreach (var fil in filer)
         {
             try { if ((fil.Attributes & (FileAttributes.ReparsePoint | Skyfil)) != 0) continue; } catch { continue; }

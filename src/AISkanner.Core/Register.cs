@@ -34,7 +34,7 @@ public sealed partial class Skanner
         {
             try
             {
-                using var k = rot.OpenSubKey(sti);
+                using var k = Tilgangslogg.Nokkel(rot, sti);
                 if (k?.GetValue(navn) is { } v) return v;
             }
             catch { }
@@ -77,7 +77,7 @@ public sealed partial class Skanner
     {
         try
         {
-            using var klasser = rot.OpenSubKey(@"SOFTWARE\Classes");
+            using var klasser = Tilgangslogg.Nokkel(rot, @"SOFTWARE\Classes");
             foreach (var navn in klasser?.GetSubKeyNames() ?? Array.Empty<string>())
             {
                 if (navn.StartsWith(".") || navn.Contains(".") || navn.Length > 40) continue;
@@ -100,7 +100,7 @@ public sealed partial class Skanner
             try
             {
                 var progIder = new List<string>();
-                using (var k = rot.OpenSubKey($@"SOFTWARE\Classes\{ext}"))
+                using (var k = Tilgangslogg.Nokkel(rot, $@"SOFTWARE\Classes\{ext}"))
                 {
                     if (k?.GetValue(null) is string standard && standard.Length > 0) progIder.Add(standard);
                     using var ow = k?.OpenSubKey("OpenWithProgids");
@@ -133,7 +133,7 @@ public sealed partial class Skanner
     {
         try
         {
-            using var k = rot.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths");
+            using var k = Tilgangslogg.Nokkel(rot, @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths");
             foreach (var navn in k?.GetSubKeyNames() ?? Array.Empty<string>())
             {
                 using var app = k!.OpenSubKey(navn);
@@ -154,7 +154,7 @@ public sealed partial class Skanner
             {
                 try
                 {
-                    using var k = rot.OpenSubKey($@"SOFTWARE\Classes\{type}\{del}");
+                    using var k = Tilgangslogg.Nokkel(rot, $@"SOFTWARE\Classes\{type}\{del}");
                     foreach (var navn in k?.GetSubKeyNames() ?? Array.Empty<string>())
                     {
                         using var verb = k!.OpenSubKey(navn);

@@ -128,6 +128,7 @@ public sealed partial class Skanner
         {
             using (var s = new FileStream(localState, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
+                Tilgangslogg.Logg("Fil", localState, Utfall.Lest, "bare lista over eksperimentflagg (LesNettleserflagg på)");
                 if (s.Length > 32 * 1024 * 1024) return null;
                 bytes = new byte[s.Length];
                 s.LesAlt(bytes);
@@ -152,7 +153,7 @@ public sealed partial class Skanner
             }
             return liste;
         }
-        catch { return null; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", localState, e); return null; }
         finally { if (bytes != null) Array.Clear(bytes, 0, bytes.Length); }
     }
 }

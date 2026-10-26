@@ -8,11 +8,29 @@ namespace AISkanner;
 ///   Skygge-AI = alltid rød. Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør eller IT:
 ///     AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper og modeller brukeren har lagt inn selv.
 ///   Godkjent av IT (godkjentAi i regler.json eller godkjent-ai.txt) = grønn, så lenge den ikke er ukjent eller farlig.
+///     Godkjenning fjerner bare risikoen ved at AI-en ikke er godkjent. Faresignaler (åpen mot nettverket,
+///     høyrisikoland, nedlastingsmappe, skjult kode) gjelder fortsatt: rød eller gul med grunnen.
 ///   AI fra Windows og signerte leverandører beholder risikoen fra søket.
 /// </summary>
 public static class Risikoregler
 {
     public const string SkyggeDefinisjon = "AI som ikke er lagt inn av Windows, en signert leverandør eller IT.";
+
+    /// <summary>Faresignaler som gjør en godkjent AI rød: andre kan bruke den, eller data havner der de ikke bør.</summary>
+    private static readonly string[] RodeSignaler =
+    {
+        "Er åpen mot nettverket",
+        "Minst én av tjenestene hører hjemme i et land",
+    };
+
+    /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>
+    private static readonly string[] GuleSignaler =
+    {
+        "Kjører fra en nedlastings",
+        "Kan kjøre skjult kode",
+        "Ligger i en nedlastings",
+        "IT har blokkert modellen",
+    };
 
     private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "Windows Recall", "Microsoft Copilot" };
 
@@ -29,8 +47,12 @@ public static class Risikoregler
             if (!ukjent && !farlig && Godkjent(f, regler.GodkjentAi))
             {
                 f.Type = "Godkjent av IT";
-                f.Risiko = Risiko.Gronn;
-                f.RisikoGrunn = "Står på IT sin liste over godkjent AI.";
+                var rod = f.Advarsler.FirstOrDefault(a => RodeSignaler.Any(s => a.StartsWith(s, StringComparison.Ordinal)));
+                var gul = f.Advarsler.FirstOrDefault(a => GuleSignaler.Any(s => a.StartsWith(s, StringComparison.Ordinal)));
+                f.Risiko = rod != null ? Risiko.Rod : gul != null ? Risiko.Gul : Risiko.Gronn;
+                f.RisikoGrunn = (rod ?? gul) is { } signal
+                    ? $"Godkjent av IT, men: {signal}"
+                    : "Står på IT sin liste over godkjent AI.";
                 continue;
             }
             f.Type = type;

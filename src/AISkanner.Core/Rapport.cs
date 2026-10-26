@@ -40,6 +40,8 @@ public static class Rapport
             L($"YARA-regler for AI-modeller: {skanner.Yara.Regler.Count} regler ({(skanner.Yara.Kilde == "innebygd" ? "innebygde" : skanner.Yara.Kilde)}).");
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
+        if (skanner != null) L(Revisjon.Kortversjon(skanner));
+        L(Revisjon.IngenAi);
         L(new string('=', 60));
         // Oversikten: én linje per AI, samme som på skjermen. Detaljene følger under.
         if (liste.Count > 0)
@@ -93,7 +95,7 @@ public static class Rapport
 
     private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";
 
-    private static string Merke(Risiko r) => r switch { Risiko.Rod => "🔴 HØY", Risiko.Gul => "🟡 MIDDELS", _ => "🟢 LAV" };
+    internal static string Merke(Risiko r) => r switch { Risiko.Rod => "🔴 HØY", Risiko.Gul => "🟡 MIDDELS", _ => "🟢 LAV" };
 
     public static string MalTekst(Mal m)
     {
@@ -123,12 +125,15 @@ public static class Rapport
         funn = liste.Select(f => new
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
-            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
-            advarsler = f.Privat ? new List<string>() : f.Advarsler,
-            hvor = f.Privat ? new List<string>() : f.Hvor,
-            merknader = f.Privat ? new List<string>() : f.Merknader,
-            detaljer = f.Privat ? new List<string>() : f.Detaljer,
-            trafikk = f.Privat ? new List<Mal>() : f.Trafikk,
+            navn = f.Navn, gruppe = f.Gruppe, kort = f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
+            // Nettleserfunn er med, som i tekstrapporten: AI-domene, nettleser og profil, antall besøk, første og siste gang.
+            // Aldri hele adresser eller sidetitler: de leses aldri inn i minnet som funn.
+            forst = f.Forst, sist = f.Sist,
+            advarsler = f.Advarsler,
+            hvor = f.Hvor,
+            merknader = f.Merknader,
+            detaljer = f.Detaljer,
+            trafikk = f.Trafikk,
         }),
     }, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 }

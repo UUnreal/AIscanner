@@ -234,9 +234,16 @@ public sealed partial class Skanner
         {
             using var db = new WinSqlite(sti);
             db.Les(sql, grense, r => { try { if (!r.ErTom(0)) rad(r); } catch { } });
+            Tilgangslogg.Logg("Database", sti, Utfall.Lest, "lest skrivebeskyttet i minnet; ingen adresser logges eller lagres");
             return true;
         }
-        catch (Exception e) { Debug.WriteLine($"Kunne ikke lese {Path.GetFileName(sti)}: {e.Message}"); return false; }
+        catch (Exception e)
+        {
+            var laast = e.Message.Inneholder("locked") || e.Message.Inneholder("busy");
+            Tilgangslogg.Logg("Database", sti, laast ? Utfall.Laast : Tilgangslogg.Fra(e), laast ? "databasen er låst av nettleseren" : Tilgangslogg.Beskriv(e));
+            Debug.WriteLine($"Kunne ikke lese {Path.GetFileName(sti)}: {e.Message}");
+            return false;
+        }
     }
 
     /// <summary>Ord som kjennetegner en nettapp: første del av domenet, f.eks. "chatgpt", "gemini", "deepseek".</summary>

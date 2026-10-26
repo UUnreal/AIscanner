@@ -61,6 +61,7 @@ internal static class ModellGjenkjenning
             try
             {
                 using var doc = JsonDocument.Parse(File.ReadAllText(config));
+                Tilgangslogg.Logg("Fil", config, Utfall.Lest, "config.json ved modellen");
                 var r = doc.RootElement;
                 if (ark == null && r.TryGetProperty("model_type", out var mt) && mt.ValueKind == JsonValueKind.String) ark = mt.GetString();
                 if (vokab == null && r.TryGetProperty("vocab_size", out var vs) && vs.TryGetInt32(out var v)) vokab = v;
@@ -68,7 +69,7 @@ internal static class ModellGjenkjenning
                 if (bredde == null && r.TryGetProperty("hidden_size", out var hs) && hs.TryGetInt32(out var b)) bredde = b;
                 if (r.TryGetProperty("_name_or_path", out var np) && np.ValueKind == JsonValueKind.String) configNavn = np.GetString();
             }
-            catch { }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", config, e); }
         }
 
         // 3. Familie fra innholdet
@@ -117,6 +118,7 @@ internal static class ModellGjenkjenning
         try
         {
             using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 16);
+            Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "fingeravtrykk (2 MB)");
             using var sha = SHA256.Create();
             const int Blokk = 1 << 20;
             var buf = new byte[Blokk];
@@ -133,7 +135,7 @@ internal static class ModellGjenkjenning
             sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             return string.Concat(sha.Hash!.Take(8).Select(b => b.ToString("x2")));
         }
-        catch { return null; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
     /// <summary>config.json i samme mappe, eller i Hugging Face-lagerets snapshots-mappe for en blob.</summary>
@@ -177,6 +179,7 @@ internal static class ModellGjenkjenning
                 try
                 {
                     using var doc = JsonDocument.Parse(File.ReadAllText(fil.FullName));
+                    Tilgangslogg.Tell("Fil", Utfall.Lest);
                     if (!doc.RootElement.TryGetProperty("layers", out var lag) || lag.ValueKind != JsonValueKind.Array) continue;
                     // .../manifests/registry.ollama.ai/library/qwen2.5/7b  ->  qwen2.5:7b
                     var deler = fil.FullName.Substring(manifester.Length).Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -192,7 +195,7 @@ internal static class ModellGjenkjenning
                             kart[hex] = kart.TryGetValue(hex, out var fra) ? fra + ", " + navn : navn;
                         }
                 }
-                catch { }
+                catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); }
             }
         }
         catch { }

@@ -19,6 +19,7 @@ public static class TcpTabell
         if (!Plattform.ErWindows) return liste;
         Les(AF_INET, liste);
         Les(AF_INET6, liste);
+        Tilgangslogg.Logg("Port", "lyttende porter (GetExtendedTcpTable)", Utfall.Lest, $"{liste.Count} porter");
         return liste;
     }
 

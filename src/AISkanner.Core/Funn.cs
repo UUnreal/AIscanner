@@ -40,7 +40,10 @@ public sealed class Funn
     /// <summary>Kort om hvor mye noe brukes, f.eks. "Brukes ofte i Chrome."</summary>
     public string? Bruk { get; set; }
     public List<string> Advarsler { get; } = new();
-    /// <summary>Bygger på nettleserdata. Vises på skjermen, men lagres aldri (heller ikke i rapporten).</summary>
+    /// <summary>
+    /// Bygger på nettleserdata (historikk eller DNS). Analyseres i minnet og lagres aldri av seg selv.
+    /// Står i rapporten brukeren selv laster ned (AI-domene, nettleser, besøk, tider), men ikke i revisjonsloggen.
+    /// </summary>
     public bool Privat { get; set; }
     public List<string> Hvor { get; } = new();
     public List<string> Merknader { get; } = new();

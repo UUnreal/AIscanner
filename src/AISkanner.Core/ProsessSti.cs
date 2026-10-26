@@ -32,9 +32,15 @@ public static class ProsessSti
 
     public static string? Hent(Process p)
     {
-        if (!Plattform.ErWindows || p.Id <= 4 || Urorlige.Contains(p.ProcessName)) return null;
+        if (!Plattform.ErWindows) return null;
+        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver); return null; }
         var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
-        if (h == IntPtr.Zero) return null;
+        if (h == IntPtr.Zero)
+        {
+            Tilgangslogg.Tell("Prosess", Marshal.GetLastWin32Error() == 5 ? Utfall.Nektet : Utfall.Feil);
+            return null;
+        }
+        Tilgangslogg.Tell("Prosess", Utfall.Lest);
         try
         {
             var sb = new StringBuilder(1024);

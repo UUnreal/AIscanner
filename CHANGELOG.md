@@ -29,6 +29,44 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.15.0] - 2026-10-26
+
+Ikke testet på Windows.
+
+### Sikkerhet
+- **Godkjent AI med faresignaler ble grønn.** En AI på godkjentlista ble grønn selv om den var åpen mot nettverket
+  eller kjørte fra en nedlastingsmappe. Nå blir den rød (åpen mot nettverket, høyrisikoland) eller gul (nedlastinger,
+  skjult kode, blokkert av IT), med grunnen «Godkjent av IT, men: …». Tre nye kontroller i selvtesten.
+
+### Lagt til
+- **Datagrunnlag (utviklermodus).** «Datagrunnlag» nederst i resultatet viser alt søket prøvde å lese, hvilken sjekk
+  som gjorde det og hvordan det gikk: lest, finnes ikke, nektet tilgang, låst, stoppet av antivirus, hoppet over,
+  tidsgrense eller feil. Fire faner: Oversikt (totaler, Defender og per sjekk), Ikke dekket (det søket ikke fikk
+  lest, og hvorfor), Alt søket leste (med filter per utfall) og Regler og bevis (SHA-256 av programmet og
+  regelfilene, og det som aldri leses med vilje). Ingenting av dette lagres.
+- **Antivirus.** Feil 225 og 226 fra Windows vises som «stoppet av antivirus». Som administrator leses Defenders egen
+  logg (hendelse 1116–1123) for tiden søket kjørte, og hendelser som gjelder dette programmet vises.
+- **Revisjonslogg Ja/Nei** på startskjermen. Nei (standard): ingenting lagres. Ja: én ny fil per søk i
+  `Dokumenter\AI-skanner\AI-revisjon_<PC>_<dato>_<tid>.txt`, aldri over en gammel. Inneholder versjon, modus,
+  start og slutt, SHA-256 av program og regelfiler, tid og utfall per sjekk, Defender, funnene og hver tilgang.
+  Siste linje er SHA-256 av alt over. NVD-oppslag legges til sist med ny kontrollsum. Aldri nettadresser, innhold i
+  filer eller verdier av nøkler. Valget følger med når programmet starter på nytt som administrator.
+- **«Ingen AI i programmet»** på startskjermen, i rapporten, i revisjonsloggen og i datagrunnlaget. Funnene kommer fra
+  faste regler (filformat, YARA, `regler.json` og kjente adresser), ikke fra en AI-modell.
+- Rapporten har en linje med datagrunnlaget: hvor mye som ble lest, og hva som ikke ble dekket.
+- `AISkanner.Cli --revisjon` skriver revisjonsloggen, `--datagrunnlag` skriver datagrunnlaget som JSON.
+- Selvtesten har 14 nye kontroller (nå 29): feilkoder til utfall (225/226 = antivirus), register-stier oversettes ikke,
+  SHA-256, og at revisjonsloggen aldri får domener eller besøk fra nettleseren.
+
+### Endret
+- **Rapporten viser hvor AI brukes i nettleseren, også i JSON.** Tekstrapporten tok allerede med AI-domene, nettleser
+  og profil, besøk og tider, mens JSON fjernet dem. Nå er de like: begge viser nettleser-AI, og begge mangler hele
+  adresser og sidetitler. Regelen er at nettleserdata analyseres i minnet og aldri lagres av seg selv; bare rapporten
+  brukeren selv laster ned, inneholder disse funnene. Revisjonsloggen har bare navn, type og sted.
+- En sjekk som krasjer, vises nå som «feil» under Ikke dekket i stedet for å se ut som «ingen funn».
+- Språkvalget følger med når programmet starter på nytt som administrator.
+- Samme versjonsnummer i programmet, kjernen og kommandolinjen (`src/Directory.Build.props`).
+
 ## [2.14.0] - 2026-10-26
 
 Ikke testet på Windows.

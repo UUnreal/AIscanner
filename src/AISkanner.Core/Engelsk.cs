@@ -26,7 +26,7 @@ public static class Engelsk
 
     // Windows-stier (til neste " · " eller slutten), nettadresser og ord med punktum (domener, filnavn)
     private static readonly Regex Beskyttet = new(
-        @"[A-Za-z]:\\.*?(?=\s·\s|\s\(|$)|\\\\[^\s]+|https?://\S+|\b[\w-]+(?:\.[\w-]+)*\.[A-Za-z][\w-]+\b", RegexOptions.Compiled, Grense);
+        @"[A-Za-z]:\\.*?(?=\s·\s|\s\(|$)|\bHK(?:LM|CU|CR|U)\\.*?(?=\s·\s|\s\(|$)|\\\\[^\s]+|https?://\S+|\b[\w-]+(?:\.[\w-]+)*\.[A-Za-z][\w-]+\b", RegexOptions.Compiled, Grense);
 
     private static Ordliste Last()
     {

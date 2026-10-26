@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt] [--en]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -45,6 +45,8 @@ if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }
+if (args.Contains("--revisjon")) { Console.WriteLine(Revisjon.Tekst(funn, skanner, Nettverk.ErAdmin() ? "administrator" : "bruker", args.Contains("--en"))); return 0; }
 Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;
 
@@ -134,6 +136,40 @@ static class Selvtest
         Sjekk("engelsk: type", Engelsk.Til("Ukjent AI") == "Unknown AI", true);
         Sjekk("engelsk: sti røres ikke", Engelsk.Til(@"Fil: C:\Users\x\Nedlastinger\modell.gguf · GGUF") == @"File: C:\Users\x\Nedlastinger\modell.gguf · GGUF", true);
         Sjekk("engelsk: land og domene", Engelsk.Til("Sender data til Kina (api.deepseek.com).") == "Sends data to China (api.deepseek.com).", true);
+
+        // Godkjent AI med faresignaler skal ikke bli grønn (godkjenning overstyrer aldri ekte fare)
+        var regelsett = new Regelsett(); regelsett.GodkjentAi.Add("Ollama");
+        var aapen = new Funn { Navn = "Ollama", Kategori = "Lokal AI", Risiko = Risiko.Rod, Hvorfor = "x", Regel = new Produkt { Navn = "Ollama", Kategori = "Lokal AI", Risiko = "gul", Hvorfor = "y" } };
+        aapen.Advarsel("Er åpen mot nettverket. Andre på samme nett kan bruke den uten passord.");
+        Risikoregler.Bruk(new[] { aapen }, regelsett);
+        Sjekk("godkjent: åpen mot nettverket er rød", aapen.Risiko == Risiko.Rod, true);
+        var nedlastet = new Funn { Navn = "Ollama", Kategori = "Lokal AI", Risiko = Risiko.Rod, Hvorfor = "x", Regel = new Produkt { Navn = "Ollama", Kategori = "Lokal AI", Risiko = "gul", Hvorfor = "y" } };
+        nedlastet.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
+        Risikoregler.Bruk(new[] { nedlastet }, regelsett);
+        Sjekk("godkjent: kjører fra nedlastinger er gul", nedlastet.Risiko == Risiko.Gul, true);
+        var ren = new Funn { Navn = "Ollama", Kategori = "Lokal AI", Risiko = Risiko.Rod, Hvorfor = "x", Regel = new Produkt { Navn = "Ollama", Kategori = "Lokal AI", Risiko = "gul", Hvorfor = "y" } };
+        Risikoregler.Bruk(new[] { ren }, regelsett);
+        Sjekk("godkjent: uten faresignaler er grønn", ren.Risiko == Risiko.Gronn, true);
+
+        // Datagrunnlag: feilkoder fra Windows gir riktig utfall (antivirus 225/226 skal aldri se ut som "finnes ikke")
+        Sjekk("tilgang: 225 = stoppet av antivirus", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x800700E1))) == Utfall.Blokkert, true);
+        Sjekk("tilgang: 226 = stoppet av antivirus", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x800700E2))) == Utfall.Blokkert, true);
+        Sjekk("tilgang: 32 = låst", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x80070020))) == Utfall.Laast, true);
+        Sjekk("tilgang: ingen adgang = nektet", Tilgangslogg.Fra(new UnauthorizedAccessException()) == Utfall.Nektet, true);
+        Sjekk("tilgang: annen feilkilde er ikke Windows-feil", Tilgangslogg.Kode(new IOException("x", 225)) == 0, true);
+        Sjekk("engelsk: register-sti røres ikke", Engelsk.Til(@"HKCU\Software\ingen\feil") == @"HKCU\Software\ingen\feil", true);
+        // Revisjonsloggen: siste linje er SHA-256 av alt over
+        Sjekk("revisjon: SHA-256 stemmer", Revisjon.Sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", true);
+        // Revisjonsloggen skal aldri ta med nettleserdata: domener, besøk og tider fra private funn
+        var privat = new Funn { Navn = "Mulige AI-nettsteder (1)", Kategori = "Nettleser-AI (nettsted)", Risiko = Risiko.Rod, Hvorfor = "x", Privat = true };
+        privat.Merknad("hemmelig-kunde.ai besøkt 12 ganger");
+        privat.Detalj("Chrome · Default · hemmelig-kunde.ai · 12 besøk · sist 26. okt. 2026");
+        var revisjonstekst = Revisjon.Tekst(new[] { privat }, new Skanner(new Regelsett()), "bruker", false);
+        Sjekk("revisjon: ingen domener fra nettleseren", revisjonstekst.Contains("hemmelig-kunde"), false);
+        Sjekk("revisjon: ingen besøk fra nettleseren", revisjonstekst.Contains("besøk"), false);
+        // Rapportene (tekst og JSON) skal vise hvor AI brukes i nettleseren, men aldri hele adresser
+        Sjekk("rapport: tekst viser AI-nettsted", Rapport.Tekst(new[] { privat }).Contains("hemmelig-kunde.ai"), true);
+        Sjekk("rapport: JSON viser AI-nettsted", Rapport.Json(new[] { privat }).Contains("hemmelig-kunde.ai"), true);
         Sjekk("cdn: vanlig adresse er ikke CDN", IpLand.Cdn(ip("101.42.18.7"), new[] { "api.deepseek.com" }) == null, true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");

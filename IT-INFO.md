@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.13.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.15.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -10,7 +10,8 @@ står i [SECURITY.md](SECURITY.md).
 - Leser bare. Endrer, sletter og installerer ingenting.
 - Trenger ikke administrator. Bare søk som administrator ber om det, og bare når brukeren velger det.
 - Sender bare produktord (for eksempel `ollama`) til NVD. Ellers bare `127.0.0.1`.
-- Lagrer ingenting mellom søk.
+- Lagrer ingenting mellom søk, med mindre brukeren velger revisjonslogg (se under).
+- Har ingen AI-modell. Funnene kommer fra faste regler: filformat, YARA, `regler.json` og kjente adresser.
 
 ## Hvordan den kjører
 
@@ -150,9 +151,45 @@ PC-navn, brukernavn, stier og funn sendes aldri. Det gjøres ingen DNS-oppslag o
 |---|---|---|
 | WebView2-data | `%LOCALAPPDATA%\AISkanner\Vindu-<pid>` | Slettes når programmet lukkes. Rester etter avbrutte kjøringer slettes ved neste start. |
 | Rapport | Der brukeren velger, som `AI-rapport_<PC>_<dato>_<tid>.txt`. Skriver aldri over en fil som finnes. | Bare når brukeren trykker «Last ned rapport» |
+| Revisjonslogg | `Dokumenter\AI-skanner\AI-revisjon_<PC>_<dato>_<tid>.txt`. Ny fil per søk, aldri over en gammel. | Bare når brukeren har valgt Ja på startskjermen. Blir liggende til noen sletter den. |
 
-Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk. Rapporten inneholder nettleserfunn
-bare som nettleser, profil og domenenavn, aldri hele adresser.
+Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk. Nettleserdata lagres aldri av seg selv.
+Rapporten brukeren selv laster ned (tekst og JSON), viser hvor AI brukes i nettleseren: AI-domene, nettleser og
+profil, antall besøk og første og siste gang. Aldri hele adresser eller sidetitler. Revisjonsloggen har bare navn, type
+og sted for slike funn.
+
+## Datagrunnlag og revisjonslogg
+
+**Datagrunnlag** (knappen nederst i resultatet) viser alt søket prøvde å lese: hvilken sjekk, hva (fil, mappe,
+register, database, port, prosess, nettverk, hendelseslogg), hvor, og utfallet:
+
+| Utfall | Betyr |
+|---|---|
+| lest | Lest uten feil |
+| finnes ikke | Stedet finnes ikke på denne PC-en (vanlig: de fleste AI-programmer er ikke installert) |
+| nektet tilgang | Windows sa nei (feil 5). Ofte mapper som krever administrator |
+| låst | Et annet program holder fila (feil 32/33), for eksempel nettleserhistorikk mens nettleseren er åpen |
+| stoppet av antivirus | Windows-feil 225/226, eller en Defender-hendelse (1116–1123) for dette programmet under søket |
+| hoppet over | Med vilje: skyfiler (OneDrive), systemmapper, dybdegrense eller sikkerhetsprosesser |
+| tidsgrense | Disken (45 s) eller AppData (40 s) tok for lang tid. Resten ble ikke gått gjennom |
+| feil | Annen feil, eller en sjekk som stoppet |
+
+Mapper som gås gjennom uten feil, telles i stedet for å listes (det kan være titusener). Alt som feiler, listes
+enkeltvis. Vinduet viser opptil 3000 oppføringer, revisjonsloggen opptil 20 000. Tellingene er alltid komplette.
+
+Defenders logg (`Microsoft-Windows-Windows Defender/Operational`) krever som regel administrator. Som vanlig
+bruker står det at den ikke ble lest, men feil 225/226 på selve fila vises uansett. Andre antivirusprogrammer har egne
+logger som ikke leses.
+
+**Revisjonslogg** er av som standard. Med Ja skrives én tekstfil per søk med `FileMode.CreateNew` (skriver aldri
+over). Fila har versjon, PC og bruker, modus, språk, start og slutt, SHA-256 av programmet, kjernen, `regler.json`,
+`ai-modeller.yar` og `godkjent-ai.txt`, tid og utfall per sjekk, Defender, funnene (risiko, navn, type, sted) og hver
+tilgang. Siste linje er SHA-256 av alt over, så endringer kan oppdages. NVD-oppslag kommer etter søket og legges til
+sist med ny kontrollsum over hele fila. Kontrollsummen beviser ikke hvem som skrev fila: den som kan endre fila, kan
+også regne ut en ny sum. Vil dere ha sporbarhet, send fila til et sted brukeren ikke kan skrive.
+
+Revisjonsloggen inneholder aldri nettadresser fra nettleseren, innhold i filer eller verdier av nøkler. Private funn
+(nettleserhistorikk og DNS) står bare med navn, type og sted, som i JSON-rapporten.
 
 ## Søk som administrator (valgfritt)
 
@@ -180,6 +217,9 @@ Ikke testet på Windows ennå.
 - **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet, med ett navn eller domene per linje,
   eller bruk `godkjentAi` i `regler.json`. Bruk eksakte produktnavn og offisielle domener (se
   [SECURITY.md](SECURITY.md#kjente-svakheter)).
+- **Godkjenning overstyrer aldri faresignaler.** En godkjent AI som er åpen mot nettverket eller sender til et
+  høyrisikoland, blir rød. En godkjent AI som kjører fra nedlastinger eller en midlertidig mappe, kan kjøre skjult kode
+  eller er blokkert av IT, blir gul. Grunnen står som «Godkjent av IT, men: …».
 - Ukjent AI, farlige modellfiler og data til høyrisikoland (`hoyrisikoLand`, standard CN, RU, IR, KP og BY) er
   røde uansett hva som står på lista.
 - På en jobb-PC uten godkjentliste blir de fleste funn røde.

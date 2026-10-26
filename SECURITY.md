@@ -58,7 +58,8 @@ Full liste står i [IT-INFO.md](IT-INFO.md). Kort sagt:
 
 **Leser** (bare lesing): prosessliste og filstier, TCP-tabeller, DNS-bufferen, deler av registeret, mappenavn og
 størrelser, de første bytene og metadata-hodet i modellfiler, utvidelsesmanifester, `Preferences` (bare
-`site_engagement`) og nettleserhistorikk (`History` og `places.sqlite`, bare AI-domener beholdes, og bare i minnet).
+`site_engagement`) og nettleserhistorikk (`History` og `places.sqlite`, bare AI-domener beholdes, og bare i minnet). AI-domener med nettleser, besøk og tider står bare i rapporten brukeren
+selv laster ned.
 
 **Leser aldri:** `Login Data` (passord), `Cookies`, `Web Data`, `Local Extension Settings` (lommebøker), verdien av
 API-nøkler, e-post eller dokumentinnhold, og minnet til andre prosesser. `lsass`, `csrss`, `winlogon` og
@@ -71,6 +72,14 @@ første bytene og metadata-hodet i store filer for å kjenne igjen modellformate
 **Unntak, av som standard:** `Local State` i Chrome og Edge inneholder AI-flaggene, men også nettleserens krypterte
 nøkkel. Den leses bare med `AISkanner.Cli --flagg`. Da leser en strømleser bare `browser.enabled_labs_experiments`,
 hopper over alt annet uten å tolke det, og nuller ut bytene etterpå. Vinduet har ikke dette valget.
+
+**Ingen AI-modell i programmet.** Gjenkjenningen er regelbasert: filformat (GGUF, safetensors, ONNX og flere),
+YARA-regler, `regler.json` og kjente adresser. Det finnes ingen modell som kan gi ulike svar på samme data, og ingen
+modell som kan lures med innhold i filene den leser.
+
+**Datagrunnlag og revisjonslogg** inneholder bare stier, navn og utfall. Revisjonsloggen skrives bare når brukeren
+velger Ja, med `FileMode.CreateNew`. SHA-256-linjen oppdager endringer, men beviser ikke opphav: den som kan skrive
+fila, kan regne ut ny sum.
 
 ## Herding
 

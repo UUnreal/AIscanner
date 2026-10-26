@@ -113,7 +113,10 @@ Risikoen settes i to trinn.
 type = Type(funn)                                    (Ukjent AI, AI-nettsted, AI-agent, Fra leverandør, …)
 farlig = «Farlig AI-modellfil» eller sender data til høyrisikoland
 
-hvis ikke ukjent og ikke farlig og står på godkjentlista → GRØNN, type «Godkjent av IT»
+hvis ikke ukjent og ikke farlig og står på godkjentlista → type «Godkjent av IT»:
+    åpen mot nettverket eller høyrisikoland            → RØD
+    nedlastingsmappe, skjult kode, blokkert av IT       → GUL
+    ellers                                              → GRØNN
 ellers hvis ukjent                                   → RØD
 ellers hvis skygge-AI (ErSkygge(type))               → RØD
 ellers                                               → beholder risikoen fra trinn 1

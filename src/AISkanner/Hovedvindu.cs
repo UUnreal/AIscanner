@@ -20,6 +20,9 @@ public sealed class Hovedvindu : Form
     private CancellationTokenSource? _nvdStopp;
     // Språk: følger Windows til brukeren trykker på et flagg. Lagres ikke mellom kjøringer.
     private bool _engelsk = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("nb" or "nn" or "no");
+    // Revisjonslogg: av til brukeren velger Ja på startskjermen. Da skrives én ny fil per søk, aldri over en gammel.
+    private bool _revisjon;
+    private string? _revisjonSti;
     private bool _vist;
     private double _sekunder;
     private string _nvdStatus = "av";
@@ -31,6 +34,10 @@ public sealed class Hovedvindu : Form
     public Hovedvindu(string[] args)
     {
         _args = args;
+        // Valgene følger med når programmet startes på nytt som administrator
+        _revisjon = args.Contains("--revisjon");
+        if (args.Contains("--en")) _engelsk = true;
+        else if (args.Contains("--no")) _engelsk = false;
         Text = "AI-skanner";
         ClientSize = new Size(980, 760);
         MinimumSize = new Size(560, 600);
@@ -79,7 +86,7 @@ public sealed class Hovedvindu : Form
         // Siden får vite om vi kjører som administrator, så startknappene viser riktig valg
         w.NavigationCompleted += (_, _) =>
         {
-            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no" });
+            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
 
@@ -126,12 +133,14 @@ public sealed class Hovedvindu : Form
         using var doc = JsonDocument.Parse(json);
         var m = doc.RootElement;
         var type = m.TryGetProperty("type", out var t) ? t.GetString() : null;
+        if (type is "sok" or "admin" && m.TryGetProperty("revisjon", out var rv)) _revisjon = rv.ValueKind == JsonValueKind.True;
         if (type == "sok" && !_soker)
         {
             // Historikk og sikkerhetshull er alltid med. Bare IT kan slå dem av med --uten-historikk / --uten-nvd.
             await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         }
         else if (type == "lagre") Lagre();
+        else if (type == "logg" && _skanner != null && !_soker) SendLogg();
         else if (type == "admin" && !_soker)
         {
             // Allerede administrator: søk med en gang. Ellers starter programmet på nytt via Windows sin godkjenning (UAC).
@@ -144,6 +153,7 @@ public sealed class Hovedvindu : Form
             // Bytter språk uten nytt søk: samme funn sendes på nytt, oversatt
             _engelsk = sp.GetString() == "en";
             if (_vist && !_soker) SendResultat(behold: true);
+            if (_vist && !_soker && m.TryGetProperty("logg", out var lg) && lg.ValueKind == JsonValueKind.True) SendLogg();
         }
     }
 
@@ -156,14 +166,17 @@ public sealed class Hovedvindu : Form
             var klokke = System.Diagnostics.Stopwatch.StartNew();
             _skanner = new Skanner(_regler, historikk);
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
+            _revisjonSti = null;
             _resultat = await Task.Run(() => _skanner.KjorAsync(false));
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
             _vist = true;
+            if (_revisjon) SkrivRevisjon(null);
             SendResultat(behold: false);
         }
         catch (Exception e)
         {
+            if (_revisjon && _skanner != null) SkrivRevisjon(e.Message);
             Send(new { type = "feil", tekst = (_engelsk ? "The scan stopped: " : "Søket stoppet: ") + e.Message });
             return;
         }
@@ -171,12 +184,26 @@ public sealed class Hovedvindu : Form
         if (!nvd) return;
         // Et nytt søk stopper oppslagene fra forrige
         var stopp = _nvdStopp = new CancellationTokenSource();
+        var forNvd = _skanner!.Logg.Oppforinger.Count;
+        var revisjonSti = _revisjonSti;
         try
         {
             await Nvd.SjekkAsync(_resultat, null, stopp.Token,
                 f => Send(new { type = "nvd", id = _resultat.IndexOf(f), merk = f.Advarsler.Skip(1).Concat(f.Merknader).Select(x => _engelsk ? Engelsk.Til(x) : x).ToList() }));
             _nvdStatus = "ferdig";
             Send(new { type = "nvdFerdig" });
+            // NVD-oppslagene kommer etter søket: de legges til sist i revisjonsloggen, med ny kontrollsum
+            if (revisjonSti != null && revisjonSti == _revisjonSti)
+            {
+                var nye = _skanner.Logg.Oppforinger.Skip(forNvd).ToList();
+                if (nye.Count > 0)
+                {
+                    var gammel = File.ReadAllText(revisjonSti, Encoding.UTF8);
+                    using var fs = new FileStream(revisjonSti, FileMode.Append, FileAccess.Write);
+                    using var w = new StreamWriter(fs, new UTF8Encoding(false));
+                    w.Write(Revisjon.Tillegg(gammel, nye, _engelsk));
+                }
+            }
         }
         catch { }
     }
@@ -199,6 +226,8 @@ public sealed class Hovedvindu : Form
                 sendtTekst = T(Rapport.Storrelse(sendt)),
                 nvd = _nvdStatus,
                 admin = Nettverk.ErAdmin(),
+                revisjon = _revisjonSti,
+                revisjonFeil = _revisjon && _revisjonSti == null,
                 telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper } : null,
             },
             funn = _resultat.Select((f, id) => new
@@ -244,7 +273,8 @@ public sealed class Hovedvindu : Form
     /// <summary>Åpner Utforsker med fila eller mappa markert. Bare stier som faktisk står i et funn godtas.</summary>
     private void VisIUtforsker(string? sti)
     {
-        if (string.IsNullOrWhiteSpace(sti) || !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
+        if (string.IsNullOrWhiteSpace(sti)) return;
+        if (sti != _revisjonSti && !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
         sti = sti!.Trim();
         if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
         if (sti == null || (!File.Exists(sti) && !Directory.Exists(sti))) return;
@@ -262,7 +292,7 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",
@@ -275,6 +305,31 @@ public sealed class Hovedvindu : Form
             Send(new { type = "feil", tekst = _engelsk ? "Admin was not approved. Scan as user, or try again." : "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen." });
         }
     }
+
+    /// <summary>
+    /// Skriver revisjonsloggen for søket: én ny fil med tidsstempel i Dokumenter\AI-skanner. Skriver aldri over en fil som finnes.
+    /// Inneholder bare stier, navn og utfall: aldri adresser fra nettleseren, filinnhold eller verdier av nøkler.
+    /// </summary>
+    private void SkrivRevisjon(string? feil)
+    {
+        try
+        {
+            var mappe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "AI-skanner");
+            Directory.CreateDirectory(mappe);
+            var navn = $"{(_engelsk ? "AI-audit" : "AI-revisjon")}_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
+            var sti = Path.Combine(mappe, navn + ".txt");
+            for (int n = 2; File.Exists(sti); n++) sti = Path.Combine(mappe, $"{navn} ({n}).txt");
+            var tekst = Revisjon.Tekst(_resultat, _skanner!, Nettverk.ErAdmin() ? "administrator" : "bruker", _engelsk, feil);
+            using var fs = new FileStream(sti, FileMode.CreateNew, FileAccess.Write);
+            using var w = new StreamWriter(fs, new UTF8Encoding(false));
+            w.Write(tekst);
+            _revisjonSti = sti;
+        }
+        catch { _revisjonSti = null; }
+    }
+
+    /// <summary>Utviklermodus: alt søket prøvde å lese, hvorfor, og hvordan det gikk. Ingenting av dette lagres.</summary>
+    private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti) });
 
     private void Lagre()
     {

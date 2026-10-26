@@ -13,6 +13,7 @@ public static class Nvd
     public static async Task SjekkAsync(IEnumerable<Funn> funn, IProgress<string>? status, CancellationToken ct, Action<Funn>? ferdig = null)
     {
         var liste = funn.Where(f => !string.IsNullOrWhiteSpace(f.Regel?.Nvd)).ToList();
+        Tilgangslogg.Sjekk.Value = "NVD";
         for (int i = 0; i < liste.Count; i++)
         {
             var f = liste[i];
@@ -25,12 +26,13 @@ public static class Nvd
                 svar.EnsureSuccessStatusCode();
                 using var doc = JsonDocument.Parse(await svar.Content.ReadAsStringAsync());
                 int antall = doc.RootElement.TryGetProperty("totalResults", out var t) ? t.GetInt32() : 0;
+                Tilgangslogg.Logg("Nettverk", $"services.nvd.nist.gov ord=\"{ord}\"", Utfall.Lest, $"{antall} CVE");
                 f.Merknad(antall > 0
                     ? $"NVD: {antall} kjente sårbarheter (CVE) nevner \"{ord}\". Hold programmet oppdatert."
                     : $"NVD: ingen kjente sårbarheter funnet for \"{ord}\".");
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-            catch { f.Merknad("NVD: oppslaget feilet (ingen nett eller for mange forespørsler)."); }
+            catch (Exception e) { Tilgangslogg.Feil("Nettverk", $"services.nvd.nist.gov ord=\"{ord}\"", e); f.Merknad("NVD: oppslaget feilet (ingen nett eller for mange forespørsler)."); }
             ferdig?.Invoke(f);
 
             // NVD tillater 5 forespørsler per 30 sekunder uten API-nøkkel: de fem første går med en gang

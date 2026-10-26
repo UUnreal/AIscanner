@@ -30,6 +30,7 @@ public static class Nettverk
         if (!Plattform.ErWindows) return liste;
         Les(AF_INET, liste);
         Les(AF_INET6, liste);
+        Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable)", Utfall.Lest, $"{liste.Count} forbindelser");
         return liste.Where(t => !IPAddress.IsLoopback(t.Fjern) && !t.Fjern.Equals(IPAddress.Any) && !t.Fjern.Equals(IPAddress.IPv6Any)).ToList();
     }
 
@@ -114,7 +115,7 @@ public static class Nettverk
         var sett = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            if (!DnsGetCacheDataTable(out var post)) return kart;
+            if (!DnsGetCacheDataTable(out var post)) { Tilgangslogg.Logg("Nettverk", "DNS-bufferen", Utfall.Feil, "Windows ga ingen DNS-buffer"); return kart; }
             // DNS_CACHE_ENTRY: pNext, pszName, wType, wDataLength, dwFlags
             while (post != IntPtr.Zero && sett.Count < 3000)
             {
@@ -123,7 +124,8 @@ public static class Nettverk
                 post = Marshal.ReadIntPtr(post);
             }
         }
-        catch { return kart; }
+        catch (Exception e) { Tilgangslogg.Feil("Nettverk", "DNS-bufferen", e); return kart; }
+        Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp)", Utfall.Lest, $"{sett.Count} navn");
 
         // DNS_RECORD: pNext, pName, wType, wDataLength, Flags, dwTtl, dwReserved, Data
         int data = 2 * IntPtr.Size + 16;
@@ -217,10 +219,12 @@ public sealed class Datamaling : IDisposable
     /// <summary>Slår på tellerne for alle åpne forbindelser. Null hvis programmet ikke kjører som administrator.</summary>
     public static Datamaling? Start()
     {
-        if (!Nettverk.ErAdmin()) return null;
+        if (!Nettverk.ErAdmin()) { Tilgangslogg.Logg("Nettverk", "Datamengde per forbindelse (EStats)", Utfall.HoppetOver, "krever administrator"); return null; }
         var m = new Datamaling();
-        foreach (var t in Nettverk.Tilkoblinger())
+        var alle = Nettverk.Tilkoblinger();
+        foreach (var t in alle)
             if (m.Sett(t, true)) m._pa.Add(t);
+        Tilgangslogg.Logg("Nettverk", "Datamengde per forbindelse (EStats)", m._pa.Count > 0 || alle.Count == 0 ? Utfall.Lest : Utfall.Nektet, $"måler {m._pa.Count} av {alle.Count} forbindelser");
         return m;
     }
 

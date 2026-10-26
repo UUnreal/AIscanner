@@ -70,6 +70,56 @@
   .inkludert { margin-top: 22px; max-width: 470px; color: var(--dempet); font-size: 13px; line-height: 1.45; }
   .feil { color: var(--rod); font-size: 14px; min-height: 20px; }
   .tillit i { font-style: normal; }
+  .revisjon { display: inline-flex; align-items: center; gap: 10px; background: var(--kort); border-radius: 980px; padding: 4px 4px 4px 16px; box-shadow: var(--skygge); margin-bottom: 14px; font-size: 13.5px; max-width: 100%; }
+  .revisjon b { font-weight: 600; white-space: nowrap; }
+  .revisjon small { color: var(--dempet); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .revisjon .bryter { border-radius: 980px; }
+  .revisjon .bryter button { border-radius: 980px; padding: 4px 14px; }
+  @media (max-height: 820px) {
+    #start { gap: 6px; }
+    .storTittel { font-size: 30px; }
+    .valg { width: 230px; height: 230px; margin: 14px 0 12px; }
+    .inkludert { margin-top: 12px; }
+  }
+  .bryter { display: inline-flex; background: var(--fyll); border-radius: 9px; padding: 2px; flex: none; }
+  .bryter button { border: 0; background: none; color: var(--dempet); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 7px; cursor: pointer; }
+  .bryter button.valgt { background: var(--kort); color: var(--tekst); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .bryter button.valgt[data-r="ja"] { color: var(--bla); }
+  /* Utviklermodus: datagrunnlaget */
+  .faner { display: flex; gap: 6px; flex: none; margin: 10px 0 2px; flex-wrap: wrap; }
+  .faner button, .filter button { border: 0; background: var(--fyll); color: var(--tekst); font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
+  .faner button.valgt, .filter button.valgt { background: var(--bla); color: #fff; }
+  .faner button .ant { opacity: .7; margin-left: 4px; }
+  .filter { display: flex; gap: 5px; flex-wrap: wrap; flex: none; margin-bottom: 6px; }
+  .filter button { font-size: 12px; padding: 3px 10px; }
+  .ufliser { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; flex: none; }
+  .uflis { background: var(--fyll); border-radius: 12px; padding: 7px 11px; min-width: 0; }
+  .uflis b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+  .uflis small { display: block; font-size: 12px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uflis.mangler.har b { color: var(--rod); }
+  .uflis.u-blokkert.har { background: var(--rod-myk); }
+  .avLinje { display: flex; gap: 8px; align-items: center; background: var(--fyll); border-radius: 10px; padding: 7px 10px; font-size: 13px; flex: none; margin-top: 6px; }
+  .avLinje.ok::before, .avLinje.ikke::before { content: ""; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--gronn); }
+  .avLinje.ikke::before { background: var(--gul); }
+  .dl { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .dl ul { display: grid; gap: 4px; }
+  .detalj li.post { padding: 5px 10px; gap: 10px; }
+  .post .ut { flex: none; width: 128px; font-size: 12px; font-weight: 600; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post .ut::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--gronn); vertical-align: 1px; }
+  .post .ut.u-ikkefunnet::before, .post .ut.u-hoppetover::before { background: var(--dempet); opacity: .5; }
+  .post .ut.u-nektet::before, .post .ut.u-laast::before, .post .ut.u-tidsgrense::before, .post .ut.u-feil::before { background: var(--gul); }
+  .post .ut.u-blokkert::before { background: var(--rod); }
+  .post .ut.u-blokkert { color: var(--rod); }
+  .post time { flex: none; color: var(--dempet); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .sjekkRad { display: grid !important; grid-template-columns: minmax(0, 1fr) 58px 70px 92px 96px 96px; gap: 8px; font-size: 13px; padding: 5px 10px !important; }
+  .sjekkRad span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; font-variant-numeric: tabular-nums; }
+  .sjekkRad span:first-child { text-align: left; }
+  .sjekkRad.hode { background: none !important; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0 !important; padding-bottom: 0 !important; }
+  .sjekkRad .rodt { color: var(--rod); font-weight: 600; }
+  .detalj ul.kildeGrid { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+  .kilde .sha { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11px; color: var(--dempet); user-select: text; overflow-wrap: anywhere; }
+  .ingenAi { display: flex; gap: 10px; align-items: center; background: var(--gronn-myk); color: var(--gronn-tekst); border-radius: 10px; padding: 8px 12px; font-size: 13px; flex: none; margin-top: 8px; }
+  .ingenAi svg { width: 18px; height: 18px; flex: none; }
   /* Språkvalg: øverst til høyre før søket, ved knappene i resultatet. Ett trykk bytter all tekst. */
   .sprak { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; z-index: 5; }
   body > .sprak { position: fixed; top: 14px; right: 18px; }
@@ -204,7 +254,13 @@
     .tr { grid-template-columns: minmax(0, 1.4fr) 92px minmax(0, 1fr) 10px; gap: 8px; padding: 0 12px; }
     .tr > :nth-child(3), .tr > :nth-child(4) { display: none; }
     .flyt { grid-template-columns: 1fr 1fr; } .flyt .pil2 { display: none; } .flyt .flis2:last-child { grid-column: 1 / -1; }
-    #bunnHoyre { display: none; }
+    #bunnHoyre .maaling, #bunnHoyre .skille { display: none; }
+    #hodeInfo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #bunnHoyre { flex: none; }
+    .sjekkRad { grid-template-columns: minmax(0, 1fr) 50px 64px 80px !important; }
+    .sjekkRad > :nth-child(4), .sjekkRad > :nth-child(5) { display: none; }
+    .detalj .navnRad .dtype { display: none; }
+    .uflis { padding: 5px 8px; } .uflis b { font-size: 15px; } .uflis small { font-size: 11px; }
     .topp { flex-wrap: wrap; } .topp .tittel { flex-basis: 100%; }
   }
 </style>
@@ -224,10 +280,15 @@
     <div data-en="&lt;b&gt;User · less data&lt;/b&gt;Fast, no approval. Does not see how much data AI sends, or programs running as administrator."><b>Bruker · mindre data</b>Rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator.</div>
     <div class="adm" data-en="&lt;b&gt;Admin · more data&lt;/b&gt;Measures how much data each AI sends, and sees every running program. Windows asks for approval first."><b>Admin · mer data</b>Måler hvor mye data hver AI sender, og ser alle programmer som kjører. Windows ber om godkjenning først.</div>
   </div>
+  <div class="revisjon" id="revisjon">
+    <b data-en="Audit trail">Revisjonslogg</b><small id="revTekst"></small>
+    <div class="bryter" role="group" aria-label="Revisjonslogg"><button data-r="nei" data-en="No">Nei</button><button data-r="ja" data-en="Yes">Ja</button></div>
+  </div>
   <div class="tillit">
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><i data-en="Changes nothing">Endrer ingenting</i></span>
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><i data-en="Never reads passwords">Leser aldri passord</i></span>
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg><i data-en="Sends only product names">Sender bare produktnavn</i></span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg><i data-en="No AI inside">Ingen AI i programmet</i></span>
   </div>
   <div class="inkludert" data-en="The scan covers AI programs and models, AI from vendors, the AI APIs in Chrome and Edge, YARA rules that find dangerous AI models, browser history (analysed on the PC and never stored) and known vulnerabilities (only product names such as “ollama” are looked up in NVD).">Søket tar med AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler som finner farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
   <div class="feil" id="feil"></div>
@@ -336,14 +397,19 @@ function tegnBunn() {
   const deler = [];
   if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
   deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
-  deler.push(L("Ingenting lagret", "Nothing stored"));
+  if (!info.revisjon) deler.push(L("Ingenting lagret", "Nothing stored"));
   deler.push(L("Rød = ukjent AI eller skygge-AI", "Red = unknown AI or shadow AI"));
   deler.push(info.nvd === "ferdig" ? L("Sikkerhetshull sjekket", "Vulnerabilities checked") : info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
   $("hodeInfo").textContent = deler.join(" · ");
-  $("bunnHoyre").innerHTML = info.dataMalt
+  const rev = info.revisjon
+    ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
+    : info.revisjonFeil ? `<span style="color:var(--rod)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
+  $("bunnHoyre").innerHTML = rev + `<button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.dataMalt
     ? esc(L(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
-    : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`;
-  const m = $("maal"); if (m) m.onclick = () => send({ type: "admin" });
+    : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`) + `</span>`;
+  const m = $("maal"); if (m) m.onclick = () => send({ type: "admin", revisjon });
+  $("dataKnapp").onclick = apneData;
+  const rv = $("revVis"); if (rv) rv.onclick = () => send({ type: "vis", sti: info.revisjon });
 }
 
 const RAD_H = 50;
@@ -380,8 +446,69 @@ function tegnListe() {
   }
 }
 
-function apneArk(f) { valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
-function lukkArk() { valgt = null; $("ark").classList.remove("apen"); }
+function apneArk(f) { dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
+function lukkArk() { valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
+
+// ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
+let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null;
+function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; logg = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
+const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
+const postLinje = p => `<li class="post"><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
+const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
+// Lister fyller plassen som er igjen og deles i sider, så arket aldri må rulles
+function sideListe(tittel, rader, linje) {
+  return `<h3 class="medSider"><span>${tittel}</span><span class="sidevalg" id="dsv"></span></h3><div class="dl" id="dl"><ul id="dlu">${rader.slice(0, 60).map(linje).join("")}</ul></div>`;
+}
+function fordelSider(rader, linje) {
+  const dl = $("dl"); if (!dl) return;
+  const forste = dl.querySelector("li"), h = forste ? forste.offsetHeight + 4 : 34;
+  const per = Math.max(1, Math.floor((dl.clientHeight + 4) / h)), sider = Math.max(1, Math.ceil(rader.length / per));
+  dataSide = Math.min(dataSide, sider - 1);
+  $("dlu").innerHTML = rader.length ? rader.slice(dataSide * per, dataSide * per + per).map(linje).join("") : `<li class="mer">${L("Ingenting her.", "Nothing here.")}</li>`;
+  $("dsv").innerHTML = sider > 1 ? `<button id="dForrige" ${dataSide === 0 ? "disabled" : ""}>‹</button>${dataSide + 1} ${L("av", "of")} ${sider}<button id="dNeste" ${dataSide >= sider - 1 ? "disabled" : ""}>›</button>` : "";
+  const f = $("dForrige"), n = $("dNeste");
+  if (f) f.onclick = () => { dataSide--; tegnData(); };
+  if (n) n.onclick = () => { dataSide++; tegnData(); };
+}
+function tegnData() {
+  const d = $("detalj"), g = logg;
+  const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Datagrunnlag", "Data basis")}</h2><span class="dtype">${L("Utviklermodus · hva søket leste, og hvorfor", "Developer mode · what the scan read, and why")}</span></div>`;
+  if (!g) { d.innerHTML = hode + `<div class="tom">${L("Henter…", "Loading…")}</div>`; $("tilbake").onclick = lukkArk; return; }
+  const mangler = g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0);
+  const faner = [["oversikt", L("Oversikt", "Overview")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket leste", "Everything read"), g.antallPoster], ["regler", L("Regler og bevis", "Rules and proof")]];
+  let kropp = "", rader = null, linje = null;
+  if (fane === "oversikt") {
+    kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
+      + `<div class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</div>`
+      + `<h3 class="medSider" style="margin-bottom:2px"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
+      + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Fantes ikke", "Not found")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
+      + `<div class="dl" id="dl"><ul id="dlu">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
+    rader = g.sjekker; linje = sjekkLinje;
+  } else if (fane === "ikke") {
+    kropp = sideListe(L("Det søket ikke fikk lest, og hvorfor", "What the scan could not read, and why"), g.ikkeDekket, postLinje);
+    rader = g.ikkeDekket; linje = postLinje;
+  } else if (fane === "alt") {
+    const typer = g.totalt.filter(x => x.n && g.poster.some(p => p.u === x.u));
+    const liste = filter ? g.poster.filter(p => p.u === filter) : g.poster;
+    kropp = `<div class="filter"><button data-f="" class="${filter ? "" : "valgt"}">${L("Alle", "All")}</button>${typer.map(x => `<button data-f="${x.u}" class="${filter === x.u ? "valgt" : ""}">${esc(x.tekst)}</button>`).join("")}</div>`
+      + sideListe(g.poster.length < g.antallPoster || g.avkortet
+          ? L(`Viser ${tall(g.poster.length)} av ${tall(g.antallPoster)}${g.avkortet ? "+" : ""} · mapper uten feil er bare talt`, `Showing ${tall(g.poster.length)} of ${tall(g.antallPoster)}${g.avkortet ? "+" : ""} · folders without errors are only counted`)
+          : L("Mapper uten feil er bare talt (se Oversikt)", "Folders without errors are only counted (see Overview)"), liste, postLinje);
+    rader = liste; linje = postLinje;
+  } else {
+    const kilde = k => `<li class="kilde"><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(k.navn)}</b><small>${esc(k.hvor)}</small></div><div class="sha">SHA-256 ${esc(k.sha || "–")}</div></div></li>`;
+    kropp = `<div class="ingenAi">${BRIKKE}<span>${esc(g.ingenAi)}</span></div>`
+      + `<h3>${L("Program og regler som ga resultatet", "Program and rules behind the result")}</h3><ul class="kildeGrid">${g.kilder.map(kilde).join("")}</ul>`
+      + `<h3>${L("Aldri lest, med vilje", "Never read, by design")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
+      + `<h3>${L("Revisjonslogg", "Audit trail")}</h3><div class="avLinje ${g.revisjon ? "ok" : ""}" style="margin-top:0">${g.revisjon ? esc(L(`Lagret: ${g.revisjon}`, `Saved: ${g.revisjon}`)) : esc(L("Av for dette søket. Ingenting er lagret.", "Off for this scan. Nothing is saved."))}</div>`;
+  }
+  d.innerHTML = hode + `<div class="faner">${faner.map(f => `<button data-fane="${f[0]}" class="${fane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? `<span class="ant">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>` + kropp;
+  $("tilbake").onclick = lukkArk;
+  d.querySelectorAll("[data-fane]").forEach(b => b.onclick = () => { fane = b.dataset.fane; dataSide = 0; filter = null; tegnData(); });
+  d.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f || null; dataSide = 0; tegnData(); });
+  if (rader) fordelSider(rader, linje);
+}
+const sjekkLinje = s => `<li class="sjekkRad"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span><span>${tall(s.lest)}</span><span>${tall(s.ikke)}</span><span>${tall(s.hoppet)}</span><span class="${s.mangler ? "rodt" : ""}">${tall(s.mangler)}</span></li>`;
 // Mushjul blar sider i lista
 $("liste").addEventListener("wheel", e => {
   if (Math.abs(e.deltaY) < 20) return;
@@ -504,14 +631,15 @@ document.addEventListener("keydown", e => {
 });
 
 let venter;
-window.addEventListener("resize", () => { clearTimeout(venter); venter = setTimeout(() => { if ($("resultat").classList.contains("aktiv")) { tegnListe(); if (valgt) tegnDetalj(); } }, 80); });
+window.addEventListener("resize", () => { clearTimeout(venter); venter = setTimeout(() => { if ($("resultat").classList.contains("aktiv")) { tegnListe(); if (valgt) tegnDetalj(); if (dataApen) tegnData(); } }, 80); });
 
 // Meldinger fra programmet
 function motta(m) {
   if (m.type === "resultat") {
     // Samme resultat på nytt språk: bli stående på samme side og samme funn
-    const id = valgt && valgt.id, s0 = side, ss = stedSide;
+    const id = valgt && valgt.id, s0 = side, ss = stedSide, varData = dataApen;
     visResultat(m.funn, m.info);
+    if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; $("ark").classList.add("apen"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
   }
   else if (m.type === "nvd") {
@@ -520,25 +648,35 @@ function motta(m) {
     if (f) { f.merk = m.merk; if (valgt === f) tegnDetalj(true); }
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
+  else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
   else if (m.type === "start") { sisteValg = "admin"; start(); }
   else if (m.type === "modus") {
     erAdmin = !!m.admin;
     if (m.sprak) { språk = m.sprak; settSpråk(språk, true); }
     if (erAdmin) sisteValg = "admin";
+    if (m.revisjon != null) revisjon = !!m.revisjon;
     tegnModus();
   }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
-let erAdmin = false, sisteValg = "sok";
+let erAdmin = false, sisteValg = "sok", revisjon = false;
 function tegnModus() {
   $("valg").classList.toggle("erAdmin", erAdmin);
   $("ringTekst").textContent = erAdmin ? L("ADMIN ER PÅ", "ADMIN IS ON") : L("SØK SOM ADMIN", "SCAN AS ADMIN");
   $("sok").innerHTML = erAdmin ? L("Søk<small>som admin</small>", "Scan<small>as admin</small>") : L("Søk<small>som bruker</small>", "Scan<small>as user</small>");
   $("sok").title = L("Søk som vanlig bruker: mindre data", "Scan as a normal user: less data");
   $("sokAdmin").title = L("Søk som administrator: mer data", "Scan as administrator: more data");
+  document.querySelectorAll("#revisjon button").forEach(b => b.classList.toggle("valgt", (b.dataset.r === "ja") === revisjon));
+  $("revTekst").textContent = revisjon
+    ? L("Lagres i Dokumenter\\AI-skanner", "Saved in Documents\\AI-skanner")
+    : L("Ingenting lagres", "Nothing is saved");
+  $("revisjon").title = revisjon
+    ? L("Ja: lagrer en logg over alt søket leste, med tidsstempel og kontrollsum. Aldri passord, nettadresser eller nøkler.", "Yes: saves a log of everything the scan read, with a timestamp and checksum. Never passwords, web addresses or keys.")
+    : L("Nei: ingenting lagres på PC-en.", "No: nothing is saved on the PC.");
 }
+document.querySelectorAll("#revisjon button").forEach(b => b.onclick = () => { revisjon = b.dataset.r === "ja"; tegnModus(); });
 
 // Bytter all tekst med en gang, også et resultat som vises. Programmet sender funnene på nytt på riktig språk (uten nytt søk).
 function settSpråk(l, fraProgram) {
@@ -550,17 +688,18 @@ function settSpråk(l, fraProgram) {
   });
   document.querySelectorAll("#sprak button").forEach(b => b.classList.toggle("valgt", b.dataset.l === l));
   tegnModus();
-  if (!fraProgram) send({ type: "sprak", sprak: l });
+  if (!fraProgram) send({ type: "sprak", sprak: l, logg: dataApen });
   if ($("resultat").classList.contains("aktiv")) {
     tegnBunn(); tegnListe(); if (valgt) tegnDetalj(true);
+    if (dataApen) { logg = null; tegnData(); }
     if (info.telling) visTelling(alle.length, info.telling);
     tegnFordeling();
   }
 }
 document.querySelectorAll("#sprak button").forEach(b => b.onclick = () => { if (b.dataset.l !== språk) settSpråk(b.dataset.l); });
-function start() { $("feil").textContent = ""; vis("soker"); send({ type: sisteValg }); }
+function start() { $("feil").textContent = ""; lukkArk(); vis("soker"); send({ type: sisteValg, revisjon }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
-$("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin" }); } };
+$("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon }); } };
 $("igjen").onclick = start;
 settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });
@@ -569,13 +708,14 @@ $("lagre").onclick = () => send({ type: "lagre" });
 function demo(m) {
   const demoFunn = () => (språk === "en" && window.DEMO_EN) || window.DEMO || [];
   if (m.type === "sok") setTimeout(() => motta({ type: "resultat", funn: demoFunn(), info: window.DEMOINFO }), 1200);
+  if (m.type === "logg" || (m.type === "sprak" && m.logg)) setTimeout(() => motta({ type: "logg", d: (språk === "en" && window.DEMOLOGG_EN) || window.DEMOLOGG }), 100);
   // Demo: funnene på engelsk, som programmet ville sendt
   if (m.type === "sprak" && window.DEMO_EN && $("resultat").classList.contains("aktiv"))
     motta({ type: "resultat", funn: m.sprak === "en" ? window.DEMO_EN : window.DEMO, info: window.DEMOINFO, behold: true });
 }
 const p = new URLSearchParams(location.search);
 if (p.get("side") === "soker") vis("soker");
-if (p.get("side") === "resultat") setTimeout(() => { visResultat((språk === "en" && window.DEMO_EN) || window.DEMO || [], window.DEMOINFO); if (p.get("valgt")) apneArk(alle[+p.get("valgt")]); }, 0);
+if (p.get("side") === "resultat") setTimeout(() => { visResultat((språk === "en" && window.DEMO_EN) || window.DEMO || [], window.DEMOINFO); if (p.get("valgt")) apneArk(alle[+p.get("valgt")]); if (p.get("data")) { apneData(); if (p.get("data") !== "1") setTimeout(() => { fane = p.get("data"); tegnData(); }, 200); } }, 0);
 </script>
 </body>
 </html>

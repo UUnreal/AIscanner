@@ -38,12 +38,25 @@ public sealed partial class Skanner
 
     /// <summary>Når søket startet, for rapporten.</summary>
     public DateTime? Startet { get; private set; }
+    public DateTime? Ferdig { get; private set; }
+
+    /// <summary>Alt søket prøvde å lese, og hvordan det gikk (utviklermodus og revisjonslogg).</summary>
+    public Tilgangslogg Logg { get; private set; } = new();
+
+    /// <summary>Reglene søket bruker (for revisjonsloggen).</summary>
+    public Regelsett Regelsett => _regler;
+    public bool MedHistorikk => _historikk;
+
+    /// <summary>Hendelser fra Defender under søket som gjelder dette programmet.</summary>
+    public Antivirus.Resultat? Forsvar { get; private set; }
 
     public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null)
     {
         _funn.Clear();
         _status = status;
         Startet = DateTime.Now;
+        Logg = new Tilgangslogg();
+        Tilgangslogg.Aktiv = Logg;
         var stegliste = new (string Tekst, Action Gjor)[]
         {
             ("Ser etter AI som kjører nå...", () => { Prosesser(); MotorerIProsesser(); }),
@@ -63,6 +76,7 @@ public sealed partial class Skanner
         _mappeFunn.Clear();
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
+        Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
         using var maling = TestNett == null ? Datamaling.Start() : null;
         int ferdig = 0;
         steg?.Report(0);
@@ -70,7 +84,13 @@ public sealed partial class Skanner
         {
             ct.ThrowIfCancellationRequested();
             var tid = Stopwatch.StartNew();
-            try { x.Gjor(); } catch (Exception e) { Debug.WriteLine($"{x.Tekst} feilet: {e.Message}"); }
+            Tilgangslogg.Sjekk.Value = x.Tekst.TrimEnd('.');
+            try { x.Gjor(); }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"{x.Tekst} feilet: {e.Message}");
+                Tilgangslogg.Logg("Sjekk", x.Tekst.TrimEnd('.'), Utfall.Feil, $"Sjekken stoppet: {Tilgangslogg.Beskriv(e)}");
+            }
             lock (Tider) Tider[x.Tekst.TrimEnd('.')] = tid.Elapsed;
             steg?.Report(Interlocked.Increment(ref ferdig));
             _status?.Report(x.Tekst);
@@ -80,12 +100,18 @@ public sealed partial class Skanner
         {
             if (maling != null && maling.Sekunder < 5) await Task.Delay(TimeSpan.FromSeconds(5 - maling.Sekunder), ct);
             var tid = Stopwatch.StartNew();
+            Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
             Trafikk(TestNett?.Invoke() ?? NettBilde.Hent(maling));
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
         Risikoregler.Bruk(_funn.Values, _regler);
+        // Stoppet antivirus noe av det vi leste? Defender skriver det i sin egen logg.
+        Tilgangslogg.Sjekk.Value = "Antivirus";
+        Forsvar = Antivirus.Hendelser(Startet.Value);
+        Tilgangslogg.Sjekk.Value = null;
         Tider["Totalt"] = klokke.Elapsed;
+        Ferdig = DateTime.Now;
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
@@ -130,15 +156,11 @@ public sealed partial class Skanner
     private Funn FraRegel(Produkt p, string hvor, string detalj) =>
         LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt, p.Rad);
 
-    internal static IEnumerable<string> Mapper(string sti)
-    {
-        try { return Directory.EnumerateDirectories(sti); } catch { return Array.Empty<string>(); }
-    }
+    internal static IEnumerable<string> Mapper(string sti) =>
+        Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateDirectories(sti).ToList(), new List<string>());
 
-    private static IEnumerable<string> Filer(string sti)
-    {
-        try { return Directory.EnumerateFiles(sti); } catch { return Array.Empty<string>(); }
-    }
+    private static IEnumerable<string> Filer(string sti) =>
+        Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateFiles(sti).ToList(), new List<string>());
 
     internal static JsonDocument? LesJson(string sti)
     {
@@ -146,10 +168,13 @@ public sealed partial class Skanner
         try
         {
             var info = new FileInfo(sti);
-            if (!info.Exists || info.Length > 20 * 1024 * 1024) return null;
-            return JsonDocument.Parse(File.ReadAllText(sti), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            if (!info.Exists) { Tilgangslogg.Logg("Fil", sti, Utfall.IkkeFunnet); return null; }
+            if (info.Length > 20 * 1024 * 1024) { Tilgangslogg.Logg("Fil", sti, Utfall.HoppetOver, "større enn 20 MB"); return null; }
+            var doc = JsonDocument.Parse(File.ReadAllText(sti), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            Tilgangslogg.Logg("Fil", sti, Utfall.Lest);
+            return doc;
         }
-        catch { return null; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
     private static string Kutt(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1).TrimEnd() + "…";
@@ -190,7 +215,7 @@ public sealed partial class Skanner
         };
         foreach (var (rot, sti) in steder)
         {
-            using var k = rot.OpenSubKey(sti);
+            using var k = Tilgangslogg.Nokkel(rot, sti);
             if (k == null) continue;
             foreach (var under in k.GetSubKeyNames())
             {
@@ -201,7 +226,7 @@ public sealed partial class Skanner
             }
         }
         // Microsoft Store-apper for innlogget bruker
-        using var pakker = Registry.CurrentUser.OpenSubKey(@"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
+        using var pakker = Tilgangslogg.Nokkel(Registry.CurrentUser, @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
         foreach (var pakke in pakker?.GetSubKeyNames() ?? Array.Empty<string>())
         {
             var r = FinnRegel(pakke.Replace('_', ' '));
@@ -214,7 +239,7 @@ public sealed partial class Skanner
     {
         if (Plattform.ErWindows)
         {
-            using (var tjenester = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services"))
+            using (var tjenester = Tilgangslogg.Nokkel(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Services"))
             {
                 foreach (var navn in tjenester?.GetSubKeyNames() ?? Array.Empty<string>())
                 {
@@ -239,7 +264,7 @@ public sealed partial class Skanner
             };
             foreach (var (rot, sti) in run)
             {
-                using var k = rot.OpenSubKey(sti);
+                using var k = Tilgangslogg.Nokkel(rot, sti);
                 foreach (var verdi in k?.GetValueNames() ?? Array.Empty<string>())
                 {
                     var r = FinnRegel($"{verdi} {k!.GetValue(verdi)}");
@@ -248,7 +273,7 @@ public sealed partial class Skanner
             }
 
             // Planlagte oppgaver: bare navnene fra registeret (oppgavefilene krever ofte admin)
-            using var tre = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree");
+            using var tre = Tilgangslogg.Nokkel(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree");
             if (tre != null) Oppgaver(tre, "");
         }
 
@@ -450,7 +475,7 @@ public sealed partial class Skanner
         if (!Plattform.ErWindows) return null;
         foreach (var (rot, navn) in new[] { (Registry.LocalMachine, "HKLM"), (Registry.CurrentUser, "HKCU") })
         {
-            using var k = rot.OpenSubKey(nokkel);
+            using var k = Tilgangslogg.Nokkel(rot, nokkel);
             if (k?.GetValue(verdi) is int v) return (v, navn);
         }
         return null;

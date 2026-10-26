@@ -30,6 +30,7 @@ public static class ModellFormat
         try
         {
             using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.SequentialScan);
+            Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "filhode (format)");
             var hode = new byte[64];
             int n = fs.Read(hode, 0, hode.Length);
             if (n < 16) return null;
@@ -62,7 +63,7 @@ public static class ModellFormat
             if (ext is ".h5" or ".keras" && Ascii(hode, 1, 3) == "HDF") return new Modell("Keras", null, null, null, false);
             return null;
         }
-        catch { return null; }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
     private static string Ascii(byte[] b, int fra, int lengde) => Encoding.ASCII.GetString(b, fra, lengde);
