@@ -442,6 +442,8 @@ public sealed partial class Skanner
         f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
         var info = new List<string>();
         var fam = id.Familie ?? id.NavneFamilie;
+        // Kommer fra: navnet i filen (DeepSeek) veier tyngre enn arkitekturen den bygger på (Qwen)
+        if ((id.NavneFamilie ?? id.Familie) is { } opp) { f.Opprinnelse ??= opp.Utgiver; f.OpprinnelseLand ??= opp.Land; }
         if (id.Familie != null && id.NavneFamilie != null && id.Familie != id.NavneFamilie)
             info.Add($"{id.FamilieTekst} ({id.Sikkerhet})");
         else if (fam != null)

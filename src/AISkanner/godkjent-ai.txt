@@ -1,0 +1,7 @@
+# AI som bedriften har godkjent. Én per linje. Disse blir grønne i AI-skanneren.
+# Skriv navnet slik det står i skanneren (f.eks. Microsoft 365 Copilot), eller et domene (f.eks. copilot.microsoft.com).
+# Ukjent AI, farlige modellfiler og AI som sender data til høyrisikoland blir røde uansett.
+# Fjern # foran linjene under for å godkjenne dem.
+
+# Microsoft 365 Copilot
+# m365.cloud.microsoft

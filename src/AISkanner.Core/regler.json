@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-26e",
+  "versjon": "2026-10-26f",
   "produkter": [
     {
       "navn": "Ollama",
@@ -709,31 +709,293 @@
     "GenAI"
   ],
   "aiNettsteder": [
-    {"navn": "Devin (Cognition)", "domener": ["devin.ai", "app.devin.ai", "cognition.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-programmerer fra Cognition", "hvorfor": "Agent som skriver og kjører kode på egen hånd. Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "ZeroGPT", "domener": ["zerogpt.com"], "risiko": "gul", "land": "US", "enkelt": "Sjekker om tekst er laget av AI", "hvorfor": "Teksten du limer inn sendes til tjenesten.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "GPTZero", "domener": ["gptzero.me"], "risiko": "gul", "land": "US", "enkelt": "Sjekker om tekst er laget av AI", "hvorfor": "Teksten du limer inn sendes til tjenesten.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Mistral", "domener": ["mistral.ai", "console.mistral.ai", "auth.mistral.ai"], "risiko": "gul", "land": "FR", "enkelt": "AI fra Mistral (Frankrike)", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i EU.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Cursor", "domener": ["cursor.com", "cursor.sh"], "risiko": "gul", "land": "US", "enkelt": "AI-kodeverktøy", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Jasper", "domener": ["jasper.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-skriving", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Writesonic", "domener": ["writesonic.com"], "risiko": "gul", "land": "US", "enkelt": "AI-skriving", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Copy.ai", "domener": ["copy.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-skriving", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Runway", "domener": ["runwayml.com", "runway.ml"], "risiko": "gul", "land": "US", "enkelt": "AI-video", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Synthesia", "domener": ["synthesia.io"], "risiko": "gul", "land": "GB", "enkelt": "AI-video", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "HeyGen", "domener": ["heygen.com"], "risiko": "gul", "land": "US", "enkelt": "AI-video", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Pi", "domener": ["pi.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-chat", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Groq", "domener": ["groq.com", "console.groq.com"], "risiko": "gul", "land": "US", "enkelt": "AI-chat og API", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Together AI", "domener": ["together.ai", "api.together.xyz"], "risiko": "gul", "land": "US", "enkelt": "AI-modeller i skyen", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "OpenRouter", "domener": ["openrouter.ai"], "risiko": "gul", "land": "US", "enkelt": "Tilgang til mange AI-modeller", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Videresender til mange ulike selskaper.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Replicate", "domener": ["replicate.com"], "risiko": "gul", "land": "US", "enkelt": "AI-modeller i skyen", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Tome", "domener": ["tome.app"], "risiko": "gul", "land": "US", "enkelt": "AI-presentasjoner", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Beautiful.ai", "domener": ["beautiful.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-presentasjoner", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Napkin", "domener": ["napkin.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-figurer", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Granola", "domener": ["granola.ai"], "risiko": "gul", "land": "US", "enkelt": "AI-møtenotater", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Tar opp møter.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Krisp", "domener": ["krisp.ai"], "risiko": "gul", "land": "US", "enkelt": "AI for møter", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Kan ta opp møter.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Ideogram", "domener": ["ideogram.ai"], "risiko": "gul", "land": "CA", "enkelt": "AI-bilder", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Hailuo / MiniMax", "domener": ["hailuoai.video", "minimax.io", "minimaxi.com"], "risiko": "rod", "land": "CN", "enkelt": "AI fra Kina", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Kling", "domener": ["klingai.com"], "risiko": "rod", "land": "CN", "enkelt": "AI-video fra Kina", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
-    {"navn": "Zhipu / ChatGLM", "domener": ["chatglm.cn", "z.ai", "bigmodel.cn"], "risiko": "rod", "land": "CN", "enkelt": "AI fra Kina", "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.", "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."},
+    {
+      "navn": "Devin (Cognition)",
+      "domener": [
+        "devin.ai",
+        "app.devin.ai",
+        "cognition.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-programmerer fra Cognition",
+      "hvorfor": "Agent som skriver og kjører kode på egen hånd. Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "ZeroGPT",
+      "domener": [
+        "zerogpt.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Sjekker om tekst er laget av AI",
+      "hvorfor": "Teksten du limer inn sendes til tjenesten.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "GPTZero",
+      "domener": [
+        "gptzero.me"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Sjekker om tekst er laget av AI",
+      "hvorfor": "Teksten du limer inn sendes til tjenesten.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Mistral",
+      "domener": [
+        "mistral.ai",
+        "console.mistral.ai",
+        "auth.mistral.ai"
+      ],
+      "risiko": "gul",
+      "land": "FR",
+      "enkelt": "AI fra Mistral (Frankrike)",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i EU.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Cursor",
+      "domener": [
+        "cursor.com",
+        "cursor.sh"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-kodeverktøy",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Jasper",
+      "domener": [
+        "jasper.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-skriving",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Writesonic",
+      "domener": [
+        "writesonic.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-skriving",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Copy.ai",
+      "domener": [
+        "copy.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-skriving",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Runway",
+      "domener": [
+        "runwayml.com",
+        "runway.ml"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-video",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Synthesia",
+      "domener": [
+        "synthesia.io"
+      ],
+      "risiko": "gul",
+      "land": "GB",
+      "enkelt": "AI-video",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "HeyGen",
+      "domener": [
+        "heygen.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-video",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Pi",
+      "domener": [
+        "pi.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-chat",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Groq",
+      "domener": [
+        "groq.com",
+        "console.groq.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-chat og API",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Together AI",
+      "domener": [
+        "together.ai",
+        "api.together.xyz"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-modeller i skyen",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "OpenRouter",
+      "domener": [
+        "openrouter.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Tilgang til mange AI-modeller",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Videresender til mange ulike selskaper.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Replicate",
+      "domener": [
+        "replicate.com"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-modeller i skyen",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Tome",
+      "domener": [
+        "tome.app"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-presentasjoner",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Beautiful.ai",
+      "domener": [
+        "beautiful.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-presentasjoner",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Napkin",
+      "domener": [
+        "napkin.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-figurer",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Granola",
+      "domener": [
+        "granola.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI-møtenotater",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Tar opp møter.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Krisp",
+      "domener": [
+        "krisp.ai"
+      ],
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "AI for møter",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Kan ta opp møter.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Ideogram",
+      "domener": [
+        "ideogram.ai"
+      ],
+      "risiko": "gul",
+      "land": "CA",
+      "enkelt": "AI-bilder",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Hailuo / MiniMax",
+      "domener": [
+        "hailuoai.video",
+        "minimax.io",
+        "minimaxi.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "AI fra Kina",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Kling",
+      "domener": [
+        "klingai.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "AI-video fra Kina",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "Zhipu / ChatGLM",
+      "domener": [
+        "chatglm.cn",
+        "z.ai",
+        "bigmodel.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "AI fra Kina",
+      "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Selskapet er i Kina.",
+      "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
     {
       "navn": "ChatGPT",
       "domener": [
@@ -1780,5 +2042,79 @@
       ],
       "type": "søkemodell"
     }
-  ]
+  ],
+  "godkjentAi": [],
+  "_godkjentAi": "AI bedriften har godkjent. Navn som i rapporten (f.eks. \"Microsoft 365 Copilot\") eller domene (f.eks. \"copilot.microsoft.com\"). Blir grønt. IT kan også legge en godkjent-ai.txt ved siden av programmet.",
+  "selskapsland": {
+    "Microsoft": "US",
+    "Google": "US",
+    "OpenAI": "US",
+    "Anthropic": "US",
+    "Meta": "US",
+    "NVIDIA": "US",
+    "Intel": "US",
+    "AMD": "US",
+    "Qualcomm": "US",
+    "Apple": "US",
+    "Adobe": "US",
+    "Zoom": "US",
+    "Dell": "US",
+    "HP": "US",
+    "Logitech": "CH",
+    "Lenovo": "CN",
+    "ASUS": "TW",
+    "Samsung": "KR",
+    "Grammarly": "US",
+    "DeepSeek": "CN:DeepSeek",
+    "Alibaba": "CN",
+    "Qwen": "CN:Alibaba",
+    "Moonshot": "CN",
+    "Kimi": "CN:Moonshot AI",
+    "Baidu": "CN",
+    "Tencent": "CN",
+    "ByteDance": "CN",
+    "Zhipu": "CN",
+    "Mistral": "FR:Mistral AI",
+    "Perplexity": "US:Perplexity AI",
+    "Cursor": "US:Anysphere",
+    "Anysphere": "US",
+    "Windsurf": "US:Windsurf",
+    "Codeium": "US",
+    "GitHub": "US:GitHub (Microsoft)",
+    "Ollama": "US",
+    "LM Studio": "US:Element Labs",
+    "Element Labs": "US",
+    "GPT4All": "US:Nomic AI",
+    "Nomic": "US",
+    "Jan": "VN:Menlo Research",
+    "Aider": "US:Aider",
+    "Cline": "US:Cline",
+    "Continue": "US:Continue",
+    "Claude": "US:Anthropic",
+    "ChatGPT": "US:OpenAI",
+    "Gemini": "US:Google",
+    "Copilot": "US:Microsoft",
+    "Stability AI": "GB",
+    "Hugging Face": "US",
+    "Cohere": "CA",
+    "xAI": "US",
+    "Grok": "US:xAI",
+    "Yandex": "RU",
+    "Sider": "US:Sider AI",
+    "Monica": "CN:Monica",
+    "Merlin": "US:Foyer",
+    "Clipchamp": "US:Microsoft",
+    "Windows": "US:Microsoft",
+    "Paint": "US:Microsoft",
+    "Teams": "US:Microsoft",
+    "Office": "US:Microsoft",
+    "Recall": "US:Microsoft",
+    "Codex": "US:OpenAI",
+    "Le Chat": "FR:Mistral AI",
+    "Llama": "US:Meta",
+    "Phi": "US:Microsoft",
+    "Gemma": "US:Google",
+    "Edge": "US:Microsoft",
+    "Chrome": "US:Google"
+  }
 }

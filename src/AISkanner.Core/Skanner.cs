@@ -80,6 +80,7 @@ public sealed partial class Skanner
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
+        Risikoregler.Bruk(_funn.Values, _regler);
         Tider["Totalt"] = klokke.Elapsed;
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");

@@ -50,6 +50,15 @@ public sealed class Funn
     public List<Mal> Trafikk { get; } = new();
     /// <summary>Landet selskapet bak tjenesten hører hjemme i (to bokstaver), når det er kjent fra listene. Der havner det du skriver.</summary>
     public string? Land { get; set; }
+    /// <summary>Selskapet som har laget AI-en, og landet det hører hjemme i (to bokstaver), når det er kjent.</summary>
+    public string? Opprinnelse { get; set; }
+    public string? OpprinnelseLand { get; set; }
+    /// <summary>Hva slags AI dette er, kort: "AI-nettsted", "Lokal modell", "Ukjent AI" osv. Settes av Risikoregler.</summary>
+    public string Type { get; set; } = "";
+    /// <summary>Hvorfor den har den risikoen den har, én setning.</summary>
+    public string? RisikoGrunn { get; set; }
+    /// <summary>Land (to bokstaver) dataene går til, utenom målte forbindelser: tjenester Windows har slått opp nylig.</summary>
+    public List<string> SenderTil { get; } = new();
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }

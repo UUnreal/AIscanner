@@ -117,7 +117,7 @@ public static class Rapport
         funn = liste.Select(f => new
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
-            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f),
+            navn = f.Navn, gruppe = f.Gruppe, kort = f.Privat ? f.Enkelt : f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
             advarsler = f.Privat ? new List<string>() : f.Advarsler,
             hvor = f.Privat ? new List<string>() : f.Hvor,
             merknader = f.Privat ? new List<string>() : f.Merknader,

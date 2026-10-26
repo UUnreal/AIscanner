@@ -87,6 +87,12 @@ public sealed class Regelsett
     [JsonPropertyName("aiTjenester")] public List<AiNettsted> AiTjenester { get; set; } = new();
     /// <summary>Land der data om bedriften ikke bør havne. AI som sender hit blir rødt.</summary>
     [JsonPropertyName("hoyrisikoLand")] public List<string> HoyrisikoLand { get; set; } = new();
+    /// <summary>AI bedriften har godkjent: navn (som i rapporten) eller domene. Blir grønt. Kan også ligge i godkjent-ai.txt ved siden av programmet.</summary>
+    [JsonPropertyName("godkjentAi")] public List<string> GodkjentAi { get; set; } = new();
+    /// <summary>Selskap -> land (to bokstaver), for «Kommer fra».</summary>
+    [JsonPropertyName("selskapsland")] public Dictionary<string, string> Selskapsland { get; set; } = new();
+    /// <summary>Hvor godkjentlista kom fra, for rapporten.</summary>
+    [JsonIgnore] public string? GodkjentKilde { get; set; }
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
@@ -107,15 +113,39 @@ public sealed class Regelsett
     /// </summary>
     public static Regelsett Last(string? sti = null)
     {
+        Regelsett r;
         sti ??= Path.Combine(AppContext.BaseDirectory, "regler.json");
         if (File.Exists(sti))
         {
-            var r = JsonSerializer.Deserialize<Regelsett>(File.ReadAllText(sti), Valg) ?? new Regelsett();
+            r = JsonSerializer.Deserialize<Regelsett>(File.ReadAllText(sti), Valg) ?? new Regelsett();
             r.Kilde = sti;
-            return r;
         }
-        using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.regler.json")
-                      ?? throw new InvalidOperationException("Mangler innebygde regler.");
-        return JsonSerializer.Deserialize<Regelsett>(s, Valg) ?? new Regelsett();
+        else
+        {
+            using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("AISkanner.regler.json")
+                          ?? throw new InvalidOperationException("Mangler innebygde regler.");
+            r = JsonSerializer.Deserialize<Regelsett>(s, Valg) ?? new Regelsett();
+        }
+        r.LesGodkjentliste(Path.Combine(AppContext.BaseDirectory, "godkjent-ai.txt"));
+        return r;
+    }
+
+    /// <summary>
+    /// IT sin liste over godkjent AI: én per linje, navn (som i rapporten) eller domene. Linjer som starter med # er kommentarer.
+    /// </summary>
+    public void LesGodkjentliste(string sti)
+    {
+        if (!File.Exists(sti)) return;
+        try
+        {
+            foreach (var linje in File.ReadAllLines(sti))
+            {
+                var t = linje.Trim();
+                if (t.Length == 0 || t.StartsWith("#")) continue;
+                if (!GodkjentAi.Contains(t, StringComparer.OrdinalIgnoreCase)) GodkjentAi.Add(t);
+            }
+            GodkjentKilde = sti;
+        }
+        catch { }
     }
 }

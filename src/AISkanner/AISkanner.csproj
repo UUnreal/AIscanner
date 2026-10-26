@@ -20,7 +20,7 @@
     <Description>Finner lokal AI, skygge-AI og nettleser-AI. Leser bare.</Description>
     <Company>AI-skanner (åpen kildekode)</Company>
     <Copyright>Copyright (c) 2026 Jørund og bidragsytere. MIT-lisens.</Copyright>
-    <Version>2.9.1</Version>
+    <Version>2.10.0</Version>
 
     <Deterministic>true</Deterministic>
     <DebugType>embedded</DebugType>
@@ -51,6 +51,8 @@
 
   <ItemGroup>
     <!-- YARA-reglene ligger også som åpen fil ved siden av programmet, så IT kan lese og endre dem -->
+    <!-- IT sin liste over godkjent AI (blir grønt). Tom som standard. -->
+    <None Include="godkjent-ai.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\AISkanner.Core\ai-modeller.yar" Link="ai-modeller.yar" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 

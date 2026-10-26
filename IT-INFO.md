@@ -46,6 +46,11 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
   modell som blir funnet. Små filer med endelser som `.pt`, `.pth`, `.pkl`, `.ckpt`, `.bin`, `.keras`, `.h5`, `.npy` sjekkes bare hvis de 8 første bytene viser
   pickle, zip, HDF5 eller NumPy, og da bare første 1 MB. Reglene finner pickle som kaller `os.system`/`subprocess`/`exec`/`eval`/nettverk, Keras Lambda-lag,
   GGUF-chatmaler med Python-internals (CVE-2024-34359) og Windows-programmer gjemt i modellfiler. Treff gir rødt funn. Ingenting kjøres, lastes eller endres.
+- **Risikoregler** (nytt i 2.10): ukjent AI og skygge-AI er alltid rød. Skygge-AI = AI som ikke er lagt inn av Windows, en signert leverandør
+  eller IT (AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper og modeller brukeren har lagt inn selv). AI på IT sin godkjentliste
+  blir grønn: `godkjent-ai.txt` ved siden av programmet (én per linje, navn eller domene) eller `godkjentAi` i `regler.json`. Ukjent AI, farlige
+  modellfiler og data til høyrisikoland blir rødt uansett. «Kommer fra» = selskapet bak (signatur, modellfamilie, tjenestelisten eller
+  `selskapsland` i `regler.json`). «Sender data til» = målte forbindelser, tjenestens land og navn Windows har slått opp.
 - **Full YARA-motor** (nytt i 2.9): egen C#-motor, fortsatt uten libyara og uten ekstra DLL. Støtter YARA 4-syntaksen: tekst (`nocase`, `wide`, `ascii`,
   `fullword`, `xor`, `base64`, `base64wide`, `private`), hex med jokertegn, nibbles, `~`, hopp og alternativer, regex (`/i`, `/s`, også `wide`),
   alle betingelser (`of`, `for … of`, `for … in`, `at`, `in`, `#`, `@`, `!`, regning, bitoperasjoner, `contains`/`matches` m.fl., regelreferanser og

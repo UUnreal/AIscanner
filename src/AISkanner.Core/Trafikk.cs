@@ -161,6 +161,7 @@ public sealed partial class Skanner
                 f.Privat = true;
                 f.Bruk ??= "Åpnet nylig.";
                 f.Land ??= tj.Land;
+                f.OpprinnelseLand ??= tj.Land;
                 foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v}");
             }
             else api.Add((tj, verter));
@@ -176,6 +177,7 @@ public sealed partial class Skanner
             foreach (var (tj, verter) in api)
                 foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")})");
             if (fraLand) f.Advarsel("Minst én av tjenestene hører hjemme i et land der dataene ikke bør havne.");
+            foreach (var (tj, _) in api) if (tj.Land != null && !f.SenderTil.Contains(tj.Land)) f.SenderTil.Add(tj.Land);
         }
     }
 
