@@ -1,111 +1,205 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-## Formål
-Kartlegger AI-verktøy på én Windows-PC (lokal AI, skygge-AI, nettleser-AI) og viser dem sortert etter risiko.
-Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste, ingen persistens. Trenger ikke admin.
-Administrator brukes bare hvis brukeren selv trykker «Mål datamengde» (se under).
+Gjelder versjon 2.11. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+står i [SECURITY.md](SECURITY.md).
+
+## Kort fortalt
+
+- Kartlegger AI på én Windows-PC (lokal AI, skygge-AI og nettleser-AI) og sorterer funnene etter risiko.
+- Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste og ingen persistens.
+- Leser bare. Endrer, sletter og installerer ingenting.
+- Trenger ikke administrator. Bare måling av datamengde ber om det, og bare når brukeren trykker på den.
+- Sender bare produktord (for eksempel `ollama`) til NVD. Ellers bare `127.0.0.1`.
+- Lagrer ingenting mellom søk.
 
 ## Hvordan den kjører
-`AISkanner.exe` er et .NET Framework 4.8-program (følger med Windows 10 og 11). Hele mappa er rundt 3,5 MB.
-Det installeres ikke, pakker ikke ut noe til `%TEMP%`, er ikke komprimert, starter ingen skript eller kommandolinjer, og kjører som vanlig bruker (`asInvoker`).
-Vinduet vises med Microsoft Edge WebView2 (som nye Outlook og Teams). WebView2 starter sine egne `msedgewebview2.exe`-prosesser
-og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingenting lagres»). Siden er bygd inn i programmet, laster ingenting fra nett og kan ikke navigere bort.
 
-## Hva den leser (kun lesing, ingenting endres)
-- Prosessliste og filsti for prosesser (`PROCESS_QUERY_LIMITED_INFORMATION` + `QueryFullProcessImageName`).
-  Minnet til andre prosesser leses aldri. lsass, csrss, winlogon og Defender-prosesser åpnes ikke.
-- Filnavn i mappa til programmer som kjører, for å se etter AI-motorer (onnxruntime, ggml/llama, torch, OpenVINO, DirectML m.fl.)
-- Installerte programmer (Uninstall-nøkler), Store-apper (nøkkelnavn), tjenester, Run-nøkler, Oppstart-mapper, navn på planlagte oppgaver
-- Lyttende TCP-porter med eierprosess (`GetExtendedTcpTable`). For porter på localhost/0.0.0.0 eid av vanlige brukerprosesser
-  sendes maks tre lesende `GET`-kall til `127.0.0.1` (`/api/tags`, `/v1/models`, `/sdapi/v1/sd-models`) for å se om programmet er en AI-server.
-- Navn (aldri verdier) på miljøvariabler som `OPENAI_API_KEY`, og om `%USERPROFILE%\.cache\huggingface\token` finnes (åpnes ikke)
-- Gjennomgang av brukerprofilen (utenom AppData) og andre faste disker (ikke Windows, Program Files eller ProgramData):
-  - for filer over 20 MB leses de første 64 bytene for å kjenne igjen AI-modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras).
-    For GGUF og safetensors leses også metadata-hodet (modellnavn, arkitektur, antall parametre). Selve modellvektene leses ikke.
-  - mappenavn i `site-packages` og `node_modules` for å finne AI-biblioteker
-  - OneDrive-filer som bare ligger i skyen hoppes over, så ingenting lastes ned.
-- Nettlesere (Chrome, Edge, Brave, Vivaldi, Opera, Firefox):
-  - `manifest.json` og `messages.json` for utvidelser, `extensions.json` i Firefox
-  - `Preferences` (bare nettstedenes bruksscore, `site_engagement`)
-  - mappenavn og størrelse under `IndexedDB` og Firefox `storage\default`
-  - **historikk** (`History` og `places.sqlite`), hvis brukeren lar bryteren stå på. Filen åpnes direkte, skrivebeskyttet og uten låser.
-    Den kopieres aldri. Lesingen bruker SQLite-motoren som følger med Windows (`winsqlite3.dll`). Bare vertsnavn som matcher AI-tjenester, antall besøk og tidspunkt for første og siste besøk (fra `visits`/`moz_historyvisits`) beholdes i minnet. Fulle adresser og titler beholdes ikke.
-    Ingenting fra nettleserdata lagres automatisk. Hvis brukeren selv laster ned tekstrapporten, står nettleserfunn med nettleser, profil og nettstedsnavn (aldri hele adresser).
-- Policyverdien `GenAILocalFoundationalModelSettings` for Chrome og Edge
-- AI-modeller nettleserne laster ned (nytt i 2.4): mappenavn, størrelser og datoer i nettleserdata for Chrome, Edge (alle kanaler), Brave, Vivaldi og Opera,
-  f.eks. `OptGuideOnDeviceModel` (Gemini Nano), `TranslateKit`, `screen_ai`, `SODA`. Ukjente mapper med modellfiler kjennes igjen på de første bytene.
-- **AI lagt inn av leverandører** (nytt i 2.5): `%LOCALAPPDATA%`, `%APPDATA%`, `AppData\LocalLow`, `%ProgramData%`, `Program Files`, `Program Files (x86)`,
-  `Program Files\WindowsApps` og `Windows\SystemApps` gås gjennom (Defender-mapper, cacher, nettleserdata og spillbiblioteker hoppes over, maks 40 sekunder).
-  AI kjennes igjen på innholdet: modellfiler (`.onnx`, `.ort`, `.tflite`, `.litertlm`, `.dlc`, `.engine`, `.pte`, OpenVINO `.xml`+`.bin`, og store filer med
-  modellformat i de første bytene) og AI-motorer (`onnxruntime`, `DirectML`, `openvino`, `ggml`, `Qnn*` m.fl.). Funnene samles per program.
-  Leverandøren bekreftes med **gyldig Authenticode-signatur** (`WinVerifyTrust`, uten tilbakekallingssjekk over nettet) eller med `AppxManifest.xml` i
-  mapper bare Windows kan skrive til. Firmanavnet i filinfo alene regnes ikke som bekreftet. Dato lagt inn = eldste opprettelsesdato på AI-filene.
-  Ukjent eller ubekreftet leverandør = høy risiko. Kjent leverandør = lav, eller middels hvis modellene er over 500 MB.
-- **YARA-regler for AI-modeller** (nytt i 2.7): reglene ligger i den åpne fila `ai-modeller.yar` ved siden av programmet (kan også kjøres med vanlig `yara.exe`;
-  IT kan endre eller legge til regler). Kjøres med en innebygd YARA-leser i C# (ingen libyara, ingen ekstra DLL). Leser første 8 MB og siste 1 MB av hver
-  modell som blir funnet. Små filer med endelser som `.pt`, `.pth`, `.pkl`, `.ckpt`, `.bin`, `.keras`, `.h5`, `.npy` sjekkes bare hvis de 8 første bytene viser
-  pickle, zip, HDF5 eller NumPy, og da bare første 1 MB. Reglene finner pickle som kaller `os.system`/`subprocess`/`exec`/`eval`/nettverk, Keras Lambda-lag,
-  GGUF-chatmaler med Python-internals (CVE-2024-34359) og Windows-programmer gjemt i modellfiler. Treff gir rødt funn. Ingenting kjøres, lastes eller endres.
-- **Risikoregler** (nytt i 2.10): ukjent AI og skygge-AI er alltid rød. Skygge-AI = AI som ikke er lagt inn av Windows, en signert leverandør
-  eller IT (AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper og modeller brukeren har lagt inn selv). AI på IT sin godkjentliste
-  blir grønn: `godkjent-ai.txt` ved siden av programmet (én per linje, navn eller domene) eller `godkjentAi` i `regler.json`. Ukjent AI, farlige
-  modellfiler og data til høyrisikoland blir rødt uansett. «Kommer fra» = selskapet bak (signatur, modellfamilie, tjenestelisten eller
-  `selskapsland` i `regler.json`). «Sender data til» = målte forbindelser, tjenestens land og navn Windows har slått opp.
-- **Full YARA-motor** (nytt i 2.9): egen C#-motor, fortsatt uten libyara og uten ekstra DLL. Støtter YARA 4-syntaksen: tekst (`nocase`, `wide`, `ascii`,
-  `fullword`, `xor`, `base64`, `base64wide`, `private`), hex med jokertegn, nibbles, `~`, hopp og alternativer, regex (`/i`, `/s`, også `wide`),
-  alle betingelser (`of`, `for … of`, `for … in`, `at`, `in`, `#`, `@`, `!`, regning, bitoperasjoner, `contains`/`matches` m.fl., regelreferanser og
-  regelsett, `global`/`private`) og modulene `pe`, `math`, `hash`, `time`, `string` og `console`. Alle strenger i alle regler søkes i én runde
-  (Aho-Corasick), betingelsene er ferdig oversatt før søket, og hex med lange hopp deles i kjeder som i YARA. Testet mot YARA 4.5.4 med 134 regler:
-  ingen avvik (`verktoy/sammenlign-yara.py`, `tests/yara/test.yar`). Ikke støttet: modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`
-  (gir «udefinert», som i YARA uten modulen), `pe.version_info` er tom, og signaturfeltene i `pe` er forenklet. Har `ai-modeller.yar` ved siden av
-  programmet en feil, brukes de innebygde reglene, og rapporten sier hvorfor.
-- **AI-API-er i Chrome og Edge** (nytt i 2.5): status for Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM-motoren.
-  Bygger på policyene `GenAILocalFoundationalModelSettings` og `BuiltInAIAPIsEnabled` (HKLM/HKCU), nettleserversjonen (mappenavnet under `Application`),
-  og hvilke modellmapper som finnes. Flagg i `chrome://flags` leses ikke som standard, fordi de ligger i filen `Local State` sammen med nettleserens
-  krypterte nøkkel. Slås det på, leses bare lista `browser.enabled_labs_experiments` med en strømleser som hopper over alt annet, og bytene nulles ut etterpå.
-- **Nettverksforbindelser nå** (nytt i 2.2): etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`).
-  Vertsnavn hentes fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme kilde som `ipconfig /displaydns`).
-  Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag. Land slås opp i en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
-  Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester, aldri annen surfing. Programmer som ikke er kjent som AI,
-  men som snakker med en AI-tjeneste (`aiTjenester` i `regler.json`), blir et eget funn.
+| | |
+|---|---|
+| Program | `AISkanner.exe`, .NET Framework 4.8 (følger med Windows 10 og 11). Hele mappa er rundt 3,7 MB. |
+| Rettigheter | `asInvoker`. Ber aldri om administrator ved oppstart. |
+| Vindu | Microsoft Edge WebView2, som nye Outlook og Teams. Starter egne `msedgewebview2.exe`-prosesser. |
+| Side | Bygget inn i programmet. Laster ingenting fra nett, kan ikke navigere bort, ingen utviklerverktøy. |
+| Utpakking | Ingen. Programmet er ikke komprimert og pakker ingenting ut til `%TEMP%`. |
+| Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt som administrator når brukeren trykker «Mål datamengde». |
+| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. |
 
-- **Registeret** (nytt i 2.3), bare lesing: AI-regler fra IT under `SOFTWARE\Policies` (Windows Copilot, Recall, Edge, Chrome, Office),
-  lenkeprotokoller (`SOFTWARE\Classes\<navn>` med `URL Protocol`), hvilke programmer som åpner modellfiler (`.gguf`, `.safetensors` m.fl.),
-  `App Paths`, høyreklikkmenyer, `RunOnce`, navn på miljøvariabler for AI-nøkler (aldri verdiene), og verdiene til `OLLAMA_HOST`/`OLLAMA_ORIGINS`
-  (sier om Ollama er åpen mot nettverket). Om mappen for Windows Recall finnes (innholdet leses ikke). SAM, SECURITY og lagret legitimasjon røres aldri.
-- **Modellidentitet** (nytt i 2.3): for hver modellfil leses metadata-hodet (arkitektur, ordforråd, antall lag, «laget fra») og `config.json` ved siden av.
-  Modell-ID er SHA-256 når Ollama eller Hugging Face allerede har lagret filen under hashen (ingen ekstra lesing), ellers et fingeravtrykk
-  av størrelse + første og siste MB (leser 2 MB per modell). Ollamas manifestfiler leses for å finne modellnavn.
+## Hva den leser
 
-## Ingenting lagres
-Hvert søk gjøres fra bunnen av. Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk.
-WebView2 trenger en midlertidig mappe mens vinduet er åpent (`%LOCALAPPDATA%\AISkanner\Vindu-<pid>`). Den slettes når programmet lukkes,
-og rester etter avbrutte kjøringer slettes ved neste start. Det eneste som blir igjen er rapporten brukeren selv velger å laste ned.
+Alt er bare lesing. Ingenting endres.
 
-## Måling av datamengde (valgfritt, krever administrator)
-Uten administrator viser skanneren hvor AI-programmene er koblet, men ikke hvor mye de sender. Windows gir ikke vanlige brukere tilgang til tellerne.
-Trykker brukeren «Ikke målt / Trykk for å måle», startes programmet på nytt via vanlig UAC-spørsmål (`runas`).
-Som administrator slår skanneren på Windows' egne TCP-tellere (`SetPerTcpConnectionEStats`, `TcpConnectionEstatsData`, samme som Ressursovervåking)
-for forbindelsene som er åpne når søket starter, leser dem når søket er ferdig (`GetPerTcpConnectionEStats`), og slår dem av igjen.
-Tallene er byte faktisk sendt og mottatt i måleperioden (typisk 10–30 sekunder), ikke anslag. Forbindelser som åpnes underveis måles ikke.
-QUIC/UDP (brukes av noen nettlesere mot Google og Cloudflare) vises ikke, fordi Windows ikke knytter UDP-trafikk til en motpart.
+### Prosesser og programmer
+
+- Prosessliste og filsti, med `PROCESS_QUERY_LIMITED_INFORMATION` og `QueryFullProcessImageName`.
+  **Minnet til andre prosesser leses aldri.** `lsass`, `csrss`, `winlogon` og Defender-prosesser åpnes ikke.
+- Filnavn i mappa til programmer som kjører, for å finne AI-motorer (`onnxruntime`, `ggml`/`llama`, `torch`,
+  `openvino`, `DirectML` m.fl.).
+- Installerte programmer (Uninstall-nøkler), Store-apper (nøkkelnavn), tjenester, Run- og RunOnce-nøkler,
+  Oppstart-mapper og navn på planlagte oppgaver.
+- Globale npm-pakker og kommandoer i `PATH`, bare om fila finnes.
+
+### Lokale AI-servere
+
+- Lyttende TCP-porter med eierprosess (`GetExtendedTcpTable`).
+- For porter på localhost eller `0.0.0.0` som eies av vanlige brukerprosesser, sendes maks tre lesende `GET` til
+  `127.0.0.1`: `/api/tags`, `/v1/models` og `/sdapi/v1/sd-models`. Tidsgrense 800 ms, maks 4 MB svar,
+  ingen omdirigering og ingen proxy. Maks 80 porter.
+
+### Filer på disken
+
+- **Brukerprofilen og andre faste disker** (ikke Windows, Program Files, ProgramData eller AppData). Stopper etter 45 sekunder.
+  - Filer over 20 MB: de første 64 bytene, for å kjenne igjen modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras).
+  - GGUF og safetensors: også metadata-hodet (navn, arkitektur, antall parametre). Selve modellvektene leses ikke.
+  - Modell-ID: fra filnavnet når Ollama eller Hugging Face har lagret fila under SHA-256. Ellers et fingeravtrykk av
+    størrelse, første MB og siste MB (2 MB lesing per modell). `config.json` og Ollama-manifester leses for navn.
+  - Mappenavn i `site-packages` og `node_modules`, for å finne AI-biblioteker.
+  - Filer i OneDrive som bare ligger i skyen, hoppes over, så ingenting lastes ned.
+- **AI lagt inn av leverandører:** `%LOCALAPPDATA%`, `%APPDATA%`, `AppData\LocalLow`, `%ProgramData%`, `Program Files`,
+  `Program Files (x86)`, `Program Files\WindowsApps` og `Windows\SystemApps`. Stopper etter 40 sekunder.
+  Defender-mapper, cacher, nettleserdata og spillbiblioteker hoppes over.
+  - Modellfiler (`.onnx`, `.ort`, `.tflite`, `.litertlm`, `.dlc`, `.engine`, `.pte`, OpenVINO `.xml` og `.bin`, og store
+    filer med modellformat i de første bytene) og AI-motorer, samlet per program.
+  - Leverandøren bekreftes med gyldig Authenticode-signatur (`WinVerifyTrust`, uten tilbakekallingssjekk over nett)
+    eller med `AppxManifest.xml` i mapper bare Windows kan skrive til. Firmanavn i filinfo alene regnes ikke som bekreftet.
+  - Dato lagt inn er eldste opprettelsesdato på AI-filene.
+- **YARA-regler** (`ai-modeller.yar`) kjøres på modellfiler som blir funnet:
+  - Store modeller: første 8 MB og siste 1 MB.
+  - Små filer (`.pt`, `.pth`, `.pkl`, `.ckpt`, `.bin`, `.keras`, `.h5`, `.npy` m.fl., under 200 MB): første 1 MB, men bare
+    hvis de første 8 bytene viser pickle, zip, HDF5 eller NumPy.
+  - Hele fila leses bare hvis den er under 64 MB og en regel trenger det, for eksempel `hash.sha256(0, filesize)`.
+    De innebygde reglene gjør ikke det.
+  - Ingenting kjøres, lastes eller pakkes ut.
+
+### Nettlesere
+
+Chrome, Edge (alle kanaler), Brave, Vivaldi, Opera og Firefox.
+
+| Fil eller sted | Hva som brukes |
+|---|---|
+| `manifest.json`, `messages.json` (utvidelser), `extensions.json` (Firefox) | Navn, beskrivelse og tilganger for utvidelser |
+| `Preferences` | Bare bruksscore per nettsted (`site_engagement`) |
+| `History`, `places.sqlite` | Se under |
+| `IndexedDB`, Firefox `storage\default` | Mappenavn og størrelse, for modeller lagret av nettsider |
+| Modellmapper i brukerdata | Mappenavn, størrelse og dato, for eksempel `OptGuideOnDeviceModel` (Gemini Nano), `EdgeLLMOnDeviceModel`, `TranslateKit`, `screen_ai`, `SODA` |
+| Versjonsmappe under `Application` | Nettleserversjon, for AI-API-status |
+
+**Historikk:** fila åpnes direkte, skrivebeskyttet og uten låser (`immutable`), med SQLite-motoren i Windows
+(`winsqlite3.dll`). Den kopieres aldri. Bare vertsnavn som matcher AI-tjenester, antall besøk og første og siste
+besøk beholdes, og bare i minnet. Fulle adresser og sidetitler beholdes aldri. Kan slås av med `--uten-historikk`.
+
+**AI-flagg** i `chrome://flags` ligger i `Local State`, sammen med nettleserens krypterte nøkkel. Den fila leses
+**ikke** av vinduet. Bare `AISkanner.Cli --flagg` leser den, og da bare lista `browser.enabled_labs_experiments`
+med en strømleser som hopper over alt annet. Bytene nulles ut etterpå.
+
+### Registeret
+
+- AI-regler fra IT under `SOFTWARE\Policies` (Windows Copilot, Recall, Click to Do, Edge, Chrome, Office), blant dem
+  `GenAILocalFoundationalModelSettings`, `BuiltInAIAPIsEnabled`, `HubsSidebarEnabled`, `CopilotPageContext` og `GeminiSettings`.
+- Lenkeprotokoller (`SOFTWARE\Classes\<navn>` med `URL Protocol`), programmer som åpner modellfiler
+  (`.gguf`, `.safetensors` m.fl.), `App Paths` og høyreklikkmenyer.
+- Verdiene til `OLLAMA_HOST` og `OLLAMA_ORIGINS`, som sier om Ollama er åpen mot nettverket.
+- Navn (aldri verdier) på miljøvariabler for AI-nøkler, for eksempel `OPENAI_API_KEY`.
+- Om mappen for Windows Recall finnes. Innholdet leses ikke.
+- SAM, SECURITY og lagret legitimasjon røres aldri.
+
+### Nøkler
+
+Bare *at* en nøkkel finnes: navn på miljøvariabler, og om `%USERPROFILE%\.cache\huggingface\token` finnes.
+Fila åpnes ikke, og verdien leses aldri.
+
+### Nettverk
+
+- Etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`, IPv4 og IPv6).
+- Vertsnavn fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme
+  kilde som `ipconfig /displaydns`). Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag.
+- Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
+- Nettleserprosesser vises bare med forbindelser til kjente AI-tjenester. Annen surfing vises ikke.
 
 ## Hva den aldri leser
-Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State`, krypteringsnøkler, lommebokdata i utvidelser
-(`Local Extension Settings`), verdien av API-nøkler, e-post eller dokumentinnhold.
-Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for lesing av innhold (i tillegg til de første bytene av store filer).
 
-## Nettverk
-Til `127.0.0.1` som beskrevet over. Ingen DNS-oppslag, ingen IP-oppslag på nett. Sårbarhetssjekken er alltid med (fra 2.6): etter at resultatet vises,
-sendes bare produktordet fra regelfila for kjente produkter som ble funnet (f.eks. `ollama`) til `services.nvd.nist.gov`. Aldri PC-navn, brukernavn eller stier.
-Bedriften kan slå den av med `AISkanner.exe --uten-nvd`, og historikken med `--uten-historikk`.
+Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State` (unntatt `--flagg` i
+kommandolinjen), krypteringsnøkler, lommebokdata i utvidelser (`Local Extension Settings`), verdien av API-nøkler,
+e-post, dokumentinnhold og minnet til andre prosesser.
+
+Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for å lese innholdet: `manifest.json`,
+`messages.json`, `extensions.json`, `Preferences`, `History` og `places.sqlite`. I tillegg leses begrensede deler av
+modellfiler som beskrevet over.
+
+## Hva den sender ut
+
+| Til | Hva | Når |
+|---|---|---|
+| `127.0.0.1` | Maks tre `GET` per lyttende port | Under søket |
+| `services.nvd.nist.gov` (HTTPS) | Bare produktordet fra `regler.json` for kjente produkter som ble funnet, for eksempel `ollama` | Etter at resultatet vises. Av med `--uten-nvd`. |
+
+PC-navn, brukernavn, stier og funn sendes aldri. Det gjøres ingen DNS-oppslag og ingen IP-oppslag på nett.
+
+## Hva den skriver
+
+| Hva | Hvor | Hvor lenge |
+|---|---|---|
+| WebView2-data | `%LOCALAPPDATA%\AISkanner\Vindu-<pid>` | Slettes når programmet lukkes. Rester etter avbrutte kjøringer slettes ved neste start. |
+| Rapport | Der brukeren velger | Bare når brukeren trykker «Last ned rapport» |
+
+Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk. Rapporten inneholder nettleserfunn
+bare som nettleser, profil og domenenavn, aldri hele adresser.
+
+## Måling av datamengde (valgfritt, krever administrator)
+
+Uten administrator viser skanneren hvor AI-programmene er koblet, men ikke hvor mye de sender. Windows gir ikke
+vanlige brukere tilgang til tellerne.
+
+Når brukeren trykker «Mål datamengde», startes programmet på nytt med vanlig UAC-spørsmål (`runas`, argument `--sok`).
+Som administrator slår skanneren på Windows' egne TCP-tellere (`SetPerTcpConnectionEStats`, `TcpConnectionEstatsData`,
+samme som Ressursovervåking) for forbindelsene som er åpne når søket starter. Den leser dem når søket er ferdig
+(`GetPerTcpConnectionEStats`) og slår dem av igjen.
+
+Tallene er byte faktisk sendt og mottatt i måleperioden (typisk 10–30 sekunder, minst 5), ikke anslag.
+Forbindelser som åpnes underveis, måles ikke. QUIC og UDP vises ikke.
+
+Ikke testet på Windows ennå.
+
+## Risiko og godkjentliste
+
+- **Ukjent AI og skygge-AI er alltid røde.** Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør
+  eller IT: AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt inn selv
+  og AI-nøkler.
+- **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet, med ett navn eller domene per linje,
+  eller bruk `godkjentAi` i `regler.json`. Bruk eksakte produktnavn og offisielle domener (se
+  [SECURITY.md](SECURITY.md#kjente-svakheter)).
+- Ukjent AI, farlige modellfiler og data til høyrisikoland (`hoyrisikoLand`, standard CN, RU, IR, KP og BY) er
+  røde uansett hva som står på lista.
+- På en jobb-PC uten godkjentliste blir de fleste funn røde.
+
+Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).
+
+## Kommandolinje og utrulling
+
+```
+AISkanner.exe [--uten-nvd] [--uten-historikk]
+AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\regler.json] [--txt] [--flagg]
+```
+
+`AISkanner.Cli` skriver JSON (eller tekst med `--txt`) til standard ut. Exit-kode: `0` = ingen funn,
+`1` = bare gule eller grønne funn, `2` = minst ett rødt funn. Den passer for Intune eller andre verktøy for utrulling.
+NVD er av som standard i kommandolinjen.
 
 ## Personvern på jobb-PC
-Historikksøket er innsyn i elektronisk lagret materiale. En arbeidsgiver som bruker skanneren på ansattes PC-er må følge e-postforskriften
-og arbeidsmiljølovens regler om kontrolltiltak, eller slå av historikksøket (kommandolinje: `--uten-historikk`).
+
+Historikksøket er innsyn i elektronisk lagret materiale. En arbeidsgiver som bruker skanneren på ansattes PC-er, må
+følge e-postforskriften og arbeidsmiljølovens regler om kontrolltiltak, eller slå av historikksøket med `--uten-historikk`.
 
 ## Kan EDR reagere?
-Lesing av nettleserhistorikk, DNS-bufferen og nettverkstabellen, og gjennomgang av filer, kan ligne rekognosering. Signerte utgivelser og godkjenning på signatur eller hash løser det.
+
+Ja, det kan skje. Lesing av nettleserhistorikk, DNS-bufferen og nettverkstabellen, og gjennomgang av filer, kan ligne
+rekognosering. Versjon 0.3 ble stoppet av Defender og Sentinel fordi den åpnet `lsass` med lesetilgang. Det ble rettet
+i 0.4. Senere versjoner er kjørt på en jobb-PC med godkjenning fra IT.
+
+Det som gjenstår, er at programmet er ukjent og usignert. Det løses med signerte utgivelser, eller med godkjenning på hash.
 
 ## Godkjenning (allowlist)
-Godkjenn på signatur når utgivelsene er signert, ellers på SHA256-hash av `AISkanner.exe` (står i `SHA256.txt`).
+
+- Når utgivelsene er signert: godkjenn på signatur.
+- Inntil da: godkjenn på SHA-256 av `AISkanner.exe` og DLL-ene. Hashene står i `SHA256.txt`, som byggeløypa lager.
+- Legg programmet i en mappe vanlige brukere ikke kan skrive til, for eksempel under Program Files. Da kan ingen
+  legge falske DLL-er eller regelfiler ved siden av det.
