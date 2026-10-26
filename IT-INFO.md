@@ -41,6 +41,11 @@ og bruker en midlertidig mappe som slettes når programmet lukkes (se «Ingentin
   Leverandøren bekreftes med **gyldig Authenticode-signatur** (`WinVerifyTrust`, uten tilbakekallingssjekk over nettet) eller med `AppxManifest.xml` i
   mapper bare Windows kan skrive til. Firmanavnet i filinfo alene regnes ikke som bekreftet. Dato lagt inn = eldste opprettelsesdato på AI-filene.
   Ukjent eller ubekreftet leverandør = høy risiko. Kjent leverandør = lav, eller middels hvis modellene er over 500 MB.
+- **YARA-regler for AI-modeller** (nytt i 2.7): reglene ligger i den åpne fila `ai-modeller.yar` ved siden av programmet (kan også kjøres med vanlig `yara.exe`;
+  IT kan endre eller legge til regler). Kjøres med en innebygd YARA-leser i C# (ingen libyara, ingen ekstra DLL). Leser første 8 MB og siste 1 MB av hver
+  modell som blir funnet. Små filer med endelser som `.pt`, `.pth`, `.pkl`, `.ckpt`, `.bin`, `.keras`, `.h5`, `.npy` sjekkes bare hvis de 8 første bytene viser
+  pickle, zip, HDF5 eller NumPy, og da bare første 1 MB. Reglene finner pickle som kaller `os.system`/`subprocess`/`exec`/`eval`/nettverk, Keras Lambda-lag,
+  GGUF-chatmaler med Python-internals (CVE-2024-34359) og Windows-programmer gjemt i modellfiler. Treff gir rødt funn. Ingenting kjøres, lastes eller endres.
 - **AI-API-er i Chrome og Edge** (nytt i 2.5): status for Prompt API, Summarizer, Writer, Rewriter, Proofreader, Classifier og LiteRT-LM-motoren.
   Bygger på policyene `GenAILocalFoundationalModelSettings` og `BuiltInAIAPIsEnabled` (HKLM/HKCU), nettleserversjonen (mappenavnet under `Application`),
   og hvilke modellmapper som finnes. Flagg i `chrome://flags` leses ikke som standard, fordi de ligger i filen `Local State` sammen med nettleserens

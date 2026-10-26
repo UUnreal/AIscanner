@@ -226,6 +226,8 @@ public sealed partial class Skanner
         public readonly List<(string Sti, long Lengde, ModellFormat.Modell Modell)> Modeller = new();
         public readonly Dictionary<string, SortedSet<string>> Motorer = new(StringComparer.OrdinalIgnoreCase);
         public readonly Dictionary<string, (SortedSet<string> Pakker, bool Agent, string Sprak)> Miljoer = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Filer der en farlig YARA-regel slo til.</summary>
+        public readonly List<(string Sti, long Lengde, List<YaraRegler.Regel> Treff)> Farlige = new();
     }
 
     private const FileAttributes Skyfil = (FileAttributes)0x00400000 | (FileAttributes)0x00040000 | FileAttributes.Offline;
@@ -268,6 +270,8 @@ public sealed partial class Skanner
         }
         Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) },
             j => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist));
+
+        LeggTilFarlige(ff);
 
         // Modeller
         var modeller = ff.Modeller.OrderByDescending(m => m.Lengde).ToList();
@@ -341,7 +345,7 @@ public sealed partial class Skanner
         }
     }
 
-    private static void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
+    private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
     {
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")
@@ -360,7 +364,7 @@ public sealed partial class Skanner
         long lengde;
         try { lengde = fil.Length; } catch { return; }
         bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
-        if (lengde < minLengde && !liten) return;
+        if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff); return; }
         if (ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
         var modell = ModellFormat.Gjenkjenn(fil.FullName);
         if (modell != null) lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell));
@@ -455,6 +459,7 @@ public sealed partial class Skanner
         if (id.Sha256 != null) f.Detalj($"Modell-ID (SHA-256, lik på alle PC-er): {id.Sha256}");
         else if (id.Fingeravtrykk != null) f.Detalj($"Modell-ID (fingeravtrykk, likt på alle PC-er): {id.Fingeravtrykk}");
         if (m.KanKjoreKode && farligPlass) f.Advarsel("Kan kjøre skjult kode, og ligger i en nedlastingsmappe.");
+        YaraPaModell(sti, f);
         if (id.NavneFamilie?.Land == "CN" || id.Familie?.Land == "CN") f.Merknad($"Laget av {(id.NavneFamilie?.Land == "CN" ? id.NavneFamilie : id.Familie)!.Utgiver} i Kina. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
     }
 

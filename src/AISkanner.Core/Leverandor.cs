@@ -131,6 +131,7 @@ public sealed partial class Skanner
 
         foreach (var app in apper.Values.OrderBy(a => a.Rot, StringComparer.OrdinalIgnoreCase)) LeggTilLeverandorFunn(app, kjorer);
 
+        LeggTilFarlige(ff);
         // Modeller fra Hugging Face, LM Studio osv. og Python/Node med AI i AppData
         foreach (var (sti, lengde, m) in ff.Modeller.OrderByDescending(m => m.Lengde).Take(15)) LeggTilModell(sti, lengde, m);
         foreach (var (sti, (pakkeliste, agent, sprak)) in ff.Miljoer)
@@ -173,6 +174,7 @@ public sealed partial class Skanner
             return;
         }
         long lengde = fil.Length;
+        if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) SjekkLitenModell(fil, ff);
         if (lengde < 1024 * 1024) return;
         string? format = null;
         if (InnebygdeFormater.TryGetValue(ext, out var kjent)) format = kjent;

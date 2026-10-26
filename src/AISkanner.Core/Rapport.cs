@@ -31,6 +31,8 @@ public static class Rapport
             L($"Søketid: {totalt.TotalSeconds:0.0} sekunder (tregest: {string.Join(", ", treg)}).");
         }
         if (skanner != null)
+            L($"YARA-regler for AI-modeller: {skanner.Yara.Regler.Count} regler ({(skanner.Yara.Kilde == "innebygd" ? "innebygde" : skanner.Yara.Kilde)}).");
+        if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         L(new string('=', 60));
         foreach (var (gruppe, tittel) in Grupper)

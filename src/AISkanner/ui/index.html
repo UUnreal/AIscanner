@@ -168,7 +168,7 @@
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Leser aldri passord</span>
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg>Sender bare produktnavn</span>
   </div>
-  <div class="inkludert">Søket tar med AI-programmer og modeller, AI fra leverandører, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
+  <div class="inkludert">Søket tar med AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler som finner farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
   <div class="feil" id="feil"></div>
 </section>
 
@@ -310,7 +310,7 @@ function tegnDetalj(beholdSide) {
   if (!beholdSide) stedSide = 0;
   if (!f) { d.innerHTML = `<div class="tom">${alle.length ? "Velg et funn." : "Ingen AI funnet."}</div>`; return; }
   const mal = f.trafikk || [];
-  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type|Utgiver):?/, API = /^AI-API: /;
+  const ID = /^(Gjenkjent som|Familie ukjent|Modell-ID|Type|Utgiver|YARA):?/, API = /^AI-API: /;
   const ident = (f.steder || []).filter(t => ID.test(t)), api = (f.steder || []).filter(t => API.test(t)),
         steder = (f.steder || []).filter(t => !ID.test(t) && !API.test(t));
   const identTittel = ident.some(t => !t.startsWith("Utgiver")) ? "Hvem er modellen" : "Hvem står bak";
