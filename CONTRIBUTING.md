@@ -25,10 +25,11 @@ dotnet publish src/AISkanner -c Release -o publish
 
 ## Teste
 
-Prosjektet har ennå ingen enhetstester i repoet. Dette er det som finnes:
+Prosjektet har én selvtest og ellers ingen enhetstester. Dette er det som finnes:
 
 | Test | Kommando | Hvor |
 |---|---|---|
+| Selvtest av risikologikken: godkjentlista avviser falske navn og domener i filstier, godtar ekte produkter og nettsteder, og ukjente lokale AI-servere blir «Ukjent AI». Exit-kode 0 når alt er grønt. | `dotnet run --project src/AISkanner.Cli -- --selvtest` | Lokalt (ikke i byggeløypa ennå) |
 | Røyktest: skanner maskinen og sjekker at JSON er gyldig og exit-kode ≤ 2 | `dotnet run --project src/AISkanner.Cli -c Release` | Byggeløypa (Windows) |
 | YARA-motoren mot ekte YARA | `python3 verktoy/sammenlign-yara.py tests/yara/test.yar tests/yara/filer` | Lokalt |
 | `ai-modeller.yar` kompilerer i ekte YARA | `python3 verktoy/test-yara.py fil …` | Lokalt |

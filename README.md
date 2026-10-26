@@ -131,6 +131,7 @@ AISkanner.Cli --yara regler.yar fil1 [fil2 …]
 | `--txt` | Skriver tekstrapport i stedet for JSON. |
 | `--flagg` | Leser AI-flagg fra `Local State` i Chrome og Edge. Av som standard (se [SECURITY.md](SECURITY.md)). |
 | `--yara` | Kjører YARA-regler på filer og skriver samme format som `yara.exe`. |
+| `--selvtest` | Kjører selvtesten av risikologikken. Exit-kode 0 når alt er grønt. |
 
 Exit-kode: `0` = ingen funn, `1` = bare gule eller grønne funn, `2` = minst ett rødt funn.
 

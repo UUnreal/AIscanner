@@ -24,6 +24,8 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
+- `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
+  navn eller domener i filstier. Kjøres ikke i byggeløypa ennå.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
