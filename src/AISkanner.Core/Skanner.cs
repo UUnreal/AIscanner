@@ -1,0 +1,459 @@
+using System.Diagnostics;
+using System.Net;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Win32;
+
+namespace AISkanner;
+
+/// <summary>
+/// Finner lokal AI, skygge-AI og nettleser-AI.
+/// Sikkerhet: leser bare, endrer ingenting, trenger ikke admin, starter ingen andre programmer.
+/// Ingenting sendes ut med mindre brukeren slår på sårbarhetssjekk (da sendes bare produktord til NVD).
+/// </summary>
+public sealed class Skanner
+{
+    private readonly Regelsett _regler;
+    private readonly Dictionary<string, Funn> _funn = new(StringComparer.OrdinalIgnoreCase);
+    private IProgress<string>? _status;
+
+    /// <summary>
+    /// Sikkerhetssperre: de eneste filene skanneren åpner og leser innholdet i.
+    /// Passord, informasjonskapsler, historikk og lommebøker i nettleseren blir aldri åpnet.
+    /// </summary>
+    public static readonly IReadOnlySet<string> LovligeFiler =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json" };
+
+    public Skanner(Regelsett regler) => _regler = regler;
+
+    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default)
+    {
+        _funn.Clear();
+        _status = status;
+        var steg = new (string Tekst, Action Gjor)[]
+        {
+            ("Sjekker programmer som kjører nå...", Prosesser),
+            ("Sjekker installerte programmer...", Installert),
+            ("Sjekker tjenester og ting som starter automatisk...", Oppstart),
+            ("Sjekker AI-verktøy for utviklere og kjente mapper...", Spor),
+            ("Sjekker om AI-servere lytter på nettverket...", Porter),
+            ("Sjekker nettleserutvidelser...", Nettlesere),
+            ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
+            ("Leter etter AI-modellfiler (kan ta litt tid)...", Modellfiler),
+        };
+        foreach (var (tekst, gjor) in steg)
+        {
+            ct.ThrowIfCancellationRequested();
+            _status?.Report(tekst);
+            try { gjor(); } catch (Exception e) { Debug.WriteLine($"{tekst} feilet: {e.Message}"); }
+        }
+        if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
+        _status?.Report("Ferdig.");
+        return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
+    }
+
+    // ---------- hjelpere ----------
+
+    internal static string Utvid(string sti)
+    {
+        var s = Environment.ExpandEnvironmentVariables(sti);
+        return OperatingSystem.IsWindows() ? s : s.Replace('\\', '/');   // bare for testing utenfor Windows
+    }
+
+    private static bool Treffer(string tekst, string ord) =>
+        Regex.IsMatch(tekst, "(?<![a-z0-9])" + Regex.Escape(ord.ToLowerInvariant()) + "(?![a-z0-9])", RegexOptions.IgnoreCase);
+
+    private Produkt? FinnRegel(string? tekst, bool utvidelse = false)
+    {
+        if (string.IsNullOrWhiteSpace(tekst)) return null;
+        IEnumerable<Produkt> kandidater = utvidelse
+            ? _regler.Produkter.Where(p => p.Kategori == "Nettleser-AI" && !p.KunUtvidelse)
+                .Concat(_regler.Produkter.Where(p => p.KunUtvidelse))
+            : _regler.Produkter.Where(p => !p.KunUtvidelse);
+        return kandidater.FirstOrDefault(p => p.Treff.Any(o => Treffer(tekst, o)));
+    }
+
+    private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj, Produkt? regel = null)
+    {
+        if (!_funn.TryGetValue(navn, out var f))
+            _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel };
+        f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
+        if (hvor != null) f.LeggTilHvor(hvor);
+        if (detalj != null) f.Detalj(detalj);
+        return f;
+    }
+
+    private Funn FraRegel(Produkt p, string hvor, string detalj) =>
+        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.Hvorfor, hvor, detalj, p);
+
+    private static IEnumerable<string> Mapper(string sti)
+    {
+        try { return Directory.EnumerateDirectories(sti); } catch { return Array.Empty<string>(); }
+    }
+
+    private static IEnumerable<string> Filer(string sti)
+    {
+        try { return Directory.EnumerateFiles(sti); } catch { return Array.Empty<string>(); }
+    }
+
+    private static JsonDocument? LesJson(string sti)
+    {
+        if (!LovligeFiler.Contains(Path.GetFileName(sti))) return null;
+        try
+        {
+            var info = new FileInfo(sti);
+            if (!info.Exists || info.Length > 20 * 1024 * 1024) return null;
+            return JsonDocument.Parse(File.ReadAllText(sti), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+        }
+        catch { return null; }
+    }
+
+    private static string? Str(JsonElement e, string navn) =>
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty(navn, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+    private static IEnumerable<JsonElement> Liste(JsonElement e, string navn) =>
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty(navn, out var v) && v.ValueKind == JsonValueKind.Array
+            ? v.EnumerateArray() : Enumerable.Empty<JsonElement>();
+
+    // ---------- 1. Prosesser ----------
+    private void Prosesser()
+    {
+        foreach (var p in Process.GetProcesses())
+        {
+            using (p)
+            {
+                string? sti = null;
+                try { sti = p.MainModule?.FileName; } catch { }
+                var r = FinnRegel($"{p.ProcessName} {sti}");
+                if (r == null) continue;
+                FraRegel(r, "Kjører nå", $"Prosess: {p.ProcessName} (PID {p.Id}) {sti}").Merknad("Kjører akkurat nå.");
+            }
+        }
+    }
+
+    // ---------- 2. Installerte programmer ----------
+    private void Installert()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var steder = new (RegistryKey Rot, string Sti)[]
+        {
+            (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        };
+        foreach (var (rot, sti) in steder)
+        {
+            using var k = rot.OpenSubKey(sti);
+            if (k == null) continue;
+            foreach (var under in k.GetSubKeyNames())
+            {
+                using var app = k.OpenSubKey(under);
+                var navn = app?.GetValue("DisplayName") as string;
+                var r = FinnRegel(navn);
+                if (r != null) FraRegel(r, "Installert program", $"Program: {navn}");
+            }
+        }
+        // Microsoft Store-apper for innlogget bruker
+        using var pakker = Registry.CurrentUser.OpenSubKey(@"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
+        foreach (var pakke in pakker?.GetSubKeyNames() ?? Array.Empty<string>())
+        {
+            var r = FinnRegel(pakke.Replace('_', ' '));
+            if (r != null) FraRegel(r, "Installert app (Microsoft Store)", $"App: {pakke.Split('_')[0]}");
+        }
+    }
+
+    // ---------- 3. Tjenester, oppstart og planlagte oppgaver ----------
+    private void Oppstart()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            using (var tjenester = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services"))
+            {
+                foreach (var navn in tjenester?.GetSubKeyNames() ?? Array.Empty<string>())
+                {
+                    using var t = tjenester!.OpenSubKey(navn);
+                    if (t == null) continue;
+                    var visning = t.GetValue("DisplayName") as string;
+                    var bilde = t.GetValue("ImagePath") as string;
+                    var r = FinnRegel($"{navn} {visning} {bilde}");
+                    if (r == null) continue;
+                    var f = FraRegel(r, "Windows-tjeneste", $"Tjeneste: {visning ?? navn}");
+                    if (t.GetValue("Start") is int start && start == 2) f.Merknad("Starter automatisk som tjeneste.");
+                }
+            }
+
+            var run = new (RegistryKey Rot, string Sti)[]
+            {
+                (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
+                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
+                (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
+            };
+            foreach (var (rot, sti) in run)
+            {
+                using var k = rot.OpenSubKey(sti);
+                foreach (var verdi in k?.GetValueNames() ?? Array.Empty<string>())
+                {
+                    var r = FinnRegel($"{verdi} {k!.GetValue(verdi)}");
+                    if (r != null) FraRegel(r, "Starter med Windows", $"Oppstart: {verdi}").Merknad("Starter automatisk når PC-en slås på.");
+                }
+            }
+
+            // Planlagte oppgaver: bare navnene fra registeret (oppgavefilene krever ofte admin)
+            using var tre = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree");
+            if (tre != null) Oppgaver(tre, "");
+        }
+
+        foreach (var mappe in new[] { @"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup", @"%ProgramData%\Microsoft\Windows\Start Menu\Programs\StartUp" })
+        {
+            foreach (var fil in Filer(Utvid(mappe)))
+            {
+                var r = FinnRegel(Path.GetFileName(fil));
+                if (r != null) FraRegel(r, "Starter med Windows", $"Oppstartsmappe: {Path.GetFileName(fil)}").Merknad("Starter automatisk når PC-en slås på.");
+            }
+        }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void Oppgaver(RegistryKey k, string sti)
+    {
+        foreach (var navn in k.GetSubKeyNames())
+        {
+            using var under = k.OpenSubKey(navn);
+            if (under == null) continue;
+            var full = sti + "\\" + navn;
+            var r = FinnRegel(full.Replace('\\', ' '));
+            if (r != null) FraRegel(r, "Planlagt oppgave", $"Oppgave: {full}").Merknad("Har en planlagt oppgave i Windows.");
+            if (sti.Count(c => c == '\\') < 4) Oppgaver(under, full);
+        }
+    }
+
+    // ---------- 4. Kjente mapper, kommandoer, npm og kodeeditorer ----------
+    private void Spor()
+    {
+        var path = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+        var endelser = OperatingSystem.IsWindows() ? new[] { ".exe", ".cmd", ".bat", ".ps1" } : new[] { "" };
+        foreach (var r in _regler.Produkter)
+        {
+            foreach (var m in r.Mapper)
+            {
+                var sti = Utvid(m);
+                if (Directory.Exists(sti)) FraRegel(r, "Mappe på disk", $"Mappe: {sti}");
+            }
+            foreach (var kommando in r.Kommandoer)
+            {
+                var treff = path.SelectMany(d => endelser.Select(e => Path.Combine(d, kommando + e))).FirstOrDefault(File.Exists);
+                if (treff != null) FraRegel(r, "Kommando i terminal", $"Kommando: {treff}");
+            }
+        }
+
+        // Globale npm-pakker (der Claude Code, Codex og Gemini CLI vanligvis installeres)
+        foreach (var d in Mapper(Utvid(@"%APPDATA%\npm\node_modules")))
+        {
+            var navn = Path.GetFileName(d);
+            var pakker = navn.StartsWith('@') ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
+            foreach (var n in pakker)
+            {
+                var r = FinnRegel(n);
+                if (r != null) FraRegel(r, "npm-pakke", $"npm: {n}");
+            }
+        }
+
+        foreach (var m in new[] { @"%USERPROFILE%\.vscode\extensions", @"%USERPROFILE%\.vscode-insiders\extensions", @"%USERPROFILE%\.cursor\extensions", @"%USERPROFILE%\.windsurf\extensions" })
+        {
+            foreach (var d in Mapper(Utvid(m)))
+            {
+                var id = Regex.Replace(Path.GetFileName(d), @"-\d+(\.\d+)*.*$", "");
+                var r = FinnRegel(id);
+                if (r != null) FraRegel(r, "Utvidelse i kodeeditor", $"Editor-utvidelse: {id}");
+            }
+        }
+    }
+
+    // ---------- 5. Åpne porter ----------
+    private void Porter()
+    {
+        var lyttere = TcpTabell.Hent();
+        foreach (var r in _regler.Produkter.Where(p => p.Porter.Count > 0))
+        {
+            foreach (var l in lyttere.Where(l => r.Porter.Contains(l.Port)))
+            {
+                string prosess;
+                try { using var p = Process.GetProcessById(l.Pid); prosess = p.ProcessName; } catch { continue; }
+                // Generiske porter (8080, 5001 osv.) teller bare hvis prosessen ligner på verktøyet
+                if (FinnRegel(prosess)?.Navn != r.Navn) continue;
+                bool apen = l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any);
+                var f = FraRegel(r, "Lytter på nettverksport", $"Port {l.Port} på {l.Adresse} ({prosess})");
+                if (apen)
+                {
+                    f.Risiko = Risiko.Rod;
+                    f.Merknad($"Port {l.Port} er ÅPEN mot nettverket. Andre på samme nett kan bruke AI-en uten passord.");
+                }
+                else f.Merknad($"Port {l.Port} lytter bare lokalt (OK).");
+            }
+        }
+    }
+
+    // ---------- 6. Modellfiler (leser bare navn og størrelse, aldri innhold) ----------
+    private void Modellfiler()
+    {
+        var endelser = new HashSet<string>(_regler.ModellfilEndelser, StringComparer.OrdinalIgnoreCase);
+        long min = _regler.ModellfilMinMB * 1024L * 1024L;
+        var steder = new[] { @"%USERPROFILE%\Downloads", @"%USERPROFILE%\Documents", @"%USERPROFILE%\Desktop", @"%USERPROFILE%\.cache",
+                             @"%USERPROFILE%\.ollama", @"%USERPROFILE%\.lmstudio", @"%LOCALAPPDATA%\nomic.ai", @"%USERPROFILE%\models", @"C:\models" };
+        var valg = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 6, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
+        var funnet = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        foreach (var s in steder)
+        {
+            var sti = Utvid(s);
+            if (!Directory.Exists(sti)) continue;
+            foreach (var fil in new DirectoryInfo(sti).EnumerateFiles("*", valg))
+            {
+                long lengde;
+                try { lengde = fil.Length; } catch { continue; }
+                if (lengde < min) continue;
+                bool ollamaBlob = Regex.IsMatch(fil.FullName, @"[\\/]\.ollama[\\/]models[\\/]blobs[\\/]", RegexOptions.IgnoreCase);
+                if (endelser.Contains(fil.Extension) || ollamaBlob) funnet[fil.FullName] = lengde;
+            }
+        }
+        if (funnet.Count == 0) return;
+        var gb = Math.Round(funnet.Values.Sum() / 1073741824.0, 1);
+        var f = LeggTil("AI-modellfiler på disk", "Lokal AI", Risiko.Gul,
+            "Nedlastede språk- eller bildemodeller. De kan kjøres uten internett og uten kontroll fra IT. Modeller fra ukjente kilder kan være manipulert.",
+            $"{funnet.Count} filer, {gb} GB", null);
+        foreach (var (navn, lengde) in funnet.OrderByDescending(x => x.Value))
+            f.Detalj($"{navn} ({Math.Round(lengde / 1073741824.0, 2)} GB)");
+    }
+
+    // ---------- 7. Nettleserutvidelser ----------
+    private static readonly (string Navn, string Sti)[] Chromium =
+    {
+        ("Chrome", @"%LOCALAPPDATA%\Google\Chrome\User Data"),
+        ("Edge", @"%LOCALAPPDATA%\Microsoft\Edge\User Data"),
+        ("Brave", @"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data"),
+        ("Vivaldi", @"%LOCALAPPDATA%\Vivaldi\User Data"),
+        ("Opera", @"%APPDATA%\Opera Software"),
+    };
+
+    private void Nettlesere()
+    {
+        foreach (var (nettleser, rotSti) in Chromium)
+        {
+            foreach (var profil in Mapper(Utvid(rotSti)))
+            {
+                var utv = Path.Combine(profil, "Extensions");
+                if (!Directory.Exists(utv)) continue;
+                foreach (var idMappe in Mapper(utv))
+                {
+                    var ver = Mapper(idMappe).OrderByDescending(x => x, StringComparer.Ordinal).FirstOrDefault();
+                    if (ver == null) continue;
+                    using var doc = LesJson(Path.Combine(ver, "manifest.json"));
+                    if (doc == null) continue;
+                    var m = doc.RootElement;
+                    var lokale = Str(m, "default_locale") ?? "en";
+                    var navn = Oversett(ver, lokale, Str(m, "name"));
+                    var besk = Oversett(ver, lokale, Str(m, "description"));
+                    var tilg = Liste(m, "permissions").Concat(Liste(m, "host_permissions"))
+                        .Concat(Liste(m, "content_scripts").SelectMany(cs => Liste(cs, "matches")))
+                        .Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!);
+                    VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg);
+                }
+            }
+        }
+
+        foreach (var profil in Mapper(Utvid(@"%APPDATA%\Mozilla\Firefox\Profiles")))
+        {
+            using var doc = LesJson(Path.Combine(profil, "extensions.json"));
+            if (doc == null) continue;
+            foreach (var a in Liste(doc.RootElement, "addons"))
+            {
+                if (Str(a, "type") != "extension" || Str(a, "location") != "app-profile") continue;
+                a.TryGetProperty("defaultLocale", out var dl);
+                var tilg = a.TryGetProperty("userPermissions", out var up) ? Liste(up, "origins").Select(e => e.GetString() ?? "") : Enumerable.Empty<string>();
+                VurderUtvidelse($"Firefox ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg);
+            }
+        }
+    }
+
+    /// <summary>Slår opp __MSG_navn__ i utvidelsens språkfil.</summary>
+    private static string? Oversett(string mappe, string lokale, string? tekst)
+    {
+        if (tekst == null) return null;
+        var m = Regex.Match(tekst, "^__MSG_(.+)__$");
+        if (!m.Success) return tekst;
+        using var doc = LesJson(Path.Combine(mappe, "_locales", lokale, "messages.json"));
+        if (doc == null || doc.RootElement.ValueKind != JsonValueKind.Object) return tekst;
+        foreach (var p in doc.RootElement.EnumerateObject())
+            if (string.Equals(p.Name, m.Groups[1].Value, StringComparison.OrdinalIgnoreCase))
+                return Str(p.Value, "message") ?? tekst;
+        return tekst;
+    }
+
+    private void VurderUtvidelse(string hvor, string? navn, string? beskrivelse, IEnumerable<string> tilganger)
+    {
+        if (string.IsNullOrWhiteSpace(navn)) return;
+        bool alleSider = tilganger.Any(t => t == "<all_urls>" || Regex.IsMatch(t, @"^(\*|https?)://\*/\*$"));
+        Funn f;
+        var r = FinnRegel(navn, utvidelse: true);
+        if (r != null) f = FraRegel(r, $"Utvidelse i {hvor}", $"{hvor}: {navn}");
+        else
+        {
+            var tekst = $" {navn} {beskrivelse} ".ToLowerInvariant();
+            if (!_regler.UkjentUtvidelseOrd.Any(tekst.Contains)) return;
+            f = LeggTil($"Ukjent AI-utvidelse: {navn}", "Nettleser-AI", Risiko.Gul,
+                "Ser ut som en AI-utvidelse, men er ikke i regelfilen. Sjekk hvem som lager den og hva den sender.",
+                $"Utvidelse i {hvor}", $"{hvor}: {navn}");
+        }
+        if (alleSider)
+        {
+            f.Risiko = Risiko.Rod;
+            f.Merknad("Kan lese og endre innholdet på ALLE nettsider du besøker, også nettbank og interne systemer.");
+        }
+    }
+
+    // ---------- 8. Innebygd AI i nettleseren ----------
+    private void InnebygdAi()
+    {
+        foreach (var r in _regler.NettleserInnebygd)
+        {
+            var rot = Utvid(r.Brukerdata);
+            var modeller = Mapper(rot).Where(d => _regler.InnebygdMappeOrd.Any(o => Path.GetFileName(d).Contains(o, StringComparison.OrdinalIgnoreCase))).ToList();
+            long storrelse = modeller.Sum(MappeStorrelse);
+            bool harModell = storrelse > 50L * 1024 * 1024;
+            var policy = LesPolicy(r.PolicyNokkel, r.PolicyVerdi);
+            if (!harModell && policy == null) continue;
+
+            bool blokkert = policy?.Verdi == 1;
+            var hvor = harModell ? $"Modell lastet ned ({Math.Round(storrelse / 1073741824.0, 1)} GB)" : "Ingen modell funnet";
+            var f = LeggTil(r.Navn, "Nettleser-AI (innebygd)", blokkert && !harModell ? Risiko.Gronn : Risiko.Gul, r.Hvorfor, hvor, null);
+            foreach (var m in modeller) f.Detalj($"Mappe: {m}");
+            if (policy == null) f.Merknad("Ingen bedriftspolicy er satt. Nettleseren bestemmer selv om AI-modellen lastes ned.");
+            else if (blokkert)
+            {
+                f.Merknad($"Bedriftspolicy blokkerer nedlasting ({r.PolicyVerdi}=1, {policy.Value.Hvor}).");
+                if (harModell) f.Merknad("Policy er satt, men modellen ligger fortsatt på disk.");
+            }
+            else f.Merknad($"Bedriftspolicy tillater lokal AI ({r.PolicyVerdi}={policy.Value.Verdi}).");
+        }
+    }
+
+    private static long MappeStorrelse(string sti)
+    {
+        try
+        {
+            var valg = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
+            return new DirectoryInfo(sti).EnumerateFiles("*", valg).Sum(f => f.Length);
+        }
+        catch { return 0; }
+    }
+
+    private static (int Verdi, string Hvor)? LesPolicy(string nokkel, string verdi)
+    {
+        if (!OperatingSystem.IsWindows()) return null;
+        foreach (var (rot, navn) in new[] { (Registry.LocalMachine, "HKLM"), (Registry.CurrentUser, "HKCU") })
+        {
+            using var k = rot.OpenSubKey(nokkel);
+            if (k?.GetValue(verdi) is int v) return (v, navn);
+        }
+        return null;
+    }
+}

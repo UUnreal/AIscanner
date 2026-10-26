@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms Condition="'$(LinuxBygg)' != 'true'">true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AISkanner.App</RootNamespace>
+    <AssemblyName>AISkanner</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <Product>AI-skanner</Product>
+    <Description>Finner lokal AI, skygge-AI og nettleser-AI. Leser bare.</Description>
+    <Version>0.3.0</Version>
+
+    <!-- Én frittstående exe: ingen .NET-installasjon, ingen PowerShell -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!-- Nødløsning for bygg på Linux uten Windows Desktop-SDK. Offisielle bygg skjer på Windows (se .github/workflows). -->
+  <ItemGroup Condition="'$(LinuxBygg)' == 'true'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    <Using Include="System.Windows.Forms" />
+    <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AISkanner.Core\AISkanner.Core.csproj" />
+  </ItemGroup>
+
+</Project>

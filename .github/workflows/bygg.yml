@@ -1,0 +1,59 @@
+name: Bygg
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bygg:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Bygg alt
+        run: dotnet build AISkanner.sln -c Release
+
+      - name: Røyktest (skanner byggemaskinen og skriver JSON)
+        shell: pwsh
+        run: |
+          dotnet run --project src/AISkanner.Cli -c Release --no-build | Out-File skann.json -Encoding utf8
+          # Exit-kode 0/1/2 betyr ingen/gule/røde funn. Alt annet er en feil.
+          if ($LASTEXITCODE -gt 2) { exit 1 }
+          Get-Content skann.json | ConvertFrom-Json | Out-Null
+
+      - name: Lag én exe
+        run: dotnet publish src/AISkanner -c Release -o publish
+
+      - name: SHA256
+        shell: pwsh
+        run: Get-FileHash publish/AISkanner.exe -Algorithm SHA256 | Format-List | Tee-Object publish/SHA256.txt
+
+      - uses: actions/upload-artifact@v4
+        id: last-opp
+        with:
+          name: AISkanner-usignert
+          path: |
+            publish/AISkanner.exe
+            publish/SHA256.txt
+
+      # Kodesignering via SignPath Foundation (gratis for åpen kildekode).
+      # Slås på når prosjektet er godkjent og SIGNPATH_API_TOKEN er lagt inn som secret.
+      # - uses: signpath/github-action-submit-signing-request@v1
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   with:
+      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+      #     organization-id: '<fra SignPath>'
+      #     project-slug: 'ai-skanner'
+      #     signing-policy-slug: 'release-signing'
+      #     github-artifact-id: ${{ steps.last-opp.outputs.artifact-id }}
+      #     wait-for-completion: true
+      #     output-artifact-directory: signert

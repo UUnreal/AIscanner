@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{07932278-46E0-4747-B49D-4CEF945BBE6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AISkanner.Core", "src\AISkanner.Core\AISkanner.Core.csproj", "{28F9C1CC-38BE-4D57-8558-00056BDD7CFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AISkanner.Cli", "src\AISkanner.Cli\AISkanner.Cli.csproj", "{56F0D0BA-48F7-4FAD-813A-28D587B866BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{28F9C1CC-38BE-4D57-8558-00056BDD7CFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28F9C1CC-38BE-4D57-8558-00056BDD7CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28F9C1CC-38BE-4D57-8558-00056BDD7CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28F9C1CC-38BE-4D57-8558-00056BDD7CFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56F0D0BA-48F7-4FAD-813A-28D587B866BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56F0D0BA-48F7-4FAD-813A-28D587B866BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56F0D0BA-48F7-4FAD-813A-28D587B866BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56F0D0BA-48F7-4FAD-813A-28D587B866BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{28F9C1CC-38BE-4D57-8558-00056BDD7CFA} = {07932278-46E0-4747-B49D-4CEF945BBE6D}
+		{56F0D0BA-48F7-4FAD-813A-28D587B866BC} = {07932278-46E0-4747-B49D-4CEF945BBE6D}
+	EndGlobalSection
+EndGlobal

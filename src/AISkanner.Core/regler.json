@@ -1,0 +1,382 @@
+{
+  "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
+  "versjon": "2026-10-26",
+  "produkter": [
+    {
+      "navn": "Ollama",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "ollama"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.ollama",
+        "%LOCALAPPDATA%\\Programs\\Ollama"
+      ],
+      "porter": [
+        11434
+      ],
+      "hvorfor": "Kjører språkmodeller lokalt. Data blir på maskinen, men API-et har ingen innlogging. Blir rødt hvis porten er åpen mot nettverket.",
+      "nvd": "ollama"
+    },
+    {
+      "navn": "LM Studio",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "lm studio",
+        "lmstudio",
+        "lm-studio"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.lmstudio",
+        "%USERPROFILE%\\.cache\\lm-studio",
+        "%LOCALAPPDATA%\\Programs\\LM Studio"
+      ],
+      "porter": [
+        1234
+      ],
+      "hvorfor": "Kjører språkmodeller lokalt med valgfri server. Modeller lastes ned fra internett uten kontroll fra IT.",
+      "nvd": "lm studio"
+    },
+    {
+      "navn": "GPT4All",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "gpt4all"
+      ],
+      "mapper": [
+        "%LOCALAPPDATA%\\nomic.ai",
+        "%USERPROFILE%\\gpt4all"
+      ],
+      "porter": [
+        4891
+      ],
+      "hvorfor": "Lokal chat-app med språkmodeller. Kan lese lokale dokumenter (LocalDocs).",
+      "nvd": "gpt4all"
+    },
+    {
+      "navn": "llama.cpp / KoboldCpp",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "llama-server",
+        "llama-cli",
+        "koboldcpp"
+      ],
+      "mapper": [],
+      "porter": [
+        8080,
+        5001
+      ],
+      "hvorfor": "Kjører språkmodeller fra kommandolinjen. Ofte lastet ned som løse filer uten installasjon.",
+      "nvd": "llama.cpp"
+    },
+    {
+      "navn": "Jan",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "jan.exe",
+        "jan ai"
+      ],
+      "mapper": [
+        "%APPDATA%\\Jan",
+        "%USERPROFILE%\\jan"
+      ],
+      "porter": [
+        1337
+      ],
+      "hvorfor": "Lokal chat-app med innebygd API-server."
+    },
+    {
+      "navn": "Stable Diffusion / ComfyUI",
+      "kategori": "Lokal AI",
+      "risiko": "gul",
+      "treff": [
+        "comfyui",
+        "stable-diffusion-webui",
+        "automatic1111",
+        "fooocus"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\ComfyUI",
+        "%USERPROFILE%\\stable-diffusion-webui"
+      ],
+      "porter": [
+        7860,
+        8188
+      ],
+      "hvorfor": "Bildegenerering lokalt. Tredjeparts tillegg (custom nodes) har tidligere inneholdt skadevare.",
+      "nvd": "comfyui"
+    },
+    {
+      "navn": "Claude Code",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "claude-code",
+        "@anthropic-ai/claude-code"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.claude"
+      ],
+      "kommandoer": [
+        "claude"
+      ],
+      "porter": [],
+      "hvorfor": "AI-agent som kan lese filer, kjøre kommandoer og sende kode til skyen. Høy risiko uten avtale og retningslinjer.",
+      "nvd": "claude code"
+    },
+    {
+      "navn": "OpenAI Codex CLI",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@openai/codex",
+        "codex.exe"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.codex"
+      ],
+      "kommandoer": [
+        "codex"
+      ],
+      "porter": [],
+      "hvorfor": "AI-agent som kan kjøre kommandoer og endre filer. Kode sendes til OpenAI.",
+      "nvd": "codex cli"
+    },
+    {
+      "navn": "Gemini CLI",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@google/gemini-cli"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.gemini"
+      ],
+      "kommandoer": [
+        "gemini"
+      ],
+      "porter": [],
+      "hvorfor": "AI-agent som kan kjøre kommandoer og lese filer. Data sendes til Google."
+    },
+    {
+      "navn": "Aider",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "aider-chat",
+        "aider.exe"
+      ],
+      "mapper": [],
+      "kommandoer": [
+        "aider"
+      ],
+      "porter": [],
+      "hvorfor": "AI-kodeagent som endrer filer og bruker valgfri skytjeneste.",
+      "nvd": "aider"
+    },
+    {
+      "navn": "Cursor",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "cursor"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.cursor",
+        "%LOCALAPPDATA%\\Programs\\cursor"
+      ],
+      "porter": [],
+      "hvorfor": "Kodeeditor med innebygd AI-agent. Kildekode sendes til skyen.",
+      "nvd": "cursor ai"
+    },
+    {
+      "navn": "Windsurf",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "windsurf",
+        "codeium"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.codeium",
+        "%USERPROFILE%\\.windsurf"
+      ],
+      "porter": [],
+      "hvorfor": "Kodeeditor med AI-agent. Kildekode sendes til skyen."
+    },
+    {
+      "navn": "Continue / Cline (VS Code)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "continue.continue",
+        "saoudrizwan.claude-dev",
+        "cline"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.continue"
+      ],
+      "porter": [],
+      "hvorfor": "AI-agenter inne i VS Code som kan endre filer og kjøre kommandoer."
+    },
+    {
+      "navn": "GitHub Copilot (VS Code)",
+      "kategori": "Skygge-AI",
+      "risiko": "gul",
+      "treff": [
+        "github.copilot"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kodeassistent. Grønn hvis bedriften har Copilot Business med avtale, ellers gul."
+    },
+    {
+      "navn": "ChatGPT (skrivebordsapp)",
+      "kategori": "Skygge-AI",
+      "risiko": "gul",
+      "treff": [
+        "chatgpt",
+        "openai.chatgpt"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Alt som limes inn sendes til OpenAI. Gratis- og Plus-kontoer kan brukes til trening."
+    },
+    {
+      "navn": "Claude (skrivebordsapp)",
+      "kategori": "Skygge-AI",
+      "risiko": "gul",
+      "treff": [
+        "anthropicclaude",
+        "claude.exe",
+        "claude desktop"
+      ],
+      "mapper": [
+        "%APPDATA%\\Claude"
+      ],
+      "porter": [],
+      "hvorfor": "Alt som limes inn sendes til Anthropic. MCP-tilkoblinger kan gi appen tilgang til filer og systemer."
+    },
+    {
+      "navn": "Microsoft Copilot",
+      "kategori": "Skygge-AI",
+      "risiko": "gronn",
+      "treff": [
+        "microsoft.copilot",
+        "microsoft 365 copilot"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Del av Windows/Microsoft 365. Lav risiko når bedriften styrer den via Microsoft 365-avtale."
+    },
+    {
+      "navn": "Perplexity",
+      "kategori": "Skygge-AI",
+      "risiko": "gul",
+      "treff": [
+        "perplexity"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "AI-søk. Spørsmål og innlimt tekst sendes til tredjepart."
+    },
+    {
+      "navn": "DeepSeek",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "deepseek"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data."
+    },
+    {
+      "navn": "Grammarly",
+      "kategori": "Nettleser-AI",
+      "risiko": "gul",
+      "treff": [
+        "grammarly"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Leser tekst du skriver i alle felt, også e-post og interne systemer."
+    },
+    {
+      "navn": "Monica / Sider / Merlin (AI-sidepanel)",
+      "kategori": "Nettleser-AI",
+      "risiko": "rod",
+      "treff": [
+        "monica",
+        "sider",
+        "merlin"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "AI-sidepaneler som leser innholdet på sidene du besøker og sender det til tredjeparts AI."
+    },
+    {
+      "navn": "Gemini / Claude / ChatGPT i nettleser",
+      "kategori": "Nettleser-AI",
+      "risiko": "gul",
+      "treff": [
+        "chatgpt",
+        "claude",
+        "gemini",
+        "copilot"
+      ],
+      "kunUtvidelse": true,
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "AI-utvidelse i nettleseren. Sjekk hvilke sider den har tilgang til."
+    }
+  ],
+  "ukjentUtvidelseOrd": [
+    "ai ",
+    " ai",
+    "gpt",
+    "llm",
+    "chatbot",
+    "assistant",
+    "copilot",
+    "summar",
+    "openai",
+    "anthropic"
+  ],
+  "modellfilEndelser": [
+    ".gguf",
+    ".ggml",
+    ".safetensors",
+    ".onnx"
+  ],
+  "modellfilMinMB": 200,
+  "nettleserInnebygd": [
+    {
+      "navn": "Chrome innebygd AI (Gemini Nano)",
+      "nettleser": "Chrome",
+      "brukerdata": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+      "policyNokkel": "SOFTWARE\\Policies\\Google\\Chrome",
+      "policyVerdi": "GenAILocalFoundationalModelSettings",
+      "hvorfor": "Chrome har lastet ned en lokal språkmodell (flere GB). Nettsider og utvidelser kan bruke den via Chromes AI-API-er uten at IT ser det. Data blir på maskinen, men modellen er ikke styrt av bedriften. Kan slås av med policyen GenAILocalFoundationalModelSettings = 1."
+    },
+    {
+      "navn": "Edge innebygd AI (lokal modell)",
+      "nettleser": "Edge",
+      "brukerdata": "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data",
+      "policyNokkel": "SOFTWARE\\Policies\\Microsoft\\Edge",
+      "policyVerdi": "GenAILocalFoundationalModelSettings",
+      "hvorfor": "Edge har lastet ned en lokal språkmodell. Nettsider og utvidelser kan bruke den via nettleserens AI-API-er. Ikke styrt av bedriften med mindre policy er satt."
+    }
+  ],
+  "innebygdMappeOrd": [
+    "OnDeviceModel",
+    "OnDeviceLLM",
+    "EdgeLLM",
+    "GenAI"
+  ]
+}
