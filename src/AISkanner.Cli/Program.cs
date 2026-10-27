@@ -53,7 +53,7 @@ if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }
+if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null, funn), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }
 if (args.Contains("--revisjon")) { Console.WriteLine(Revisjon.Tekst(funn, skanner, Nettverk.ErAdmin() ? "administrator" : "bruker", args.Contains("--en"))); return 0; }
 Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;
@@ -228,6 +228,9 @@ static class Selvtest
         var kontroll = Skanner.Kontroll(Regelsett.Last());
         Sjekk("kontroll: alle alarmer slår ut med kjente spor", !kontroll.Contains("FEIL") && kontroll.Contains("alarmer slo ut riktig"), true);
         Sjekk("kontroll: midlertidig mappe slettet", kontroll.Contains("Den midlertidige mappa er slettet."), true);
+        Sjekk("kart: registernøkkel havner under Registeret", Kart.Plass("Register", @"HKCU\Software\Ollama").StartsWith(@"Registeret\HKCU\"), true);
+        Sjekk("kart: fil havner under Disk", Kart.Plass("Fil", @"C:\Users\a\.claude\settings.json") == @"Disk\C:\Users\a\.claude\settings.json", true);
+        Sjekk("kart: port havner under Nettverk", Kart.Plass("Port", "127.0.0.1:11434/api/tags").StartsWith(@"Nettverk\"), true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
         return feil == 0 ? 0 : 1;

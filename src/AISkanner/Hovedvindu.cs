@@ -386,7 +386,7 @@ public sealed class Hovedvindu : Form
 
     private void StoppAlleFolg() { foreach (var id in _folg.Keys.ToList()) StoppFolg(id); }
 
-    private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti) });
+    private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti, _resultat) });
 
     private void Lagre()
     {

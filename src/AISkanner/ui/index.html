@@ -120,6 +120,52 @@
   .kilde .sha { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11px; color: var(--dempet); user-select: text; overflow-wrap: anywhere; }
   .ingenAi { display: flex; gap: 10px; align-items: center; background: var(--gronn-myk); color: var(--gronn-tekst); border-radius: 10px; padding: 8px 12px; font-size: 13px; flex: none; margin-top: 8px; }
   .ingenAi svg { width: 18px; height: 18px; flex: none; }
+  /* Datagrunnlag → Kart: alle steder søket rørte, som SpaceSniffer. Klikk for å gå inn, ⓘ for detaljer. */
+  .skTopp { display: flex; gap: 8px; align-items: center; flex: none; margin: 4px 0 6px; min-width: 0; }
+  .skSti { display: flex; gap: 2px; align-items: center; flex: 1; min-width: 0; overflow: hidden; font-size: 13px; white-space: nowrap; }
+  .skSti button { border: 0; background: none; color: var(--bla); font: inherit; padding: 2px 4px; border-radius: 6px; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
+  .skSti button:last-child { color: var(--tekst); font-weight: 600; }
+  .skSti i { color: var(--dempet); font-style: normal; flex: none; }
+  .skInfoKnapp { border: 0; background: var(--fyll); color: var(--tekst); font: inherit; font-size: 12.5px; padding: 4px 11px; border-radius: 20px; cursor: pointer; flex: none; }
+  .skFlate { position: relative; flex: 1; min-height: 120px; border-radius: 10px; overflow: hidden; background: var(--fyll); }
+  .skFlis { position: absolute; box-sizing: border-box; border: 1px solid var(--kort); border-radius: 4px; overflow: hidden; cursor: pointer; background: var(--fyll); font-size: 11.5px; line-height: 1.25; }
+  .skFlis:hover { outline: 2px solid var(--bla); outline-offset: -2px; }
+  .skFlis.niva2:hover { z-index: 2; }
+  .skFlis .skNavn { padding: 3px 6px 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .skFlis .skTall { padding: 0 6px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .skFlis.niva1 { background: var(--kort); }
+  .skFlis.niva2 { border-color: var(--kort); }
+  .skFlis.r0 { background: var(--gronn-myk); } .skFlis.r1 { background: var(--gul-myk); } .skFlis.r2 { background: var(--rod-myk); }
+  .skFlis.niva1.r0 { box-shadow: inset 0 3px 0 var(--gronn); } .skFlis.niva1.r1 { box-shadow: inset 0 3px 0 var(--gul); } .skFlis.niva1.r2 { box-shadow: inset 0 3px 0 var(--rod); }
+  .skFlis.mangler { border: 1.5px dashed var(--gul); }
+  .skFlis.rest { opacity: .7; }
+  .skFunn { display: inline-block; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--rod); color: #fff; font-size: 10.5px; font-weight: 700; text-align: center; line-height: 15px; margin-left: 4px; vertical-align: 1px; }
+  .skFunn.r1 { background: var(--gul); } .skFunn.r0 { background: var(--gronn); }
+  .skForklaring { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--dempet); flex: none; margin-top: 6px; }
+  .skForklaring span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--fyll); }
+  .skForklaring .r2::before { background: var(--rod-myk); box-shadow: inset 0 0 0 1.5px var(--rod); } .skForklaring .r1::before { background: var(--gul-myk); box-shadow: inset 0 0 0 1.5px var(--gul); }
+  .skForklaring .r0::before { background: var(--gronn-myk); box-shadow: inset 0 0 0 1.5px var(--gronn); } .skForklaring .m::before { background: none; border: 1.5px dashed var(--gul); box-sizing: border-box; }
+  .skTom { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dempet); font-size: 13px; padding: 20px; text-align: center; }
+  /* Infovinduet: åpnes over kartet */
+  .skVindu { position: absolute; inset: 0; background: rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; z-index: 4; padding: 18px; }
+  .skKort { background: var(--kort); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.3); width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  .skKort header { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px 8px; }
+  .skKort header div { flex: 1; min-width: 0; }
+  .detalj .skKort header h3, .skKort header h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; text-transform: none; letter-spacing: normal; color: var(--tekst); font-weight: 700; }
+  .skKort .skFull { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); overflow-wrap: anywhere; user-select: text; margin-top: 3px; }
+  .skKort header button { border: 0; background: var(--fyll); color: var(--tekst); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 15px; flex: none; }
+  .skKort .skInnhold { padding: 0 16px 14px; overflow: auto; display: grid; gap: 10px; }
+  .skKort h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--dempet); font-weight: 600; }
+  .skRuter { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+  .skRuter div { background: var(--fyll); border-radius: 10px; padding: 6px 10px; }
+  .skRuter b { display: block; font-size: 16px; } .skRuter small { color: var(--dempet); font-size: 11.5px; }
+  .skRuter .mangler b { color: var(--rod); }
+  .skListe { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .skListe li { background: var(--fyll); border-radius: 9px; padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; min-width: 0; }
+  .skListe li.klikk { cursor: pointer; } .skListe li.klikk:hover { background: var(--bla-myk); }
+  .skListe li .prikk { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .skListe li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .skListe li small { color: var(--dempet); margin-left: auto; flex: none; }
   /* Språkvalg: øverst til høyre før søket, ved knappene i resultatet. Ett trykk bytter all tekst. */
   .sprak { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; z-index: 5; }
   body > .sprak { position: fixed; top: 14px; right: 18px; }
@@ -483,7 +529,7 @@ function lukkArk() { valgt = null; dataApen = false; $("ark").classList.remove("
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
 let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null;
-function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; logg = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
+function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
 const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
 const postLinje = p => `<li class="post"><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
 const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
@@ -507,7 +553,7 @@ function tegnData() {
   const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Datagrunnlag", "Data basis")}</h2><span class="dtype">${L("Utviklermodus · hva søket leste, og hvorfor", "Developer mode · what the scan read, and why")}</span></div>`;
   if (!g) { d.innerHTML = hode + `<div class="tom">${L("Henter…", "Loading…")}</div>`; $("tilbake").onclick = lukkArk; return; }
   const mangler = g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0);
-  const faner = [["oversikt", L("Oversikt", "Overview")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket leste", "Everything read"), g.antallPoster], ["regler", L("Regler og bevis", "Rules and proof")]];
+  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket leste", "Everything read"), g.antallPoster], ["regler", L("Regler og bevis", "Rules and proof")]];
   let kropp = "", rader = null, linje = null;
   if (fane === "oversikt") {
     kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
@@ -516,6 +562,11 @@ function tegnData() {
       + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Fantes ikke", "Not found")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
       + `<div class="dl" id="dl"><ul id="dlu">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
     rader = g.sjekker; linje = sjekkLinje;
+  } else if (fane === "kart") {
+    kropp = `<div class="skTopp"><div class="skSti" id="skSti"></div><div class="bryter" id="skMal"><button data-m="antall" class="${kartMal === "antall" ? "valgt" : ""}">${L("Antall", "Count")}</button><button data-m="storrelse" class="${kartMal === "storrelse" ? "valgt" : ""}">${L("Størrelse", "Size")}</button></div><button class="skInfoKnapp" id="skOm">ⓘ ${L("Om dette stedet", "About this place")}</button></div>`
+      + `<div class="skFlate" id="skFlate"></div>`
+      + `<div class="skForklaring"><span class="r2">${L("Høy risiko her eller under", "High risk here or below")}</span><span class="r1">${L("Middels", "Medium")}</span><span class="r0">${L("Lav", "Low")}</span><span class="m">${L("Noe ble ikke lest (nektet, tidsgrense, feil)", "Something was not read (denied, time limit, error)")}</span><span>${L("Bare i minnet, lagres ikke", "In memory only, not saved")}</span></div>`
+      + `<div class="skVindu" id="skVindu" style="display:none"></div>`;
   } else if (fane === "ikke") {
     kropp = sideListe(L("Det søket ikke fikk lest, og hvorfor", "What the scan could not read, and why"), g.ikkeDekket, postLinje);
     rader = g.ikkeDekket; linje = postLinje;
@@ -539,7 +590,143 @@ function tegnData() {
   d.querySelectorAll("[data-fane]").forEach(b => b.onclick = () => { fane = b.dataset.fane; dataSide = 0; filter = null; tegnData(); });
   d.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f || null; dataSide = 0; tegnData(); });
   if (rader) fordelSider(rader, linje);
+  if (fane === "kart") {
+    d.querySelectorAll("#skMal [data-m]").forEach(b => b.onclick = () => { kartMal = b.dataset.m; tegnData(); });
+    $("skOm").onclick = () => { const sti = kartNode(); apneKartInfo(sti[sti.length - 1]); };
+    tegnKart(); tegnKartInfo();
+  }
 }
+// ---------- Datagrunnlag → Kart: alle steder søket rørte, fra registeret til mapper ----------
+// Som SpaceSniffer: flisene er så store som antall ting (eller filstørrelsen) under stedet. Klikk på en flis for å gå inn,
+// «Om dette stedet» eller en flis uten noe under åpner infovinduet. Bare i minnet, forsvinner med søket.
+let kartSti = [], kartMal = "antall", kartInfo = null;
+const KART_MANGLER = ["nektet", "laast", "blokkert", "tidsgrense", "feil"];
+const KART_NAVN = { "PC-en": ["PC-en", "The PC"], "Disk": ["Disk", "Disk"], "Registeret": ["Registeret", "Registry"], "Nettverk": ["Nettverk", "Network"], "Annet": ["Annet", "Other"] };
+const kartNavn = n => n.rest ? `${tall(+n.n)} ${L("andre", "others")}` : KART_NAVN[n.n] ? L(...KART_NAVN[n.n]) : n.n;
+const kartVerdi = n => kartMal === "storrelse" ? n.b || 0 : n.a || 0;
+const kartMangler = n => KART_MANGLER.reduce((a, k) => a + ((n.u || {})[k] || 0), 0);
+function byteTekst(b) {
+  if (!b) return "0 B";
+  const e = ["B", "KB", "MB", "GB", "TB"]; let i = 0; while (b >= 1024 && i < e.length - 1) { b /= 1024; i++; }
+  return b.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { maximumFractionDigits: b < 10 && i ? 1 : 0 }) + " " + e[i];
+}
+function kartNode() {
+  let n = logg.kart;
+  const sti = [n];
+  for (const navn of kartSti) { const b = (n.c || []).find(x => x.n === navn && !x.rest); if (!b) break; n = b; sti.push(n); }
+  kartSti = sti.slice(1).map(x => x.n);
+  return sti;
+}
+// Squarified treemap (Bruls, Huizing, van Wijk 2000)
+function kartFlater(barn, x, y, w, h) {
+  const sum = barn.reduce((a, b) => a + b.v, 0), ut = [];
+  if (!sum || w <= 0 || h <= 0) return ut;
+  const skala = (w * h) / sum, liste = barn.map(b => ({ ...b, area: b.v * skala }));
+  let rad = [];
+  const verst = (r, side) => { const s = r.reduce((a, b) => a + b.area, 0), maks = Math.max(...r.map(b => b.area)), min = Math.min(...r.map(b => b.area)); return Math.max(side * side * maks / (s * s), (s * s) / (side * side * min)); };
+  const legg = r => {
+    const s = r.reduce((a, b) => a + b.area, 0);
+    if (w >= h) { const bw = s / h; let yy = y; for (const b of r) { const bh = b.area / bw; ut.push({ ...b, x, y: yy, w: bw, h: bh }); yy += bh; } x += bw; w -= bw; }
+    else { const bh = s / w; let xx = x; for (const b of r) { const bw = b.area / bh; ut.push({ ...b, x: xx, y, w: bw, h: bh }); xx += bw; } y += bh; h -= bh; }
+  };
+  for (const b of liste) {
+    const side = Math.min(w, h);
+    if (!rad.length || verst(rad, side) >= verst([...rad, b], side)) rad.push(b);
+    else { legg(rad); rad = [b]; }
+  }
+  if (rad.length) legg(rad);
+  return ut;
+}
+function kartTall(n) {
+  const deler = [kartMal === "storrelse" ? byteTekst(n.b) : tall(n.a) + " " + L("ting", "items")];
+  if (kartMal !== "storrelse" && n.b) deler.push(byteTekst(n.b));
+  return deler.join(" · ");
+}
+function kartFunnMerke(n) {
+  const ider = kartFunnUnder(n);
+  return ider.length ? `<span class="skFunn r${n.r}">${ider.length}</span>` : "";
+}
+function kartFunnUnder(n, ut = new Set()) {
+  (n.f || []).forEach(i => ut.add(i));
+  (n.c || []).forEach(b => kartFunnUnder(b, ut));
+  return [...ut];
+}
+function tegnKart() {
+  const flate = $("skFlate"); if (!flate || !logg || !logg.kart) return;
+  const sti = kartNode(), n = sti[sti.length - 1];
+  $("skSti").innerHTML = sti.map((x, i) => `${i ? "<i>›</i>" : ""}<button data-niva="${i}" title="${esc(x.s || kartNavn(x))}">${esc(kartNavn(x))}</button>`).join("");
+  $("skSti").querySelectorAll("button").forEach(b => b.onclick = () => { kartSti = kartSti.slice(0, +b.dataset.niva); tegnKart(); });
+  const W = flate.clientWidth, H = flate.clientHeight;
+  const barn = (n.c || []).map(b => ({ node: b, v: kartVerdi(b) })).filter(b => b.v > 0).sort((a, b) => b.v - a.v);
+  if (!barn.length) {
+    flate.innerHTML = `<div class="skTom">${n.c && kartMal === "storrelse" ? L("Ingen filstørrelser her. Bytt til «Antall».", "No file sizes here. Switch to «Count».") : L("Ingenting under dette stedet. Trykk «Om dette stedet» for detaljer.", "Nothing below this place. Press «About this place» for details.")}</div>`;
+    return;
+  }
+  let html = "";
+  const flis = (b, x, y, w, h, niva) => {
+    const m = b.node, kl = `skFlis niva${niva}${m.r >= 0 ? " r" + m.r : ""}${kartMangler(m) ? " mangler" : ""}${m.rest ? " rest" : ""}`;
+    const tittel = `${m.s || kartNavn(m)}\n${kartTall(m)}${kartMangler(m) ? "\n" + L("Ikke dekket: ", "Not covered: ") + tall(kartMangler(m)) : ""}`;
+    const tekst = w > 46 && h > 17 ? `<div class="skNavn">${esc(kartNavn(m))}${kartFunnMerke(m)}</div>${h > 32 ? `<div class="skTall">${esc(kartTall(m))}</div>` : ""}` : "";
+    return `<div class="${kl}" data-sti="${esc(JSON.stringify(b.sti))}" style="left:${x}px;top:${y}px;width:${Math.max(0, w)}px;height:${Math.max(0, h)}px" title="${esc(tittel)}">${tekst}</div>`;
+  };
+  for (const b of kartFlater(barn, 0, 0, W, H)) {
+    b.sti = [b.node.n];
+    html += flis(b, b.x, b.y, b.w, b.h, 1);
+    // Ett nivå til inne i store fliser, som i SpaceSniffer
+    const under = (b.node.c || []).map(c => ({ node: c, v: kartVerdi(c) })).filter(c => c.v > 0).sort((a, c) => c.v - a.v);
+    if (under.length && b.w > 90 && b.h > 64) {
+      const topp = 34, pad = 3;
+      for (const c of kartFlater(under, b.x + pad, b.y + topp, b.w - 2 * pad, b.h - topp - pad)) {
+        if (c.w < 6 || c.h < 6) continue;
+        c.sti = [b.node.n, c.node.n];
+        html += flis(c, c.x, c.y, c.w, c.h, 2);
+      }
+    }
+  }
+  flate.innerHTML = html;
+  flate.querySelectorAll(".skFlis").forEach(e => e.onclick = ev => {
+    ev.stopPropagation();
+    const del = JSON.parse(e.dataset.sti);
+    let m = n; for (const x of del) m = (m.c || []).find(c => c.n === x) || m;
+    if (m.rest) return;
+    const harUnder = (m.c || []).some(c => kartVerdi(c) > 0);
+    if (harUnder) { kartSti = kartSti.concat(del); tegnKart(); }
+    else apneKartInfo(m);
+  });
+}
+function apneKartInfo(n) { kartInfo = n; tegnKartInfo(); }
+function tegnKartInfo() {
+  const v = $("skVindu"); if (!v) return;
+  const n = kartInfo;
+  if (!n) { v.innerHTML = ""; v.style.display = "none"; return; }
+  v.style.display = "flex";
+  const u = n.u || {}, tekster = Object.fromEntries((logg.totalt || []).map(x => [x.u, x.tekst]));
+  const plass = (n.s || "").split("\\")[0];
+  const type = plass === "Disk" ? (n.fi != null || (n.c || []).length ? L("Mappe", "Folder") : L("Fil eller mappe", "File or folder"))
+    : plass === "Registeret" ? L("Registernøkkel", "Registry key") : plass === "Nettverk" ? L("Nettverk", "Network") : n.s ? L("Annet", "Other") : L("Hele PC-en", "The whole PC");
+  const full = n.s ? n.s.split("\\").slice(1).join("\\") || n.s : "";
+  const ruter = [[tall(n.a), L("ting søket så på her og under", "items the scan looked at here and below")]];
+  if (n.fi != null) ruter.push([tall(n.fi), L("filer rett i mappa", "files directly in the folder")]);
+  if (n.b) ruter.push([byteTekst(n.b), L("samlet filstørrelse", "total file size")]);
+  const utfall = Object.keys(u).map(k => `<div class="${KART_MANGLER.includes(k) ? "mangler" : ""}"><b>${tall(u[k])}</b><small>${esc(tekster[k] || k)}</small></div>`).join("");
+  const funn = kartFunnUnder(n).map(id => alle.find(f => f.id === id)).filter(Boolean)
+    .sort((a, b) => RISIKO_REKKE[a.risiko] - RISIKO_REKKE[b.risiko]);
+  const egne = new Set(n.f || []);
+  v.innerHTML = `<div class="skKort" role="dialog" aria-modal="true">
+    <header><div><h3>${esc(n.s ? kartNavn({ n: n.s.split("\\").pop() }) : kartNavn(n))}</h3><div class="skFull">${esc(type)}${full ? " · " + esc(full) : ""}</div></div><button id="skLukk" aria-label="${L("Lukk", "Close")}">✕</button></header>
+    <div class="skInnhold">
+      <div class="skRuter">${ruter.map(r => `<div><b>${r[0]}</b><small>${r[1]}</small></div>`).join("")}</div>
+      ${utfall ? `<div><h4>${L("Slik gikk lesingen", "How reading went")}</h4><div class="skRuter">${utfall}</div></div>` : ""}
+      ${funn.length ? `<div><h4>${L("Funn her og under", "Findings here and below")} (${funn.length})</h4><ul class="skListe">${funn.slice(0, 40).map(f => `<li class="klikk ${f.risiko}" data-id="${f.id}"><span class="prikk"></span><span>${esc(f.navn)}</span><small>${esc(f.type || "")}${egne.has(f.id) ? "" : " · " + L("under", "below")}</small></li>`).join("")}</ul></div>` : ""}
+      ${(n.k || []).length ? `<div><h4>${L("Sjekker som leste her", "Checks that read here")}</h4><ul class="skListe">${n.k.map(k => `<li><span>${esc(k)}</span></li>`).join("")}</ul></div>` : ""}
+      ${(n.d || []).length ? `<div><h4>${L("Merknad fra søket", "Note from the scan")}</h4><ul class="skListe">${n.d.map(d => `<li><span title="${esc(d)}">${esc(d)}</span></li>`).join("")}</ul></div>` : ""}
+      ${(n.c || []).length ? `<div><h4>${L("Største under", "Largest below")}</h4><ul class="skListe">${n.c.slice(0, 8).map(c => `<li><span>${esc(kartNavn(c))}</span><small>${esc(kartTall(c))}</small></li>`).join("")}</ul></div>` : ""}
+    </div></div>`;
+  $("skLukk").onclick = () => { kartInfo = null; tegnKartInfo(); };
+  v.onclick = e => { if (e.target === v) { kartInfo = null; tegnKartInfo(); } };
+  v.querySelectorAll("li[data-id]").forEach(li => li.onclick = () => { const f = alle.find(x => x.id === +li.dataset.id); if (f) { kartInfo = null; apneArk(f); } });
+}
+const RISIKO_REKKE = { rod: 0, gul: 1, gronn: 2 };
 const sjekkLinje = s => `<li class="sjekkRad"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span><span>${tall(s.lest)}</span><span>${tall(s.ikke)}</span><span>${tall(s.hoppet)}</span><span class="${s.mangler ? "rodt" : ""}">${tall(s.mangler)}</span></li>`;
 // Mushjul blar sider i lista
 $("liste").addEventListener("wheel", e => {

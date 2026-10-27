@@ -181,7 +181,7 @@ public static class Revisjon
     }
 
     /// <summary>Datagrunnlaget for utviklermodus i vinduet (samme innhold som revisjonsloggen, men bare i minnet).</summary>
-    public static object Datagrunnlag(Skanner s, bool engelsk, string? revisjonSti)
+    public static object Datagrunnlag(Skanner s, bool engelsk, string? revisjonSti, IReadOnlyList<Funn>? funn = null)
     {
         string T(string? x) => (engelsk ? Engelsk.Til(x) : x) ?? "";
         string U(Utfall u) => T(Revisjon.UtfallTekst(u));
@@ -219,6 +219,7 @@ public static class Revisjon
             aldri = Revisjon.AldriLest.Select(T),
             ingenAi = T(Revisjon.IngenAi),
             revisjon = revisjonSti,
+            kart = s.Logg.Kart.Tre(funn, T),
         };
     }
 }

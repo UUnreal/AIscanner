@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.17.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.18.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -230,6 +230,16 @@ register, database, port, prosess, nettverk, hendelseslogg), hvor, og utfallet:
 
 Mapper som gås gjennom uten feil, telles i stedet for å listes (det kan være titusener). Alt som feiler, listes
 enkeltvis. Vinduet viser opptil 3000 oppføringer, revisjonsloggen opptil 20 000. Tellingene er alltid komplette.
+
+**Kart** (fane i Datagrunnlag) viser de samme stedene som et klikkbart kart, etter samme prinsipp som SpaceSniffer:
+Disk, Registeret, Nettverk og Annet øverst, og hver mappe eller nøkkel som en flis så stor som antall ting søket så
+på der (eller samlet filstørrelse, med «Størrelse»). Farge viser høyeste risiko blant funn på stedet eller under det.
+Stiplet kant betyr at noe ikke ble lest (nektet, låst, stoppet av antivirus, tidsgrense eller feil). Klikk på en flis
+for å gå inn. «Om dette stedet», eller en flis uten noe under, åpner et infovindu med full sti, antall, filstørrelse,
+utfall, hvilke sjekker som leste der, merknader fra søket og funnene der og under. Klikk på et funn for å åpne det.
+Kartet bygges mens søket går, ligger bare i minnet og forsvinner med søket. Det kommer aldri i rapporten eller
+revisjonsloggen. Det har bare stier, navn, antall og filstørrelser, aldri innhold. Mappenavn i brukerprofilen vises,
+så skjermbilder av kartet kan avsløre prosjekt- og filnavn. Store mapper viser de 150 største stedene og samler resten.
 
 Defenders logg (`Microsoft-Windows-Windows Defender/Operational`) krever som regel administrator. Som vanlig
 bruker står det at den ikke ble lest, men feil 225/226 på selve fila vises uansett. Andre antivirusprogrammer har egne

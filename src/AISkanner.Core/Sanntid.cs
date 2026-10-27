@@ -316,21 +316,22 @@ public sealed partial class Skanner
     private void Gaa(string mappe, int dybde, FilFunn ff, HashSet<string> hopp, long minLengde, Stopwatch frist)
     {
         if (hopp.Contains(mappe)) return;
-        if (dybde < 0) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver); return; }
         if (frist.Elapsed > TimeSpan.FromSeconds(45))
         {
             Tilgangslogg.EnGang("disk-45", "Mappe", mappe, Utfall.Tidsgrense, "45 sekunder brukt på disken; resten av mappene ble ikke gått gjennom");
-            Tilgangslogg.Tell("Mappe", Utfall.Tidsgrense);
+            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense);
             return;
         }
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver); return; }
         if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
         try { innhold = new DirectoryInfo(mappe).EnumerateFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
+        long filer = 0, bytes = 0;
         try
         {
             foreach (var e in innhold)
@@ -340,9 +341,14 @@ public sealed partial class Skanner
                 if ((a & Skyfil) != 0) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); continue; }   // aldri last ned skyfiler (OneDrive)
                 if ((a & FileAttributes.ReparsePoint) != 0) { SjekkLenke(e); continue; }
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
-                else if (e is FileInfo fil) SjekkFil(fil, mappe, ff, minLengde);
+                else if (e is FileInfo fil)
+                {
+                    filer++;
+                    try { bytes += fil.Length; } catch { }
+                    SjekkFil(fil, mappe, ff, minLengde);
+                }
             }
-            Tilgangslogg.Tell("Mappe", Utfall.Lest);
+            Tilgangslogg.TellMappe(mappe, Utfall.Lest, filer, bytes);
         }
         catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
     }

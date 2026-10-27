@@ -29,6 +29,19 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.18.0] - 2026-10-27
+
+Ikke testet på Windows. Kartvisningen er testet i nettleser med data fra en falsk PC-profil.
+
+### Lagt til
+- **Kart i Datagrunnlag**, som SpaceSniffer: alle steder søket rørte (disk, register, nettverk og annet) som klikkbare
+  fliser. Størrelsen er antall ting søket så på eller samlet filstørrelse (bryter «Antall/Størrelse»), fargen er høyeste
+  risiko på stedet eller under, og stiplet kant betyr at noe ikke ble lest. Klikk for å gå inn, brødsmuler for å gå ut.
+  Infovinduet viser full sti, antall, størrelse, utfall, sjekker, merknader og funn, og et funn åpnes med ett klikk.
+  Bare i minnet. Kommer aldri i rapporten eller revisjonsloggen.
+- Gjennomgangen av disken teller nå filer og samlet størrelse per mappe (bare i minnet, til kartet).
+- Selvtest: stier, registernøkler og porter havner riktig på kartet.
+
 ## [2.17.1] - 2026-10-27
 
 Ikke testet på Windows. 2.17.0 startet på én ekte Windows-PC uten nye funn; om alarmene virker der, er ikke bekreftet.

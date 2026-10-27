@@ -32,6 +32,9 @@ public sealed class Tilgangslogg
     public static readonly AsyncLocal<string?> Sjekk = new();
 
     public IReadOnlyCollection<Tilgang> Oppforinger => _liste;
+
+    /// <summary>Alle steder søket rørte, som et tre (Datagrunnlag → Kart). Bare i minnet.</summary>
+    public Kart Kart { get; } = new();
     public bool Avkortet => _lagt > MaksOppforinger;
 
     /// <summary>Antall per sjekk, type og utfall. Telles også når lista er full.</summary>
@@ -48,6 +51,7 @@ public sealed class Tilgangslogg
         if (l == null) return;
         var sjekk = Navn;
         l._antall.AddOrUpdate((sjekk, hva, utfall), 1, (_, n) => n + 1);
+        l.Kart.Legg(Kart.Plass(hva, mal), sjekk, utfall, detalj);
         if (Interlocked.Increment(ref l._lagt) <= MaksOppforinger) l._liste.Enqueue(new Tilgang(DateTime.Now, sjekk, hva, mal, utfall, detalj));
     }
 
@@ -57,6 +61,15 @@ public sealed class Tilgangslogg
         var l = Aktiv;
         if (l == null || n <= 0) return;
         l._antall.AddOrUpdate((Navn, hva, utfall), n, (_, x) => x + n);
+    }
+
+    /// <summary>Teller én mappe i gjennomgangen og legger den på kartet med antall filer og samlet størrelse.</summary>
+    public static void TellMappe(string mappe, Utfall utfall, long filer = 0, long bytes = 0)
+    {
+        var l = Aktiv;
+        if (l == null) return;
+        l._antall.AddOrUpdate((Navn, "Mappe", utfall), 1, (_, x) => x + 1);
+        l.Kart.Legg(Kart.Plass("Mappe", mappe), Navn, utfall, null, filer, bytes);
     }
 
     /// <summary>Logger bare første gang per nøkkel i søket (f.eks. at tidsgrensen ble nådd).</summary>
