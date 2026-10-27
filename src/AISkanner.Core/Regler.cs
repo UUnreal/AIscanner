@@ -82,6 +82,25 @@ public sealed class DaarligVersjon
     [JsonPropertyName("kilde")] public string? Kilde { get; set; }
 }
 
+public sealed class DaarligUtvidelse
+{
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
+public sealed class IocFil
+{
+    /// <summary>Sti med miljøvariabler, f.eks. %TEMP%\tmp.987654321.lock.</summary>
+    [JsonPropertyName("sti")] public string Sti { get; set; } = "";
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
+public sealed class IocDomene
+{
+    [JsonPropertyName("domene")] public string Domene { get; set; } = "";
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
 public sealed class Regelsett
 {
     [JsonPropertyName("versjon")] public string Versjon { get; set; } = "";
@@ -106,6 +125,9 @@ public sealed class Regelsett
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
     /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
     [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
+    [JsonPropertyName("daarligeUtvidelser")] public List<DaarligUtvidelse> DaarligeUtvidelser { get; set; } = new();
+    [JsonPropertyName("iocFiler")] public List<IocFil> IocFiler { get; set; } = new();
+    [JsonPropertyName("iocDomener")] public List<IocDomene> IocDomener { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>
     [JsonIgnore] public string Kilde { get; private set; } = "innebygd";

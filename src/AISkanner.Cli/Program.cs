@@ -70,6 +70,14 @@ static class TestNett
                 : new Tilkobling(pid, System.Net.IPAddress.Parse("192.168.1.10"), port++, ip, 443);
             if (inn) (nb.Lyttere ??= new()).Add(new TcpTabell.Lytter(System.Net.IPAddress.Any, ly.GetInt32(), pid));
             nb.Tider[k.Nokkel] = (DateTime.Now.AddSeconds(-15), DateTime.Now);
+            // "lokal": klient på PC-en koblet til en lokal AI-server (127.0.0.1:port)
+            if (t.TryGetProperty("lokal", out var lo) && lo.ValueKind == System.Text.Json.JsonValueKind.Number)
+            {
+                nb.Tilkoblinger.Remove(k);
+                nb.Lokale.Add(new Tilkobling(pid, System.Net.IPAddress.Loopback, port++, System.Net.IPAddress.Loopback, lo.GetInt32()));
+                nb.Prosesser[pid] = (t.GetProperty("navn").GetString()!, t.TryGetProperty("sti", out var st2) ? st2.GetString() : null);
+                continue;
+            }
             nb.Tilkoblinger.Add(k);
             nb.Prosesser[pid] = (t.GetProperty("navn").GetString()!, t.TryGetProperty("sti", out var st) ? st.GetString() : null);
             if (t.TryGetProperty("vert", out var v))
@@ -199,6 +207,16 @@ static class Selvtest
         Sjekk("spor: alltid rødt, også når IT har godkjent navnet", spor.Risiko == Risiko.Rod && spor.Type == "Ukjent AI-spor", true);
         Sjekk("spor: rapporten sier aldri «angrep»", (Rapport.Tekst(new[] { spor }) + Rapport.Tekst(Array.Empty<Funn>())).IndexOf("angrep", StringComparison.OrdinalIgnoreCase) >= 0, false);
         Sjekk("spor: tom rapport sier «fant ingen spor»", Rapport.Tekst(Array.Empty<Funn>()).Contains("fant ingen spor"), true);
+
+        // Misbruksspor: tellere og uttrekk som aldri tar med innhold
+        Sjekk("misbruk: skjulte tegn telles (null-bredde, tag-tegn)", Skanner.TellSkjulte("a\u200Bb\uDB40\uDC41c\uFEFF") == 3, true);
+        Sjekk("misbruk: BOM først er ikke skjult tegn", Skanner.TellSkjulte("\uFEFFhei") == 0, true);
+        Sjekk("misbruk: hook viser bare første ord", Skanner.ForsteOrd("node .claude/setup.mjs --token hemmelig") == "node", true);
+        Sjekk("misbruk: nøkkel som første ord skjules", Skanner.ForsteOrd("sk-proj-ABCDEFGHIJKLMNOPQRSTUVWX run") == "[skjult]", true);
+        var flagg = Skanner.FlaggITekst("start /b claude --dangerously-skip-permissions -p \"slett alt\"");
+        Sjekk("misbruk: farlig flagg i autostart", flagg.Any(x => x.Agent == "Claude Code" && x.Flagg == "--dangerously-skip-permissions"), true);
+        Sjekk("misbruk: oppgaveteksten tas ikke med", flagg.Any(x => x.Flagg.Contains("slett")), false);
+        Sjekk("misbruk: vanlig claude-kommando er ikke farlig", Skanner.FlaggITekst("claude --version").Count == 0, true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
         return feil == 0 ? 0 : 1;

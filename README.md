@@ -33,7 +33,7 @@ Funnene deles i fire grupper.
 | **Lokal AI** | Modellfiler (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn. Lokale AI-servere som Ollama og LM Studio. Programmer med AI-motor (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML). |
 | **Nettleser** | AI-nettsteder som er brukt (bruksspor og historikk), AI-utvidelser og ukjente AI-nettsteder. |
 | **Skjult på PC** | AI-agenter og kodeverktøy, AI lagt inn av leverandører (Microsoft, NVIDIA, Adobe, PC-produsenten), nettlesermodeller som Gemini Nano, AI-API-er i Chrome og Edge, AI-nøkler, registeret og programmer som sender data til AI-tjenester i det skjulte. |
-| **Ukjente AI-spor** | MCP-servere, «godkjenn alt» i AI-agenter, Ollama brukt fra andre maskiner, agentøkter som har vært borti nøkler eller kjørt nedlastet kode, skript med AI-nøkkel i oppstart, kjente dårlige pakkeversjoner. Alltid røde. Bare tider og stier, aldri innhold. |
+| **Ukjente AI-spor** | MCP-servere, «godkjenn alt» og hooks i AI-agenter, AI-servere brukt fra andre maskiner, ukjente programmer som snakker med AI, agentøkter som har vært borti nøkler, skjulte tegn i CLAUDE.md og AGENTS.md, ferdigheter som laster ned kode, agenter i autostart med farlige flagg, kjente dårlige pakker, filer og domener. Alltid røde. Bare tider og stier, aldri innhold. |
 
 For hver AI viser skanneren:
 

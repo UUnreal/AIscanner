@@ -76,6 +76,7 @@ public sealed partial class Skanner
         Tider.Clear();
         _mappeFunn.Clear();
         while (_prosjektOppsett.TryTake(out _)) { }
+        TomMisbruk();
         lock (Blindsoner) Blindsoner.Clear();
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
@@ -457,6 +458,8 @@ public sealed partial class Skanner
         var visning = $"{Kutt(navn, 40)} ({nettleser}-utvidelse)";
         Funn f;
         var r = FinnRegel(navn, utvidelse: true);
+        var tekst0 = $" {navn} {beskrivelse} ".ToLowerInvariant();
+        UtvidelseMisbruk(hvor, navn!, tilganger, mappe, erAi: r != null || _regler.UkjentUtvidelseOrd.Any(tekst0.Contains));
         if (r != null)
             f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {mappe}", r, r.Enkelt, r.Rad);
         else

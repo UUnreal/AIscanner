@@ -324,9 +324,9 @@ public sealed partial class Skanner
             return;
         }
         var navn = Path.GetFileName(mappe);
-        if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
+        if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
         if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
@@ -338,7 +338,7 @@ public sealed partial class Skanner
                 FileAttributes a;
                 try { a = e.Attributes; } catch { continue; }
                 if ((a & Skyfil) != 0) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); continue; }   // aldri last ned skyfiler (OneDrive)
-                if ((a & FileAttributes.ReparsePoint) != 0) continue;
+                if ((a & FileAttributes.ReparsePoint) != 0) { SjekkLenke(e); continue; }
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
                 else if (e is FileInfo fil) SjekkFil(fil, mappe, ff, minLengde);
             }
@@ -363,6 +363,7 @@ public sealed partial class Skanner
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
     {
         if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
+        SjekkAgentfil(fil);
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")
         {

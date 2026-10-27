@@ -37,7 +37,7 @@ public sealed partial class Skanner
     public static readonly ISet<string> Sporfiler = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "claude_desktop_config.json", ".claude.json", ".mcp.json", "mcp.json", "config.toml",
-        "settings.json", "settings.local.json", "package.json",
+        "settings.json", "settings.local.json", "package.json", "tasks.json",
     };
 
     // Prosjektfiler funnet av filgjennomgangen (.mcp.json, .vscode\mcp.json, .claude\settings*.json osv.)
@@ -64,10 +64,19 @@ public sealed partial class Skanner
 
     private void UkjenteSporSjekk()
     {
+        lock (Blindsoner)
+            Blindsoner.AddRange(new[]
+            {
+                "Ordrer skjult i nettsider eller dokumenter som en AI-agent leste (prompt injection), når agenten ikke fører logg.",
+                "Lesing av nøkkelfiler uten revisjon i Windows.",
+                "MCP-servere på nettet som endrer seg etter at de ble godkjent.",
+                "AI-nettlesere som handler på egen hånd i agentmodus.",
+                "Kommandolinjene til programmer som kjører, også i hendelseslogger (leses aldri).",
+            });
         foreach (var (navn, steg) in new (string, Action)[]
         {
             ("MCP", McpBruker), ("Godkjenn alt", GodkjennAltBruker), ("Serverlogger", Serverlogger),
-            ("Agentøkter", Agentokter), ("Skript", SkriptMedAi), ("Pakker", DaarligePakker), ("Admin", AdminSpor), ("WSL", Wsl),
+            ("Agentøkter", Agentokter), ("Misbruk", MisbrukBruker), ("Skript", SkriptMedAi), ("Pakker", DaarligePakker), ("Admin", AdminSpor), ("WSL", Wsl),
         })
         {
             try { steg(); }
@@ -167,6 +176,7 @@ public sealed partial class Skanner
         catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
+    private static readonly Regex InnebygdKode = new(@"\b(node|bun)(\.exe)?\s+(-e|--eval|-p|--print)\b|\bpython[0-9.]*(\.exe)?\s+-c\b|\bdeno(\.exe)?\s+eval\b|\b(powershell|pwsh)(\.exe)?\b.{0,40}\s-c(ommand)?\b.{0,300}(iwr|irm|invoke-webrequest|invoke-restmethod|downloadstring|net\.webclient)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FarligKommando = new(@"-enc(odedcommand)?\b|\biex\b|invoke-expression|downloadstring|(curl|wget|irm|iwr|invoke-webrequest|invoke-restmethod)\b[^|]{0,300}\|\s*(sh|bash|iex|pwsh|powershell)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly CultureInfo NbKultur = new("nb-NO");
@@ -196,6 +206,7 @@ public sealed partial class Skanner
             var hele = $"{s.Kommando} {s.Argument}";
             if (s.Kommando != null && Regex.IsMatch(s.Kommando, @"\\(Temp|Downloads|Nedlastinger)\\|\\ProgramData\\|/tmp/", RegexOptions.IgnoreCase)) grunner.Add("starter et program fra Temp, Nedlastinger eller ProgramData");
             if (FarligKommando.IsMatch(hele)) grunner.Add("starter PowerShell eller laster ned og kjører kode");
+            if (InnebygdKode.IsMatch(hele)) grunner.Add("kjører kode skrevet rett i oppsettet (node -e, python -c)");
             string? vert = null;
             if (s.Url != null && Uri.TryCreate(s.Url, UriKind.Absolute, out var u))
             {
@@ -263,6 +274,7 @@ public sealed partial class Skanner
                     if (a is "Bash" or "Bash(*)" or "Bash(*:*)" or "*" or "PowerShell" or "PowerShell(*)") funn.Add($"tillater {a} uten å spørre");
         }
         GodkjennAlt(sti, "Claude Code", funn, prosjekt);
+        ClaudeMisbruk(doc.RootElement, sti);
     }
 
     private void EditorInnstillinger(string sti, string program, bool prosjekt)
@@ -319,6 +331,7 @@ public sealed partial class Skanner
                 else if (forelder == ".claude") ClaudeInnstillinger(sti, prosjekt: true);
                 else EditorInnstillinger(sti, forelder == ".cursor" ? "Cursor" : "VS Code", prosjekt: true);
             }
+            MisbrukEtterGjennomgang();
         }
         finally { Tilgangslogg.Sjekk.Value = forrige; }
     }
@@ -439,6 +452,7 @@ public sealed partial class Skanner
             ("Gemini CLI", Utvid(@"%USERPROFILE%\.gemini\tmp"), "*.json", 3),
             ("GitHub Copilot", Utvid(@"%APPDATA%\Code\User\workspaceStorage"), "*.json", 3),
         };
+        var hodelose = new List<(string Program, DateTime Start)>();
         foreach (var (program, mappe, monster, dybde) in kilder)
         {
             var okter = new List<Okt>();
@@ -457,7 +471,7 @@ public sealed partial class Skanner
                             if (o.Forst == null || lokal < o.Forst) o.Forst = lokal;
                             if (o.Sist == null || lokal > o.Sist) o.Sist = lokal;
                         }
-                    if (Menneske.IsMatch(l) && !Verktoysvar.IsMatch(l)) o.Menneske += Menneske.Matches(l).Count;
+                    if (Menneske.IsMatch(l) && !Verktoysvar.IsMatch(l)) o.Menneske++;   // én per linje: "type" og "role" står ofte begge
                     for (int i = 0; i < Oktkategorier.Length; i++)
                         if (Oktkategorier[i].Monster.IsMatch(l)) o.Treff[i]++;
                 }, Stopp);
@@ -466,6 +480,7 @@ public sealed partial class Skanner
                 okter.Add(o);
             }
             if (okter.Count == 0) continue;
+            hodelose.AddRange(okter.Where(o => o.Menneske <= 1 && o.Forst != null).Select(o => (program, o.Forst!.Value)));
             var utenMenneske = okter.Count(o => o.Menneske <= 1);
             var medTreff = okter.Where(o => o.Treff.Any(t => t > 0)).ToList();
             // Rødt: en økt uten menneske som leste nøkler, hentet tokens, lastet ned og kjørte eller slettet mye
@@ -484,6 +499,20 @@ public sealed partial class Skanner
                 f.Detalj($"{Oktkategorier[i].Navn}: {med.Count} økter, {med.Sum(o => o.Treff[i])} treff · sist {Nar(med.Max(o => o.Sist!.Value), "tid i logglinje")}");
             }
             f.Detalj($"Fil: {mappe} · økter: {okter.Count} · uten menneske: {utenMenneske} · første {Nar(okter.Min(o => o.Forst!.Value), "tid i logglinje")} · sist {Nar(okter.Max(o => o.Sist!.Value), "tid i logglinje")}");
+        }
+        // Flere agenter startet uten menneske innen samme minutt: mønster fra misbruk der én agent starter andre
+        var klynger = hodelose.GroupBy(x => new DateTime(x.Start.Year, x.Start.Month, x.Start.Day, x.Start.Hour, x.Start.Minute, 0))
+            .Where(g => g.Count() >= 3 && g.Select(x => x.Program).Distinct().Count() >= 2).OrderByDescending(g => g.Key).ToList();
+        if (klynger.Count > 0)
+        {
+            var f = Spor("Flere AI-agenter startet samtidig uten menneske",
+                "Økter i flere ulike AI-agenter startet innen samme minutt, uten at et menneske skrev noe etter første melding. Det er et kjent mønster når én agent starter andre.", null);
+            f.Advarsel("Flere AI-agenter startet uten menneske innen samme minutt.");
+            foreach (var g in klynger.Take(10))
+            {
+                f.Tidspunkt(g.Key, g.Key);
+                f.Detalj($"{Nar(g.Key, "tid i logglinje")} · {g.Count()} økter · {string.Join(", ", g.Select(x => x.Program).Distinct())}");
+            }
         }
     }
 
@@ -526,20 +555,6 @@ public sealed partial class Skanner
                 f.Detalj($"Fil: {fil.FullName} · snakker med {vert.TrimStart(':')} · har nøkkel (vises ikke) · opprettet {Nar(fil.CreationTime, "opprettelsestid på fil")} · endret {Nar(fil.LastWriteTime, "endringstid på fil")}");
             }
         }
-        // Filnavn kjent fra skadevare som brukte AI (2025). Samme navn betyr ikke at det er samme fil.
-        foreach (var sti in new[] { Utvid(@"%TEMP%\thinking_robot_log.txt"), Utvid(@"%ProgramData%\info\info.txt") })
-        {
-            if (sti.Contains('%')) continue;
-            bool finnes;
-            try { finnes = File.Exists(sti); } catch { finnes = false; }
-            Tilgangslogg.Logg("Fil", sti, finnes ? Utfall.Lest : Utfall.IkkeFunnet, "finnes fila? (innholdet åpnes ikke)");
-            if (!finnes) continue;
-            var t = Endret(sti);
-            var f = Spor("Fil med kjent navn fra AI-skadevare", "En fil med samme navn og sted som en fil kjent fra skadevare som brukte AI (2025). Innholdet er ikke åpnet.", null);
-            f.Advarsel("Samme navn og sted som en fil kjent fra skadevare som brukte AI (2025).");
-            f.Tidspunkt(t, t);
-            f.Detalj($"Fil: {sti}{(t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : "")}");
-        }
     }
 
     // ---------- P3: kjente dårlige pakkeversjoner ----------
@@ -551,6 +566,12 @@ public sealed partial class Skanner
             {
                 // navn@versjon (package.json, lockfil) eller npm-tarball i logg: /nx/-/nx-21.5.0.tgz
                 var kort = d.Navn.Substring(d.Navn.LastIndexOf('/') + 1);
+                // "*": alle versjoner (navnetyveri som claud-code)
+                if (v == "*")
+                {
+                    if (Regex.IsMatch(tekst, $@"(?<![\w\-/.@]){Regex.Escape(d.Navn)}@\d|/{Regex.Escape(d.Navn)}/-/", RegexOptions.IgnoreCase)) return d.Navn;
+                    continue;
+                }
                 if (Regex.IsMatch(tekst, $@"(?<![\w\-/.@]){Regex.Escape(d.Navn)}@{Regex.Escape(v)}(?![\w.\-])|/{Regex.Escape(d.Navn)}/-/{Regex.Escape(kort)}-{Regex.Escape(v)}\.tgz", RegexOptions.IgnoreCase))
                     return $"{d.Navn} {v}";
             }

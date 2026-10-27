@@ -44,6 +44,38 @@ Ikke testet på Windows.
 - **Følg med.** Hake i detaljene til et funn viser datamengden sendt og mottatt per sekund i et diagram, de siste
   2 minuttene, mens vinduet er åpent. Krever administrator for datamengde; uten vises antall forbindelser. Lagres
   ikke og logges ikke.
+- **Flere ukjente AI-spor** fra studien om AI-misbruk. Alle røde «Ukjent AI-spor», bare metadata:
+  - Hooks i Claude Code (bare hendelse og første ord i kommandoen), oppgaver i `.vscode\tasks.json` som kjører når
+    mappa åpnes, og kjørbare skript rett i `.claude\` eller `.vscode\`.
+  - `enableAllProjectMcpServers`, `enabledMcpjsonServers` og `WebFetch` uten grense eller mot uttakstjenester.
+    MCP-servere som kjører kode skrevet rett i oppsettet (`node -e`, `python -c`).
+  - Symlinker og junctions i prosjektmapper som peker inn i agentoppsett (målet leses, lenken følges ikke).
+  - Skjulte tegn (null-bredde, tag-tegn, retningsstyring) i `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`,
+    `.cursor\rules\*.mdc`, `copilot-instructions.md` m.fl. Bare antallet vises.
+  - `.gemini\.env` i prosjektmapper (bare at den finnes).
+  - Ferdigheter og tillegg (`.claude\skills`, `.claude\plugins`, `.codex\skills`, OpenClaw) med nedlasting og
+    kjøring av kode, lange base64-blokker, passordbeskyttede zip-filer eller uttakstjenester.
+  - Fjernkode fra Hugging Face som har kjørt (`transformers_modules`), modellkode som bruker nettet, og Ollama-modeller
+    fra ukjente registre.
+  - AI-agenter som startes av seg selv med farlige flagg (`--dangerously-skip-permissions`, `--yolo` m.fl.) fra
+    Run-nøkkelen, Oppstart-mappa, PowerShell-profiler og `.bashrc`. Bare agent og flagg vises.
+  - Flere AI-agenter startet uten menneske innen samme minutt.
+  - Ukjent program på PC-en som bruker den lokale AI-serveren (127.0.0.1:11434 eller 1234).
+  - Nettleserutvidelser som ikke er AI, men har tilgang til ChatGPT, Claude, Gemini m.fl., og kjente dårlige ID-er.
+  - Kjente filer (`iocFiler`) og domener i DNS-bufferen (`iocDomener`) fra AI-misbruk, og pip-pakker i kjente
+    dårlige versjoner (litellm 1.82.7 og 1.82.8). Typosquat-pakker (`claud-code`, `cloude-code`) i alle versjoner.
+  - Modellfiler (.pt, .pth, .bin, .ckpt) som egentlig er 7z-arkiver (nullifAI).
+  - MCP-verktøy i npx-cachen med skjulte tegn eller `<IMPORTANT>`-blokker.
+- Nye blindsoner i rapporten: prompt injection uten agentlogg, lesing av nøkkelfiler uten revisjon, MCP-servere som
+  endrer seg etter godkjenning, AI-nettlesere i agentmodus og kommandolinjer.
+
+### Ikke bygget
+- Kommandolinjene til programmer som kjører (WMI) og kommandoer i Windows-hendelseslogger (Sysmon 1, 4688, 4104).
+  Programmet leser aldri kommandolinjer.
+
+### Rettet
+- Agentøkter: en melding fra brukeren ble talt to ganger når linja hadde både `"type":"user"` og `"role":"user"`,
+  så økter uten menneske ble ikke sett.
 
 ## [2.16.0] - 2026-10-27
 

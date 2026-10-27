@@ -8,6 +8,8 @@ namespace AISkanner;
 internal sealed class NettBilde
 {
     public List<Tilkobling> Tilkoblinger = new();
+    /// <summary>Programmer på PC-en koblet til en lokal AI-server (127.0.0.1:11434 osv.).</summary>
+    public List<Tilkobling> Lokale = new();
     public Dictionary<IPAddress, List<string>> Dns = new();
     public List<string> DnsNavn = new();
     public Dictionary<int, (string Navn, string? Sti)> Prosesser = new();
@@ -23,9 +25,10 @@ internal sealed class NettBilde
 
     public static NettBilde Hent(Datamaling? maling)
     {
-        var nb = new NettBilde { Tilkoblinger = Nettverk.Tilkoblinger() };
+        var alle = Nettverk.Alle();
+        var nb = new NettBilde { Tilkoblinger = Nettverk.Ute(alle), Lokale = Nettverk.LokaleAiKlienter(alle) };
         nb.Dns = Nettverk.DnsBuffer(out nb.DnsNavn);
-        foreach (var pid in nb.Tilkoblinger.Select(t => t.Pid).Distinct())
+        foreach (var pid in nb.Tilkoblinger.Concat(nb.Lokale).Select(t => t.Pid).Distinct())
         {
             if (pid <= 4 || pid == Plattform.EgenPid) continue;
             try { using var p = Process.GetProcessById(pid); nb.Prosesser[pid] = (p.ProcessName, ProsessSti.Hent(p)); } catch { }
@@ -305,6 +308,31 @@ public sealed partial class Skanner
             f.Tidspunkt(forst ?? DateTime.Now, sist ?? DateTime.Now);
             f.Bruk = $"{g.Select(t => t.Fjern).Distinct().Count()} klient(er) koblet til nå.";
             _funnPid.GetOrAdd(f, _ => new HashSet<int>()).Add(g.Key.Pid);
+        }
+
+        // Program på PC-en som ikke er kjent AI, men bruker den lokale AI-serveren (PromptLock-mønsteret)
+        var serverPid = new HashSet<int>(lyttere.Where(l => Nettverk.AiServerPorter.Contains(l.Port)).Select(l => l.Pid));
+        foreach (var g in nb.Lokale.Where(t => t.Pid > 4 && t.Pid != Plattform.EgenPid && !serverPid.Contains(t.Pid)).GroupBy(t => t.Pid))
+        {
+            if (!nb.Prosesser.TryGetValue(g.Key, out var p) || FunnForProsess(p.Navn, p.Sti) != null) continue;
+            var portene = string.Join(", ", g.Select(t => t.FjernPort).Distinct());
+            var f = Spor($"Ukjent program bruker lokal AI-server: {p.Navn}",
+                $"Et program som ikke er kjent som AI-app, er koblet til den lokale AI-serveren (port {portene}). Vi vet ikke hva det bruker modellen til.", null);
+            f.Advarsel("Ukjent program bruker den lokale AI-modellen.");
+            f.Detalj($"Program som kjører: {p.Sti ?? p.Navn} (PID {g.Key}) · port {portene} · {g.Count()} forbindelse{(g.Count() == 1 ? "" : "r")}");
+            f.Tidspunkt(DateTime.Now, DateTime.Now);
+            _funnPid.GetOrAdd(f, _ => new HashSet<int>()).Add(g.Key);
+        }
+
+        // Domener kjent fra AI-misbruk i DNS-bufferen
+        var ioc = _regler.IocDomener.Where(d => nb.DnsNavn.Any(n => n.Equals(d.Domene, StringComparison.OrdinalIgnoreCase) || n.EndsWith("." + d.Domene, StringComparison.OrdinalIgnoreCase))).ToList();
+        if (ioc.Count > 0)
+        {
+            var f = Spor("Domener kjent fra AI-misbruk slått opp",
+                "Windows har nylig slått opp et domene som er kjent fra angrep der AI-verktøy eller falske AI-tjenester ble brukt. Vi vet ikke hvilket program som gjorde det.", null);
+            f.Advarsel("Domene kjent fra AI-misbruk er slått opp på denne PC-en nylig.");
+            foreach (var d in ioc) f.Detalj($"Windows har nylig slått opp: {d.Domene}{(d.Kilde != null ? " · " + d.Kilde : "")}");
+            f.Tidspunkt(DateTime.Now, DateTime.Now);
         }
     }
 

@@ -11,6 +11,7 @@ namespace AISkanner;
 internal sealed class Lyttevindu : IDisposable
 {
     private readonly Dictionary<string, (Tilkobling T, DateTime Forst, DateTime Sist)> _sett = new();
+    private readonly Dictionary<string, Tilkobling> _lokale = new();
     private readonly Dictionary<IPAddress, List<string>> _dns = new();
     private readonly HashSet<string> _dnsNavn = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<int, (string Navn, string? Sti)> _prosesser = new();
@@ -51,10 +52,20 @@ internal sealed class Lyttevindu : IDisposable
     private void Les()
     {
         var naa = DateTime.Now;
-        var liste = Nettverk.Tilkoblinger(logg: false);
+        var alle = Nettverk.Alle(logg: false);
+        var liste = Nettverk.Ute(alle);
         lock (_sett)
         {
             Avlesninger++;
+            foreach (var t in Nettverk.LokaleAiKlienter(alle))
+            {
+                _lokale[t.Nokkel] = t;
+                if (t.Pid > 4 && t.Pid != Plattform.EgenPid && !_prosesser.ContainsKey(t.Pid) && !_ukjentPid.Contains(t.Pid))
+                {
+                    try { using var p = Process.GetProcessById(t.Pid); _prosesser[t.Pid] = (p.ProcessName, ProsessSti.Hent(p)); }
+                    catch { _ukjentPid.Add(t.Pid); }
+                }
+            }
             foreach (var t in liste)
             {
                 if (_sett.TryGetValue(t.Nokkel, out var x)) _sett[t.Nokkel] = (x.T, x.Forst, naa);
@@ -107,6 +118,7 @@ internal sealed class Lyttevindu : IDisposable
             var nb = new NettBilde
             {
                 Tilkoblinger = _sett.Values.Select(x => x.T).ToList(),
+                Lokale = _lokale.Values.ToList(),
                 Dns = _dns.ToDictionary(x => x.Key, x => x.Value.ToList()),
                 DnsNavn = _dnsNavn.ToList(),
                 Prosesser = new Dictionary<int, (string, string?)>(_prosesser),

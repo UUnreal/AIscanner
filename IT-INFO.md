@@ -142,9 +142,34 @@ fil»), fordi endringstider kan forfalskes.
 | Dårlige pakkeversjoner | `%APPDATA%\npm\node_modules\*\package.json`, `%LOCALAPPDATA%\npm-cache\_logs`, `.vscode\extensions` | Navn og versjon mot `daarligeVersjoner` i `regler.json` |
 | Sist kjørt (admin) | `C:\Windows\Prefetch\*.pf`, BAM i registeret | Programnavn og kjøretider for kjente AI-programmer |
 
-Ikke dekket: SRUM, Amcache, MFT og filene inne i WSL. Er WSL installert, står det som blindsone i rapporten.
+| Hooks og oppgaver | `hooks` i `.claude\settings*.json`, `.vscode\tasks.json` med `runOn: folderOpen`, skript rett i `.claude\` og `.vscode\` | Hendelse og første ord i kommandoen, filsti, tid |
+| MCP som starter selv, uttak | `.claude\settings*.json` | `enableAllProjectMcpServers`, `enabledMcpjsonServers`, `WebFetch` i `permissions.allow` |
+| Lenker inn i agentoppsett | Symlinker og junctions i prosjektmapper | Bare målet (FSCTL_GET_REPARSE_POINT). Lenken følges aldri. |
+| Skjulte tegn | `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `.cursor\rules\*.mdc`, `.github\copilot-instructions.md` (maks 1 MB) | Antall usynlige tegn. Teksten beholdes aldri. |
+| Agent-.env | `.gemini\.env` i prosjektmapper | Bare om fila finnes. Åpnes aldri. |
+| Ferdigheter og tillegg | `.claude\skills`, `.claude\plugins`, `.codex\skills`, `.openclaw`, `.clawdbot` og `.claude\skills` i prosjekter (maks 100 filer per ferdighet) | Om teksten har nedlasting og kjøring, lange base64-blokker, passord-zip eller uttakstjenester |
+| Hugging Face og Ollama | `.cache\huggingface\modules\transformers_modules`, `.py` i `hub\models--*\snapshots`, `.ollama\models\manifests` | Mappenavn og tid; om modellkoden importerer nettverks- eller kommandobiblioteker; registernavn |
+| Autostart med farlige flagg | HKCU `Run`/`RunOnce`, Oppstart-mappa, PowerShell-profiler, `.bashrc` | Bare agent og flagg. Ikke resten av kommandoen. |
+| Lokale klienter | TCP-tabellen: forbindelser til 127.0.0.1:11434 og :1234 | Program og port |
+| Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
+| Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |
+| npx-cachen | `%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\*mcp*` (maks 200 filer, 20 s) | Antall skjulte tegn og `<IMPORTANT>`-blokker |
+
+Ikke dekket: SRUM, Amcache, MFT og filene inne i WSL. Kommandolinjene til programmer som kjører, og kommandoer i
+Windows-hendelseslogger, leses aldri. Er WSL installert, står det som blindsone i rapporten.
 Agentøkter kan inneholde personopplysninger. Bare tider og treff leses, men på jobb-PC bør bruken avklares
 (e-postforskriften kan gjelde når agenten har lest e-post). Slå av med `--uten-agentlogger`.
+
+### Lyttevindu og «Følg med»
+
+Under søket leses TCP-tabellen (`GetExtendedTcpTable`) hvert 250. ms og DNS-bufferen hvert 2. sekund i minst 20
+sekunder (`--lytt 0-60`, 0 = ett øyeblikksbilde). Ingen pakker fanges og ingenting sendes. Navn som ikke er AI,
+forkastes i minnet. Som administrator slås Windows' tellere per forbindelse (EStats) på for nye forbindelser og av
+igjen etterpå.
+
+«Følg med» leser de samme tabellene hvert sekund for ett funn mens vinduet er åpent, og viser datamengden i et
+diagram. Det lagres ikke, logges ikke og forsvinner når haken tas bort eller vinduet lukkes. Bare TCP: UDP og QUIC
+(HTTP/3) vises ikke.
 
 ## Hva den aldri leser
 
@@ -249,8 +274,8 @@ Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).
 ## Kommandolinje og utrulling
 
 ```
-AISkanner.exe [--uten-nvd] [--uten-historikk] [--uten-agentlogger]
-AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.exe [--uten-nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60]
+AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\regler.json] [--txt] [--flagg]
 ```
 
 `AISkanner.Cli` skriver JSON (eller tekst med `--txt`) til standard ut. Exit-kode: `0` = ingen funn,

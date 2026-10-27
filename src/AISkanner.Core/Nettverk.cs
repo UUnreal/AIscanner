@@ -24,15 +24,27 @@ public static class Nettverk
     private static extern uint GetExtendedTcpTable(IntPtr tabell, ref int storrelse, bool sorter, int ipVersjon, int klasse, uint reservert);
 
     /// <summary>Alle etablerte forbindelser til andre maskiner (ikke forbindelser innad på PC-en).</summary>
-    public static List<Tilkobling> Tilkoblinger(bool logg = true)
+    public static List<Tilkobling> Tilkoblinger(bool logg = true) => Ute(Alle(logg));
+
+    /// <summary>Alle etablerte forbindelser, også innad på PC-en.</summary>
+    public static List<Tilkobling> Alle(bool logg = true)
     {
         var liste = new List<Tilkobling>();
         if (!Plattform.ErWindows) return liste;
         Les(AF_INET, liste);
         Les(AF_INET6, liste);
         if (logg) Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable)", Utfall.Lest, $"{liste.Count} forbindelser");
-        return liste.Where(t => !IPAddress.IsLoopback(t.Fjern) && !t.Fjern.Equals(IPAddress.Any) && !t.Fjern.Equals(IPAddress.IPv6Any)).ToList();
+        return liste;
     }
+
+    public static List<Tilkobling> Ute(IEnumerable<Tilkobling> alle) =>
+        alle.Where(t => !IPAddress.IsLoopback(t.Fjern) && !t.Fjern.Equals(IPAddress.Any) && !t.Fjern.Equals(IPAddress.IPv6Any)).ToList();
+
+    /// <summary>Lokale porter for AI-servere (Ollama, LM Studio). Klientene som kobler seg til dem fra PC-en selv.</summary>
+    public static readonly HashSet<int> AiServerPorter = new() { 11434, 1234 };
+
+    public static List<Tilkobling> LokaleAiKlienter(IEnumerable<Tilkobling> alle) =>
+        alle.Where(t => IPAddress.IsLoopback(t.Fjern) && AiServerPorter.Contains(t.FjernPort)).ToList();
 
     private static int Port(uint p) => (int)(((p & 0xFF) << 8) | ((p >> 8) & 0xFF));
 

@@ -24,6 +24,8 @@ public static class Revisjon
         "Verdier av API-nøkler og miljøvariabler (bare navnene)",
         "Minnet til andre programmer, lsass og kommandolinjer",
         "Andre brukeres profiler (også som administrator)",
+        "Kommandolinjene til programmer som kjører, også i Windows-hendelseslogger",
+        "Teksten i instruksjonsfiler (CLAUDE.md, AGENTS.md), ferdigheter, hooks (bare første ord) og .env",
         "Innholdet i AI-agentenes økter, kommandoer og svar (bare tidspunkter og om en økt nevner nøkler eller systemfiler)",
     };
 

@@ -1029,3 +1029,111 @@ datamengde per sekund, bare i minnet|data volume per second, in memory only
 antall forbindelser (datamengde krever administrator)|number of connections (data volume requires administrator)
 Brukt fra andre maskiner|Used from other machines
 Ukjent program|Unknown program
+# 2.17 Misbruksspor
+AI-agent startes med farlige flagg|AI agent starts with dangerous flags
+AI-agent som starter av seg selv uten å spørre før den gjør noe.|AI agent that starts on its own without asking before it acts.
+En AI-agent startes av seg selv (oppstart, profil eller register) med flagg som slår av spørsmålene før den kjører kommandoer. Bare agent og flagg vises.|An AI agent is started automatically (startup, profile or registry) with flags that turn off the questions before it runs commands. Only agent and flag are shown.
+Agent-oppsett med .env i prosjekt|Agent setup with .env in project
+Gemini CLI leser .gemini\.env i prosjektmappa. Den kan endre hvor agenten sender data eller hvilke nøkler den bruker. Innholdet er ikke åpnet.|Gemini CLI reads .gemini\.env in the project folder. It can change where the agent sends data or which keys it uses. The content was not opened.
+innholdet åpnes ikke|the content is not opened
+En Python-pakke i en versjon som står på lista over kjente dårlige versjoner i regler.json.|A Python package in a version that is on the list of known bad versions in regler.json.
+En versjon fra lista over kjente dårlige versjoner er installert.|A version from the list of known bad versions is installed.
+Python-pakker på lista over kjente dårlige versjoner|Python packages on the list of known bad versions
+En fil med modellendelse (.pt, .pth, .bin, .ckpt) er pakket som 7z. Slik har skadelige modeller sluppet forbi skanning (nullifAI).|A file with a model extension (.pt, .pth, .bin, .ckpt) is packed as 7z. This is how malicious models have slipped past scanning (nullifAI).
+Modellfil som egentlig er et 7z-arkiv|Model file that is really a 7z archive
+En symbolsk lenke eller junction i en prosjektmappe peker på oppsettet til en AI-agent. Slik kan et prosjekt endre agentens innstillinger. Lenken er ikke fulgt.|A symbolic link or junction in a project folder points to an AI agent's setup. This way a project can change the agent's settings. The link was not followed.
+Snarveier inn i AI-agentens oppsett|Links into the AI agent's setup
+~ · peker til | · points to 
+ukjent mål|unknown target
+endringstid på lenke|link modified time
+En utvidelse som ikke er et AI-verktøy, har tilgang til sidene der du bruker AI. Den kan lese det du skriver og svarene.|An extension that is not an AI tool has access to the sites where you use AI. It can read what you write and the answers.
+Utvidelsen står på lista over kjente utvidelser som har tatt ut AI-samtaler.|The extension is on the list of known extensions that have taken out AI conversations.
+~Kjent utvidelse fra lista over dårlige utvidelser \((.+)\)\.|Known extension from the list of bad extensions ($1).
+~^Utvidelse som kan lese AI-samtaler: |Extension that can read AI conversations: 
+Utvidelse som kan lese AI-samtaler|Extension that can read AI conversations
+~ · tilgang til | · access to 
+~En (instruksjonsfil for alle prosjekter|instruksjonsfil) for AI-agenter har tegn som ikke vises på skjermen, men som AI-en leser\. Slik kan noen gi agenten skjulte ordrer\.|An instruction file for AI agents has characters that are not shown on screen, but that the AI reads. This way someone can give the agent hidden orders.
+~(\d+) skjulte tegn i en instruksjonsfil for AI-agenter\.|$1 hidden characters in an instruction file for AI agents.
+~(\d+) skjulte tegn|$1 hidden characters
+~^Skjulte tegn i |Hidden characters in 
+Skjulte tegn i|Hidden characters in
+Et MCP-verktøy i npx-cachen har skjulte tegn eller <IMPORTANT>-blokker i koden. Slik kan et verktøy gi AI-agenten ordrer brukeren ikke ser.|An MCP tool in the npx cache has hidden characters or <IMPORTANT> blocks in its code. This way a tool can give the AI agent orders the user does not see.
+MCP-verktøy med skjulte beskjeder til AI-en|MCP tool with hidden messages to the AI
+~(\d+) <IMPORTANT>-blokker|$1 <IMPORTANT> blocks
+200 filer eller 20 sekunder brukt i npx-cachen|200 files or 20 seconds spent in the npx cache
+~En ferdighet eller et tillegg for (.+?) inneholder mønstre som ofte brukes for å få agenten til å laste ned og kjøre kode\. Teksten vises ikke\.|A skill or plugin for $1 contains patterns often used to make the agent download and run code. The text is not shown.
+~^Ferdighet for AI-agent: |Skill for AI agent: 
+~Ferdighet for AI-agent som (.+)\.$|Skill for AI agent that $1.
+laster ned og kjører kode|downloads and runs code
+lang base64-blokk|long base64 block
+ber om passordbeskyttet zip|asks for a password-protected zip
+sender til uttakstjeneste|sends to an exfiltration service
+skjulte tegn|hidden characters
+Fil med samme navn og sted som en kjent fil fra AI-misbruk.|File with the same name and location as a known file from AI misuse.
+Filer kjent fra AI-misbruk|Files known from AI misuse
+Filer med samme navn og sted som filer kjent fra angrep der AI-verktøy ble brukt eller misbrukt. Samme navn betyr ikke at det er samme fil. Innholdet er ikke åpnet.|Files with the same name and location as files known from incidents where AI tools were used or misused. The same name does not mean it is the same file. The content was not opened.
+Fjernkode fra Hugging Face har kjørt|Remote code from Hugging Face has run
+Python-kode som fulgte med en modell fra Hugging Face er lastet ned og kjørt på PC-en (trust_remote_code). Vi vet ikke hva koden gjorde.|Python code that came with a model from Hugging Face was downloaded and run on the PC (trust_remote_code). We do not know what the code did.
+Modellkode som kan bruke nettet eller kjøre kommandoer|Model code that can use the network or run commands
+Python-filer som fulgte med en modell fra Hugging Face importerer nettverks- eller kommandobiblioteker. De kjører hvis modellen lastes med trust_remote_code.|Python files that came with a model from Hugging Face import network or command libraries. They run if the model is loaded with trust_remote_code.
+~ · lastet ned | · downloaded 
+opprettelsestid på mappe|folder creation time
+Ollama har hentet modeller fra et annet sted enn Ollama sitt eget register eller Hugging Face.|Ollama has fetched models from somewhere other than Ollama's own registry or Hugging Face.
+Ollama-modeller fra ukjent register|Ollama models from an unknown registry
+~ · register | · registry 
+~^Hooks i (.+?): alle prosjekter|Hooks in $1: all projects
+~^Hooks i (.+?): |Hooks in $1: 
+Hooks i en prosjektmappe: kjører for alle som åpner prosjektet med agenten.|Hooks in a project folder: run for everyone who opens the project with the agent.
+Kommandoer som AI-agenten kjører av seg selv ved bestemte hendelser (oppstart, før verktøy). Bare første ord i kommandoen vises.|Commands the AI agent runs on its own at certain events (startup, before tools). Only the first word of the command is shown.
+Kjørbare skript ligger rett i oppsettmappa til en AI-agent eller kodeeditor (.claude, .vscode). Der hører de vanligvis ikke hjemme.|Executable scripts are placed directly in the setup folder of an AI agent or code editor (.claude, .vscode). They do not usually belong there.
+~^Skript i agentmappe: |Script in agent folder: 
+Kommando som kjører av seg selv når prosjektet åpnes.|Command that runs on its own when the project is opened.
+VS Code eller Cursor kjører en kommando av seg selv når prosjektmappa åpnes. Bare første ord i kommandoen vises.|VS Code or Cursor runs a command on its own when the project folder is opened. Only the first word of the command is shown.
+Oppgave som starter når prosjektet åpnes|Task that starts when the project is opened
+~kjøres når mappa åpnes: |runs when the folder is opened: 
+bare antall skjulte tegn; teksten lagres ikke|only the number of hidden characters; the text is not stored
+bare lenkemålet; lenken følges ikke|only the link target; the link is not followed
+lenkemålet kunne ikke leses|the link target could not be read
+enableAllProjectMcpServers = true (MCP-servere i prosjekter starter uten å spørre)|enableAllProjectMcpServers = true (MCP servers in projects start without asking)
+~enabledMcpjsonServers: (\d+) MCP-servere fra prosjektet er godkjent på forhånd|enabledMcpjsonServers: $1 MCP servers from the project are approved in advance
+tillater WebFetch til alle adresser uten å spørre|allows WebFetch to all addresses without asking
+tillater WebFetch til|allows WebFetch to
+uten å spørre (kjent tjeneste for å ta ut data)|without asking (known service for taking out data)
+instruksjonsfil for alle prosjekter|instruction file for all projects
+kjører kode skrevet rett i oppsettet (node -e, python -c)|runs code written directly in the setup (node -e, python -c)
+Flere AI-agenter startet samtidig uten menneske|Several AI agents started at the same time without a human
+Økter i flere ulike AI-agenter startet innen samme minutt, uten at et menneske skrev noe etter første melding. Det er et kjent mønster når én agent starter andre.|Sessions in several different AI agents started within the same minute, without a human writing anything after the first message. This is a known pattern when one agent starts others.
+Flere AI-agenter startet uten menneske innen samme minutt.|Several AI agents started without a human within the same minute.
+~(\d+) økter · |$1 sessions · 
+~^Ukjent program bruker lokal AI-server: |Unknown program uses local AI server: 
+~Et program som ikke er kjent som AI-app, er koblet til den lokale AI-serveren \(port ([\d, ]+)\)\. Vi vet ikke hva det bruker modellen til\.|A program not known as an AI app is connected to the local AI server (port $1). We do not know what it uses the model for.
+Ukjent program bruker den lokale AI-modellen.|Unknown program uses the local AI model.
+Domener kjent fra AI-misbruk slått opp|Domains known from AI misuse looked up
+Windows har nylig slått opp et domene som er kjent fra angrep der AI-verktøy eller falske AI-tjenester ble brukt. Vi vet ikke hvilket program som gjorde det.|Windows recently looked up a domain known from incidents where AI tools or fake AI services were used. We do not know which program did it.
+Domene kjent fra AI-misbruk er slått opp på denne PC-en nylig.|A domain known from AI misuse was looked up on this PC recently.
+falsk AI-tjeneste|fake AI service
+studie AI-misbruk 2026|AI misuse study 2026
+AI-skadevare 2025|AI malware 2025
+Ordrer skjult i nettsider eller dokumenter som en AI-agent leste (prompt injection), når agenten ikke fører logg.|Orders hidden in web pages or documents an AI agent read (prompt injection), when the agent keeps no log.
+Lesing av nøkkelfiler uten revisjon i Windows.|Reading of key files without auditing in Windows.
+MCP-servere på nettet som endrer seg etter at de ble godkjent.|MCP servers on the internet that change after they were approved.
+AI-nettlesere som handler på egen hånd i agentmodus.|AI browsers acting on their own in agent mode.
+Kommandolinjene til programmer som kjører, også i hendelseslogger (leses aldri).|The command lines of running programs, also in event logs (never read).
+Kommandolinjene til programmer som kjører, også i Windows-hendelseslogger|The command lines of running programs, also in Windows event logs
+Teksten i instruksjonsfiler (CLAUDE.md, AGENTS.md), ferdigheter, hooks (bare første ord) og .env|The text in instruction files (CLAUDE.md, AGENTS.md), skills, hooks (only the first word) and .env
+Kjører av seg selv|Runs on its own
+Agent-.env i prosjekt|Agent .env in project
+Skript i agentmappe|Script in agent folder
+Laster ned kode|Downloads code
+Skjulte tegn|Hidden characters
+Lenke til agentoppsett|Link to agent setup
+Fjernkode|Remote code
+Farlige flagg|Dangerous flags
+Agenter uten menneske|Agents without a human
+Kjent domene|Known domain
+Leser AI-samtaler|Reads AI conversations
+Skjulte beskjeder|Hidden messages
+Skjult modell|Hidden model
+Ukjent register|Unknown registry
+Ferdighet for AI-agent|Skill for AI agent
+alle prosjekter|all projects

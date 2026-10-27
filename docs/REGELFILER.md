@@ -149,6 +149,18 @@ på en ekte PC ennå.
 Beskriver innebygd AI i en nettleser: `brukerdata` (mappen med brukerdata), `policyNokkel` og `policyVerdi` (policyen
 som slår den av) og forklaringstekster.
 
+### daarligeUtvidelser, iocFiler og iocDomener
+
+```json
+"daarligeUtvidelser": [ { "id": "fnmihdojmnkclgjpcoonokmkhjpjechg", "kilde": "…" } ],
+"iocFiler": [ { "sti": "%TEMP%\\bw1.js", "kilde": "…" } ],
+"iocDomener": [ { "domene": "chatsaigpt.com", "kilde": "…" } ]
+```
+
+Utvidelses-ID-er sammenlignes med mappenavnet under `Extensions`. For `iocFiler` sjekkes bare om fila finnes;
+innholdet åpnes aldri. `iocDomener` treffer domenet og alle underdomener i DNS-bufferen. Alle treff blir
+«Ukjent AI-spor» (rødt).
+
 ### daarligeVersjoner
 
 ```json
@@ -156,7 +168,8 @@ som slår den av) og forklaringstekster.
 ```
 
 `navn` er npm-pakken (også `@scope/navn`) eller VS Code-utvidelsen (`utgiver.navn`). Versjonene må stå i sin
-helhet; områder som `>=1.0.16` støttes ikke. Treff gir «Ukjent AI-spor» (rødt) og sammenlignes med `package.json`
+helhet; områder som `>=1.0.16` støttes ikke. `"*"` betyr alle versjoner (for navnetyveri som `claud-code`).
+Python-pakker sammenlignes med `site-packages\navn-versjon.dist-info`. Treff gir «Ukjent AI-spor» (rødt) og sammenlignes med `package.json`
 i globale npm-pakker, npm-loggene (`navn@versjon` og `/navn/-/navn-versjon.tgz`) og mappenavn i `.vscode\extensions`.
 
 ## ai-modeller.yar
