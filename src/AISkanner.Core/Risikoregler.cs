@@ -61,6 +61,8 @@ public static class Risikoregler
                 f.Risiko = Risiko.Rod;
                 f.RisikoGrunn = f.Navn.StartsWith("Farlig", StringComparison.Ordinal)
                     ? "Modellfilen inneholder kode som kjører når den lastes."
+                    : type == "Ukjent AI-spor"
+                    ? "Ukjent AI-spor: vi vet ikke hvem som satte det opp eller hva det er brukt til."
                     : "Ukjent AI: vi vet ikke hvem som har laget den eller hva den gjør.";
             }
             else if (ErSkygge(type))
@@ -83,6 +85,7 @@ public static class Risikoregler
         var k = f.Kategori;
         var d = f.Detaljer;
         if (f.Navn == "AI-regler fra IT") return "IT-regel";
+        if (k == Skanner.SporKategori) return "Ukjent AI-spor";
         // "Lokal AI-server (...)" er navnet på et ukjent program som svarer som en AI-tjeneste (gjenkjente servere får sitt eget navn).
         // (k == "AI-server" slo aldri til: "AI-server" settes som lokasjon, ikke kategori.)
         if (f.Navn.StartsWith("Farlig AI-modellfil") || f.Navn.StartsWith("Ukjent") || f.Navn.StartsWith("Lokal AI-server", StringComparison.Ordinal)) return "Ukjent AI";

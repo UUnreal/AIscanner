@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.15.2. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.16.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -126,11 +126,31 @@ Fila åpnes ikke, og verdien leses aldri.
 Vinduet og rapporten finnes på norsk og engelsk. Språket følger Windows (`CurrentUICulture`) til brukeren trykker på
 et flagg. Valget lagres ikke. Funnene oversettes i programmet med ordlista `engelsk.txt`, uten nett.
 
+### Ukjente AI-spor
+
+Oppsett og logger med ukjent opphav. Alle blir «Ukjent AI-spor» (rødt), også når IT har godkjent navnet. Bare
+metadata kommer ut: filsti, tid, antall og kategori. Ved hver tid står kilden («tid i logglinje», «endringstid på
+fil»), fordi endringstider kan forfalskes.
+
+| Hva | Filer | Hva som leses |
+|---|---|---|
+| MCP-servere | `%APPDATA%\Claude\claude_desktop_config.json`, `%USERPROFILE%\.claude.json`, `.cursor\mcp.json`, `%APPDATA%\Code\User\mcp.json`, `.gemini\settings.json`, `.codex\config.toml`, og `.mcp.json`, `.vscode\mcp.json`, `.cursor\mcp.json` i prosjektmapper | Navn, kommando, første argument og vert. Aldri `env`. Kode etter `-enc`/`-c` og alt som ligner en nøkkel vises som «[skjult]». |
+| «Godkjenn alt» | `.claude\settings*.json`, `.codex\config.toml`, VS Code og Cursor `settings.json` | Bare `permissions.defaultMode`, `permissions.allow`, `approval_policy`, `sandbox_mode`, `chat.tools.autoApprove` |
+| Lokale AI-servere | `%LOCALAPPDATA%\Ollama\server*.log`, `%USERPROFILE%\.lmstudio\server-logs` | Klientadresse, tid og endepunkt per linje. Ikke forespørslene. |
+| Agentøkter | `.claude\projects\*.jsonl`, `.codex\sessions\rollout-*.jsonl`, `.gemini\tmp`, VS Code `chatSessions` | Tidsstempler, antall meldinger fra mennesket og treff per kategori. Teksten beholdes aldri. Maks 500 filer per program og 20 sekunder totalt. Av med `--uten-agentlogger`. |
+| Skript med AI-nøkkel | `.vbs .js .ps1 .py .bat .cmd` i Oppstart, `%TEMP%` og `%ProgramData%` (ett nivå) | Om fila nevner en AI-tjeneste og har noe som ligner en nøkkel. Nøkkelen vises aldri. |
+| Dårlige pakkeversjoner | `%APPDATA%\npm\node_modules\*\package.json`, `%LOCALAPPDATA%\npm-cache\_logs`, `.vscode\extensions` | Navn og versjon mot `daarligeVersjoner` i `regler.json` |
+| Sist kjørt (admin) | `C:\Windows\Prefetch\*.pf`, BAM i registeret | Programnavn og kjøretider for kjente AI-programmer |
+
+Ikke dekket: SRUM, Amcache, MFT og filene inne i WSL. Er WSL installert, står det som blindsone i rapporten.
+Agentøkter kan inneholde personopplysninger. Bare tider og treff leses, men på jobb-PC bør bruken avklares
+(e-postforskriften kan gjelde når agenten har lest e-post). Slå av med `--uten-agentlogger`.
+
 ## Hva den aldri leser
 
 Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State` (unntatt `--flagg` i
 kommandolinjen), krypteringsnøkler, lommebokdata i utvidelser (`Local Extension Settings`), verdien av API-nøkler,
-e-post, dokumentinnhold og minnet til andre prosesser.
+e-post, dokumentinnhold, innholdet i AI-agentenes økter og minnet til andre prosesser.
 
 Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for å lese innholdet: `manifest.json`,
 `messages.json`, `extensions.json`, `Preferences`, `History` og `places.sqlite`. I tillegg leses begrensede deler av
@@ -229,8 +249,8 @@ Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).
 ## Kommandolinje og utrulling
 
 ```
-AISkanner.exe [--uten-nvd] [--uten-historikk]
-AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.exe [--uten-nvd] [--uten-historikk] [--uten-agentlogger]
+AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--regler sti\regler.json] [--txt] [--flagg]
 ```
 
 `AISkanner.Cli` skriver JSON (eller tekst med `--txt`) til standard ut. Exit-kode: `0` = ingen funn,

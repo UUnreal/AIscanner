@@ -6,7 +6,7 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.15.2 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.16.0 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
 - **Status:** testversjon, ikke signert. 2.8–2.15 er ikke kjørt på ekte Windows (se [Status](#status)).
@@ -26,13 +26,14 @@ AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppf
 
 ## Hva den finner
 
-Funnene deles i tre grupper.
+Funnene deles i fire grupper.
 
 | Gruppe | Eksempler |
 |---|---|
 | **Lokal AI** | Modellfiler (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras), også uten navn. Lokale AI-servere som Ollama og LM Studio. Programmer med AI-motor (llama.cpp, ONNX Runtime, PyTorch, OpenVINO, DirectML). |
 | **Nettleser** | AI-nettsteder som er brukt (bruksspor og historikk), AI-utvidelser og ukjente AI-nettsteder. |
 | **Skjult på PC** | AI-agenter og kodeverktøy, AI lagt inn av leverandører (Microsoft, NVIDIA, Adobe, PC-produsenten), nettlesermodeller som Gemini Nano, AI-API-er i Chrome og Edge, AI-nøkler, registeret og programmer som sender data til AI-tjenester i det skjulte. |
+| **Ukjente AI-spor** | MCP-servere, «godkjenn alt» i AI-agenter, Ollama brukt fra andre maskiner, agentøkter som har vært borti nøkler eller kjørt nedlastet kode, skript med AI-nøkkel i oppstart, kjente dårlige pakkeversjoner. Alltid røde. Bare tider og stier, aldri innhold. |
 
 For hver AI viser skanneren:
 
@@ -157,6 +158,7 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 
 - Skanneren finner spor, ikke alt. Et tomt resultat betyr ikke at PC-en er fri for AI.
 - Den skanner bare innlogget bruker.
+- Filene inne i WSL leses ikke. SRUM, Amcache og MFT leses ikke.
 - Forbindelser vises bare mens programmene er åpne. QUIC/UDP vises ikke.
 - «Sender data til» viser hvor serveren står eller hvor selskapet hører hjemme, ikke nødvendigvis hvor dataene lagres.
 - YARA-motoren mangler modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`.

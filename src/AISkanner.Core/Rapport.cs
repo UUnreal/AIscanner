@@ -41,6 +41,9 @@ public static class Rapport
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
+        int spor = liste.Count(f => f.Gruppe == "spor");
+        L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        if (skanner != null) foreach (var b in skanner.Blindsoner) L($"Blindsone: {b}");
         L(Revisjon.IngenAi);
         L(new string('=', 60));
         // Oversikten: én linje per AI, samme som på skjermen. Detaljene følger under.
@@ -59,7 +62,7 @@ public static class Rapport
             L();
             L($"{tittel.ToUpperInvariant()} ({del.Count})");
             L(new string('=', 60));
-            if (del.Count == 0) L("Ingen funn.");
+            if (del.Count == 0) L(gruppe == "spor" ? "Fant ingen spor." : "Ingen funn.");
         foreach (var f in del)
         {
             L();
@@ -91,6 +94,7 @@ public static class Rapport
     public static readonly (string Id, string Tittel)[] Grupper =
     {
         ("lokal", "Lokal AI (kjører på PC-en)"), ("nettleser", "AI i nettleseren"), ("skjult", "Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)"),
+        ("spor", "Ukjente AI-spor (oppsett og logger med ukjent opphav)"),
     };
 
     private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";

@@ -29,6 +29,34 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.16.0] - 2026-10-27
+
+Ikke testet på Windows.
+
+### Lagt til
+- **Ukjente AI-spor**, en fjerde gruppe i resultatet og rapporten. Oppsett og logger etter AI-agenter og AI-tjenester
+  der vi ikke vet hvem som satte dem opp eller hvorfor. Alle er «Ukjent AI-spor» og røde, også om IT har godkjent
+  navnet. Programmet sier aldri at PC-en er angrepet. Rapporten og revisjonsloggen sier «fant spor (N)» eller
+  «fant ingen spor».
+  - MCP-servere i Claude Desktop, Claude Code, Cursor, VS Code, Gemini CLI og Codex, også i prosjektmapper
+    (`.mcp.json`, `.vscode\mcp.json`). MCP-servere på IT-lista hoppes over. `env` (der nøklene ligger) leses aldri.
+  - «Godkjenn alt»: `bypassPermissions` og `Bash` uten å spørre i Claude Code, `approval_policy = "never"` og
+    `danger-full-access` i Codex, `chat.tools.autoApprove` i VS Code og Cursor (CVE-2025-53773).
+  - Ollama brukt fra andre maskiner: klientadresser i `server.log` som ikke er denne PC-en, med første og siste
+    tid. LM Studio: andre adresser i serverloggen.
+  - Agentøkter i Claude Code, Codex, Gemini CLI og GitHub Copilot: bare tider, antall og om en økt nevner nøkler
+    (`.ssh`, `.aws`, `.env` m.fl.), henter tokens, laster ned og kjører kode, sletter mye eller lager GitHub-repo.
+    Bare økter med slike treff blir spor. Teksten i økta beholdes aldri. Av med `--uten-agentlogger`.
+  - Skript i Oppstart, Temp og ProgramData som snakker med en AI-tjeneste og har en API-nøkkel i seg. Nøkkelen vises ikke.
+  - Kjente dårlige pakkeversjoner fra `regler.json` (`daarligeVersjoner`): nx (s1ngularity), postmark-mcp,
+    @bitwarden/cli og Amazon Q-utvidelsen, i globale npm-pakker, npm-logger og VS Code-utvidelser.
+  - Som administrator: når AI-programmer sist kjørte, fra Prefetch og BAM.
+  - Blindsoner står i rapporten. WSL er installert, men filene der leses ikke.
+- Kolonnen «Viktigst» og telleren øverst viser sporene.
+
+### Endret
+- Revisjonsloggen viser om agentøkter ble sjekket, antall spor og blindsoner.
+
 ## [2.15.2] - 2026-10-26
 
 Ikke testet på Windows.

@@ -70,10 +70,13 @@ public sealed partial class Skanner
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
             ("Sjekker registeret...", Register),
             ("Leter etter AI som leverandører har lagt inn...", LeverandorAi),
+            ("Ser etter ukjente AI-spor...", UkjenteSporSjekk),
         };
         // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
         Tider.Clear();
         _mappeFunn.Clear();
+        while (_prosjektOppsett.TryTake(out _)) { }
+        lock (Blindsoner) Blindsoner.Clear();
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
         Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
@@ -162,9 +165,9 @@ public sealed partial class Skanner
     private static IEnumerable<string> Filer(string sti) =>
         Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateFiles(sti).ToList(), new List<string>());
 
-    internal static JsonDocument? LesJson(string sti)
+    internal static JsonDocument? LesJson(string sti, ISet<string>? lovlige = null)
     {
-        if (!LovligeFiler.Contains(Path.GetFileName(sti))) return null;
+        if (!(lovlige ?? LovligeFiler).Contains(Path.GetFileName(sti))) return null;
         try
         {
             var info = new FileInfo(sti);

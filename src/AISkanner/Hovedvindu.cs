@@ -164,7 +164,7 @@ public sealed class Hovedvindu : Form
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
-            _skanner = new Skanner(_regler, historikk);
+            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger") };
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
             _resultat = await Task.Run(() => _skanner.KjorAsync(false));
@@ -228,7 +228,7 @@ public sealed class Hovedvindu : Form
                 admin = Nettverk.ErAdmin(),
                 revisjon = _revisjonSti,
                 revisjonFeil = _revisjon && _revisjonSti == null,
-                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper } : null,
+                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, spor = _resultat.Count(f => f.Gruppe == "spor") } : null,
             },
             funn = _resultat.Select((f, id) => new
             {
@@ -292,7 +292,7 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",

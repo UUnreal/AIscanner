@@ -14,6 +14,7 @@ public static class Oversikt
     public static string Punkt(Funn f)
     {
         var detaljer = f.Detaljer;
+        if (f.Gruppe == "spor") return SporPunkt(f.Navn);
         if (f.Navn.StartsWith("Farlig AI-modellfil", StringComparison.Ordinal)) return "Skjult kode";
         if (f.Navn.StartsWith("AI slått på manuelt", StringComparison.Ordinal)) return "Slått på manuelt";
 
@@ -68,7 +69,7 @@ public static class Oversikt
         int modeller = 0, nettsteder = 0, utvidelser = 0, apper = 0;
         foreach (var f in funn)
         {
-            if (f.Type == "IT-regel") continue;
+            if (f.Type == "IT-regel" || f.Gruppe == "spor") continue;
             if (f.Modeller > 0) { modeller += f.Modeller; continue; }
             if (f.Type is "AI-nettsted" or "Ukjent AI-nettsted" || f.Kategori.Contains("(nettsted)"))
                 nettsteder += Regex.Match(f.Navn, @"\((\d+)\)$") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 1;
@@ -86,6 +87,8 @@ public static class Oversikt
         if (n > 0) deler.Add(n == 1 ? "1 AI-nettsted" : $"{n} AI-nettsteder");
         if (u > 0) deler.Add(u == 1 ? "1 nettleserutvidelse" : $"{u} nettleserutvidelser");
         if (a > 0) deler.Add(a == 1 ? "1 AI-app eller agent" : $"{a} AI-apper og agenter");
+        int s = funn.Count(f => f.Gruppe == "spor");
+        if (s > 0) deler.Add(s == 1 ? "1 ukjent AI-spor" : $"{s} ukjente AI-spor");
         return deler.Count == 1 ? deler[0] : string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
     }
 
@@ -98,6 +101,19 @@ public static class Oversikt
     }
 
     /// <summary>Hvor på PC-en AI-en ligger, kort: "Chrome", "Nedlastinger", "Program Files\Lenovo".</summary>
+    private static string SporPunkt(string navn) => navn switch
+    {
+        var n when n.StartsWith("MCP-servere") => "Verktøy for AI-agent",
+        var n when n.StartsWith("Godkjenn alt") => "Spør aldri",
+        var n when n.StartsWith("Ollama") || n.StartsWith("LM Studio") => "Brukt fra andre maskiner",
+        var n when n.StartsWith("Agentøkter") => "Nøkler eller kode i økt",
+        var n when n.StartsWith("Skript") => "Skript med AI-nøkkel",
+        var n when n.StartsWith("Pakker") => "Kjent dårlig versjon",
+        var n when n.StartsWith("Fil med kjent navn") => "Kjent filnavn",
+        var n when n.StartsWith("Når AI-programmer") => "Sist kjørt",
+        _ => "Ukjent AI-spor",
+    };
+
     public static string Lokasjon(Funn f)
     {
         foreach (var d in f.Detaljer)

@@ -2116,5 +2116,12 @@
     "Gemma": "US:Google",
     "Edge": "US:Microsoft",
     "Chrome": "US:Google"
-  }
+  },
+  "_daarligeVersjoner": "Pakkeversjoner som er kjent kapret eller ondsinnede og som misbruker AI-verktøy. Treff vises som «Ukjent AI-spor» (rødt). Bare navn og versjon sammenlignes.",
+  "daarligeVersjoner": [
+    { "navn": "nx", "versjoner": ["20.9.0", "20.10.0", "20.11.0", "20.12.0", "21.5.0", "21.6.0", "21.7.0", "21.8.0"], "kilde": "GHSA-cxm3-wv7p-598c (s1ngularity, aug. 2025)" },
+    { "navn": "postmark-mcp", "versjoner": ["1.0.16", "1.0.17", "1.0.18"], "kilde": "Koi Security, sep. 2025 (ondsinnet MCP-server)" },
+    { "navn": "@bitwarden/cli", "versjoner": ["2026.4.0"], "kilde": "Bitwarden-varsel 2026" },
+    { "navn": "amazonwebservices.amazon-q-vscode", "versjoner": ["1.84.0"], "kilde": "AWS-2025-015 (Amazon Q-utvidelse, jul. 2025)" }
+  ]
 }

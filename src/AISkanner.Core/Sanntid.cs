@@ -274,6 +274,8 @@ public sealed partial class Skanner
             j => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist));
 
         LeggTilFarlige(ff);
+        // AI-oppsett i prosjektmapper (.mcp.json, .vscode\mcp.json, .claude\settings.json) som gjennomgangen fant
+        ProsjektOppsett();
 
         // Modeller
         var modeller = ff.Modeller.OrderByDescending(m => m.Lengde).ToList();
@@ -324,7 +326,7 @@ public sealed partial class Skanner
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude")) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
         if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
@@ -360,6 +362,7 @@ public sealed partial class Skanner
 
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
     {
+        if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")
         {

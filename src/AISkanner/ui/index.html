@@ -360,13 +360,13 @@ function kart(f) {
   }).join("");
   return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${Object.keys(cdn).length ? `<div class="cdn">${L("Tjenesten skjuler IP-en", "The service hides the IP")}: ${esc(Object.entries(cdn).map(([n, a]) => `${a} ${L("bak", "behind")} ${n}`).join(", "))}</div>` : ""}</div>`;
 }
-const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")]];
+const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Ukjent AI-spor", "Unknown AI trace")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
 // Overskriften teller AI-modeller. Resten (nettsteder, utvidelser, apper) står under.
 function visTelling(antall, t) {
   $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : t.modeller === 1 ? L("1 AI-modell funnet", "1 AI model found") : t.modeller ? L(`${t.modeller} AI-modeller funnet`, `${t.modeller} AI models found`) : L("Ingen AI-modeller funnet", "No AI models found");
-  const andre = [[t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")]]
+  const andre = [[t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")]]
     .filter(x => x[0] > 0).map(x => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}`);
   $("andreFunn").textContent = andre.length ? "+ " + andre.join(" · ") : "";
 }

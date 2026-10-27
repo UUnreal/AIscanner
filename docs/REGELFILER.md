@@ -66,6 +66,7 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `aiTjenester` | liste | AI-API-er som programmer snakker med i bakgrunnen, kjent på vertsnavn. |
 | `hoyrisikoLand` | liste med landkoder | Data hit gir alltid rødt. Standard: `CN`, `RU`, `IR`, `KP`, `BY`. |
 | `godkjentAi` | liste med tekst | Som `godkjent-ai.txt`. |
+| `daarligeVersjoner` | liste med objekter | Pakker og utvidelser i kjente dårlige versjoner. Se under. |
 | `selskapsland` | objekt | Selskap eller produkt → land, for «Kommer fra». Verdien er `"US"` eller `"US:Anthropic"` (land og selskap). |
 | `modellfamilier` | liste | Modellfamilier som kjennes igjen på innholdet. |
 | `leverandorAi` | liste | Navn på AI som leverandører legger inn. |
@@ -147,6 +148,16 @@ på en ekte PC ennå.
 
 Beskriver innebygd AI i en nettleser: `brukerdata` (mappen med brukerdata), `policyNokkel` og `policyVerdi` (policyen
 som slår den av) og forklaringstekster.
+
+### daarligeVersjoner
+
+```json
+{ "navn": "nx", "versjoner": ["21.5.0", "21.6.0"], "kilde": "GHSA-cxm3-wv7p-598c" }
+```
+
+`navn` er npm-pakken (også `@scope/navn`) eller VS Code-utvidelsen (`utgiver.navn`). Versjonene må stå i sin
+helhet; områder som `>=1.0.16` støttes ikke. Treff gir «Ukjent AI-spor» (rødt) og sammenlignes med `package.json`
+i globale npm-pakker, npm-loggene (`navn@versjon` og `/navn/-/navn-versjon.tgz`) og mappenavn i `.vscode\extensions`.
 
 ## ai-modeller.yar
 

@@ -33,7 +33,7 @@ public sealed class Funn
     /// Hvor AI-en lever: "lokal" (kjører på PC-en: modeller, motorer, lokale servere),
     /// "nettleser" (nettsteder, utvidelser, innebygd AI) eller "skjult" (alt annet på PC-en: apper og agenter som bruker AI i skyen, kode, nøkler, bakgrunnsprogrammer).
     /// </summary>
-    public string Gruppe => Kategori.StartsWith("Nettleser") ? "nettleser" : Kategori.StartsWith("Lokal") ? "lokal" : "skjult";
+    public string Gruppe => Kategori == Skanner.SporKategori ? "spor" : Kategori.StartsWith("Nettleser") ? "nettleser" : Kategori.StartsWith("Lokal") ? "lokal" : "skjult";
     public required string Hvorfor { get; init; }
     public string? Enkelt { get; init; }
     public string? Rad { get; init; }

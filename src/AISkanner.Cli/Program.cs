@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -39,7 +39,7 @@ int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
-var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg") };
+var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger") };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
@@ -171,6 +171,26 @@ static class Selvtest
         Sjekk("rapport: tekst viser AI-nettsted", Rapport.Tekst(new[] { privat }).Contains("hemmelig-kunde.ai"), true);
         Sjekk("rapport: JSON viser AI-nettsted", Rapport.Json(new[] { privat }).Contains("hemmelig-kunde.ai"), true);
         Sjekk("cdn: vanlig adresse er ikke CDN", IpLand.Cdn(ip("101.42.18.7"), new[] { "api.deepseek.com" }) == null, true);
+
+        // Ukjente AI-spor: alltid røde, aldri innhold fra økter, kommandoer eller nøkler
+        var pf = new byte[0x80 + 64];
+        BitConverter.GetBytes(30).CopyTo(pf, 0);
+        System.Text.Encoding.ASCII.GetBytes("SCCA").CopyTo(pf, 4);
+        System.Text.Encoding.Unicode.GetBytes("OLLAMA.EXE").CopyTo(pf, 0x10);
+        BitConverter.GetBytes(new DateTime(2026, 10, 26, 12, 0, 0, DateTimeKind.Utc).ToFileTimeUtc()).CopyTo(pf, 0x80);
+        var tolket = Prefetch.Tolk(pf);
+        Sjekk("spor: Prefetch gir programnavn og tid", tolket?.Exe == "OLLAMA.EXE" && tolket.Tider.Count == 1, true);
+        var toml = Skanner.McpFraToml(new[] { "approval_policy = \"never\"", "[mcp_servers.skall]", "command = \"powershell\"", "args = [\"-enc\", \"QQBBAA\"]", "[annet]", "command = \"x\"" });
+        Sjekk("spor: MCP fra Codex-oppsett", toml.Count == 1 && toml[0].Navn == "skall" && toml[0].Kommando == "powershell", true);
+        Sjekk("spor: kode etter -enc vises aldri", Skanner.FørsteArgument(toml[0].Argument).Contains("QQBBAA"), false);
+        Sjekk("spor: nøkkel i argument vises aldri", Skanner.FørsteArgument("--key sk-proj-ABCDEFGHIJKLMNOPQRSTUV123").Contains("sk-proj"), false);
+        var gin = Skanner.GinLinje.Match("[GIN] 2026/10/26 - 22:01:02 | 200 |  1.2345ms |    192.168.1.20 | POST     \"/api/chat\"");
+        Sjekk("spor: Ollama-logglinje gir klientadresse", gin.Success && gin.Groups[3].Value == "192.168.1.20" && gin.Groups[5].Value == "/api/chat", true);
+        var spor = new Funn { Navn = "MCP-servere: Test", Kategori = Skanner.SporKategori, Risiko = Risiko.Gronn, Hvorfor = "x" };
+        Risikoregler.Bruk(new[] { spor }, new Regelsett { GodkjentAi = new() { "MCP-servere: Test" } });
+        Sjekk("spor: alltid rødt, også når IT har godkjent navnet", spor.Risiko == Risiko.Rod && spor.Type == "Ukjent AI-spor", true);
+        Sjekk("spor: rapporten sier aldri «angrep»", (Rapport.Tekst(new[] { spor }) + Rapport.Tekst(Array.Empty<Funn>())).IndexOf("angrep", StringComparison.OrdinalIgnoreCase) >= 0, false);
+        Sjekk("spor: tom rapport sier «fant ingen spor»", Rapport.Tekst(Array.Empty<Funn>()).Contains("fant ingen spor"), true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
         return feil == 0 ? 0 : 1;

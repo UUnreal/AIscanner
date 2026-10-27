@@ -24,6 +24,7 @@ public static class Revisjon
         "Verdier av API-nøkler og miljøvariabler (bare navnene)",
         "Minnet til andre programmer, lsass og kommandolinjer",
         "Andre brukeres profiler (også som administrator)",
+        "Innholdet i AI-agentenes økter, kommandoer og svar (bare tidspunkter og om en økt nevner nøkler eller systemfiler)",
     };
 
     public sealed record Kilde(string Navn, string Hvor, string? Sha256);
@@ -113,6 +114,10 @@ public static class Revisjon
         L($"Start: {s.Startet:yyyy-MM-dd HH:mm:ss}   Slutt: {s.Ferdig ?? DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         L($"Nettleserhistorikk: {(s.MedHistorikk ? "sjekket i minnet, ingen adresser lagret" : "slått av av IT")}");
         L($"Eksperimentflagg i nettleseren (Local State): {(s.LesNettleserflagg ? "lest (slått på av IT)" : "ikke lest")}");
+        L($"Agentøkter (tidspunkter og treff, aldri innhold): {(s.MedAgentlogger ? "sjekket" : "slått av av IT")}");
+        int spor = funn.Count(f => f.Gruppe == "spor");
+        L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        foreach (var b in s.Blindsoner) L($"Blindsone: {b}");
         L(IngenAi);
         if (feil != null) L($"Søket stoppet: {feil}");
         L(new string('=', 60));

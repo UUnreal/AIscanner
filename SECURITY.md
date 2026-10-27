@@ -68,6 +68,10 @@ Defender-prosesser åpnes ikke.
 **Håndhevet i koden:** `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for å lese innholdet:
 `manifest.json`, `messages.json`, `extensions.json`, `Preferences`, `History` og `places.sqlite`. I tillegg leses de
 første bytene og metadata-hodet i store filer for å kjenne igjen modellformater, og YARA leser begrensede deler av modellfiler.
+Sporsjekken har sin egen liste, `Skanner.Sporfiler` (`claude_desktop_config.json`, `.claude.json`, `.mcp.json`,
+`mcp.json`, `config.toml`, `settings.json`, `settings.local.json`, `package.json`), og leser i tillegg Ollama- og
+LM Studio-logger, agentøkter og små skript linje for linje. Fra økter og skript beholdes bare tider, antall og om en
+kategori traff, aldri teksten. `env` i MCP-oppsett leses aldri.
 
 **Unntak, av som standard:** `Local State` i Chrome og Edge inneholder AI-flaggene, men også nettleserens krypterte
 nøkkel. Den leses bare med `AISkanner.Cli --flagg`. Da leser en strømleser bare `browser.enabled_labs_experiments`,

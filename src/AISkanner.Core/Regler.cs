@@ -74,6 +74,14 @@ public sealed class InnebygdAI
     [JsonPropertyName("rad")] public string? Rad { get; set; }
 }
 
+public sealed class DaarligVersjon
+{
+    /// <summary>npm-pakke (f.eks. "nx", "@bitwarden/cli") eller utvidelse (utgiver.navn).</summary>
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    [JsonPropertyName("versjoner")] public List<string> Versjoner { get; set; } = new();
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
 public sealed class Regelsett
 {
     [JsonPropertyName("versjon")] public string Versjon { get; set; } = "";
@@ -96,6 +104,8 @@ public sealed class Regelsett
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
     [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
+    /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
+    [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>
     [JsonIgnore] public string Kilde { get; private set; } = "innebygd";

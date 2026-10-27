@@ -892,3 +892,112 @@ innebygd|built-in
 ingen|none
 Program|Program
 Kjerne|Core
+# 2.16 Ukjente AI-spor
+Ukjente AI-spor (oppsett og logger med ukjent opphav)|Unknown AI traces (setups and logs of unknown origin)
+Ukjent AI-spor: vi vet ikke hvem som satte det opp eller hva det er brukt til.|Unknown AI trace: we do not know who set it up or what it is used for.
+Ukjente AI-spor: fant ingen spor.|Unknown AI traces: found no traces.
+~Ukjente AI-spor: fant spor \((\d+)\)\.|Unknown AI traces: found traces ($1).
+Fant ingen spor.|Found no traces.
+~(\d+) ukjente AI-spor\b|$1 unknown AI traces
+~(\d+) ukjent AI-spor\b|$1 unknown AI trace
+Ukjente AI-spor|Unknown AI traces
+Ukjent AI-spor|Unknown AI trace
+Ser etter ukjente AI-spor...|Looking for unknown AI traces...
+Ser etter ukjente AI-spor|Looking for unknown AI traces
+Blindsone|Blind spot
+Agentøkter (tidspunkter og treff, aldri innhold)|Agent sessions (times and hits, never content)
+sjekket|checked
+Innholdet i AI-agentenes økter, kommandoer og svar (bare tidspunkter og om en økt nevner nøkler eller systemfiler)|The content of AI agent sessions, commands and replies (only times and whether a session mentions keys or system files)
+AI-agenten har fått verktøy (MCP-servere) som kan lese filer, kjøre kommandoer eller koble seg til tjenester.|The AI agent has been given tools (MCP servers) that can read files, run commands or connect to services.
+AI-agenten kan kjøre kommandoer og endre filer uten å spørre.|The AI agent can run commands and change files without asking.
+Andre maskiner har kjørt AI-modellen eller lastet ned modeller via Ollama.|Other machines have run the AI model or downloaded models through Ollama.
+Den lokale AI-serveren har svart på forespørsler fra andre adresser enn denne PC-en.|The local AI server has answered requests from addresses other than this PC.
+En agentøkt uten menneske har lest nøkler, hentet tokens, lastet ned og kjørt kode eller slettet mye.|An agent session without a human has read keys, fetched tokens, downloaded and run code or deleted a lot.
+En fil med samme navn og sted som en fil kjent fra skadevare som brukte AI (2025). Innholdet er ikke åpnet.|A file with the same name and location as a file known from malware that used AI (2025). The content was not opened.
+En pakke eller utvidelse i en versjon som står på lista over kjente dårlige versjoner i regler.json.|A package or extension in a version that is on the list of known bad versions in regler.json.
+En versjon fra lista over kjente dårlige versjoner er eller har vært installert.|A version from the list of known bad versions is or has been installed.
+Et skript i en oppstarts- eller midlertidig mappe snakker med en AI-tjeneste og har en API-nøkkel i seg.|A script in a startup or temporary folder talks to an AI service and contains an API key.
+Loggene til AI-agenten viser økter uten menneske, eller at agenten har vært borti nøkler, tokens, nedlasting og kjøring av kode eller sletting. Bare tider og antall er lest, ikke hva som ble skrevet.|The AI agent's logs show sessions without a human, or that the agent has touched keys, tokens, downloading and running code or deleting. Only times and counts were read, not what was written.
+MCP-oppsett i en prosjektmappe: kan følge med kode fra andre og starte når prosjektet åpnes.|MCP setup in a project folder: can come with code from others and start when the project is opened.
+«Godkjenn alt» er slått på i en prosjektmappe: gjelder alle som åpner prosjektet.|"Approve all" is turned on in a project folder: applies to everyone who opens the project.
+Samme navn og sted som en fil kjent fra skadevare som brukte AI (2025).|Same name and location as a file known from malware that used AI (2025).
+Skript med AI-nøkkel i oppstart, Temp eller ProgramData. Ukjent hvem som la det der.|Script with an AI key in Startup, Temp or ProgramData. Unknown who put it there.
+Windows husker når programmer kjørte. Viser når AI-programmer sist ble startet. Bare som administrator.|Windows remembers when programs ran. Shows when AI programs were last started. Administrator only.
+Når AI-programmer sist kjørte (admin)|When AI programs last ran (admin)
+Pakker på lista over kjente dårlige versjoner|Packages on the list of known bad versions
+Skript som bruker AI med nøkkel|Script that uses AI with a key
+Fil med kjent navn fra AI-skadevare|File with a known name from AI malware
+Ollama brukt fra andre maskiner|Ollama used from other machines
+LM Studio-server: andre adresser i loggen|LM Studio server: other addresses in the log
+Serverloggen til LM Studio nevner andre adresser enn denne PC-en.|The LM Studio server log mentions addresses other than this PC.
+Agentøkter|Agent sessions
+Godkjenn alt|Approve all
+MCP-servere i prosjekt|MCP servers in project
+MCP-servere|MCP servers
+kobler til en ukjent tjeneste|connects to an unknown service
+starter PowerShell eller laster ned og kjører kode|starts PowerShell or downloads and runs code
+starter et program fra Temp, Nedlastinger eller ProgramData|starts a program from Temp, Downloads or ProgramData
+pakkeversjon på lista over kjente dårlige versjoner|package version on the list of known bad versions
+ligger i en prosjektmappe|is in a project folder
+snakker med|talks to
+UKJENTE AI-SPOR (OPPSETT OG LOGGER MED UKJENT OPPHAV)|UNKNOWN AI TRACES (SETUPS AND LOGS OF UNKNOWN ORIGIN)
+~(\d+) MCP-servere i |$1 MCP servers in 
+~(\d+) MCP-server i |$1 MCP server in 
+~MCP-server «([^»]+)» ligger i en prosjektmappe\.|MCP server "$1" is in a project folder.
+~MCP-server «([^»]+)» starter PowerShell eller laster ned og kjører kode\.|MCP server "$1" starts PowerShell or downloads and runs code.
+~MCP-server «([^»]+)» starter et program fra Temp, Nedlastinger eller ProgramData\.|MCP server "$1" starts a program from Temp, Downloads or ProgramData.
+~MCP-server «([^»]+)» kobler til en ukjent tjeneste \(([^)]+)\)\.|MCP server "$1" connects to an unknown service ($2).
+~MCP-server «([^»]+)» pakkeversjon på lista over kjente dårlige versjoner: ([^.]+(?:\.\d+)*)\.|MCP server "$1" package version on the list of known bad versions: $2.
+~MCP-server «([^»]+)»|MCP server "$1"
+~fjern: |remote: 
+~(\d+) andre adresser i Ollama-loggen\.|$1 other addresses in the Ollama log.
+~(\d+) andre adresse i Ollama-loggen\.|$1 other address in the Ollama log.
+~klient ([0-9A-Fa-f:.]+)|client $1
+~(\d+) forespørsler|$1 requests
+~(\d+) linjer|$1 lines
+~adresse ([0-9.]+)|address $1
+~(\d+) økter, (\d+) uten menneske etter første melding\.|$1 sessions, $2 without a human after the first message.
+~(\d+) økter, (\d+) treff|$1 sessions, $2 hits
+~økter: (\d+) · uten menneske: (\d+)|sessions: $1 · without a human: $2
+leste nøkler|read keys
+hentet tokens|fetched tokens
+lastet ned og kjørte|downloaded and ran
+slettet mye|deleted a lot
+opprettet GitHub-repo|created GitHub repo
+tid i logglinje|time in log line
+tid i filnavn|time in file name
+endringstid på fil|file modified time
+endringstid på mappe|folder modified time
+opprettelsestid på fil|file creation time
+ukjent tid|unknown time
+~npm installerte |npm installed 
+~ · installert | · installed 
+~ · utvidelse | · extension 
+~ · kjørt | · ran 
+~sist kjørt|last ran
+har nøkkel (vises ikke)|has a key (not shown)
+~ · opprettet | · created 
+[kode skjult]|[code hidden]
+[skjult]|[hidden]
+defaultMode = bypassPermissions (spør aldri)|defaultMode = bypassPermissions (never asks)
+approval_policy = never (spør aldri før kommandoer)|approval_policy = never (never asks before commands)
+sandbox_mode = danger-full-access (ingen sandkasse)|sandbox_mode = danger-full-access (no sandbox)
+~tillater (\S+) uten å spørre|allows $1 without asking
+~WSL \(Linux i Windows\) er installert \((\d+)\)\. AI og spor inne i WSL er ikke sjekket\.|WSL (Linux in Windows) is installed ($1). AI and traces inside WSL were not checked.
+bare tider, antall og adresser; innhold lagres ikke|only times, counts and addresses; content is not stored
+finnes fila? (innholdet åpnes ikke)|does the file exist? (content is not opened)
+slått av av IT (--uten-agentlogger)|turned off by IT (--uten-agentlogger)
+tidsgrensen for agentøkter er nådd|the time limit for agent sessions was reached
+20 sekunder brukt på agentøkter; resten ble ikke lest|20 seconds spent on agent sessions; the rest was not read
+bare programnavn og kjøretider|only program names and run times
+blindsone: filene i WSL leses ikke|blind spot: the files in WSL are not read
+~større enn (\d+) MB|larger than $1 MB
+Verktøy for AI-agent|Tools for AI agent
+Spør aldri|Never asks
+Brukt fra andre maskiner|Used from other machines
+Nøkler eller kode i økt|Keys or code in session
+Skript med AI-nøkkel|Script with AI key
+Kjent dårlig versjon|Known bad version
+Kjent filnavn|Known file name
+Sist kjørt|Last ran
+Spor|Traces
