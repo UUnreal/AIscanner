@@ -29,6 +29,22 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.17.0] - 2026-10-27
+
+Ikke testet på Windows.
+
+### Lagt til
+- **Lyttevindu.** TCP-tabellen leses hvert 250. ms og DNS-bufferen hvert 2. sekund i minst 20 sekunder mens søket
+  går, så korte AI-kall også blir sett. Ingen pakkefangst, ingenting lagres. `--lytt 0-60` endrer lengden (0 = ett
+  øyeblikksbilde som før). Bare TCP: UDP og QUIC (HTTP/3) står som blindsone i rapporten.
+- **AI-server brukt fra annen maskin** (Ukjent AI-spor, rødt): forbindelse inn til porten en lokal AI-server lytter på
+  (Ollama, LM Studio m.fl.) fra en annen adresse enn PC-en. Viser klient, land, tid og datamengde (admin).
+- **Ukjent program snakker med AI** (Ukjent AI-spor, rødt): program uten kjent utgiver, eller fra Nedlastinger/Temp,
+  med forbindelse til en AI-tjeneste. Kjente utgivere vises som før som skygge-AI.
+- **Følg med.** Hake i detaljene til et funn viser datamengden sendt og mottatt per sekund i et diagram, de siste
+  2 minuttene, mens vinduet er åpent. Krever administrator for datamengde; uten vises antall forbindelser. Lagres
+  ikke og logges ikke.
+
 ## [2.16.0] - 2026-10-27
 
 Ikke testet på Windows.
