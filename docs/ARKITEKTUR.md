@@ -44,6 +44,7 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `Sanntid.cs` | Prosesser og AI-motorer, lokale AI-servere, AI-nøkler, filgjennomgang (modeller og AI-kode). |
 | `Misbruk.cs` | Flere ukjente AI-spor (hooks, skjulte tegn, ferdigheter, autostart med farlige flagg, lenker, kjente filer). Filgjennomgangen samler kandidater; de vurderes etterpå. |
 | `Lytting.cs` | Lyttevindu under søket og «Følg med» (datamengde live). Bare i minnet. |
+| `Kontroll.cs` | Kontrollmodus (`--kontroll`): falske spor i en midlertidig mappe, sjekker at hver alarm slår ut, sletter mappa. |
 | `UkjenteSpor.cs` | Ukjente AI-spor: MCP-oppsett, «godkjenn alt», serverlogger, agentøkter (bare metadata), skript med AI-nøkkel, dårlige pakkeversjoner, Prefetch/BAM (admin). Alle røde. |
 | `ModellFormat.cs` | Kjenner igjen modellformater på de første bytene, og leser GGUF- og safetensors-hodet. |
 | `ModellGjenkjenning.cs` | Modellfamilie fra arkitektur og ordforråd, modell-ID (SHA-256 eller fingeravtrykk), Ollama-navn. |

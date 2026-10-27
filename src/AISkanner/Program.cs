@@ -33,6 +33,7 @@ internal static class Program
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+        if (args.Contains("--kontroll")) { try { VisKontroll(args.Contains("--en")); } catch (Exception e) { VisFeil(e); } return; }
         try { Kjor(args); }
         catch (Exception e) { VisFeil(e); }
     }
@@ -40,6 +41,18 @@ internal static class Program
     // Egen metode: hvis en DLL mangler, feiler den her (når vinduet lages), etter at feilmeldingen er klar.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static void Kjor(string[] args) => Application.Run(new Hovedvindu(args));
+
+    // «AISkanner.exe --kontroll»: lager kjente spor i en midlertidig mappe, sjekker at hver alarm slår ut,
+    // sletter mappa og viser resultatet (Ctrl+C kopierer). Ingenting lagres.
+    private static void VisKontroll(bool engelsk)
+    {
+        var tekst = Skanner.Kontroll(Regelsett.Last());
+        if (engelsk) tekst = string.Join("\r\n", tekst.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Select(l => Engelsk.Til(l)));
+        var feil = tekst.Contains("FEIL");
+        MessageBox.Show(tekst + "\r\n" + (engelsk ? "Press Ctrl+C to copy." : "Trykk Ctrl+C for å kopiere."),
+            engelsk ? "AI Scanner: alarm check" : "AI-skanner: kontroll av alarmene", MessageBoxButtons.OK,
+            feil ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+    }
 
     private static void VisFeil(Exception? e)
     {

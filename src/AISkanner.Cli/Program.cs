@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -37,6 +37,14 @@ bool nvd = args.Contains("--nvd");
 bool historikk = !args.Contains("--uten-historikk");
 int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
+
+// Kontrollmodus: lager kjente spor i en midlertidig mappe og sjekker at hver alarm slår ut. Ingenting lagres.
+if (args.Contains("--kontroll"))
+{
+    var k = Skanner.Kontroll(regler);
+    Console.WriteLine(args.Contains("--en") ? string.Join(Environment.NewLine, k.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Select(l => Engelsk.Til(l))) : k);
+    return k.Contains("FEIL") ? 1 : 0;
+}
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
 var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
@@ -217,6 +225,9 @@ static class Selvtest
         Sjekk("misbruk: farlig flagg i autostart", flagg.Any(x => x.Agent == "Claude Code" && x.Flagg == "--dangerously-skip-permissions"), true);
         Sjekk("misbruk: oppgaveteksten tas ikke med", flagg.Any(x => x.Flagg.Contains("slett")), false);
         Sjekk("misbruk: vanlig claude-kommando er ikke farlig", Skanner.FlaggITekst("claude --version").Count == 0, true);
+        var kontroll = Skanner.Kontroll(Regelsett.Last());
+        Sjekk("kontroll: alle alarmer slår ut med kjente spor", !kontroll.Contains("FEIL") && kontroll.Contains("alarmer slo ut riktig"), true);
+        Sjekk("kontroll: midlertidig mappe slettet", kontroll.Contains("Den midlertidige mappa er slettet."), true);
 
         Console.WriteLine(feil == 0 ? "SELVTEST OK" : $"SELVTEST FEILET ({feil})");
         return feil == 0 ? 0 : 1;

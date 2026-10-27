@@ -30,6 +30,7 @@ Prosjektet har én selvtest og ellers ingen enhetstester. Dette er det som finne
 | Test | Kommando | Hvor |
 |---|---|---|
 | Selvtest av risikologikken: godkjentlista avviser falske navn og domener i filstier, godtar ekte produkter og nettsteder, og ukjente lokale AI-servere blir «Ukjent AI». Exit-kode 0 når alt er grønt. | `dotnet run --project src/AISkanner.Cli -- --selvtest` | Lokalt og i byggeløypa (`bygg.yml`) |
+| Kontroll av alarmene: lager kjente spor i en midlertidig mappe og sjekker at alle alarmer slår ut. Exit-kode 1 ved FEIL. Kjøres også av selvtesten. | `dotnet run --project src/AISkanner.Cli -- --kontroll` | Lokalt; på Windows med `AISkanner.exe --kontroll` før hver utgivelse |
 | Røyktest: skanner maskinen og sjekker at JSON er gyldig og exit-kode ≤ 2 | `dotnet run --project src/AISkanner.Cli -c Release` | Byggeløypa (Windows) |
 | YARA-motoren mot ekte YARA | `python3 verktoy/sammenlign-yara.py tests/yara/test.yar tests/yara/filer` | Lokalt |
 | `ai-modeller.yar` kompilerer i ekte YARA | `python3 verktoy/test-yara.py fil …` | Lokalt |
@@ -94,8 +95,8 @@ Endringer bare i `regler.json` eller `ai-modeller.yar` (nye produkter, nettstede
 ## Lage en utgivelse
 
 1. Flytt alt under `[Ikke utgitt]` i [CHANGELOG.md](CHANGELOG.md) til en ny versjon med dato, og oppdater lenkene nederst.
-2. Oppdater `<Version>` i `src/AISkanner/AISkanner.csproj` og `assemblyIdentity version` i `src/AISkanner/app.manifest`.
-   (Manifestet står på `2.1.0.0` og er ikke fulgt med siden 2.1.)
+2. Oppdater `<Version>` i `src/Directory.Build.props` og `assemblyIdentity version` i `src/AISkanner/app.manifest`.
+2b. Kjør `AISkanner.exe --kontroll` på en ekte Windows-PC. Alle linjer skal være OK. Ny alarm = ny linje i `Kontroll.cs`.
 3. Oppdater versjonen og [Status](README.md#status)-tabellen i [README.md](README.md).
 4. Merk utgivelsen, for eksempel `git tag v2.13.1 && git push origin v2.13.1`.
 5. Byggeløypa bygger, sjekker størrelsen og laster opp `AISkanner-usignert` med `SHA256.txt`.

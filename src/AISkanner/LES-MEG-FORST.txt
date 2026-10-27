@@ -8,7 +8,10 @@ Se på kolonnen «Type» i Filutforsker: programmet heter «Program», innstilli
 
 Pakk ut hele mappa før du starter. Programmet virker ikke rett fra zip-fila.
 
+Virker alarmene? Dobbeltklikk Kontroller-alarmene.cmd. Den lager falske spor i en midlertidig mappe,
+sjekker at hver alarm slår ut, sletter mappa og viser OK eller FEIL. Ingenting lagres.
+
 Feil? Programmet viser en melding. Trykk Ctrl+C i meldingen for å kopiere teksten.
 
 English: double-click AISkanner.exe (Type: Application). AISkanner.exe.config is a settings file, not the program.
-Extract the whole zip first.
+Extract the whole zip first. Kontroller-alarmene.cmd checks that every alarm triggers (add --en for English).

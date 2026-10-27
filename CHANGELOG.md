@@ -29,6 +29,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.17.1] - 2026-10-27
+
+Ikke testet på Windows. 2.17.0 startet på én ekte Windows-PC uten nye funn; om alarmene virker der, er ikke bekreftet.
+
+### Lagt til
+- **Kontrollmodus: `AISkanner.exe --kontroll`** (og `AISkanner.Cli --kontroll`, exit-kode 1 ved feil). Lager kjente,
+  ufarlige spor i en midlertidig mappe under `%TEMP%`, kjører de samme sjekkene mot den mappa, viser OK/FEIL for hver
+  av 29 alarmer pluss en sjekk av at ingen nøkler, kommandoer eller øktinnhold kom med, og sletter mappa. Ingenting
+  lagres, ingenting sendes. Uten dette kan «ingen funn» ikke skilles fra «sjekken virker ikke».
+  `Kontroller-alarmene.cmd` i zip-fila starter den med dobbeltklikk.
+  Ikke kontrollert: symlinker, Prefetch/BAM, Run-nøkkelen og ekte nettverkstabeller (nettverksreglene kjøres mot et
+  kunstig nettbilde).
+- **Flere MCP-plasseringer:** Claude fra Microsoft Store (`%LOCALAPPDATA%\Packages\*Claude*\LocalCache\Roaming\Claude`),
+  Windsurf (`.codeium\windsurf\mcp_config.json`), LM Studio (`.lmstudio\mcp.json`), VS Code Insiders (`mcp.json`),
+  og Cline og Roo Code (`globalStorage` under Code, Code - Insiders, Cursor og Windsurf).
+- Selvtest: kontrollmodus skal gi 30 av 30.
+
 ## [2.17.0] - 2026-10-27
 
 Ikke testet på Windows.

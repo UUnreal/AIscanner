@@ -1137,3 +1137,38 @@ Skjult modell|Hidden model
 Ukjent register|Unknown registry
 Ferdighet for AI-agent|Skill for AI agent
 alle prosjekter|all projects
+KONTROLL AV ALARMENE (falske spor i en midlertidig mappe)|ALARM CHECK (fake traces in a temporary folder)
+alarmer slo ut riktig på|alarms triggered correctly in
+Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.|Not checked here: symlinks (need rights), Prefetch/BAM (admin), the Run key and real network tables.
+Nettverksalarmene er kontrollert med et kunstig nettbilde: reglene virker, men ikke at Windows ga data.|The network alarms were checked with a synthetic network picture: the rules work, but this does not show that Windows supplied data.
+Den midlertidige mappa er slettet.|The temporary folder has been deleted.
+Kontrollen stoppet:|The check stopped:
+Klarte ikke å slette|Could not delete
+Den kan slettes for hånd.|It can be deleted by hand.
+FEIL  |FAIL  
+(ikke funnet)|(not found)
+(funnet, men|(found, but
+MCP-server med innebygd kode (Codex)|MCP server with inline code (Codex)
+MCP-oppsett i prosjektmappe|MCP setup in project folder
+«Godkjenn alt», MCP som starter selv og WebFetch|«Approve all», self-starting MCP and WebFetch
+«Godkjenn alt» i Codex|«Approve all» in Codex
+Oppgave som starter når mappa åpnes|Task that starts when the folder is opened
+Skript i .claude-mappe|Script in .claude folder
+.gemini\.env i prosjekt|.gemini\.env in project
+Ferdighet som laster ned kode|Skill that downloads code
+Ollama-logg med annen maskin|Ollama log with another machine
+Agentøkt som leste nøkler|Agent session that read keys
+Flere agenter uten menneske|Several agents without a human
+Agent med farlige flagg i .bashrc|Agent with dangerous flags in .bashrc
+Skript med AI-nøkkel i oppstart|Script with AI key at startup
+Dårlig npm-versjon|Bad npm version
+Dårlig pip-versjon|Bad pip version
+Modellfil pakket som 7z|Model file packed as 7z
+Forgiftet MCP-verktøy i npx-cachen|Poisoned MCP tool in the npx cache
+Kjent fil fra AI-misbruk|Known file from AI misuse
+Utvidelse med tilgang til AI-sider|Extension with access to AI sites
+Nett: annen maskin bruker lokal AI-server|Network: another machine uses local AI server
+Nett: ukjent program mot AI-tjeneste|Network: unknown program to AI service
+Nett: ukjent program bruker lokal Ollama|Network: unknown program uses local Ollama
+Nett: kjent domene i DNS-bufferen|Network: known domain in the DNS cache
+Ingen nøkler, kommandoer eller øktinnhold i rapporten|No keys, commands or session content in the report

@@ -38,6 +38,7 @@ public sealed partial class Skanner
     {
         "claude_desktop_config.json", ".claude.json", ".mcp.json", "mcp.json", "config.toml",
         "settings.json", "settings.local.json", "package.json", "tasks.json",
+        "mcp_config.json", "cline_mcp_settings.json", "mcp_settings.json",
     };
 
     // Prosjektfiler funnet av filgjennomgangen (.mcp.json, .vscode\mcp.json, .claude\settings*.json osv.)
@@ -99,6 +100,18 @@ public sealed partial class Skanner
         LesMcpFil(Utvid(@"%USERPROFILE%\.cursor\mcp.json"), "Cursor", prosjekt: false);
         LesMcpFil(Utvid(@"%APPDATA%\Code\User\mcp.json"), "VS Code", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.gemini\settings.json"), "Gemini CLI", prosjekt: false);
+        LesMcpFil(Utvid(@"%APPDATA%\Code - Insiders\User\mcp.json"), "VS Code Insiders", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.codeium\windsurf\mcp_config.json"), "Windsurf", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.lmstudio\mcp.json"), "LM Studio", prosjekt: false);
+        // Utvidelser i VS Code og Cursor med egne MCP-lister (Cline, Roo Code)
+        foreach (var editor in new[] { "Code", "Code - Insiders", "Cursor", "Windsurf" })
+        {
+            LesMcpFil(Utvid($@"%APPDATA%\{editor}\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json"), $"Cline ({editor})", prosjekt: false);
+            LesMcpFil(Utvid($@"%APPDATA%\{editor}\User\globalStorage\rooveterinaryinc.roo-cline\settings\mcp_settings.json"), $"Roo Code ({editor})", prosjekt: false);
+        }
+        // Claude Desktop fra Microsoft Store: oppsettet ligger i appens egen mappe
+        foreach (var pakke in Mapper(Utvid(@"%LOCALAPPDATA%\Packages")).Where(d => Path.GetFileName(d).IndexOf("Claude", StringComparison.OrdinalIgnoreCase) >= 0))
+            LesMcpFil(Path.Combine(pakke, "LocalCache", "Roaming", "Claude", "claude_desktop_config.json"), "Claude Desktop (Microsoft Store)", prosjekt: false);
         var codex = Utvid(@"%USERPROFILE%\.codex\config.toml");
         if (LesToml(codex) is { } toml) VurderMcp(codex, "Codex", McpFraToml(toml), prosjekt: false);
     }

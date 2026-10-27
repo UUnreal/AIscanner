@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.17.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.17.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -134,7 +134,7 @@ fil»), fordi endringstider kan forfalskes.
 
 | Hva | Filer | Hva som leses |
 |---|---|---|
-| MCP-servere | `%APPDATA%\Claude\claude_desktop_config.json`, `%USERPROFILE%\.claude.json`, `.cursor\mcp.json`, `%APPDATA%\Code\User\mcp.json`, `.gemini\settings.json`, `.codex\config.toml`, og `.mcp.json`, `.vscode\mcp.json`, `.cursor\mcp.json` i prosjektmapper | Navn, kommando, første argument og vert. Aldri `env`. Kode etter `-enc`/`-c` og alt som ligner en nøkkel vises som «[skjult]». |
+| MCP-servere | `%APPDATA%\Claude\claude_desktop_config.json` (også Store-utgaven under `%LOCALAPPDATA%\Packages\*Claude*`), Windsurf `.codeium\windsurf\mcp_config.json`, LM Studio `.lmstudio\mcp.json`, Cline og Roo Code i `globalStorage`, VS Code Insiders, `%USERPROFILE%\.claude.json`, `.cursor\mcp.json`, `%APPDATA%\Code\User\mcp.json`, `.gemini\settings.json`, `.codex\config.toml`, og `.mcp.json`, `.vscode\mcp.json`, `.cursor\mcp.json` i prosjektmapper | Navn, kommando, første argument og vert. Aldri `env`. Kode etter `-enc`/`-c` og alt som ligner en nøkkel vises som «[skjult]». |
 | «Godkjenn alt» | `.claude\settings*.json`, `.codex\config.toml`, VS Code og Cursor `settings.json` | Bare `permissions.defaultMode`, `permissions.allow`, `approval_policy`, `sandbox_mode`, `chat.tools.autoApprove` |
 | Lokale AI-servere | `%LOCALAPPDATA%\Ollama\server*.log`, `%USERPROFILE%\.lmstudio\server-logs` | Klientadresse, tid og endepunkt per linje. Ikke forespørslene. |
 | Agentøkter | `.claude\projects\*.jsonl`, `.codex\sessions\rollout-*.jsonl`, `.gemini\tmp`, VS Code `chatSessions` | Tidsstempler, antall meldinger fra mennesket og treff per kategori. Teksten beholdes aldri. Maks 500 filer per program og 20 sekunder totalt. Av med `--uten-agentlogger`. |
@@ -170,6 +170,15 @@ igjen etterpå.
 «Følg med» leser de samme tabellene hvert sekund for ett funn mens vinduet er åpent, og viser datamengden i et
 diagram. Det lagres ikke, logges ikke og forsvinner når haken tas bort eller vinduet lukkes. Bare TCP: UDP og QUIC
 (HTTP/3) vises ikke.
+
+### Kontroll av alarmene
+
+`AISkanner.exe --kontroll` (eller `Kontroller-alarmene.cmd`) viser om alarmene virker på denne PC-en. Programmet
+lager ufarlige falske spor i `%TEMP%\AISkanner-kontroll-xxxxxxxx`, peker sjekkene dit i stedet for brukerens mapper,
+viser OK eller FEIL for hver alarm og sletter mappa. Ingen ekte mapper leses, ingenting lagres, ingenting sendes.
+Antivirus kan reagere på de falske sporene (for eksempel en fil som ser ut som en kjent skadevare-fil). Nettverksreglene
+kontrolleres med et kunstig nettbilde, så kontrollen viser at reglene virker, ikke at Windows ga nettverksdata.
+Symlinker, Prefetch, BAM og Run-nøkkelen kontrolleres ikke.
 
 ## Hva den aldri leser
 
@@ -275,7 +284,9 @@ Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).
 
 ```
 AISkanner.exe [--uten-nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60]
+AISkanner.exe --kontroll [--en]
 AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.Cli --kontroll [--en]
 ```
 
 `AISkanner.Cli` skriver JSON (eller tekst med `--txt`) til standard ut. Exit-kode: `0` = ingen funn,

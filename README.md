@@ -6,10 +6,10 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.17.0 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.17.1 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
-- **Status:** testversjon, ikke signert. 2.8–2.15 er ikke kjørt på ekte Windows (se [Status](#status)).
+- **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
 
 ## Innhold
 
@@ -169,7 +169,8 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 
 | Del | Status |
 |---|---|
-| Skannemotor | Testet på Linux med falske PC-profiler. Kjørt på ekte Windows til og med 2.7. |
+| Skannemotor | Testet på Linux med falske PC-profiler. Kjørt på ekte Windows til og med 2.7. 2.17.0 startet og søkte på én Windows-PC (ingen nye funn). |
+| Ukjente AI-spor og lyttevindu (2.16–2.17) | Alle 29 alarmer slår ut i kontrollmodus på Linux. Ikke kontrollert på Windows: kjør `AISkanner.exe --kontroll`. |
 | Vindu (WebView2) | Kjørt på Windows i 2.3, 2.5 og 2.7. Tabellvisningen fra 2.8 og 2.10 er bare testet i nettleser med eksempeldata. |
 | YARA-motor | Testet mot YARA 4.5.4 med 134 regler, uten avvik. |
 | NVD-oppslag | Ikke testet, fordi byggemiljøet stenger for nettet. |
