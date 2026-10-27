@@ -190,7 +190,7 @@ public static class Revisjon
         // Opptil 3000 i vinduet: alt som ikke ble lest først, så resten
         var vises = poster.Where(p => p.Utfall != Utfall.Lest).Take(3000).ToList();
         vises.AddRange(poster.Where(p => p.Utfall == Utfall.Lest).Take(3000 - vises.Count));
-        object Post(Tilgang p) => new { t = p.Tid.ToString("HH:mm:ss"), u = p.Utfall.ToString().ToLowerInvariant(), ut = U(p.Utfall), s = T(p.Sjekk), h = T(p.Hva), m = T(p.Mal), d = p.Detalj == null ? null : T(p.Detalj) };
+        object Post(Tilgang p) => new { t = p.Tid.ToString("HH:mm:ss"), u = p.Utfall.ToString().ToLowerInvariant(), ut = U(p.Utfall), s = T(p.Sjekk), h = T(p.Hva), m = T(p.Mal), d = p.Detalj == null ? null : T(p.Detalj), k = Kart.Plass(p.Hva, p.Mal) };
         var av = s.Forsvar;
         return new
         {
@@ -220,6 +220,9 @@ public static class Revisjon
             ingenAi = T(Revisjon.IngenAi),
             revisjon = revisjonSti,
             kart = s.Logg.Kart.Tre(funn, T),
+            // Hvert sted per utfall fra kartet, også mappene gjennomgangen bare talte. Alt i tallene skal kunne åpnes.
+            steder = s.Logg.Kart.Steder(3000).Select(x => new { u = x.Utfall.ToString().ToLowerInvariant(), ut = U(x.Utfall), s = T(x.Sjekk),
+                h = T(x.Rot == Kart.Disk ? "Mappe eller fil" : x.Rot), m = x.Sti, d = x.Detalj == null ? null : T(x.Detalj), n = x.Antall, k = x.Plass }),
         };
     }
 }

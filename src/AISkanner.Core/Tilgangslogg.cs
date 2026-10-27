@@ -56,20 +56,25 @@ public sealed class Tilgangslogg
     }
 
     /// <summary>Teller uten å logge hver enkelt (for gjennomgang av mange mapper).</summary>
-    public static void Tell(string hva, Utfall utfall, int n = 1)
+    public static void Tell(string hva, Utfall utfall, int n = 1, string? sted = null, string? detalj = null)
     {
         var l = Aktiv;
         if (l == null || n <= 0) return;
         l._antall.AddOrUpdate((Navn, hva, utfall), n, (_, x) => x + n);
+        if (sted != null) l.Kart.Legg(Kart.Plass(hva, sted), Navn, utfall, detalj);
     }
 
+    /// <summary>Legger et sted på kartet uten å telle det (det er talt et annet sted, f.eks. skyfiler per mappe).</summary>
+    public static void BareKart(string hva, string sted, Utfall utfall, string? detalj = null) =>
+        Aktiv?.Kart.Legg(Kart.Plass(hva, sted), Navn, utfall, detalj);
+
     /// <summary>Teller én mappe i gjennomgangen og legger den på kartet med antall filer og samlet størrelse.</summary>
-    public static void TellMappe(string mappe, Utfall utfall, long filer = 0, long bytes = 0)
+    public static void TellMappe(string mappe, Utfall utfall, long filer = 0, long bytes = 0, string? detalj = null)
     {
         var l = Aktiv;
         if (l == null) return;
         l._antall.AddOrUpdate((Navn, "Mappe", utfall), 1, (_, x) => x + 1);
-        l.Kart.Legg(Kart.Plass("Mappe", mappe), Navn, utfall, null, filer, bytes);
+        l.Kart.Legg(Kart.Plass("Mappe", mappe), Navn, utfall, detalj, filer, bytes);
     }
 
     /// <summary>Logger bare første gang per nøkkel i søket (f.eks. at tidsgrensen ble nådd).</summary>

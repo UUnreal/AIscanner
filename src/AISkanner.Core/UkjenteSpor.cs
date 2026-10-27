@@ -548,14 +548,14 @@ public sealed partial class Skanner
             {
                 long lengde;
                 try { lengde = fil.Length; } catch { continue; }
-                if (lengde > 1024 * 1024) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); continue; }
+                if (lengde > 1024 * 1024) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver, sted: fil.FullName, detalj: "større enn 1 MB"); continue; }
                 string tekst;
                 try
                 {
                     using var fs = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                     using var r = new StreamReader(fs);
                     tekst = r.ReadToEnd();
-                    Tilgangslogg.Tell("Fil", Utfall.Lest);
+                    Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
                 }
                 catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
                 var vert = AiApiVerter.FirstOrDefault(v => tekst.IndexOf(v, StringComparison.OrdinalIgnoreCase) >= 0);

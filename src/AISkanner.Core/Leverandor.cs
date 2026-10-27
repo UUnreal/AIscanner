@@ -147,20 +147,20 @@ public sealed partial class Skanner
     private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist)
     {
         if (hopp.Contains(mappe)) return;
-        if (dybde < 0) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "dybdegrensen for leverandørmapper er nådd"); return; }
         if (frist.Elapsed > TimeSpan.FromSeconds(40))
         {
             Tilgangslogg.EnGang("appdata-40", "Mappe", mappe, Utfall.Tidsgrense, "40 sekunder brukt i AppData; resten ble ikke gått gjennom");
-            Tilgangslogg.Tell("Mappe", Utfall.Tidsgrense);
+            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense, detalj: "40 sekunder brukt i AppData");
             return;
         }
         var navn = Path.GetFileName(mappe);
-        if (LeverandorHopp.Contains(navn)) { Tilgangslogg.Tell("Mappe", Utfall.HoppetOver); return; }
+        if (LeverandorHopp.Contains(navn)) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappenavn som hoppes over av regel (buffer, logger, oppdateringer)"); return; }
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;
         try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
-        Tilgangslogg.Tell("Mappe", Utfall.Lest);
+        Tilgangslogg.TellMappe(mappe, Utfall.Lest, innhold.LongCount(e => e is FileInfo));
         foreach (var e in innhold)
         {
             FileAttributes a;

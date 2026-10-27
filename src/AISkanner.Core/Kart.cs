@@ -53,6 +53,23 @@ public sealed class Kart
         }
     }
 
+    /// <summary>Hvert sted per utfall (opptil <paramref name="maks"/> per utfall), så tallene i Datagrunnlag kan åpnes som lister.</summary>
+    public IEnumerable<(string Rot, string Sti, Utfall Utfall, int Antall, string Sjekk, string? Detalj, string Plass)> Steder(int maks)
+    {
+        var tatt = new int[Enum.GetValues(typeof(Utfall)).Length];
+        foreach (var (plass, s) in _steder.OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            int i = plass.IndexOf('\\');
+            var rot = i < 0 ? plass : plass.Substring(0, i);
+            var sti = i < 0 ? "" : plass.Substring(i + 1);
+            if (rot == Annet && sti.IndexOf('\\') is var j && j > 0) { rot = sti.Substring(0, j); sti = sti.Substring(j + 1); }
+            lock (s)
+                for (int u = 0; u < s.Utfall.Length; u++)
+                    if (s.Utfall[u] > 0 && tatt[u]++ < maks)
+                        yield return (rot, sti, (Utfall)u, s.Utfall[u], s.Sjekker.FirstOrDefault() ?? "", s.Detaljer.FirstOrDefault(), plass);
+        }
+    }
+
     /// <summary>Stiene og registernøklene et funn peker på, slik at funnet kan merkes på kartet.</summary>
     public static IEnumerable<string> StederFor(Funn f)
     {

@@ -26,7 +26,7 @@ public sealed partial class Skanner
             var hode = new byte[8];
             using (var s = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
-                Tilgangslogg.Tell("Fil", Utfall.Lest);
+                Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
                 if (s.Read(hode, 0, 8) < 8) return;
             }
             bool pickle = hode[0] == 0x80 && hode[1] is >= 2 and <= 5;

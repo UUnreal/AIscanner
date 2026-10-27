@@ -342,14 +342,14 @@ public sealed partial class Skanner
         DateTime? sist = null;
         foreach (var fil in Plattform.Filer(mappe, "*", 4).Where(x => Skillendelser.Contains(x.Extension)).Take(100))
         {
-            if (fil.Length > 1024 * 1024) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); continue; }
+            if (fil.Length > 1024 * 1024) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver, sted: fil.FullName, detalj: "større enn 1 MB"); continue; }
             string tekst;
             try
             {
                 using var fs = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 using var r = new StreamReader(fs);
                 tekst = r.ReadToEnd();
-                Tilgangslogg.Tell("Fil", Utfall.Lest);
+                Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
             }
             catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
             foreach (var (navn, m) in Skillmonstre)
@@ -393,7 +393,7 @@ public sealed partial class Skanner
             {
                 if (fil.Length > 1024 * 1024) continue;
                 bool farlig;
-                try { farlig = Nettkode.IsMatch(File.ReadAllText(fil.FullName)); Tilgangslogg.Tell("Fil", Utfall.Lest); }
+                try { farlig = Nettkode.IsMatch(File.ReadAllText(fil.FullName)); Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName); }
                 catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
                 if (farlig) py.Add((fil.FullName, fil.LastWriteTime));
             }
@@ -505,7 +505,7 @@ public sealed partial class Skanner
                     if (lest >= 200 || klokke.Elapsed > TimeSpan.FromSeconds(20)) { Tilgangslogg.EnGang("npx-200", "Mappe", rot, Utfall.Tidsgrense, "200 filer eller 20 sekunder brukt i npx-cachen"); goto ferdig; }
                     if (fil.Length > 1024 * 1024) continue;
                     string tekst;
-                    try { tekst = File.ReadAllText(fil.FullName); lest++; Tilgangslogg.Tell("Fil", Utfall.Lest); }
+                    try { tekst = File.ReadAllText(fil.FullName); lest++; Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName); }
                     catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
                     int s = TellSkjulte(tekst), v = Regex.Matches(tekst, "<IMPORTANT>", RegexOptions.IgnoreCase).Count;
                     if (s + v == 0) continue;

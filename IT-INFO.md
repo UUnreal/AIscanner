@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.18.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.18.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -228,8 +228,8 @@ register, database, port, prosess, nettverk, hendelseslogg), hvor, og utfallet:
 | tidsgrense | Disken (45 s) eller AppData (40 s) tok for lang tid. Resten ble ikke gått gjennom |
 | feil | Annen feil, eller en sjekk som stoppet |
 
-Mapper som gås gjennom uten feil, telles i stedet for å listes (det kan være titusener). Alt som feiler, listes
-enkeltvis. Vinduet viser opptil 3000 oppføringer, revisjonsloggen opptil 20 000. Tellingene er alltid komplette.
+Hvert tall kan trykkes på og åpner stedene bak det, med sjekk og grunn. Mapper i gjennomgangen, prosesser og
+leverandørmapper står med sti; filer som leses inne i en mappe, telles per mappe. Alt som feiler, listes enkeltvis. Vinduet viser opptil 3000 oppføringer, revisjonsloggen opptil 20 000. Tellingene er alltid komplette.
 
 **Kart** (fane i Datagrunnlag) viser de samme stedene som et klikkbart kart, etter samme prinsipp som SpaceSniffer:
 Disk, Registeret, Nettverk og Annet øverst, og hver mappe eller nøkkel som en flis så stor som antall ting søket så

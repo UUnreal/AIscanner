@@ -29,6 +29,19 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.18.1] - 2026-10-27
+
+Ikke testet på Windows. Testet i nettleser med data fra en falsk PC-profil.
+
+### Rettet
+- **Ingenting i Datagrunnlag kunne trykkes på.** Nå åpner hvert tall i Oversikt (lest, finnes ikke, nektet tilgang,
+  låst, stoppet av antivirus, hoppet over, tidsgrense, feil) lista over nøyaktig de stedene, med sjekk og grunn. En rad
+  i «Per sjekk» åpner alt den sjekken rørte, og et tall i raden åpner bare det utfallet. En linje i lista åpner stedet på
+  kartet med infovinduet.
+- Ting som før bare ble talt, har nå sti og grunn: mapper i gjennomgangen (dybdegrense, mapper med punktum, tidsgrense,
+  skyfiler per mappe), leverandørmapper, prosesser (nektet, systemprosess, sikkerhetsprosess) og filer over 1 MB.
+  Filer som leses inne i en mappe, telles fortsatt bare per mappe. Lista sier hvor mange som bare er talt.
+
 ## [2.18.0] - 2026-10-27
 
 Ikke testet på Windows. Kartvisningen er testet i nettleser med data fra en falsk PC-profil.

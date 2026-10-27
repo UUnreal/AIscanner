@@ -33,14 +33,15 @@ public static class ProsessSti
     public static string? Hent(Process p)
     {
         if (!Plattform.ErWindows) return null;
-        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver); return null; }
+        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver, sted: $"{p.ProcessName} ({p.Id})", detalj: p.Id <= 4 ? "systemprosess" : "sikkerhetsprosess som ikke røres (regel)"); return null; }
         var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
         if (h == IntPtr.Zero)
         {
-            Tilgangslogg.Tell("Prosess", Marshal.GetLastWin32Error() == 5 ? Utfall.Nektet : Utfall.Feil);
+            var kode = Marshal.GetLastWin32Error();
+            Tilgangslogg.Tell("Prosess", kode == 5 ? Utfall.Nektet : Utfall.Feil, sted: $"{p.ProcessName} ({p.Id})", detalj: kode == 5 ? "Windows nektet (kjører som administrator eller beskyttet)" : $"Windows-feil {kode}");
             return null;
         }
-        Tilgangslogg.Tell("Prosess", Utfall.Lest);
+        Tilgangslogg.Tell("Prosess", Utfall.Lest, sted: $"{p.ProcessName} ({p.Id})");
         try
         {
             var sb = new StringBuilder(1024);

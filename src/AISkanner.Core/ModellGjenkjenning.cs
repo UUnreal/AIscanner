@@ -179,7 +179,7 @@ internal static class ModellGjenkjenning
                 try
                 {
                     using var doc = JsonDocument.Parse(File.ReadAllText(fil.FullName));
-                    Tilgangslogg.Tell("Fil", Utfall.Lest);
+                    Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
                     if (!doc.RootElement.TryGetProperty("layers", out var lag) || lag.ValueKind != JsonValueKind.Array) continue;
                     // .../manifests/registry.ollama.ai/library/qwen2.5/7b  ->  qwen2.5:7b
                     var deler = fil.FullName.Substring(manifester.Length).Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);

@@ -94,6 +94,11 @@
   .filter button { font-size: 12px; padding: 3px 10px; }
   .ufliser { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; flex: none; }
   .uflis { background: var(--fyll); border-radius: 12px; padding: 7px 11px; min-width: 0; }
+  .uflis.har { cursor: pointer; } .uflis.har:hover { box-shadow: inset 0 0 0 2px var(--bla); }
+  .sjekkRad[data-sjekk] { cursor: pointer; } .sjekkRad[data-sjekk]:hover { background: var(--bla-myk) !important; }
+  .sjekkRad span[data-su] { cursor: pointer; border-radius: 6px; } .sjekkRad span[data-su]:hover { text-decoration: underline; color: var(--bla); }
+  .detalj li.post[data-k] { cursor: pointer; } .detalj li.post[data-k]:hover { background: var(--bla-myk); }
+  .filter .sjekkValg { background: var(--bla-myk); color: var(--bla); }
   .uflis b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
   .uflis small { display: block; font-size: 12px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .uflis.mangler.har b { color: var(--rod); }
@@ -528,10 +533,38 @@ function apneArk(f) { dataApen = false; valgt = f; $("ark").classList.add("apen"
 function lukkArk() { valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
-let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null;
-function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
+let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null, sjekkFilter = null;
+// Alt søket rørte: enkeltoppføringer (med tid) pluss steder fra kartet som bare ble talt. Hvert tall i Datagrunnlag åpner denne lista.
+const DG_MANGLER = ["blokkert", "nektet", "laast", "tidsgrense", "feil"];
+const normSti = m => String(m || "").toLowerCase().replace(/[\\/]+$/, "");
+function allePoster(g) {
+  if (g._alle) return g._alle;
+  const sett = new Set(g.poster.map(p => p.u + "|" + normSti(p.m)));
+  const ekstra = (g.steder || []).filter(x => !sett.has(x.u + "|" + normSti(x.m))).map(x => ({ ...x, t: x.n > 1 ? x.n + "×" : "", talt: true }));
+  return g._alle = g.poster.concat(ekstra);
+}
+function filtrert(g) {
+  return allePoster(g).filter(p => (!filter || (filter === "mangler" ? DG_MANGLER.includes(p.u) : p.u === filter)) && (!sjekkFilter || p.s === sjekkFilter));
+}
+// Fra en linje i lista til stedet på kartet, med infovinduet åpent
+function visPaKart(plass) {
+  if (!logg || !logg.kart) return;
+  const norm = x => x.toLowerCase().replace(/\\+/g, "\\");
+  const mal = norm(plass), kjede = [];
+  let n = logg.kart;
+  for (;;) {
+    const b = (n.c || []).find(c => c.s && !c.rest && (mal === norm(c.s) || mal.startsWith(norm(c.s) + "\\")));
+    if (!b) break;
+    kjede.push(b); n = b;
+    if (mal === norm(b.s)) break;
+  }
+  if (!kjede.length) return;
+  fane = "kart"; kartSti = kjede.slice(0, -1).map(x => x.n); kartInfo = null; tegnData(); apneKartInfo(kjede[kjede.length - 1]);
+}
+function apneListe(u, sjekk) { fane = "alt"; filter = u || null; sjekkFilter = sjekk || null; dataSide = 0; tegnData(); }
+function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
 const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
-const postLinje = p => `<li class="post"><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
+const postLinje = p => `<li class="post"${p.k ? ` data-k="${esc(p.k)}" title="${esc(L("Vis på kartet", "Show on the map"))}"` : ""}><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
 const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
 // Lister fyller plassen som er igjen og deles i sider, så arket aldri må rulles
 function sideListe(tittel, rader, linje) {
@@ -556,7 +589,7 @@ function tegnData() {
   const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket leste", "Everything read"), g.antallPoster], ["regler", L("Regler og bevis", "Rules and proof")]];
   let kropp = "", rader = null, linje = null;
   if (fane === "oversikt") {
-    kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
+    kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"${x.n ? ` data-u="${x.u}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
       + `<div class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</div>`
       + `<h3 class="medSider" style="margin-bottom:2px"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
       + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Fantes ikke", "Not found")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
@@ -568,15 +601,22 @@ function tegnData() {
       + `<div class="skForklaring"><span class="r2">${L("Høy risiko her eller under", "High risk here or below")}</span><span class="r1">${L("Middels", "Medium")}</span><span class="r0">${L("Lav", "Low")}</span><span class="m">${L("Noe ble ikke lest (nektet, tidsgrense, feil)", "Something was not read (denied, time limit, error)")}</span><span>${L("Bare i minnet, lagres ikke", "In memory only, not saved")}</span></div>`
       + `<div class="skVindu" id="skVindu" style="display:none"></div>`;
   } else if (fane === "ikke") {
-    kropp = sideListe(L("Det søket ikke fikk lest, og hvorfor", "What the scan could not read, and why"), g.ikkeDekket, postLinje);
-    rader = g.ikkeDekket; linje = postLinje;
+    const ikke = allePoster(g).filter(p => DG_MANGLER.includes(p.u));
+    kropp = sideListe(L("Det søket ikke fikk lest, og hvorfor", "What the scan could not read, and why"), ikke, postLinje);
+    rader = ikke; linje = postLinje;
   } else if (fane === "alt") {
-    const typer = g.totalt.filter(x => x.n && g.poster.some(p => p.u === x.u));
-    const liste = filter ? g.poster.filter(p => p.u === filter) : g.poster;
-    kropp = `<div class="filter"><button data-f="" class="${filter ? "" : "valgt"}">${L("Alle", "All")}</button>${typer.map(x => `<button data-f="${x.u}" class="${filter === x.u ? "valgt" : ""}">${esc(x.tekst)}</button>`).join("")}</div>`
-      + sideListe(g.poster.length < g.antallPoster || g.avkortet
-          ? L(`Viser ${tall(g.poster.length)} av ${tall(g.antallPoster)}${g.avkortet ? "+" : ""} · mapper uten feil er bare talt`, `Showing ${tall(g.poster.length)} of ${tall(g.antallPoster)}${g.avkortet ? "+" : ""} · folders without errors are only counted`)
-          : L("Mapper uten feil er bare talt (se Oversikt)", "Folders without errors are only counted (see Overview)"), liste, postLinje);
+    const typer = g.totalt.filter(x => x.n);
+    const liste = filtrert(g);
+    // Hvor mange tallet i Oversikt sier, mot hvor mange som har en sti i lista
+    const totalt = !filter ? null : filter === "mangler" ? g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0) : (g.totalt.find(x => x.u === filter) || {}).n;
+    const sjekkRad = sjekkFilter ? g.sjekker.find(x => x.navn === sjekkFilter) : null;
+    const antall = !sjekkRad ? totalt : !filter ? null : filter === "lest" ? sjekkRad.lest : filter === "ikkefunnet" ? sjekkRad.ikke : filter === "hoppetover" ? sjekkRad.hoppet : filter === "mangler" ? sjekkRad.mangler : null;
+    const steder = liste.reduce((a, p) => a + (p.n || 1), 0);
+    const tittel = antall != null && antall > steder
+      ? L(`${tall(liste.length)} steder · ${tall(antall - steder)} av ${tall(antall)} er bare talt (filer i en mappe, skyfiler) og har ingen egen linje`, `${tall(liste.length)} places · ${tall(antall - steder)} of ${tall(antall)} are only counted (files in a folder, cloud files) and have no line of their own`)
+      : liste.length === 1 ? L("1 sted", "1 place") : L(`${tall(liste.length)} steder`, `${tall(liste.length)} places`);
+    kropp = `<div class="filter"><button data-f="" class="${filter ? "" : "valgt"}">${L("Alle", "All")}</button>${typer.map(x => `<button data-f="${x.u}" class="${filter === x.u ? "valgt" : ""}">${esc(x.tekst)} <span class="ant">${tall(x.n)}</span></button>`).join("")}${filter === "mangler" ? `<button class="valgt">${L("Ikke dekket", "Not covered")}</button>` : ""}${sjekkFilter ? `<button class="sjekkValg" id="sjekkAv" title="${esc(L("Vis alle sjekker", "Show all checks"))}">${esc(sjekkFilter)} ✕</button>` : ""}</div>`
+      + sideListe(tittel, liste, postLinje);
     rader = liste; linje = postLinje;
   } else {
     const kilde = k => `<li class="kilde"><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(k.navn)}</b><small>${esc(k.hvor)}</small></div><div class="sha">SHA-256 ${esc(k.sha || "–")}</div></div></li>`;
@@ -589,7 +629,16 @@ function tegnData() {
   $("tilbake").onclick = lukkArk;
   d.querySelectorAll("[data-fane]").forEach(b => b.onclick = () => { fane = b.dataset.fane; dataSide = 0; filter = null; tegnData(); });
   d.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f || null; dataSide = 0; tegnData(); });
+  d.querySelectorAll(".uflis[data-u]").forEach(b => b.onclick = () => apneListe(b.dataset.u));
+  if ((fane === "alt" || fane === "ikke") && $("dl")) $("dl").onclick = e => { const li = e.target.closest("[data-k]"); if (li) visPaKart(li.dataset.k); };
+  if ($("sjekkAv")) $("sjekkAv").onclick = () => { sjekkFilter = null; dataSide = 0; tegnData(); };
   if (rader) fordelSider(rader, linje);
+  // Klikk på en rad eller et tall i «Per sjekk» åpner nøyaktig de stedene
+  if (fane === "oversikt" && $("dl")) $("dl").onclick = e => {
+    const rad = e.target.closest("[data-sjekk]"); if (!rad) return;
+    const tallet = e.target.closest("[data-su]");
+    apneListe(tallet ? tallet.dataset.su : null, rad.dataset.sjekk);
+  };
   if (fane === "kart") {
     d.querySelectorAll("#skMal [data-m]").forEach(b => b.onclick = () => { kartMal = b.dataset.m; tegnData(); });
     $("skOm").onclick = () => { const sti = kartNode(); apneKartInfo(sti[sti.length - 1]); };
@@ -638,7 +687,7 @@ function kartFlater(barn, x, y, w, h) {
   return ut;
 }
 function kartTall(n) {
-  const deler = [kartMal === "storrelse" ? byteTekst(n.b) : tall(n.a) + " " + L("ting", "items")];
+  const deler = [kartMal === "storrelse" ? byteTekst(n.b) : tall(n.a) + " " + L("ting", n.a === 1 ? "item" : "items")];
   if (kartMal !== "storrelse" && n.b) deler.push(byteTekst(n.b));
   return deler.join(" · ");
 }
@@ -727,7 +776,8 @@ function tegnKartInfo() {
   v.querySelectorAll("li[data-id]").forEach(li => li.onclick = () => { const f = alle.find(x => x.id === +li.dataset.id); if (f) { kartInfo = null; apneArk(f); } });
 }
 const RISIKO_REKKE = { rod: 0, gul: 1, gronn: 2 };
-const sjekkLinje = s => `<li class="sjekkRad"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span><span>${tall(s.lest)}</span><span>${tall(s.ikke)}</span><span>${tall(s.hoppet)}</span><span class="${s.mangler ? "rodt" : ""}">${tall(s.mangler)}</span></li>`;
+const sjekkLinje = s => `<li class="sjekkRad" data-sjekk="${esc(s.navn)}" title="${esc(L("Vis alt denne sjekken leste", "Show everything this check read"))}"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span>`
+  + [["lest", s.lest], ["ikkefunnet", s.ikke], ["hoppetover", s.hoppet], ["mangler", s.mangler]].map(([u, n]) => `<span${n ? ` data-su="${u}"` : ""} class="${u === "mangler" && n ? "rodt" : ""}">${tall(n)}</span>`).join("") + `</li>`;
 // Mushjul blar sider i lista
 $("liste").addEventListener("wheel", e => {
   if (Math.abs(e.deltaY) < 20) return;
