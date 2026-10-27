@@ -43,6 +43,9 @@ public static class Rapport
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
         int spor = liste.Count(f => f.Gruppe == "spor");
         L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        if (skanner != null) L(skanner.LyttetSekunder > 0
+            ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). UDP og QUIC (HTTP/3) vises ikke."
+            : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
         if (skanner != null) foreach (var b in skanner.Blindsoner) L($"Blindsone: {b}");
         L(Revisjon.IngenAi);
         L(new string('=', 60));

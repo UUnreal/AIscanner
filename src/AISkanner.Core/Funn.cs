@@ -119,6 +119,9 @@ public sealed class Mal
     public int Antall { get; set; }
     public long? Ut { get; set; }
     public long? Inn { get; set; }
+    /// <summary>Første og siste gang en forbindelse hit ble sett i lyttevinduet.</summary>
+    public DateTime? Forst { get; set; }
+    public DateTime? Sist { get; set; }
     /// <summary>IP-adressene forbindelsene gikk til (høyst 8), hver med sitt land.</summary>
     public List<IpSted> Ip { get; } = new();
 }

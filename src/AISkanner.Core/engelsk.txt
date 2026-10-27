@@ -1001,3 +1001,31 @@ Kjent dårlig versjon|Known bad version
 Kjent filnavn|Known file name
 Sist kjørt|Last ran
 Spor|Traces
+# 2.17 Nettverk
+~Nettverk: lyttet i (\d+) sekunder \(TCP-tabellen hvert 250\. ms\)\. UDP og QUIC \(HTTP/3\) vises ikke\.|Network: listened for $1 seconds (TCP table every 250 ms). UDP and QUIC (HTTP/3) are not shown.
+Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.|Network: one snapshot of the TCP table. UDP and QUIC (HTTP/3) are not shown.
+Følg med (datamengde live) logges ikke og lagres ikke.|Watch (live data volume) is not logged and not saved.
+~Lytter på nettverket i (\d+) sekunder til\.\.\.|Listening to the network for $1 more seconds...
+~AI-server brukt fra annen maskin: |AI server used from another machine: 
+~En annen maskin er koblet til (.+?) på port (\d+) på denne PC-en\. Vi vet ikke hvem det er eller hva den bruker AI-en til\.|Another machine is connected to $1 on port $2 on this PC. We do not know who it is or what it uses the AI for.
+~Andre maskiner bruker (.+?) på denne PC-en nå\.|Other machines are using $1 on this PC now.
+~Klient ([0-9A-Fa-f:.]+)|Client $1
+~(\d+) forbindelser\b|$1 connections
+~(\d+) forbindelse\b|$1 connection
+~ · sett nå| · seen now
+~ · sett (\d\d:\d\d:\d\d)| · seen $1
+~(\d+) klient\(er\) koblet til nå\.|$1 client(s) connected now.
+~Ukjent program snakker med AI: |Unknown program talks to AI: 
+~Et program uten kjent utgiver har forbindelse til (.+?)\. Vi vet ikke hva det er eller hva det sender\.|A program without a known publisher is connected to $1. We do not know what it is or what it sends.
+~Ukjent program med forbindelse til (.+?)\.$|Unknown program connected to $1.
+~ · utgiver: ukjent| · publisher: unknown
+~ · utgiver: | · publisher: 
+TCP-tabellen (GetExtendedTcpTable), lyttevindu|TCP table (GetExtendedTcpTable), listening window
+DNS-bufferen (bare navn Windows allerede har slått opp), lyttevindu|DNS cache (only names Windows has already looked up), listening window
+~(\d+) avlesninger på (\d+) sekunder, (\d+) forbindelser sett|$1 readings in $2 seconds, $3 connections seen
+~(\d+) navn; bare AI-navn brukes, resten forkastes|$1 names; only AI names are used, the rest are discarded
+~^Følg med: |Watch: 
+datamengde per sekund, bare i minnet|data volume per second, in memory only
+antall forbindelser (datamengde krever administrator)|number of connections (data volume requires administrator)
+Brukt fra andre maskiner|Used from other machines
+Ukjent program|Unknown program

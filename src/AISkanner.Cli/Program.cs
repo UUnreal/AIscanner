@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -39,7 +39,7 @@ int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
-var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger") };
+var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status);
@@ -63,7 +63,13 @@ static class TestNett
         {
             int pid = t.GetProperty("pid").GetInt32();
             var ip = System.Net.IPAddress.Parse(t.GetProperty("ip").GetString()!);
-            var k = new Tilkobling(pid, System.Net.IPAddress.Parse("192.168.1.10"), port++, ip, 443);
+            // "lytter": forbindelse inn til en port programmet lytter på (klient på en annen maskin)
+            bool inn = t.TryGetProperty("lytter", out var ly) && ly.ValueKind == System.Text.Json.JsonValueKind.Number;
+            var k = inn
+                ? new Tilkobling(pid, System.Net.IPAddress.Parse("192.168.1.10"), ly.GetInt32(), ip, port++)
+                : new Tilkobling(pid, System.Net.IPAddress.Parse("192.168.1.10"), port++, ip, 443);
+            if (inn) (nb.Lyttere ??= new()).Add(new TcpTabell.Lytter(System.Net.IPAddress.Any, ly.GetInt32(), pid));
+            nb.Tider[k.Nokkel] = (DateTime.Now.AddSeconds(-15), DateTime.Now);
             nb.Tilkoblinger.Add(k);
             nb.Prosesser[pid] = (t.GetProperty("navn").GetString()!, t.TryGetProperty("sti", out var st) ? st.GetString() : null);
             if (t.TryGetProperty("vert", out var v))
@@ -74,6 +80,8 @@ static class TestNett
             }
             if (nb.Bytes != null && t.TryGetProperty("ut", out var ut)) nb.Bytes[k.Nokkel] = (ut.GetInt64(), t.GetProperty("inn").GetInt64());
         }
+        nb.Lyttere ??= new();
+        nb.LytteSekunder = doc.RootElement.TryGetProperty("lytteSekunder", out var ls) ? ls.GetDouble() : 0;
         if (doc.RootElement.TryGetProperty("dnsNavn", out var dn)) foreach (var n in dn.EnumerateArray()) nb.DnsNavn.Add(n.GetString()!);
         return nb;
     }

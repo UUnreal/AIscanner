@@ -213,6 +213,15 @@
   .sted .l2 { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
   .brikker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; flex: none; }
   .brikker span { background: var(--fyll); border-radius: 20px; padding: 2px 10px; font-size: 12.5px; color: var(--dempet); }
+  .folg { margin-top: 10px; flex: none; }
+  .folg label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .folg input { width: 16px; height: 16px; accent-color: var(--bla); margin: 0; }
+  .folgGraf { margin-top: 6px; background: var(--fyll); border-radius: 10px; padding: 8px 10px 6px; }
+  .folgGraf svg { display: block; width: 100%; height: 64px; }
+  .folgGraf .ut { stroke: var(--rod); } .folgGraf .inn { stroke: var(--bla); } .folgGraf .n { stroke: var(--dempet); }
+  .folgGraf polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+  .folgTekst { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--dempet); margin-top: 4px; }
+  .folgTekst b { font-weight: 600; } .folgTekst .ut b { color: var(--rod); } .folgTekst .inn b { color: var(--bla); }
   .medSider { display: flex; align-items: center; justify-content: space-between; }
   .sidevalg { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-weight: 500; }
   .sidevalg button { border: 0; background: var(--fyll); color: var(--bla); width: 26px; height: 22px; border-radius: 7px; cursor: pointer; font-size: 15px; line-height: 1; }
@@ -446,6 +455,29 @@ function tegnListe() {
   }
 }
 
+// ---------- Følg med: datamengden live, bare mens vinduet er åpent. Ingenting lagres. ----------
+let folg = {};
+const fart = b => b == null ? "–" : b < 1024 ? `${b} B/s` : b < 1048576 ? `${(b / 1024).toFixed(b < 10240 ? 1 : 0)} kB/s` : `${(b / 1048576).toFixed(1)} MB/s`;
+function folgGraf(id) {
+  const g = folg[id];
+  if (!g || !g.p.length) return `<div class="folgTekst">${L("Venter på første måling…", "Waiting for the first measurement…")}</div>`;
+  const p = g.p, admin = g.admin, sist = p[p.length - 1], N = 120;
+  const verdi = admin ? p.flatMap(x => [x.ut || 0, x.inn || 0]) : p.map(x => x.n);
+  const maks = Math.max(1, ...verdi);
+  const linje = (velg, kl) => `<polyline class="${kl}" points="${p.map((x, i) => `${((N - p.length + i) / (N - 1) * 300).toFixed(1)},${(62 - (velg(x) || 0) / maks * 58).toFixed(1)}`).join(" ")}"/>`;
+  const svg = `<svg viewBox="0 0 300 64" preserveAspectRatio="none">${admin ? linje(x => x.ut, "ut") + linje(x => x.inn, "inn") : linje(x => x.n, "n")}</svg>`;
+  const tekst = admin
+    ? `<span class="ut">${L("Sendt", "Sent")} <b>${fart(sist.ut)}</b></span><span class="inn">${L("Mottatt", "Received")} <b>${fart(sist.inn)}</b></span><span>${L("Topp", "Peak")} ${fart(maks)}</span>`
+    : `<span>${L("Datamengde krever administrator. Viser antall forbindelser.", "Data volume requires administrator. Showing number of connections.")}</span>`;
+  const til = sist.n ? `${sist.n} ${sist.n === 1 ? L("forbindelse", "connection") : L("forbindelser", "connections")}${sist.til.length ? " · " + sist.til.map(esc).join(", ") : ""}` : L("Ingen åpne forbindelser nå", "No open connections now");
+  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${til}</span><span>${L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
+}
+function settFolg(f, pa) {
+  if (pa) folg[f.id] = folg[f.id] || { p: [], admin: false }; else delete folg[f.id];
+  send({ type: "folg", id: f.id, pa });
+  tegnDetalj(true);
+}
+
 function apneArk(f) { dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
 function lukkArk() { valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
 
@@ -589,6 +621,7 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
         <div class="flis2"><small>${L(`Hvorfor ${merke(f.risiko).toLowerCase()} risiko`, `Why ${merke(f.risiko).toLowerCase()} risk`)}</small><div class="grunn">${esc(f.grunn || f.kort)}</div></div>
       </div>
       <div class="brikker">${tider.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+      ${f.folgbar ? `<div class="folg"><label><input type="checkbox" id="folgBoks" ${folg[f.id] ? "checked" : ""}>${L("Følg med på datamengden", "Watch the data volume")}</label>${folg[f.id] ? `<div id="folgGraf">${folgGraf(f.id)}</div>` : ""}</div>` : ""}
       ${ident.length ? `<h3>${identTittel}</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
       ${api.length ? `<h3>${L("AI-funksjoner for nettsider", "AI features for websites")}</h3>${kompakt ? apiKompakt() : `<ul class="apiListe">${api.map(apiLinje).join("")}</ul>`}` : ""}
       ${mal.length || (f.senderTil || []).length ? `<h3>${L("Hvor dataene går", "Where the data goes")}</h3><div class="kartRad">${kart(f)}${mal.length ? `<ul id="malListe">${mal.map(malLinje).join("")}</ul>` : `<div class="kartInfo">${esc(L(`Tjenesten hører hjemme i ${f.senderTil.map(l => l.land).join(", ")}. IP-adressene vises når den er i bruk under søket.`, `The service is based in ${f.senderTil.map(l => l.land).join(", ")}. IP addresses show when it is in use during the scan.`))}</div>`}</div>` : ""}
@@ -608,6 +641,7 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
   if (fs) fs.onclick = () => { stedSide--; tegnDetalj(true); };
   if (ns) ns.onclick = () => { stedSide++; tegnDetalj(true); };
   d.querySelectorAll(".vis").forEach(b => b.onclick = () => send({ type: "vis", sti: b.dataset.sti }));
+  const fb = $("folgBoks"); if (fb) fb.onchange = () => settFolg(f, fb.checked);
   const t = $("tilbake"); if (t) t.onclick = lukkArk;
 }
 
@@ -638,6 +672,7 @@ function motta(m) {
   if (m.type === "resultat") {
     // Samme resultat på nytt språk: bli stående på samme side og samme funn
     const id = valgt && valgt.id, s0 = side, ss = stedSide, varData = dataApen;
+    if (!m.behold) folg = {};
     visResultat(m.funn, m.info);
     if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; $("ark").classList.add("apen"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
@@ -646,6 +681,12 @@ function motta(m) {
     // Svar på sikkerhetshull kommer etter at resultatet vises
     const f = alle.find(x => m.id != null ? x.id === m.id : x.navn === m.navn);
     if (f) { f.merk = m.merk; if (valgt === f) tegnDetalj(true); }
+  }
+  else if (m.type === "folgdata") {
+    const g = folg[m.id]; if (!g) return;
+    g.admin = m.admin; g.p.push({ ut: m.ut, inn: m.inn, n: m.n, til: m.til || [] });
+    if (g.p.length > 120) g.p.shift();
+    if (valgt && valgt.id === m.id && $("folgGraf")) $("folgGraf").innerHTML = folgGraf(m.id);
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }

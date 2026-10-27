@@ -24,13 +24,13 @@ public static class Nettverk
     private static extern uint GetExtendedTcpTable(IntPtr tabell, ref int storrelse, bool sorter, int ipVersjon, int klasse, uint reservert);
 
     /// <summary>Alle etablerte forbindelser til andre maskiner (ikke forbindelser innad på PC-en).</summary>
-    public static List<Tilkobling> Tilkoblinger()
+    public static List<Tilkobling> Tilkoblinger(bool logg = true)
     {
         var liste = new List<Tilkobling>();
         if (!Plattform.ErWindows) return liste;
         Les(AF_INET, liste);
         Les(AF_INET6, liste);
-        Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable)", Utfall.Lest, $"{liste.Count} forbindelser");
+        if (logg) Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable)", Utfall.Lest, $"{liste.Count} forbindelser");
         return liste.Where(t => !IPAddress.IsLoopback(t.Fjern) && !t.Fjern.Equals(IPAddress.Any) && !t.Fjern.Equals(IPAddress.IPv6Any)).ToList();
     }
 
@@ -107,7 +107,7 @@ public static class Nettverk
     private const uint DNS_QUERY_NO_WIRE_QUERY = 0x10;   // bare fra bufferen, aldri ut på nettet
 
     /// <summary>Navn PC-en nylig har slått opp, og hvilke navn hver IP-adresse hører til. Spør aldri en DNS-server.</summary>
-    public static Dictionary<IPAddress, List<string>> DnsBuffer(out List<string> navn)
+    public static Dictionary<IPAddress, List<string>> DnsBuffer(out List<string> navn, bool logg = true)
     {
         var kart = new Dictionary<IPAddress, List<string>>();
         navn = new List<string>();
@@ -125,7 +125,7 @@ public static class Nettverk
             }
         }
         catch (Exception e) { Tilgangslogg.Feil("Nettverk", "DNS-bufferen", e); return kart; }
-        Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp)", Utfall.Lest, $"{sett.Count} navn");
+        if (logg) Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp)", Utfall.Lest, $"{sett.Count} navn");
 
         // DNS_RECORD: pNext, pName, wType, wDataLength, Flags, dwTtl, dwReserved, Data
         int data = 2 * IntPtr.Size + 16;
@@ -216,14 +216,30 @@ public sealed class Datamaling : IDisposable
 
     private Datamaling() { }
 
+    /// <summary>Uten forbindelser fra før. Forbindelser legges til med <see cref="Legg"/> når de dukker opp. Null uten administrator.</summary>
+    public static Datamaling? Tom() => Nettverk.ErAdmin() ? new Datamaling() : null;
+
+    private readonly HashSet<string> _kjente = new();
+
+    /// <summary>Slår på telleren for en ny forbindelse. Usant hvis Windows ikke tillot det.</summary>
+    public bool Legg(Tilkobling t)
+    {
+        lock (_pa)
+        {
+            if (!_kjente.Add(t.Nokkel)) return _pa.Any(x => x.Nokkel == t.Nokkel);
+            if (!Sett(t, true)) return false;
+            _pa.Add(t);
+            return true;
+        }
+    }
+
     /// <summary>Slår på tellerne for alle åpne forbindelser. Null hvis programmet ikke kjører som administrator.</summary>
     public static Datamaling? Start()
     {
         if (!Nettverk.ErAdmin()) { Tilgangslogg.Logg("Nettverk", "Datamengde per forbindelse (EStats)", Utfall.HoppetOver, "krever administrator"); return null; }
         var m = new Datamaling();
         var alle = Nettverk.Tilkoblinger();
-        foreach (var t in alle)
-            if (m.Sett(t, true)) m._pa.Add(t);
+        foreach (var t in alle) m.Legg(t);
         Tilgangslogg.Logg("Nettverk", "Datamengde per forbindelse (EStats)", m._pa.Count > 0 || alle.Count == 0 ? Utfall.Lest : Utfall.Nektet, $"måler {m._pa.Count} av {alle.Count} forbindelser");
         return m;
     }
@@ -245,7 +261,9 @@ public sealed class Datamaling : IDisposable
     {
         var svar = new Dictionary<string, (long, long)>();
         uint storrelse = (uint)Marshal.SizeOf<DataRod>();
-        foreach (var t in _pa)
+        List<Tilkobling> pa;
+        lock (_pa) pa = _pa.ToList();
+        foreach (var t in pa)
         {
             try
             {
@@ -263,7 +281,11 @@ public sealed class Datamaling : IDisposable
     /// <summary>Slår tellerne av igjen, så PC-en er som før.</summary>
     public void Dispose()
     {
-        foreach (var t in _pa) Sett(t, false);
-        _pa.Clear();
+        lock (_pa)
+        {
+            foreach (var t in _pa) Sett(t, false);
+            _pa.Clear();
+            _kjente.Clear();
+        }
     }
 }

@@ -81,6 +81,8 @@ public sealed partial class Skanner
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
         Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
         using var maling = TestNett == null ? Datamaling.Start() : null;
+        // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
+        using var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
         int ferdig = 0;
         steg?.Report(0);
         await Task.WhenAll(stegliste.Select(x => Task.Run(() =>
@@ -101,10 +103,19 @@ public sealed partial class Skanner
         // Til slutt: hvor AI-programmene sender data akkurat nå
         try
         {
-            if (maling != null && maling.Sekunder < 5) await Task.Delay(TimeSpan.FromSeconds(5 - maling.Sekunder), ct);
+            var minst = lytting != null ? Math.Min(60, LytteSekunder) : maling != null ? 5 : 0;
+            var brukt = lytting?.Sekunder ?? maling?.Sekunder ?? 0;
+            if (brukt < minst)
+            {
+                _status?.Report($"Lytter på nettverket i {Math.Ceiling(minst - brukt):0} sekunder til...");
+                await Task.Delay(TimeSpan.FromSeconds(minst - brukt), ct);
+            }
             var tid = Stopwatch.StartNew();
             Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
-            Trafikk(TestNett?.Invoke() ?? NettBilde.Hent(maling));
+            var nb = TestNett?.Invoke() ?? lytting?.Stopp() ?? NettBilde.Hent(maling);
+            LyttetSekunder = nb.LytteSekunder;
+            Trafikk(nb);
+            InnTilAiServer(nb);
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }

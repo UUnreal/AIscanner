@@ -105,7 +105,8 @@ public static class Oversikt
     {
         var n when n.StartsWith("MCP-servere") => "Verktøy for AI-agent",
         var n when n.StartsWith("Godkjenn alt") => "Spør aldri",
-        var n when n.StartsWith("Ollama") || n.StartsWith("LM Studio") => "Brukt fra andre maskiner",
+        var n when n.StartsWith("Ollama") || n.StartsWith("LM Studio") || n.StartsWith("AI-server brukt") => "Brukt fra andre maskiner",
+        var n when n.StartsWith("Ukjent program") => "Ukjent program",
         var n when n.StartsWith("Agentøkter") => "Nøkler eller kode i økt",
         var n when n.StartsWith("Skript") => "Skript med AI-nøkkel",
         var n when n.StartsWith("Pakker") => "Kjent dårlig versjon",

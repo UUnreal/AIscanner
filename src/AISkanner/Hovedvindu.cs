@@ -99,6 +99,7 @@ public sealed class Hovedvindu : Form
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
+        StoppAlleFolg();
         base.OnFormClosed(e);
         _web.Dispose();
         // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
@@ -148,6 +149,11 @@ public sealed class Hovedvindu : Form
             else StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
         }
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
+        else if (type == "folg" && m.TryGetProperty("id", out var fid) && fid.TryGetInt32(out var id))
+        {
+            if (m.TryGetProperty("pa", out var pa) && pa.ValueKind == JsonValueKind.True) StartFolg(id);
+            else StoppFolg(id);
+        }
         else if (type == "sprak" && m.TryGetProperty("sprak", out var sp))
         {
             // Bytter språk uten nytt søk: samme funn sendes på nytt, oversatt
@@ -161,10 +167,11 @@ public sealed class Hovedvindu : Form
     {
         _soker = true;
         _nvdStopp?.Cancel();
+        StoppAlleFolg();
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
-            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger") };
+            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args) };
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
             _resultat = await Task.Run(() => _skanner.KjorAsync(false));
@@ -251,6 +258,7 @@ public sealed class Hovedvindu : Form
                 ingenLand = T(Risikoregler.IngenLand(f)),
                 lokalt = Risikoregler.IngenLand(f).StartsWith("Ingen", StringComparison.Ordinal),
                 kort = T(f.Kort),
+                folgbar = _skanner.KanFolges(f),
                 merk = f.Advarsler.Skip(1).Concat(f.Merknader).Select(T).ToList(),
                 steder = f.Detaljer.Select(T).ToList(),
                 trafikk = f.Trafikk.Select(m => new
@@ -292,7 +300,7 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",
@@ -329,6 +337,55 @@ public sealed class Hovedvindu : Form
     }
 
     /// <summary>Utviklermodus: alt søket prøvde å lese, hvorfor, og hvordan det gikk. Ingenting av dette lagres.</summary>
+    /// <summary>--lytt N: lyttevindu i sekunder (0 til 60). Standard 20.</summary>
+    internal static int LytteSekunder(string[] args)
+    {
+        var i = Array.IndexOf(args, "--lytt");
+        return i >= 0 && i + 1 < args.Length && int.TryParse(args[i + 1], out var n) ? Math.Max(0, Math.Min(60, n)) : 20;
+    }
+
+    // ---------- Følg med: datamengde live for valgte funn, bare mens vinduet er åpent ----------
+
+    private readonly Dictionary<int, (Folger Folger, System.Windows.Forms.Timer Klokke)> _folg = new();
+
+    private void StartFolg(int id)
+    {
+        if (_skanner == null || _soker || id < 0 || id >= _resultat.Count || _folg.ContainsKey(id)) return;
+        var folger = new Folger(_skanner, _resultat[id]);
+        var klokke = new System.Windows.Forms.Timer { Interval = 1000 };
+        bool opptatt = false;
+        klokke.Tick += async (_, _) =>
+        {
+            if (opptatt) return;
+            opptatt = true;
+            try
+            {
+                var p = await Task.Run(folger.Les);
+                if (!_folg.ContainsKey(id)) return;
+                Send(new
+                {
+                    type = "folgdata", id, admin = folger.MalerData,
+                    tid = p.Tid.ToString("HH:mm:ss"), ut = p.UtPerSek, inn = p.InnPerSek, n = p.Forbindelser, til = p.Mottakere,
+                });
+            }
+            catch (Exception e) { System.Diagnostics.Debug.WriteLine($"Følg med: {e.Message}"); }
+            finally { opptatt = false; }
+        };
+        _folg[id] = (folger, klokke);
+        klokke.Start();
+    }
+
+    private void StoppFolg(int id)
+    {
+        if (!_folg.TryGetValue(id, out var x)) return;
+        _folg.Remove(id);
+        x.Klokke.Stop();
+        x.Klokke.Dispose();
+        x.Folger.Dispose();
+    }
+
+    private void StoppAlleFolg() { foreach (var id in _folg.Keys.ToList()) StoppFolg(id); }
+
     private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti) });
 
     private void Lagre()

@@ -117,6 +117,10 @@ public static class Revisjon
         L($"Agentøkter (tidspunkter og treff, aldri innhold): {(s.MedAgentlogger ? "sjekket" : "slått av av IT")}");
         int spor = funn.Count(f => f.Gruppe == "spor");
         L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        L(s.LyttetSekunder > 0
+            ? $"Nettverk: lyttet i {s.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). UDP og QUIC (HTTP/3) vises ikke."
+            : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
+        L("Følg med (datamengde live) logges ikke og lagres ikke.");
         foreach (var b in s.Blindsoner) L($"Blindsone: {b}");
         L(IngenAi);
         if (feil != null) L($"Søket stoppet: {feil}");
