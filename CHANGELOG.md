@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.2] - 2026-10-28
+
+Ikke testet på Windows.
+
+### Rettet
+- **Mulig årsak til at 2.19 og 2.19.1 ikke kom i gang på Windows.** I 2.19 ble lokale porter spurt i 16 tråder som
+  hver sto og ventet på svaret (`.GetResult()`), samtidig som de andre sjekkene brukte trådpoolen. På .NET Framework
+  4.8 kan det sulte ut trådpoolen, så tidsavbruddene og hele søket stopper opp. Nå er spørringene helt asynkrone, og
+  ingen tråd står og venter. Samme porter, adresser og tidsgrense som før.
+
 ## [2.19.1] - 2026-10-28
 
 Ikke testet på Windows.

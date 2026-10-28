@@ -144,13 +144,18 @@ public sealed partial class Skanner
         // MaxResponseContentBufferSize: et ondsinnet lokalt program kan ikke svare med et svar på flere GB og spise opp minnet.
         using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(800), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
         // Alle portene spørres samtidig (16 om gangen). Før tok det 0,8 s per port som ikke svarte, én etter én.
+        // Helt asynkront: ingen tråd står og venter på et svar. (2.19 ventet med .GetResult() i 16 tråder samtidig, mens de
+        // andre sjekkene også brukte trådpoolen. På .NET Framework kan det sulte ut trådpoolen så søket stopper opp.)
         var svar = new List<string>?[lyttere.Count];
-        using (var kø = new SemaphoreSlim(16))
-            Task.WaitAll(lyttere.Select((l, i) => Task.Run(async () =>
+        using (var ko = new SemaphoreSlim(16))
+        {
+            async Task Ett(int i)
             {
-                await kø.WaitAsync().ConfigureAwait(false);
-                try { svar[i] = Spor(klient, l.Port); } finally { kø.Release(); }
-            })).ToArray());
+                await ko.WaitAsync().ConfigureAwait(false);
+                try { svar[i] = await SporAsync(klient, lyttere[i].Port).ConfigureAwait(false); } finally { ko.Release(); }
+            }
+            Task.WhenAll(Enumerable.Range(0, lyttere.Count).Select(Ett)).GetAwaiter().GetResult();
+        }
         for (int i = 0; i < lyttere.Count; i++)
         {
             var l = lyttere[i];
@@ -177,16 +182,18 @@ public sealed partial class Skanner
     }
 
     /// <summary>Ett lesende GET-kall mot vanlige AI-adresser. Returnerer modellnavn, eller null hvis det ikke er AI.</summary>
-    internal static List<string>? Spor(HttpClient klient, int port)
+    internal static List<string>? Spor(HttpClient klient, int port) => SporAsync(klient, port).GetAwaiter().GetResult();
+
+    internal static async Task<List<string>?> SporAsync(HttpClient klient, int port)
     {
         foreach (var sti in new[] { "/api/tags", "/v1/models", "/sdapi/v1/sd-models" })
         {
             try
             {
-                using var svar = klient.GetAsync($"http://127.0.0.1:{port}{sti}").GetAwaiter().GetResult();
+                using var svar = await klient.GetAsync($"http://127.0.0.1:{port}{sti}").ConfigureAwait(false);
                 Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
                 if (!svar.IsSuccessStatusCode) continue;
-                var tekst = svar.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (tekst.Length > 2_000_000) continue;
                 using var doc = JsonDocument.Parse(tekst);
                 var rot = doc.RootElement;
