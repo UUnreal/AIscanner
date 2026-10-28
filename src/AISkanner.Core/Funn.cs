@@ -88,6 +88,8 @@ public sealed class Funn
 
     public void Merknad(string s) { lock (this) if (!Merknader.Contains(s)) Merknader.Add(s); }
     public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 500) Detaljer.Add(s); }
+    /// <summary>Erstatter en detaljlinje som starter likt, så tall fra en tidligere lesing ikke blir stående ved siden av nye.</summary>
+    public void ErstattDetalj(string start, string s) { lock (this) { Detaljer.RemoveAll(d => d.StartsWith(start, StringComparison.Ordinal)); Detalj(s); } }
 
     /// <summary>Første og siste spor etter bruk, når det finnes (besøk, filer endret, forbindelse nå).</summary>
     public DateTime? Forst { get; set; }

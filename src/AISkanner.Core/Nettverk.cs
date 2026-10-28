@@ -232,6 +232,7 @@ public sealed class Datamaling : IDisposable
     public static Datamaling? Tom() => Nettverk.ErAdmin() ? new Datamaling() : null;
 
     private readonly HashSet<string> _kjente = new();
+    private static readonly Dictionary<string, int> Bruk = new();
 
     /// <summary>Slår på telleren for en ny forbindelse. Usant hvis Windows ikke tillot det.</summary>
     public bool Legg(Tilkobling t)
@@ -239,7 +240,14 @@ public sealed class Datamaling : IDisposable
         lock (_pa)
         {
             if (!_kjente.Add(t.Nokkel)) return _pa.Any(x => x.Nokkel == t.Nokkel);
-            if (!Sett(t, true)) return false;
+            // Lyttingen i bakgrunnen, Nettverk og Følg med kan måle samme forbindelse samtidig. Telleren slås på én gang
+            // (en ny påslåing kan nullstille den) og av først når den siste er ferdig.
+            lock (Bruk)
+            {
+                if (Bruk.TryGetValue(t.Nokkel, out var n)) Bruk[t.Nokkel] = n + 1;
+                else if (Sett(t, true)) Bruk[t.Nokkel] = 1;
+                else return false;
+            }
             _pa.Add(t);
             return true;
         }
@@ -295,7 +303,13 @@ public sealed class Datamaling : IDisposable
     {
         lock (_pa)
         {
-            foreach (var t in _pa) Sett(t, false);
+            lock (Bruk)
+                foreach (var t in _pa)
+                {
+                    if (Bruk.TryGetValue(t.Nokkel, out var n) && n > 1) { Bruk[t.Nokkel] = n - 1; continue; }
+                    Bruk.Remove(t.Nokkel);
+                    Sett(t, false);
+                }
             _pa.Clear();
             _kjente.Clear();
         }

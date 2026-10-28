@@ -13,6 +13,15 @@ internal static class Program
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern bool SetDllDirectory(string? sti);
 
+    /// <summary>Tid fra programmet startet til skjermen var klar. Vises i bunnlinjen, så oppstarten kan måles.</summary>
+    internal static readonly System.Diagnostics.Stopwatch Klokke = System.Diagnostics.Stopwatch.StartNew();
+    internal static long? OppstartMs;
+    internal static long FraStart()
+    {
+        try { using var p = System.Diagnostics.Process.GetCurrentProcess(); return Math.Max(Klokke.ElapsedMilliseconds, (long)(DateTime.Now - p.StartTime).TotalMilliseconds); }
+        catch { return Klokke.ElapsedMilliseconds; }
+    }
+
     [STAThread]
     private static void Main(string[] args)
     {

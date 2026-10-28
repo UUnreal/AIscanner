@@ -107,12 +107,24 @@ internal sealed class Lyttevindu : IDisposable
                 _bytes[k] = _bytes.TryGetValue(k, out var x) ? (Math.Max(x.Ut, v.Ut), Math.Max(x.Inn, v.Inn)) : v;
     }
 
+    /// <summary>Alt sett så langt, uten å stoppe lyttingen (resultatet vises før lyttevinduet er ferdig).</summary>
+    public NettBilde Bilde()
+    {
+        try { Les(); LesDns(); if (_maling != null) LesBytes(); } catch { }
+        return Lag(logg: false);
+    }
+
     /// <summary>Stopper lyttingen og gir alt som ble sett i vinduet som ett nettbilde.</summary>
     public NettBilde Stopp()
     {
         _stopp.Cancel();
         try { _lop.Wait(2000); } catch { }
         try { Les(); LesDns(); if (_maling != null) LesBytes(); } catch { }
+        return Lag(logg: true);
+    }
+
+    private NettBilde Lag(bool logg)
+    {
         lock (_sett)
         {
             var nb = new NettBilde
@@ -128,9 +140,9 @@ internal sealed class Lyttevindu : IDisposable
                 LytteSekunder = Sekunder,
                 Avlesninger = Avlesninger,
             };
-            Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable), lyttevindu", Utfall.Lest,
+            if (logg) Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable), lyttevindu", Utfall.Lest,
                 $"{Avlesninger} avlesninger på {Sekunder:0} sekunder, {_sett.Count} forbindelser sett");
-            Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp), lyttevindu", Utfall.Lest,
+            if (logg) Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp), lyttevindu", Utfall.Lest,
                 $"{_dnsNavn.Count} navn; bare AI-navn brukes, resten forkastes");
             return nb;
         }

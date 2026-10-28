@@ -23,6 +23,46 @@ public static class TcpTabell
         return liste;
     }
 
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    private static extern uint GetExtendedUdpTable(IntPtr tabell, ref int storrelse, bool sorter, int ipVersjon, int klasse, uint reservert);
+    private const int UDP_TABLE_OWNER_PID = 1;
+    // Navneoppslag og oppdaging på nettet lokalt (DNS, NetBIOS, SSDP, mDNS, LLMNR), ikke trafikk ut
+    private static readonly HashSet<int> LokaleUdp = new() { 53, 137, 138, 1900, 5353, 5355 };
+
+    /// <summary>
+    /// Åpne UDP-porter per program. Bare antall: UDP-tabellen sier ikke hvor det sendes. Brukes som hint om QUIC (HTTP/3),
+    /// som går over UDP og derfor ikke synes i TCP-tabellen. Krever ikke admin.
+    /// </summary>
+    public static Dictionary<int, int> UdpPerProgram()
+    {
+        var svar = new Dictionary<int, int>();
+        if (!Plattform.ErWindows) return svar;
+        foreach (var familie in new[] { AF_INET, AF_INET6 })
+        {
+            int storrelse = 0;
+            GetExtendedUdpTable(IntPtr.Zero, ref storrelse, false, familie, UDP_TABLE_OWNER_PID, 0);
+            if (storrelse <= 0) continue;
+            storrelse += 4096;
+            var buf = Marshal.AllocHGlobal(storrelse);
+            try
+            {
+                if (GetExtendedUdpTable(buf, ref storrelse, false, familie, UDP_TABLE_OWNER_PID, 0) != 0) continue;
+                int antall = Marshal.ReadInt32(buf);
+                // MIB_UDPROW_OWNER_PID: localAddr, localPort, pid (12 byte). MIB_UDP6ROW_OWNER_PID: localAddr[16], scope, localPort, pid (28 byte)
+                int str = familie == AF_INET ? 12 : 28, portVed = familie == AF_INET ? 4 : 20, pidVed = familie == AF_INET ? 8 : 24;
+                var rad = buf + 4;
+                for (int i = 0; i < antall; i++, rad += str)
+                {
+                    if (LokaleUdp.Contains(Port((uint)Marshal.ReadInt32(rad, portVed)))) continue;
+                    int pid = Marshal.ReadInt32(rad, pidVed);
+                    svar[pid] = svar.TryGetValue(pid, out var n) ? n + 1 : 1;
+                }
+            }
+            finally { Marshal.FreeHGlobal(buf); }
+        }
+        return svar;
+    }
+
     private static int Port(uint p) => (int)(((p & 0xFF) << 8) | ((p >> 8) & 0xFF));
 
     private static void Les(int familie, List<Lytter> liste)

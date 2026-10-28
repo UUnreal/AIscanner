@@ -10,9 +10,16 @@ namespace AISkanner;
 /// </summary>
 public sealed class Nettverkvisning : IDisposable
 {
-    public sealed record Rad(string Program, string? Sti, int Pid, string Tjeneste, string? Vert, string? Land, string? Cdn,
-        string? EierLand, int Forbindelser, long? UtPerSek, long? InnPerSek, bool Kjent, string? Nettleser);
-    public sealed record Bilde(DateTime Tid, List<Rad> Rader, long? UtPerSek, long? InnPerSek, int AndreForbindelser);
+    /// <summary>
+    /// Én rad: et program og en AI-tjeneste. <paramref name="Uavklart"/>: et kjent AI-program med forbindelser der vi ikke
+    /// kan avgjøre tjenesten (navnet er ikke i DNS-bufferen). Da er Tjeneste null og <paramref name="Ai"/> funnet programmet hører til.
+    /// </summary>
+    public sealed record Rad(string Program, string? Sti, int Pid, string? Tjeneste, string? Vert, string? Land, string? Cdn,
+        string? EierLand, int Forbindelser, long? UtPerSek, long? InnPerSek, bool Kjent, string? Nettleser, string? Ai, bool Uavklart,
+        IReadOnlyCollection<string> AlleLand);
+    /// <summary>Et program med åpne UDP-porter (mulig QUIC/HTTP/3, som ikke synes her). Bare antall, ikke hvor.</summary>
+    public sealed record Udp(string Program, int Porter, bool Nettleser);
+    public sealed record Bilde(DateTime Tid, List<Rad> Rader, long? UtPerSek, long? InnPerSek, int AndreForbindelser, int AndreNettleser, List<Udp> UdpHint);
 
     private readonly Skanner _skanner;
     private readonly Datamaling? _maling = Datamaling.Tom();
@@ -21,6 +28,7 @@ public sealed class Nettverkvisning : IDisposable
     private readonly HashSet<int> _ukjentPid = new();
     private readonly Dictionary<string, (long Ut, long Inn)> _forrige = new();
     private HashSet<(int, int)> _lyttere = new();
+    private Dictionary<int, int> _udp = new();
     private DateTime _sistDns = DateTime.MinValue, _sistLyttere = DateTime.MinValue, _forrigeTid = DateTime.Now;
 
     public bool MalerData => _maling != null;
@@ -60,12 +68,15 @@ public sealed class Nettverkvisning : IDisposable
             if (naa - _sistLyttere > TimeSpan.FromSeconds(5))
             {
                 _lyttere = new HashSet<(int, int)>(TcpTabell.Hent().Select(l => (l.Pid, l.Port)));
+                _udp = TcpTabell.UdpPerProgram();
                 _sistLyttere = naa;
             }
         }
 
-        var grupper = new Dictionary<(int, string), List<(Tilkobling T, string? Vert, AiNettsted Tj)>>();
-        int andre = 0;
+        // Tjeneste "" = kjent AI-program, men vi kan ikke avgjøre hvor forbindelsen går
+        var grupper = new Dictionary<(int, string), List<(Tilkobling T, string? Vert, AiNettsted? Tj)>>();
+        int andre = 0, andreNettleser = 0;
+        var navngitt = new List<(Tilkobling T, string? Vert, AiNettsted? Tj)>();
         foreach (var t in alle)
         {
             if (t.Pid <= 4 || t.Pid == Plattform.EgenPid || _lyttere.Contains((t.Pid, t.LokalPort))) continue;
@@ -73,8 +84,26 @@ public sealed class Nettverkvisning : IDisposable
             if (_dns.TryGetValue(t.Fjern, out var navn))
                 foreach (var n in navn) if (_skanner.Tjeneste(n) is { } x) { vert = n; tj = x; break; }
             if (tj == null && _skanner.Vert(t.Fjern) is { } v && _skanner.Tjeneste(v) is { } y) { vert = v; tj = y; }
-            if (tj == null) { andre++; continue; }
-            var k = (t.Pid, tj.Navn);
+            navngitt.Add((t, vert, tj));
+        }
+        // Programmer (ikke nettlesere) som snakker med en AI-tjeneste nå: alle forbindelsene deres vises
+        var aiPid = new HashSet<int>(navngitt.Where(x => x.Tj != null).Select(x => x.T.Pid));
+        foreach (var (t, vert0, tj) in navngitt)
+        {
+            var vert = vert0;
+            if (tj == null)
+            {
+                var (prog, sti) = Prosess(t.Pid);
+                bool nettleser = Skanner.Nettleserprosesser.ContainsKey(prog);
+                if (nettleser || (!aiPid.Contains(t.Pid) && AiFor(t.Pid, prog, sti) == null))
+                {
+                    andre++;
+                    if (nettleser) andreNettleser++;
+                    continue;
+                }
+                vert = _dns.TryGetValue(t.Fjern, out var nv) && nv.Count > 0 ? nv[0] : null;
+            }
+            var k = (t.Pid, tj?.Navn ?? "");
             if (!grupper.TryGetValue(k, out var g)) grupper[k] = g = new();
             g.Add((t, vert, tj));
         }
@@ -107,16 +136,44 @@ public sealed class Nettverkvisning : IDisposable
                 ut = (long)(du / sek); inn = (long)(di / sek);
                 sumUt += ut.Value; sumInn += inn.Value;
             }
-            var forste = g[0];
-            var cdn = IpLand.Cdn(forste.T.Fjern, _dns.TryGetValue(forste.T.Fjern, out var dn) ? dn : null);
+            // Land og CDN per adresse. Går forbindelsene til flere land, vises ikke ett av dem som om det var alle.
+            var steder = g.Select(x => x.T.Fjern).Distinct().Select(ip =>
+            {
+                var c = IpLand.Cdn(ip, _dns.TryGetValue(ip, out var dn) ? dn : null);
+                return (Cdn: c, Land: c != null ? null : IpLand.Finn(ip));
+            }).Distinct().ToList();
+            var (cdn, land) = steder.Count == 1 ? steder[0] : (null, null);
+            var alleLand = steder.Where(x => x.Land != null).Select(x => x.Land!).Distinct().ToList();
             var nettleser = Skanner.Nettleserprosesser.TryGetValue(prog, out var nl) ? nl : null;
-            bool kjent = nettleser != null || _skanner.FunnForProsess(prog, sti) != null;
-            rader.Add(new Rad(prog, sti, pid, forste.Tj.Navn, forste.Vert, cdn != null ? null : IpLand.Finn(forste.T.Fjern), cdn, forste.Tj.Land,
-                g.Count, ut, inn, kjent, nettleser));
+            var funn = nettleser == null ? AiFor(pid, prog, sti) : null;
+            // Et ukjent AI-spor er ikke «kjent» selv om programmet hører til et funn
+            bool kjent = nettleser != null || (funn != null && funn.Gruppe != "spor");
+            var forste = g[0];
+            bool uavklart = forste.Tj == null;
+            var vertene = g.Select(x => x.Vert).Where(v => v != null).Distinct().ToList();
+            rader.Add(new Rad(prog, sti, pid, forste.Tj?.Navn, uavklart ? (vertene.Count == 1 ? vertene[0] : null) : forste.Vert, land, cdn, forste.Tj?.Land,
+                g.Count, ut, inn, kjent, nettleser, funn == null ? null : Oversikt.Navn(funn), uavklart, alleLand));
         }
-        rader = rader.OrderBy(r => r.Kjent).ThenByDescending(r => r.UtPerSek ?? 0).ThenByDescending(r => r.Forbindelser).ToList();
-        return new Bilde(naa, rader, bytes != null ? sumUt : null, bytes != null ? sumInn : null, andre);
+        rader = rader.OrderBy(r => r.Kjent).ThenBy(r => r.Uavklart).ThenByDescending(r => r.UtPerSek ?? 0).ThenByDescending(r => r.Forbindelser).ToList();
+
+        // UDP-porter hos nettlesere og AI-programmer: kan være QUIC (HTTP/3), som ikke synes i TCP-tabellen
+        var udp = new Dictionary<string, (int Porter, bool Nettleser)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (pid, n) in _udp)
+        {
+            if (pid <= 4 || pid == Plattform.EgenPid) continue;
+            var (prog, sti) = Prosess(pid);
+            bool nettleser = Skanner.Nettleserprosesser.TryGetValue(prog, out var nl);
+            if (!nettleser && AiFor(pid, prog, sti) == null) continue;
+            var navn = nettleser ? nl! : prog;
+            udp[navn] = (udp.TryGetValue(navn, out var x) ? x.Porter + n : n, nettleser);
+        }
+        var udpHint = udp.Select(x => new Udp(x.Key, x.Value.Porter, x.Value.Nettleser)).OrderByDescending(x => x.Porter).ToList();
+        return new Bilde(naa, rader, bytes != null ? sumUt : null, bytes != null ? sumInn : null, andre, andreNettleser, udpHint);
     }
+
+    // Regelsøket per program gjøres én gang mens visningen er åpen, ikke for hver forbindelse hvert sekund
+    private readonly Dictionary<int, Funn?> _ai = new();
+    private Funn? AiFor(int pid, string prog, string? sti) => _ai.TryGetValue(pid, out var f) ? f : _ai[pid] = _skanner.FunnForProsess(prog, sti);
 
     private (string Navn, string? Sti) Prosess(int pid)
     {

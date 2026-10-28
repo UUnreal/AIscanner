@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.2. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.3. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -166,7 +166,8 @@ Agentøkter kan inneholde personopplysninger. Bare tider og treff leses, men på
 Under søket leses TCP-tabellen (`GetExtendedTcpTable`) hvert 250. ms og DNS-bufferen hvert 2. sekund i minst 20
 sekunder (`--lytt 0-60`, 0 = ett øyeblikksbilde). Ingen pakker fanges og ingenting sendes. Navn som ikke er AI,
 forkastes i minnet. Som administrator slås Windows' tellere per forbindelse (EStats) på for nye forbindelser og av
-igjen etterpå.
+igjen etterpå. I vinduet vises resultatet når sjekkene er ferdige; lyttevinduet går videre i bakgrunnen, og funnene og
+revisjonsloggen oppdateres når det er gått. En teller slås av først når ingen (lyttingen, Nettverk, Følg med) bruker den.
 
 «Følg med» leser de samme tabellene hvert sekund for ett funn mens vinduet er åpent, og viser datamengden i et
 diagram. Det lagres ikke, logges ikke og forsvinner når haken tas bort eller vinduet lukkes. Bare TCP: UDP og QUIC
@@ -178,7 +179,10 @@ Knappen «Nettverk» nederst i resultatet viser hvilke programmer som snakker me
 AI-tjeneste og vertsnavn, land eller CDN, antall forbindelser, og som administrator sendt og mottatt per sekund i et
 diagram for alle eller for ett valgt program. Program som ikke er kjent fra søket eller er en nettleser, merkes
 «Ukjent program» i rødt. Den leser TCP-tabellen hvert sekund og DNS-bufferen hvert 2. sekund, bare mens visningen er
-åpen. Forbindelser som ikke går til kjente AI-tjenester, telles men vises ikke. Ingen pakkefangst, ingen driver, ingen
+åpen. Kjente AI-programmer fra søket, og programmer som snakker med en AI-tjeneste, vises med alle forbindelsene sine;
+der navnet ikke er i DNS-bufferen står «Kan ikke avgjøre». Andre forbindelser telles (med hvor mange som er fra
+nettlesere) men vises ikke. Antall åpne UDP-porter hos nettlesere og AI-programmer vises som hint om QUIC (UDP-tabellen
+sier ikke hvor det sendes). Ingen pakkefangst, ingen driver, ingen
 innhold. Ingenting lagres og ingenting kommer i rapporten. Bare TCP: UDP og QUIC (HTTP/3) vises ikke, og det står i
 visningen. `AISkanner.Cli --nettverk` skriver tre avlesninger som JSON.
 

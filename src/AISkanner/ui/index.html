@@ -472,6 +472,7 @@ function tegnFordeling() {
 
 function tegnBunn() {
   const deler = [];
+  if (oppstartMs != null) deler.push(`${L("Oppstart", "Startup")} ${(oppstartMs / 1000).toFixed(1).replace(".", L(",", "."))} s`);
   if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
   deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
   if (!info.revisjon) deler.push(L("Ingenting lagret", "Nothing stored"));
@@ -481,8 +482,11 @@ function tegnBunn() {
   const rev = info.revisjon
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
     : info.revisjonFeil ? `<span style="color:var(--rod)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
-  $("bunnHoyre").innerHTML = rev + `<button id="nettKnapp">${L("Nettverk", "Network")}</button><span class="skille"> · </span><button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.dataMalt
-    ? esc(L(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
+  // Mens lyttingen går i bakgrunnen vises ingen datamengde: tallet er ikke ferdig, og et halvt tall skal ikke stå der
+  $("bunnHoyre").innerHTML = rev + `<button id="nettKnapp">${L("Nettverk", "Network")}</button><span class="skille"> · </span><button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.lytter
+    ? `<span class="lytter">${esc(lytterIgjen > 0 ? L(`Lytter på nettverket: ${lytterIgjen} s igjen`, `Listening to the network: ${lytterIgjen} s left`) : L("Lytter på nettverket…", "Listening to the network…"))}</span>`
+    : info.dataMalt
+    ? esc(L(`Sendt ut under søket: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out during the scan: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
     : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`) + `</span>`;
   const m = $("maal"); if (m) m.onclick = () => send({ type: "admin", revisjon });
   $("dataKnapp").onclick = apneData;
@@ -556,7 +560,7 @@ function apneNett() {
 function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); }
 function mottaNett(m) {
   if (!nettApen) return;
-  nett.admin = m.admin; nett.andre = m.andre; nett.rader = m.rader || []; nett.tid = m.tid;
+  nett.admin = m.admin; nett.andre = m.andre; nett.andreNettleser = m.andreNettleser || 0; nett.udp = m.udp || []; nett.rader = m.rader || []; nett.tid = m.tid;
   nett.p.push({ ut: m.ut, inn: m.inn, n: nett.rader.reduce((a, r) => a + r.n, 0) });
   if (nett.p.length > 120) nett.p.shift();
   const sett = new Set();
@@ -585,18 +589,31 @@ function tegnNett() {
   const valgtRad = nettValgt && nett.rader.find(r => r.nokkel === nettValgt);
   const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Nettverk", "Network")}</h2><span class="dtype">${L("Live · hvilke programmer som snakker med AI-tjenester nå · lagres ikke", "Live · which programs are talking to AI services now · not saved")}${nett.tid ? " · " + esc(nett.tid) : ""}</span></div>`;
   const graf = nettValgt && nett.hist[nettValgt]
-    ? nettGraf(nett.hist[nettValgt], nett.admin, valgtRad ? `${valgtRad.program} → ${valgtRad.tjeneste}` : L("Avsluttet", "Ended"))
+    ? nettGraf(nett.hist[nettValgt], nett.admin, valgtRad ? `${valgtRad.program} → ${valgtRad.tjeneste || L("kan ikke avgjøre", "cannot tell")}` : L("Avsluttet", "Ended"))
     : nettGraf(nett.p, nett.admin, L("Alle AI-forbindelser", "All AI connections"));
   const rad = r => `<li class="nettRad${r.kjent ? "" : " ukjent"}${r.nokkel === nettValgt ? " valgt" : ""}" data-n="${esc(r.nokkel)}" title="${esc(r.sti || r.program)}">
-      <span class="prog"><i></i><b>${esc(r.program)}</b><small>${r.kjent ? esc(r.nettleser || L("kjent fra søket", "known from the scan")) : L("Ukjent program", "Unknown program")}</small></span>
-      <span>${esc(r.tjeneste)}<small>${esc(r.vert || "")}</small></span>
+      <span class="prog"><i></i><b>${esc(r.program)}</b><small>${r.kjent ? esc(r.nettleser || r.ai || L("kjent fra søket", "known from the scan")) : r.ai ? L("Ukjent AI-spor", "Unknown AI trace") : L("Ukjent program", "Unknown program")}</small></span>
+      ${r.uavklart
+        ? `<span>${L("Kan ikke avgjøre", "Cannot tell")}<small>${esc(r.vert || L("adressen har ikke noe navn i DNS-bufferen", "the address has no name in the DNS cache"))}</small></span>`
+        : `<span>${esc(r.tjeneste)}<small>${esc(r.vert || "")}</small></span>`}
       <span class="${r.farlig ? "fare" : ""}">${esc(r.land || L("ukjent", "unknown"))}${r.eier && r.eier !== r.land ? `<small>${L("selskap", "company")}: ${esc(r.eier)}</small>` : ""}</span>
       <span class="tall">${tall(r.n)}</span><span class="tall">${fart(r.ut)}</span><span class="tall">${fart(r.inn)}</span></li>`;
   const kolonner = `<li class="nettRad hode"><span>${L("Program", "Program")}</span><span>${L("AI-tjeneste", "AI service")}</span><span>${L("Land", "Country")}</span><span class="tall">${L("Forb.", "Conn.")}</span><span class="tall">${L("Sendt", "Sent")}</span><span class="tall">${L("Mottatt", "Received")}</span></li>`;
-  const tom = `<li class="mer">${nett.tid ? L("Ingen programmer snakker med AI-tjenester akkurat nå.", "No programs are talking to AI services right now.") : L("Leser…", "Reading…")}</li>`;
+  // Tom liste: si nøyaktig hva det betyr, ikke mer
+  const tom = `<li class="mer">${nett.tid
+    ? L("Ingen programmer har TCP-forbindelser til kjente AI-tjenester akkurat nå. AI-nettsteder fra nettleserhistorikken trenger ikke være åpne nå.",
+        "No programs have TCP connections to known AI services right now. AI sites from the browser history need not be open now.")
+    : L("Leser…", "Reading…")}</li>`;
+  const udp = (nett.udp || []).length
+    ? " " + L("Åpne UDP-porter (kan være QUIC/HTTP/3, vises ikke her): ", "Open UDP ports (may be QUIC/HTTP/3, not shown here): ") + nett.udp.slice(0, 5).map(u => `${u.program} ${u.porter}`).join(", ") + "."
+    : "";
+  const andre = nett.andre
+    ? L(`${nett.andre} andre forbindelser${nett.andreNettleser ? ` (${nett.andreNettleser} fra nettlesere)` : ""} har ingen kjent AI-adresse og vises ikke. Navnet kan ha gått ut av DNS-bufferen, eller nettleseren bruker DNS over HTTPS.`,
+        `${nett.andre} other connections${nett.andreNettleser ? ` (${nett.andreNettleser} from browsers)` : ""} have no known AI address and are not shown. The name may have expired from the DNS cache, or the browser uses DNS over HTTPS.`)
+    : "";
   d.innerHTML = hode + `<div class="nettTopp">${graf}</div>`
     + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${nett.rader.length ? nett.rader.map(rad).join("") : tom}</ul></div>`
-    + `<div class="avLinje ikke">${esc(L(`Bare TCP: UDP og QUIC (HTTP/3) vises ikke. ${nett.andre} andre forbindelser går ikke til kjente AI-tjenester og vises ikke. Ingen innhold leses, ingenting lagres.`, `TCP only: UDP and QUIC (HTTP/3) are not shown. ${nett.andre} other connections do not go to known AI services and are not shown. No content is read, nothing is saved.`))}</div>`;
+    + `<div class="avLinje ikke">${esc(L("Bare TCP.", "TCP only.") + udp + (andre ? " " + andre : "") + " " + L("Ikke noe innhold leses, ingenting lagres.", "No content is read, nothing is saved."))}</div>`;
   $("tilbake").onclick = lukkArk;
   // Rader som ikke får plass, telles i stedet for å rulle
   const dl = $("nettDl"), ul = $("nettUl");
@@ -1008,6 +1025,7 @@ function motta(m) {
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "prosent") settProsent(m.p);
+  else if (m.type === "lytter") { lytterIgjen = m.igjen; if (info && info.lytter) tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
   else if (m.type === "start") { sisteValg = "admin"; start(); }
@@ -1016,12 +1034,13 @@ function motta(m) {
     if (m.sprak) { språk = m.sprak; settSpråk(språk, true); }
     if (erAdmin) sisteValg = "admin";
     if (m.revisjon != null) revisjon = !!m.revisjon;
+    if (m.oppstartMs != null) oppstartMs = m.oppstartMs;
     tegnModus();
   }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
-let erAdmin = false, sisteValg = "sok", revisjon = false;
+let erAdmin = false, sisteValg = "sok", revisjon = false, oppstartMs = null, lytterIgjen = 0;
 function tegnModus() {
   $("valg").classList.toggle("erAdmin", erAdmin);
   $("ringTekst").textContent = erAdmin ? L("ADMIN ER PÅ", "ADMIN IS ON") : L("SØK SOM ADMIN", "SCAN AS ADMIN");

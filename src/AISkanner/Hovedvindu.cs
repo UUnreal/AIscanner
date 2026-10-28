@@ -13,10 +13,14 @@ namespace AISkanner.App;
 public sealed class Hovedvindu : Form
 {
     private readonly WebView2 _web = new() { Dock = DockStyle.Fill };
-    private readonly Regelsett _regler = Regelsett.Last();
+    // Reglene lastes i bakgrunnen mens vinduet og WebView2 starter, så de ikke forsinker oppstarten
+    private readonly Task<Regelsett> _reglerLast = Task.Run(() => Regelsett.Last());
+    private Regelsett _regler => _reglerLast.GetAwaiter().GetResult();
     private List<Funn> _resultat = new();
     private Skanner? _skanner;
     private bool _soker;
+    private CancellationTokenSource? _lyttStopp;
+    private int _revisjonAntall;
     private CancellationTokenSource? _nvdStopp;
     // Språk: følger Windows til brukeren trykker på et flagg. Lagres ikke mellom kjøringer.
     private bool _engelsk = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("nb" or "nn" or "no");
@@ -54,7 +58,8 @@ public sealed class Hovedvindu : Form
         {
             // WebView2 må ha en mappe mens vinduet er åpent. Den er ny for hver kjøring og slettes når programmet lukkes,
             // så programmet lagrer ingenting mellom søk.
-            RyddVindusdata(alle: true);
+            // Rester etter tidligere kjøringer slettes i bakgrunnen; det kan være mange filer og skal ikke holde igjen vinduet
+            _ = Task.Run(() => RyddVindusdata(alle: true));
             var data = Path.Combine(Rot, $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}");
             var miljo = await CoreWebView2Environment.CreateAsync(null, data);
             await _web.EnsureCoreWebView2Async(miljo);
@@ -86,7 +91,9 @@ public sealed class Hovedvindu : Form
         // Siden får vite om vi kjører som administrator, så startknappene viser riktig valg
         w.NavigationCompleted += (_, _) =>
         {
-            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon });
+            // Fra Windows startet prosessen (også lasting av .NET) til vinduet er klart
+            Program.OppstartMs ??= Program.FraStart();
+            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon, oppstartMs = Program.OppstartMs });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
 
@@ -99,6 +106,7 @@ public sealed class Hovedvindu : Form
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
+        _lyttStopp?.Cancel();
         StoppAlleFolg();
         StoppNettverk();
         base.OnFormClosed(e);
@@ -122,7 +130,8 @@ public sealed class Hovedvindu : Form
                 if (navn.StartsWith("Vindu-") || navn.StartsWith("WebView2"))
                     try { Directory.Delete(d, true); } catch { }
             }
-            if (Directory.GetFileSystemEntries(Rot).Length == 0) Directory.Delete(Rot);
+            // Rotmappa slettes bare ved lukking. Ved oppstart kan WebView2 holde på å lage vår egen mappe i den.
+            if (!alle && Directory.GetFileSystemEntries(Rot).Length == 0) Directory.Delete(Rot);
             return !Directory.Exists(Path.Combine(Rot, egen));
         }
         catch { return false; }
@@ -173,12 +182,13 @@ public sealed class Hovedvindu : Form
     {
         _soker = true;
         _nvdStopp?.Cancel();
+        _lyttStopp?.Cancel();
         StoppAlleFolg();
         StoppNettverk();
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
-            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args) };
+            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args), LyttIBakgrunnen = true };
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
             // Progress<int> sender tilbake til UI-tråden; søkesirkelen viser 0–100 % fra faktisk fremdrift
@@ -187,7 +197,8 @@ public sealed class Hovedvindu : Form
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
             _vist = true;
-            if (_revisjon) SkrivRevisjon(null);
+            // Lytter vi fortsatt på nettverket, skrives revisjonsloggen når lyttingen er ferdig, med alt som ble sett
+            if (_revisjon && !_skanner.LytterNa) SkrivRevisjon(null);
             SendResultat(behold: false);
         }
         catch (Exception e)
@@ -197,11 +208,11 @@ public sealed class Hovedvindu : Form
             return;
         }
         finally { _soker = false; }
+        var skanner = _skanner!;
+        if (skanner.LytterNa) _ = LyttFerdigAsync(skanner);
         if (!nvd) return;
         // Et nytt søk stopper oppslagene fra forrige
         var stopp = _nvdStopp = new CancellationTokenSource();
-        var forNvd = _skanner!.Logg.Oppforinger.Count;
-        var revisjonSti = _revisjonSti;
         try
         {
             await Nvd.SjekkAsync(_resultat, null, stopp.Token,
@@ -209,11 +220,13 @@ public sealed class Hovedvindu : Form
             _nvdStatus = "ferdig";
             Send(new { type = "nvdFerdig" });
             // NVD-oppslagene kommer etter søket: de legges til sist i revisjonsloggen, med ny kontrollsum
-            if (revisjonSti != null && revisjonSti == _revisjonSti)
+            // Er loggen ikke skrevet ennå (lyttingen går fortsatt), kommer oppslagene med når den skrives.
+            if (_revisjonSti is { } revisjonSti && _skanner == skanner)
             {
-                var nye = _skanner.Logg.Oppforinger.Skip(forNvd).ToList();
+                var nye = skanner.Logg.Oppforinger.Skip(_revisjonAntall).ToList();
                 if (nye.Count > 0)
                 {
+                    _revisjonAntall += nye.Count;
                     var gammel = File.ReadAllText(revisjonSti, Encoding.UTF8);
                     using var fs = new FileStream(revisjonSti, FileMode.Append, FileAccess.Write);
                     using var w = new StreamWriter(fs, new UTF8Encoding(false));
@@ -222,6 +235,29 @@ public sealed class Hovedvindu : Form
             }
         }
         catch { }
+    }
+
+    /// <summary>
+    /// Resultatet er vist; lyttevinduet går videre. Vinduet får sekundene som er igjen, og så funnene på nytt med
+    /// alt nettverket viste i hele vinduet. Et nytt søk stopper lyttingen fra forrige.
+    /// </summary>
+    private async Task LyttFerdigAsync(Skanner skanner)
+    {
+        var stopp = _lyttStopp = new CancellationTokenSource();
+        try
+        {
+            var liste = await skanner.FullforLyttingAsync(new Progress<int>(s => { if (_skanner == skanner && !_soker) Send(new { type = "lytter", igjen = s }); }), stopp.Token);
+            if (liste == null || _skanner != skanner || _soker) return;
+            _resultat = liste;
+            if (_revisjon) SkrivRevisjon(null);
+            SendResultat(behold: true);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Lytting feilet: {e.Message}");
+            if (_skanner == skanner && !_soker) { if (_revisjon) SkrivRevisjon(null); SendResultat(behold: true); }
+        }
     }
 
     /// <summary>Sender funnene til vinduet på valgt språk. Brukes etter søket og når brukeren bytter språk.</summary>
@@ -243,7 +279,9 @@ public sealed class Hovedvindu : Form
                 nvd = _nvdStatus,
                 admin = Nettverk.ErAdmin(),
                 revisjon = _revisjonSti,
-                revisjonFeil = _revisjon && _revisjonSti == null,
+                revisjonFeil = _revisjon && _revisjonSti == null && !_skanner.LytterNa,
+                lytter = _skanner.LytterNa,
+                lytteSekunder = _skanner.LytteSekunder,
                 telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, spor = _resultat.Count(f => f.Gruppe == "spor") } : null,
             },
             funn = _resultat.Select((f, id) => new
@@ -336,6 +374,7 @@ public sealed class Hovedvindu : Form
             var navn = $"{(_engelsk ? "AI-audit" : "AI-revisjon")}_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var sti = Path.Combine(mappe, navn + ".txt");
             for (int n = 2; File.Exists(sti); n++) sti = Path.Combine(mappe, $"{navn} ({n}).txt");
+            _revisjonAntall = _skanner!.Logg.Oppforinger.Count;
             var tekst = Revisjon.Tekst(_resultat, _skanner!, Nettverk.ErAdmin() ? "administrator" : "bruker", _engelsk, feil);
             using var fs = new FileStream(sti, FileMode.CreateNew, FileAccess.Write);
             using var w = new StreamWriter(fs, new UTF8Encoding(false));
@@ -414,12 +453,15 @@ public sealed class Hovedvindu : Form
                 string? T(string? x) => _engelsk ? Engelsk.Til(x) : x;
                 Send(new
                 {
-                    type = "nettdata", admin = visning.MalerData, tid = b.Tid.ToString("HH:mm:ss"), ut = b.UtPerSek, inn = b.InnPerSek, andre = b.AndreForbindelser,
+                    type = "nettdata", admin = visning.MalerData, tid = b.Tid.ToString("HH:mm:ss"), ut = b.UtPerSek, inn = b.InnPerSek, andre = b.AndreForbindelser, andreNettleser = b.AndreNettleser,
+                    udp = b.UdpHint.Select(u => new { program = u.Program, porter = u.Porter, nettleser = u.Nettleser }),
                     rader = b.Rader.Select(r => new
                     {
                         nokkel = $"{r.Pid}|{r.Tjeneste}", program = r.Program, sti = r.Sti, pid = r.Pid, tjeneste = r.Tjeneste, vert = r.Vert,
-                        land = T(r.Cdn != null ? $"Skjult bak {r.Cdn}" : IpLand.Navn(r.Land)), eier = r.EierLand == null ? null : T(IpLand.Navn(r.EierLand)),
-                        farlig = (r.Land != null && farlige.Contains(r.Land)) || (r.EierLand != null && farlige.Contains(r.EierLand)),
+                        land = T(r.Cdn != null ? $"Skjult bak {r.Cdn}" : r.Land != null ? IpLand.Navn(r.Land) : r.AlleLand.Count > 1 ? $"{r.AlleLand.Count} land" : null),
+                        eier = r.EierLand == null ? null : T(IpLand.Navn(r.EierLand)),
+                        farlig = r.AlleLand.Any(farlige.Contains) || (r.EierLand != null && farlige.Contains(r.EierLand)),
+                        ai = T(r.Ai), uavklart = r.Uavklart,
                         n = r.Forbindelser, ut = r.UtPerSek, inn = r.InnPerSek, kjent = r.Kjent, nettleser = r.Nettleser,
                     }),
                 });

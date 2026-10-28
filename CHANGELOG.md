@@ -29,6 +29,35 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.3] - 2026-10-28
+
+Ikke testet på Windows. Kjernen er testet på Linux med falske nettbilder, visningen i nettleser med eksempeldata.
+Ingen skjermer har endret utseende; bare tekst i felt som fantes fra før.
+
+### Endret
+- **Resultatet vises når sjekkene er ferdige, ikke etter lyttevinduet.** Før ventet søket alltid til nettverket var
+  lyttet på i 20 sekunder (`--lytt`), så søketiden var aldri under 20 s. Nå vises resultatet straks sjekkene er ferdige
+  (på test-PC-en 1,2 s), og lyttingen fortsetter i bakgrunnen. Bunnlinja viser «Lytter på nettverket: N s igjen».
+  Når vinduet er gått, oppdateres funnene med alt nettverket viste. Revisjonsloggen skrives først da, med alt.
+  Kommandolinja (`AISkanner.Cli`) venter som før.
+- **Bunnlinja viser oppstartstiden** («Oppstart 1,8 s»): fra Windows startet prosessen til vinduet er klart.
+- «Sendt ut» heter nå «Sendt ut under søket», fordi tallet gjelder lyttevinduet, ikke nå. Mens lyttingen går, vises
+  ikke noe tall: et halvt tall skal ikke stå ved siden av et helt.
+- Oppstart: reglene lastes og gamle vindusdata ryddes i bakgrunnen, så vinduet ikke venter på dem.
+- **Nettverk viser mer.** Kjente AI-programmer fra søket vises med alle forbindelsene sine, også de der vi ikke kan
+  avgjøre tjenesten. Det står «Kan ikke avgjøre» og «adressen har ikke noe navn i DNS-bufferen», ikke en gjetning.
+  Det samme gjelder et program som snakker med en AI-tjeneste: alle forbindelsene dets vises. Går forbindelsene til
+  flere land, står antall land, ikke ett av dem.
+- Nettverk sier hvorfor noe ikke vises: antall andre forbindelser og hvor mange av dem som er fra nettlesere (navnet
+  kan ha gått ut av DNS-bufferen, eller nettleseren bruker DNS over HTTPS), og antall åpne UDP-porter hos nettlesere og
+  AI-programmer (kan være QUIC/HTTP/3, som ikke synes). Tom liste sier at AI-nettsteder fra historikken ikke trenger
+  være åpne nå.
+
+### Rettet
+- Datamengde: lyttingen i bakgrunnen, Nettverk og Følg med kan måle samme forbindelse samtidig. Før kunne den som
+  ble lukket først, slå av telleren for de andre. Nå slås telleren av først når den siste er ferdig.
+- Lest to ganger (først resultatet, så hele lyttevinduet) gir ikke doble linjer eller gamle tall ved siden av nye.
+
 ## [2.19.2] - 2026-10-28
 
 Ikke testet på Windows.

@@ -81,13 +81,16 @@ public sealed partial class Skanner
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
         Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
-        using var maling = TestNett == null ? Datamaling.Start() : null;
+        var maling = TestNett == null ? Datamaling.Start() : null;
         // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
-        using var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
+        var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
+        // Med LyttIBakgrunnen vises resultatet straks sjekkene er ferdige; lyttingen fortsetter og fullføres med FullforLyttingAsync
+        bool bakgrunn = LyttIBakgrunnen && lytting != null;
         var ferdig = new int[1];
         steg?.Report(0);
         // Prosent for søkesirkelen, regnet ut fra faktisk fremdrift: ferdige sjekker (70 %), tid brukt av lyttevinduet
         // mot lengden (25 %) og analysen til slutt (5 %). Sjekkene og lyttevinduet går samtidig. Går aldri bakover.
+        // Lytter vi i bakgrunnen, venter ikke sirkelen på lyttingen: sjekkene er 95 %.
         var minstLytt = lytting != null ? Math.Min(60, LytteSekunder) : maling != null ? 5 : 0;
         int sistProsent = -1;
         void Rapporter(bool helt = false)
@@ -95,7 +98,8 @@ public sealed partial class Skanner
             if (prosent == null) return;
             double lyttet = minstLytt <= 0 ? (Volatile.Read(ref ferdig[0]) == stegliste.Length ? 1 : 0)
                 : Math.Min(1, (lytting?.Sekunder ?? maling?.Sekunder ?? 0) / minstLytt);
-            int p = helt ? 100 : (int)Math.Min(99, 70.0 * Volatile.Read(ref ferdig[0]) / stegliste.Length + 25 * lyttet);
+            int p = helt ? 100 : bakgrunn ? (int)Math.Min(99, 95.0 * Volatile.Read(ref ferdig[0]) / stegliste.Length)
+                : (int)Math.Min(99, 70.0 * Volatile.Read(ref ferdig[0]) / stegliste.Length + 25 * lyttet);
             lock (stegliste)
             {
                 if (p <= sistProsent) return;
@@ -135,14 +139,14 @@ public sealed partial class Skanner
         {
             var minst = minstLytt;
             var brukt = lytting?.Sekunder ?? maling?.Sekunder ?? 0;
-            if (brukt < minst)
+            if (brukt < minst && !bakgrunn)
             {
                 _status?.Report($"Lytter på nettverket i {Math.Ceiling(minst - brukt):0} sekunder til...");
                 await Task.Delay(TimeSpan.FromSeconds(minst - brukt), ct);
             }
             var tid = Stopwatch.StartNew();
             Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
-            var nb = TestNett?.Invoke() ?? lytting?.Stopp() ?? NettBilde.Hent(maling);
+            var nb = TestNett?.Invoke() ?? (bakgrunn ? lytting!.Bilde() : lytting?.Stopp()) ?? NettBilde.Hent(maling);
             LyttetSekunder = nb.LytteSekunder;
             Trafikk(nb);
             InnTilAiServer(nb);
@@ -156,12 +160,60 @@ public sealed partial class Skanner
         Tilgangslogg.Sjekk.Value = null;
         Tider["Totalt"] = klokke.Elapsed;
         Ferdig = DateTime.Now;
+        if (bakgrunn) { _bakgrunn = (lytting!, maling, minstLytt); LytterNa = true; }
+        else { lytting?.Dispose(); maling?.Dispose(); }
         prosentStopp.Cancel();
         await prosentLop.ConfigureAwait(false);
         Rapporter(helt: true);
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
+    }
+
+    /// <summary>Resultatet vises før nettverkslyttingen er ferdig; lyttingen fortsetter og fullføres med FullforLyttingAsync.</summary>
+    public bool LyttIBakgrunnen { get; set; }
+    /// <summary>Sant mens lyttevinduet fortsatt går etter at resultatet er vist.</summary>
+    public bool LytterNa { get; private set; }
+    private (Lyttevindu Lytting, Datamaling? Maling, double Minst)? _bakgrunn;
+
+    /// <summary>
+    /// Venter til lyttevinduet har gått hele lengden, og oppdaterer nettverksdelen av funnene med alt som ble sett.
+    /// <paramref name="igjen"/> får antall sekunder som er igjen, hvert sekund. Gir den oppdaterte lista, eller null hvis
+    /// det ikke lyttes i bakgrunnen.
+    /// </summary>
+    public async Task<List<Funn>?> FullforLyttingAsync(IProgress<int>? igjen = null, CancellationToken ct = default)
+    {
+        if (_bakgrunn is not { } b) return null;
+        _bakgrunn = null;
+        try
+        {
+            while (b.Lytting.Sekunder < b.Minst)
+            {
+                igjen?.Report((int)Math.Ceiling(b.Minst - b.Lytting.Sekunder));
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(1, b.Minst - b.Lytting.Sekunder)), ct).ConfigureAwait(false);
+            }
+            igjen?.Report(0);
+            await Task.Run(() =>
+            {
+                var tid = Stopwatch.StartNew();
+                Tilgangslogg.Aktiv = Logg;
+                Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
+                var nb = b.Lytting.Stopp();
+                LyttetSekunder = nb.LytteSekunder;
+                Trafikk(nb);
+                InnTilAiServer(nb);
+                Risikoregler.Bruk(_funn.Values, _regler);
+                Tilgangslogg.Sjekk.Value = null;
+                lock (Tider) Tider["Ser hvor AI sender data"] = Tider.TryGetValue("Ser hvor AI sender data", out var f) ? f + tid.Elapsed : tid.Elapsed;
+            }, ct).ConfigureAwait(false);
+            return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
+        }
+        finally
+        {
+            LytterNa = false;
+            b.Lytting.Dispose();
+            b.Maling?.Dispose();
+        }
     }
 
     // ---------- hjelpere ----------

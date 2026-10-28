@@ -127,7 +127,9 @@ public sealed partial class Skanner
                 if (tj == null) continue;   // annen surfing angår ikke oss
                 f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, nettleser, null, enkelt: tj.Enkelt, rad: tj.Rad);
                 f.Privat = true;
-                f.Bruk = f.Bruk == null ? $"Åpen i {nettleser} nå." : f.Bruk.TrimEnd('.') + $". Åpen i {nettleser} nå.";
+                var apen = $"Åpen i {nettleser} nå.";
+                if (f.Bruk == null) f.Bruk = apen;
+                else if (!f.Bruk.Contains(apen)) f.Bruk = f.Bruk.TrimEnd('.') + ". " + apen;   // trafikken kan leses to ganger (lytting i bakgrunnen)
             }
             else
             {
@@ -300,7 +302,7 @@ public sealed partial class Skanner
                 if (b > sist || sist == null) sist = b;
                 var land = IpLand.Navn(IpLand.Finn(k.First().Fjern));
                 long? bytes = nb.Bytes == null ? null : k.Sum(t => nb.Bytes.TryGetValue(t.Nokkel, out var x) ? x.Ut + x.Inn : 0);
-                f.Detalj($"Klient {k.Key}{(land != null ? $" ({land})" : "")} · port {g.Key.LokalPort} · {k.Count()} forbindelse{(k.Count() == 1 ? "" : "r")}"
+                f.ErstattDetalj($"Klient {k.Key}{(land != null ? $" ({land})" : "")} · port {g.Key.LokalPort} · ", $"Klient {k.Key}{(land != null ? $" ({land})" : "")} · port {g.Key.LokalPort} · {k.Count()} forbindelse{(k.Count() == 1 ? "" : "r")}"
                     + (bytes != null ? $" · {Rapport.Storrelse(bytes.Value)}" : "")
                     + (a != null ? $" · sett {a:HH:mm:ss}–{b:HH:mm:ss}" : " · sett nå"));
             }
@@ -319,7 +321,7 @@ public sealed partial class Skanner
             var f = Spor($"Ukjent program bruker lokal AI-server: {p.Navn}",
                 $"Et program som ikke er kjent som AI-app, er koblet til den lokale AI-serveren (port {portene}). Vi vet ikke hva det bruker modellen til.", null);
             f.Advarsel("Ukjent program bruker den lokale AI-modellen.");
-            f.Detalj($"Program som kjører: {p.Sti ?? p.Navn} (PID {g.Key}) · port {portene} · {g.Count()} forbindelse{(g.Count() == 1 ? "" : "r")}");
+            f.ErstattDetalj($"Program som kjører: {p.Sti ?? p.Navn} (PID {g.Key}) · port ", $"Program som kjører: {p.Sti ?? p.Navn} (PID {g.Key}) · port {portene} · {g.Count()} forbindelse{(g.Count() == 1 ? "" : "r")}");
             f.Tidspunkt(DateTime.Now, DateTime.Now);
             _funnPid.GetOrAdd(f, _ => new HashSet<int>()).Add(g.Key);
         }

@@ -3,6 +3,7 @@
 # Stier (C:\...) og nettadresser oversettes aldri. Ord som mangler her, står igjen på norsk.
 
 # ---------- Mønstre: datoer og tall ----------
+~^(\d+) land$|$1 countries
 ~(\d{1,2})\. jan\.? (\d{4})|$1 Jan $2
 ~(\d{1,2})\. feb\.? (\d{4})|$1 Feb $2
 ~(\d{1,2})\. mars? ?\.? (\d{4})|$1 Mar $2
