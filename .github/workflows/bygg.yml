@@ -33,6 +33,9 @@ jobs:
       - name: Selvtest (godkjentlista kan ikke lures)
         run: dotnet run --project src/AISkanner.Cli -c Release --no-build -- --selvtest
 
+      - name: Kontroll (falske AI-spor i %TEMP%, alle alarmer skal slå ut)
+        run: dotnet run --project src/AISkanner.Cli -c Release --no-build -- --kontroll
+
       - name: Bygg programmet
         run: dotnet publish src/AISkanner -c Release -o publish
 
