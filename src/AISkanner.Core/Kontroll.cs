@@ -162,6 +162,15 @@ public sealed partial class Skanner
         Sjekk(t.Modeller == 2, $"AI-modeller i overskriften skulle vært bare språkmodellen og modellfila, men ble {t.Modeller}");
         Sjekk(t.Innebygd == 3, $"programmer med innebygd AI skulle vært tre, men ble {t.Innebygd}");
         Sjekk(t.Apper == 0, "innebygd AI fra leverandør telles som AI-app eller agent");
+        Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("5 AI-funn: 2 lokale AI-modeller", StringComparison.Ordinal),
+            "overskriften er ikke summen av alle AI-funn med lokale AI-modeller først");
+
+        // Samme komponent i flere versjoner eller med to utgivernavn skal bli én rad
+        Sjekk(UtenVersjon("Microsoft.WindowsAppRuntime.1.8") == UtenVersjon("Microsoft.WindowsAppRuntime.2"), "WindowsAppRuntime 1.8 og 2 blir to rader");
+        Sjekk(Firma("Microsoft Windows") == "Microsoft" && Firma("Microsoft Corporation") == "Microsoft", "«Microsoft Windows» og «Microsoft Corporation» blir to rader");
+        Sjekk(UtenVersjon("Paint") == "Paint" && UtenVersjon("7-Zip") == "7-Zip" && UtenVersjon("Microsoft 365") == "Microsoft 365" && UtenVersjon("Program v2.1") == "Program", "navn uten versjon blir kuttet");
+        var wasdk = s._regler.LeverandorAi.FirstOrDefault(l => l.Ord.Any(o => @"c:\program files\windowsapps\microsoft.windowsappruntime.1.8_8000.1.2_x64__8wekyb3d8bbwe".Contains(o.ToLowerInvariant())));
+        Sjekk(wasdk?.Navn == "Windows App SDK (Windows ML)", $"WindowsAppRuntime gjenkjennes som {wasdk?.Navn ?? "ingenting"}, ikke Windows App SDK");
         return (ok, alle);
     }
 

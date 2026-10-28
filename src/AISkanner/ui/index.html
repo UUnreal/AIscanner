@@ -460,12 +460,16 @@ function kart(f) {
 const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Ukjent AI-spor", "Unknown AI trace")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
-// Overskriften teller AI-modeller som kan kjøres for seg selv. Resten (nettsteder, utvidelser, apper, programmer med innebygd AI) står under.
+// Overskriften er alle AI-funn. Linja under viser hva de er: lokale AI-modeller (kan kjøres for seg selv på PC-en),
+// nettsteder, utvidelser, apper, programmer med innebygd AI og ukjente spor. Summen av linja er tallet i overskriften.
 function visTelling(antall, t) {
-  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : t.modeller === 1 ? L("1 AI-modell funnet", "1 AI model found") : t.modeller ? L(`${t.modeller} AI-modeller funnet`, `${t.modeller} AI models found`) : L("Ingen AI-modeller funnet", "No AI models found");
-  const andre = [[t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")]]
-    .filter(x => x[0] > 0).map(x => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}`);
-  $("andreFunn").textContent = andre.length ? "+ " + andre.join(" · ") : "";
+  const deler = [[t.modeller, L("lokal AI-modell", "local AI model"), L("lokale AI-modeller", "local AI models")], [t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")]]
+    .filter(x => x[0] > 0);
+  const sum = deler.reduce((a, x) => a + x[0], 0) || antall;
+  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 AI-funn", "1 AI finding") : L(`${sum} AI-funn`, `${sum} AI findings`);
+  // Står det bare én eller to lokale AI-modeller, vises navnet, så det er klart hva de er
+  const navn = (t.modellNavn || []).length && t.modellNavn.length <= 2 ? ` (${t.modellNavn.join(", ")})` : "";
+  $("andreFunn").textContent = deler.map((x, i) => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}${i === 0 && t.modeller > 0 ? navn : ""}`).join(" · ");
 }
 
 // Én tabell: høy risiko først. Hver rad: AI-modell (med det viktigste på høyst tre ord), risiko og hvor den ligger.
@@ -474,7 +478,7 @@ function visResultat(funn, inf) {
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO[a[0].risiko] - RISIKO[b[0].risiko] || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null;
   const ant = r => alle.filter(f => f.risiko === r).length;
-  visTelling(funn.length, info.telling || { modeller: alle.filter(f => /modell|model/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0 });
+  visTelling(funn.length, info.telling || { modeller: alle.filter(f => /modell|model/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0, innebygd: 0, spor: 0 });
   $("bar").innerHTML = funn.length ? ["rod", "gul", "gronn"].filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
   tegnFordeling();
   tegnBunn();

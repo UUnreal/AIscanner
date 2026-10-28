@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-28l",
+  "versjon": "2026-10-28m",
   "produkter": [
     {
       "navn": "Ollama",
@@ -604,6 +604,17 @@
       "utgiver": "Microsoft",
       "hva": "språkmodell og bildemodeller innebygd i Windows",
       "bekreftet": false
+    },
+    {
+      "ord": [
+        "microsoft.windowsappruntime",
+        "windowsappruntime"
+      ],
+      "navn": "Windows App SDK (Windows ML)",
+      "utgiver": "Microsoft",
+      "hva": "AI-motor (Windows ML og ONNX Runtime) som Windows-apper deler",
+      "bekreftet": true,
+      "kilde": "Windows ML følger med Windows App SDK fra 1.8: https://learn.microsoft.com/windows/apps/windows-app-sdk/release-notes/windows-app-sdk-1-8 og https://learn.microsoft.com/windows/ai/new-windows-ml/onnx-versions. Hver versjon (1.8, 2 osv.) er en egen pakke, men samme komponent."
     },
     {
       "ord": [

@@ -85,18 +85,28 @@ public static class Oversikt
         return (modeller, nettsteder, utvidelser, apper, innebygd);
     }
 
-    /// <summary>Tellingen som tekst, i samme rekkefølge som på skjermen.</summary>
+    /// <summary>Navnene på de lokale AI-modellene, så det står hva de er når det bare er én eller to.</summary>
+    public static List<string> ModellNavn(IEnumerable<Funn> funn) =>
+        funn.Where(f => f.Modeller > 0 && f.Type != "IT-regel" && f.Gruppe != "spor").Select(Navn).Distinct().ToList();
+
+    /// <summary>Tellingen som tekst, som på skjermen: alle AI-funn, og hva de er.</summary>
     public static string TellingTekst(IEnumerable<Funn> funn)
     {
         var (m, n, u, a, i) = Telling(funn);
-        var deler = new List<string> { m == 1 ? "1 AI-modell" : $"{m} AI-modeller" };
+        int s = funn.Count(f => f.Gruppe == "spor");
+        var deler = new List<string>();
+        var navn = ModellNavn(funn);
+        var hvilke = navn.Count is > 0 and <= 2 ? $" ({string.Join(", ", navn)})" : "";
+        if (m > 0) deler.Add((m == 1 ? "1 lokal AI-modell" : $"{m} lokale AI-modeller") + hvilke);
         if (n > 0) deler.Add(n == 1 ? "1 AI-nettsted" : $"{n} AI-nettsteder");
         if (u > 0) deler.Add(u == 1 ? "1 nettleserutvidelse" : $"{u} nettleserutvidelser");
         if (a > 0) deler.Add(a == 1 ? "1 AI-app eller agent" : $"{a} AI-apper og agenter");
         if (i > 0) deler.Add(i == 1 ? "1 program med innebygd AI" : $"{i} programmer med innebygd AI");
-        int s = funn.Count(f => f.Gruppe == "spor");
         if (s > 0) deler.Add(s == 1 ? "1 ukjent AI-spor" : $"{s} ukjente AI-spor");
-        return deler.Count == 1 ? deler[0] : string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
+        int sum = m + n + u + a + i + s;
+        if (sum == 0) return "Ingen AI";
+        var hode = sum == 1 ? "1 AI-funn" : $"{sum} AI-funn";
+        return deler.Count == 1 ? hode : $"{hode}: " + string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
     }
 
     /// <summary>Navnet uten forklarende forstavelse: "AI-modell: Llama" blir "Llama".</summary>

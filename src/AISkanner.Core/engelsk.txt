@@ -22,6 +22,7 @@
 ~(\d),(\d)|$1.$2
 ~(\d) mrd\. parametre|$1 billion parameters
 ~(\d) mill\. parametre|$1 million parameters
+~(\d+) mapper\b|$1 folders
 
 # ---------- Måneder alene ----------
 januar|January
@@ -91,6 +92,10 @@ Ikke sett|Not seen
 # ---------- Telling ----------
 AI-modeller funnet|AI models found
 1 AI-modell funnet|1 AI model found
+lokale AI-modeller|local AI models
+lokal AI-modell|local AI model
+1 AI-funn|1 AI finding
+AI-funn|AI findings
 AI-modeller|AI models
 AI-modell|AI model
 AI-nettsteder|AI websites

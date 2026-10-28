@@ -273,7 +273,12 @@ public sealed partial class Skanner
         var risiko = !kjent ? Risiko.Rod : stor ? Risiko.Gul : Risiko.Gronn;
 
         var regel = FinnRegel($"{produkt} {exe}");
-        var navn = regel?.Navn ?? (utgiver != null && !produkt.Inneholder(Forkort(utgiver)) ? $"{produkt} ({Forkort(utgiver)})" : produkt);
+        // Samme komponent skal bli én rad: kjente mapper får navnet fra regelfila uten utgiver, og ellers fjernes
+        // versjonsnummer (WindowsAppRuntime.1.8 og .2) og utgiveren kortes til firmaet («Microsoft Windows» og
+        // «Microsoft Corporation» er begge Microsoft). Hver kopi står fortsatt som egen mappe i detaljene.
+        var firma = utgiver == null ? null : Firma(utgiver);
+        var navn = regel?.Navn ?? frø?.Navn
+                   ?? (firma != null && !UtenVersjon(produkt).Inneholder(firma) ? $"{UtenVersjon(produkt)} ({firma})" : UtenVersjon(produkt));
         var hva = frø?.Hva ?? (app.Filer.Count > 0 ? "AI-modeller som kjører lokalt i programmet" : "AI-motor som kan kjøre AI-modeller lokalt");
         var hvorfor = kjent
             ? $"{Forkort(utgiver!)} har lagt AI inn i programmet: {hva}. Kom med programmet eller en oppdatering, uten at noen ble spurt."
@@ -295,9 +300,12 @@ public sealed partial class Skanner
         bool iGang = kjorer.Any(k => k.StartsWith(rot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
         f.Tidspunkt(lagtInn, iGang ? DateTime.Now : oppdatert);
 
+        // Flere kopier eller versjoner av samme komponent er slått sammen: teksten gjelder alle
+        int kopier = f.Detaljer.Count(d => d.StartsWith("Mappe: ", StringComparison.Ordinal)) + 1;
         var deler = new List<string>();
-        if (utgiver != null) deler.Add($"Fra {Forkort(utgiver)}");
-        if (app.Filer.Count > 0) deler.Add($"{app.Filer.Count} {(app.Filer.Count == 1 ? "innebygd modellfil" : "innebygde modellfiler")} ({Rapport.Storrelse(storrelse)})");
+        if (utgiver != null) deler.Add($"Fra {Firma(utgiver)}");
+        if (f.Innebygde > 0) deler.Add($"{f.Innebygde} {(f.Innebygde == 1 ? "innebygd modellfil" : "innebygde modellfiler")}{(kopier == 1 ? $" ({Rapport.Storrelse(storrelse)})" : "")}");
+        if (kopier > 1) deler.Add($"{kopier} mapper");
         if (app.Motorer.Count > 0) deler.Add($"AI-motor: {string.Join(", ", app.Motorer)}");
         if (lagtInn != null) deler.Add($"lagt inn {Tid(lagtInn)}");
         f.Bruk = string.Join(", ", deler) + (iGang ? ". Kjører nå." : ".");
@@ -337,6 +345,18 @@ public sealed partial class Skanner
         var i = mappe.IndexOf('_');
         return i > 0 ? mappe.Substring(0, i) : mappe;
     }
+
+    /// <summary>"Microsoft.WindowsAppRuntime.1.8" → "Microsoft.WindowsAppRuntime", "Program v2.1" → "Program". "Microsoft 365" står.</summary>
+    internal static string UtenVersjon(string navn)
+    {
+        var u = Regex.Replace(navn, @"(?:\.\d+(?:\.\d+)*|[\s_-]v?\d+(?:\.\d+)+)$", "", RegexOptions.IgnoreCase);
+        return u.Length >= 3 ? u : navn;
+    }
+
+    /// <summary>Firmaet bak en utgiver: «Microsoft Windows» og «Microsoft Corporation» blir begge «Microsoft».</summary>
+    internal static string Firma(string utgiver) =>
+        KjenteLeverandorer.Where(k => Regex.IsMatch(utgiver, @"(?<![\p{L}\d])" + Regex.Escape(k) + @"(?![\p{L}\d])", RegexOptions.IgnoreCase))
+            .OrderByDescending(k => k.Length).FirstOrDefault() ?? Forkort(utgiver);
 
     /// <summary>"Microsoft Corporation" → "Microsoft", "NVIDIA Corporation" → "NVIDIA".</summary>
     private static string Forkort(string utgiver) =>

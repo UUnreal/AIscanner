@@ -29,6 +29,25 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.10] - 2026-10-28
+
+Venter på test på Windows.
+
+### Endret
+- **Overskriften er alle AI-funn**, og linja under viser hva de er: lokale AI-modeller først, så nettsteder,
+  utvidelser, apper og agenter, programmer med innebygd AI og ukjente spor. Summen av linja er tallet i overskriften.
+  Før sto bare de lokale AI-modellene i overskriften, og det var uklart hva tallet betydde når resten var langt større.
+  Samme tekst står øverst i rapporten.
+- Når det bare er én eller to lokale AI-modeller, står navnet i parentes (for eksempel språkmodellen i Chrome).
+
+### Rettet
+- **Samme komponent blir én rad.** Leverandørfunn med navn fra regelfila får ikke lenger utgiveren bak navnet, så
+  to kopier der den ene er signert «Microsoft Windows» og den andre «Microsoft Corporation» ikke blir to rader.
+  Utgiveren kortes til firmaet (`Firma`), og versjonsnummer på slutten av pakkenavn fjernes (`UtenVersjon`). Hver
+  mappe står fortsatt i detaljene, og raden sier hvor mange mapper den gjelder.
+- **Windows App SDK (Windows ML)** er en kjent leverandørkomponent. `Microsoft.WindowsAppRuntime.1.8`, `.2` osv.
+  er versjoner av samme pakke, og blir én rad. Kilde i `regler.json`.
+
 ## [2.19.9] - 2026-10-28
 
 Gjennomgang av falske AI-funn i reglene for skygge-AI, nettsteder og nettverk. Venter på test på Windows.
