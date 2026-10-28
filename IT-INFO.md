@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.5. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.6. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -200,6 +200,11 @@ viser OK eller FEIL for hver alarm og sletter mappa. Ingen ekte mapper leses, in
 Antivirus kan reagere på de falske sporene (for eksempel en fil som ser ut som en kjent skadevare-fil). Nettverksreglene
 kontrolleres med et kunstig nettbilde, så kontrollen viser at reglene virker, ikke at Windows ga nettverksdata.
 Symlinker, Prefetch, BAM og Run-nøkkelen kontrolleres ikke.
+
+Kontrollen sjekker også reglene for kinesisk AI: vertsnavn for kinesiske AI-nettsteder og API-er skal treffe en tjeneste
+i Kina med høy risiko, vanlige kinesiske nettsteder som ikke er AI (baidu.com, qq.com, aliyun.com, tiktok.com …) skal
+ikke treffe, kinesiske AI-programmer og VS Code-utvidelser skal kjennes igjen, og modellarkitekturer skal peke entydig
+på en kinesisk familie. Alt skal være OK; i 2.19.6 er det 98 av 98.
 
 ## Hva den aldri leser
 

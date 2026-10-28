@@ -40,7 +40,7 @@ internal static class ModellGjenkjenning
     private static readonly Regex OllamaBlob = new(@"[\\/]blobs[\\/]sha256[-:]([0-9a-f]{64})$", RegexOptions.IgnoreCase);
     private static readonly Regex HfBlob = new(@"[\\/]models--[^\\/]+[\\/]blobs[\\/]([0-9a-f]{64})$", RegexOptions.IgnoreCase);
 
-    private static string Norm(string? s) => Regex.Replace((s ?? "").ToLowerInvariant(), "[^a-z0-9]", "");
+    internal static string Norm(string? s) => Regex.Replace((s ?? "").ToLowerInvariant(), "[^a-z0-9]", "");
 
     public static ModellIdentitet Finn(ModellFormat.Modell m, string sti, Regelsett regler, string? kildenavn)
     {

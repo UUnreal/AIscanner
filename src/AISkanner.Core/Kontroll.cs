@@ -47,6 +47,61 @@ public sealed partial class Skanner
         new("Domener kjent fra AI-misbruk", "Nett: kjent domene i DNS-bufferen"),
     };
 
+    // Kinesisk AI: vertsnavn som skal gjenkjennes som en tjeneste i Kina, og navn som ikke skal (falske treff)
+    private static readonly string[] KinaVerter =
+    {
+        "chat.deepseek.com", "api.deepseek.com", "chat.qwen.ai", "dashscope.aliyuncs.com", "modelscope.cn", "kimi.com", "api.moonshot.ai",
+        "doubao.com", "ark.cn-beijing.volces.com", "api.coze.com", "trae.ai", "yiyan.baidu.com", "qianfan.baidubce.com", "yuanbao.tencent.com",
+        "hunyuan.tencentcloudapi.com", "chatglm.cn", "open.bigmodel.cn", "minimax.io", "api.stepfun.com", "api.lingyiwanwu.com",
+        "api.baichuan-ai.com", "spark-api.xf-yun.com", "api.sensenova.cn", "api.siliconflow.cn", "klingai.com", "vidu.com",
+    };
+    private static readonly string[] IkkeAiVerter =
+    {
+        "www.baidu.com", "qq.com", "www.tencent.com", "cloud.tencent.com", "www.aliyun.com", "www.alibaba.com", "taobao.com",
+        "www.bytedance.com", "www.tiktok.com", "www.capcut.com", "www.xfyun.cn", "www.sensetime.com",
+    };
+    // Programmer som skal kjennes igjen som kinesisk AI, og stier som ikke skal (f.eks. en bruker som heter Kimi)
+    private static readonly (string Tekst, string Navn)[] KinaProgrammer =
+    {
+        (@"C:\Users\a\AppData\Local\Programs\Trae\Trae.exe", "Trae / MarsCode (ByteDance)"),
+        (@"C:\Users\a\AppData\Local\Doubao\Application\Doubao.exe", "Doubao (ByteDance)"),
+        (@"C:\Users\a\.vscode\extensions\alibaba-cloud.tongyi-lingma-2.5.0", "Qwen / Tongyi (Alibaba)"),
+        (@"C:\Users\a\.vscode\extensions\aminer.codegeex-2.20.0", "CodeGeeX (Zhipu)"),
+        (@"C:\Users\a\.vscode\extensions\baiducomate.comate-3.1.0", "Baidu Comate"),
+        (@"C:\Users\a\.vscode\extensions\tencent-cloud.coding-copilot-3.0.0", "Tencent CodeBuddy"),
+    };
+    private static readonly string[] IkkeKinaProgrammer =
+    {
+        @"C:\Users\Kimi\Documents\notater.exe", @"C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE", @"C:\Program Files\Ernie Ball\app.exe",
+    };
+    // Modellarkitekturer (GGUF general.architecture eller config.json model_type) som entydig peker på en kinesisk modellfamilie
+    private static readonly string[] KinaArkitekturer =
+    {
+        "qwen2", "qwen3", "qwen3moe", "qwen3next", "deepseek2", "deepseek_v3", "glm4moe", "chatglm", "kimik2", "internlm2", "baichuan", "minicpm",
+        "hunyuan-moe", "hunyuan_v1_dense", "ernie4_5", "ernie4_5_moe", "seed_oss", "minimax-m2", "bailingmoe2", "dots1",
+    };
+
+    /// <summary>Kontrollen av reglene for kinesisk AI. Gir (riktige, alle) og skriver én linje per feil.</summary>
+    private static (int Ok, int Alle) KinaKontroll(Skanner s, Regelsett regler, StringBuilder sb)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Kina: {hva}"); }
+        foreach (var v in KinaVerter)
+            Sjekk(s.Tjeneste(v) is { Land: "CN" } t && RisikoTekst.Fra(t.Risiko) == Risiko.Rod, $"{v} gjenkjennes ikke som AI i Kina");
+        foreach (var v in IkkeAiVerter)
+            Sjekk(s.Tjeneste(v) == null, $"{v} er ikke AI, men ble gjenkjent som {s.Tjeneste(v)?.Navn}");
+        foreach (var (tekst, navn) in KinaProgrammer)
+            Sjekk(s.FinnRegel(tekst)?.Navn == navn, $"{tekst} gjenkjennes ikke som {navn}");
+        foreach (var tekst in IkkeKinaProgrammer)
+            Sjekk(s.FinnRegel(tekst) == null, $"{tekst} er ikke AI, men ble gjenkjent som {s.FinnRegel(tekst)?.Navn}");
+        foreach (var ark in KinaArkitekturer)
+        {
+            var fam = regler.Modellfamilier.Where(f => f.Arkitekturer.Any(x => ModellGjenkjenning.Norm(x) == ModellGjenkjenning.Norm(ark))).ToList();
+            Sjekk(fam.Count == 1 && fam[0].Land == "CN", $"modellarkitektur {ark} peker ikke entydig på en kinesisk familie");
+        }
+        return (ok, alle);
+    }
+
     /// <summary>Kjører kontrollen og gir en tekst med OK/FEIL per alarm. Ingenting lagres.</summary>
     public static string Kontroll(Regelsett regler)
     {
@@ -82,6 +137,10 @@ public sealed partial class Skanner
             nb.Tilkoblinger.Add(inn);
             nb.Tilkoblinger.Add(ut);
             nb.Dns[ut.Fjern] = new List<string> { "api.openai.com" };
+            // Kjent AI-program som sender til en AI-tjeneste i Kina
+            var kina = new Tilkobling(9001, IPAddress.Parse("192.168.1.10"), 51003, IPAddress.Parse("116.205.1.2"), 443);
+            nb.Tilkoblinger.Add(kina);
+            nb.Dns[kina.Fjern] = new List<string> { "api.deepseek.com" };
             nb.Lokale.Add(new Tilkobling(9003, IPAddress.Loopback, 51002, IPAddress.Loopback, 11434));
             s.Trafikk(nb);
             s.InnTilAiServer(nb);
@@ -103,7 +162,15 @@ public sealed partial class Skanner
             bool rent = !new[] { "HEMMELIG-INNHOLD", "sk-proj-KONTROLL", "QQBBAAKONTROLL", "slett-alt-kontroll" }.Any(rapport.Contains);
             if (rent) ok++;
             sb.AppendLine($"{(rent ? "OK  " : "FEIL")}  Ingen nøkler, kommandoer eller øktinnhold i rapporten");
-            int alle = Kontrollspor.Length + 1;
+            // Data til Kina: rødt, og det står hvor dataene går
+            var ollama = funn.FirstOrDefault(y => y.Trafikk.Any(m => m.Adresse == "api.deepseek.com"));
+            bool tilKina = ollama != null && ollama.Risiko == Risiko.Rod && ollama.Advarsler.Any(a => a.StartsWith("Sender data til", StringComparison.Ordinal) && a.Contains("Kina"));
+            if (tilKina) ok++;
+            sb.AppendLine($"{(tilKina ? "OK  " : "FEIL")}  Nett: AI-program som sender til DeepSeek blir rødt med «Sender data til … Kina»");
+            var (kinaOk, kinaAlle) = KinaKontroll(s, regler, sb);
+            ok += kinaOk;
+            sb.AppendLine($"{(kinaOk == kinaAlle ? "OK  " : "FEIL")}  Kinesisk AI: {kinaOk} av {kinaAlle} regler riktige (nettsteder, API-er, programmer, modellfamilier og navn som ikke skal treffe)");
+            int alle = Kontrollspor.Length + 2 + kinaAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

@@ -227,7 +227,7 @@ public sealed partial class Skanner
     private static bool Treffer(string tekst, string ord) =>
         Regex.IsMatch(tekst, "(?<![a-z0-9])" + Regex.Escape(ord.ToLowerInvariant()) + "(?![a-z0-9])", RegexOptions.IgnoreCase);
 
-    private Produkt? FinnRegel(string? tekst, bool utvidelse = false)
+    internal Produkt? FinnRegel(string? tekst, bool utvidelse = false)
     {
         if (string.IsNullOrWhiteSpace(tekst)) return null;
         IEnumerable<Produkt> kandidater = utvidelse

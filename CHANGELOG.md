@@ -29,6 +29,38 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.6] - 2026-10-28
+
+Ikke testet på Windows. Reglene er kontrollert med `--kontroll` (98 av 98) og selvtesten.
+
+### Lagt til
+- **Bedre dekning av kinesisk AI.** Fra før: DeepSeek, Qwen, Kimi, Doubao, Zhipu/GLM, MiniMax, Kling, Baidu ERNIE-API og
+  modellfamiliene Qwen, DeepSeek, GLM, Yi, Kimi, InternLM, Baichuan og MiniCPM. Nytt:
+  - Nettsteder: ERNIE/Yiyan (Baidu), Yuanbao og Hunyuan (Tencent), Coze og Jimeng/Dreamina (ByteDance), StepFun/Yuewen,
+    01.AI, Baichuan, iFlytek Spark, SenseChat, Vidu. Flere adresser for Kimi (kimi.ai, moonshot.cn), Qwen (qwen.ai,
+    tongyi.com) og Doubao (cici.com, utenlandsversjonen).
+  - API-er brukt av programmer: Tencent Hunyuan, BytePlus ModelArk og Coze (ByteDance), Trae/MarsCode, StepFun, 01.AI,
+    Baichuan, iFlytek Spark, SenseNova, SiliconFlow (kinesisk drift av DeepSeek og Qwen) og ModelScope (Alibabas
+    modellbibliotek, der modeller lastes ned fra Kina).
+  - Programmer og utvidelser: Trae (ByteDances AI-IDE), Doubao, Yuanbao, Qwen/Tongyi Lingma, Kimi, Baidu Comate,
+    CodeGeeX, Tencent CodeBuddy og iFlyCode.
+  - Modellfamilier på arkitektur: Hunyuan (Tencent), ERNIE 4.5 (Baidu), Seed-OSS (ByteDance), MiniMax-M2, Ling/Ring
+    (Ant Group) og dots.llm (rednote). Qwen3-Next, Qwen3-VL-MoE, GLM-4V og InternVL legges til eksisterende familier.
+    Ordforrådsstørrelse er ikke lagt inn for de nye; de kjennes igjen på arkitektur eller navn.
+  - Selskap og land for de nye navnene, så «Kommer fra» viser Kina og riktig selskap.
+- **Kontroll av reglene for Kina** i `--kontroll`: 26 vertsnavn skal treffe en tjeneste i Kina med høy risiko, 12
+  vanlige kinesiske nettsteder (baidu.com, qq.com, aliyun.com, tiktok.com, capcut.com …) skal ikke treffe, 6 program-
+  og utvidelsesstier skal kjennes igjen og 3 skal ikke (blant annet en bruker som heter Kimi), og 20 arkitekturer skal
+  peke entydig på en kinesisk familie. I tillegg: et AI-program som sender til DeepSeek, blir rødt med «Sender data
+  til Kina».
+
+Data som sendes til Kina, var allerede høy risiko (Kina står på lista over høyrisikoland). En kinesisk modell som
+kjører lokalt, vises fortsatt som «Kommer fra Kina» og «Kjører lokalt, data sendes ikke dit»; det er ikke det samme som
+at data sendes til Kina.
+
+Kilder: leverandørenes egne nettsteder og API-dokumentasjon, og arkitekturnavnene i llama.cpp og Hugging Face
+transformers. Adressene er ikke slått opp på nettet av programmet.
+
 ## [2.19.5] - 2026-10-28
 
 Ikke testet på Windows. Visningen er testet i nettleser, bredt og smalt vindu, norsk og engelsk.

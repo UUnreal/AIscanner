@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-26f",
+  "versjon": "2026-10-28k",
   "produkter": [
     {
       "navn": "Ollama",
@@ -400,6 +400,136 @@
       "enkelt": "AI-utvidelse i nettleseren",
       "hvorforEnkelt": "En AI-utvidelse som kan lese det som står på nettsider.",
       "rad": "Sjekk hvilke sider den har tilgang til. Fjern den hvis du ikke bruker den."
+    },
+    {
+      "navn": "Trae / MarsCode (ByteDance)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "trae",
+        "marscode"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kinesisk AI-assistent for koding. Koden du jobber med, sendes til Kina.",
+      "enkelt": "Kinesisk AI for koding",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Doubao (ByteDance)",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "doubao"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.",
+      "enkelt": "Kinesisk AI-tjeneste",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Yuanbao (Tencent)",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "yuanbao"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.",
+      "enkelt": "Kinesisk AI-tjeneste",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Qwen / Tongyi (Alibaba)",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "tongyi",
+        "qianwen"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.",
+      "enkelt": "Kinesisk AI-tjeneste",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Kimi (Moonshot)",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "kimi.exe"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Data lagres i Kina. Flere land og Datatilsynet har advart mot bruk med sensitive data.",
+      "enkelt": "Kinesisk AI-tjeneste",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Baidu Comate",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "comate",
+        "baiducomate"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kinesisk AI-assistent for koding. Koden du jobber med, sendes til Kina.",
+      "enkelt": "Kinesisk AI for koding",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "CodeGeeX (Zhipu)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "codegeex"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kinesisk AI-assistent for koding. Koden du jobber med, sendes til Kina.",
+      "enkelt": "Kinesisk AI for koding",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "Tencent CodeBuddy",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "codebuddy",
+        "tencent-cloud.coding-copilot"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kinesisk AI-assistent for koding. Koden du jobber med, sendes til Kina.",
+      "enkelt": "Kinesisk AI for koding",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "iFlyCode (iFlytek)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "iflycode"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Kinesisk AI-assistent for koding. Koden du jobber med, sendes til Kina.",
+      "enkelt": "Kinesisk AI for koding",
+      "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
+      "rad": "Avinstaller den på jobb-PC-er."
     }
   ],
   "ukjentUtvidelseOrd": [
@@ -1151,7 +1281,9 @@
       "navn": "Kimi",
       "domener": [
         "kimi.com",
-        "kimi.moonshot.cn"
+        "kimi.moonshot.cn",
+        "kimi.ai",
+        "moonshot.cn"
       ],
       "risiko": "rod",
       "land": "CN",
@@ -1163,7 +1295,9 @@
       "navn": "Qwen",
       "domener": [
         "chat.qwen.ai",
-        "tongyi.aliyun.com"
+        "tongyi.aliyun.com",
+        "qwen.ai",
+        "tongyi.com"
       ],
       "risiko": "rod",
       "land": "CN",
@@ -1174,7 +1308,8 @@
     {
       "navn": "Doubao",
       "domener": [
-        "doubao.com"
+        "doubao.com",
+        "cici.com"
       ],
       "risiko": "rod",
       "land": "CN",
@@ -1338,6 +1473,133 @@
       "enkelt": "AI-søk",
       "hvorfor": "Alt du skriver eller limer inn sendes til selskapet bak. Gratiskontoer kan brukes til å trene AI-en.",
       "rad": "Ikke lim inn kundedata, passord eller interne dokumenter. På jobb: bruk bare tjenester bedriften har avtale med."
+    },
+    {
+      "navn": "ERNIE / Yiyan (Baidu)",
+      "domener": [
+        "yiyan.baidu.com",
+        "ernie.baidu.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Yuanbao (Tencent)",
+      "domener": [
+        "yuanbao.tencent.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Hunyuan (Tencent)",
+      "domener": [
+        "hunyuan.tencent.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Coze (ByteDance)",
+      "domener": [
+        "coze.com",
+        "coze.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk plattform for AI-agenter",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Jimeng / Dreamina (ByteDance)",
+      "domener": [
+        "jimeng.jianying.com",
+        "dreamina.capcut.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI for bilder og video",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "StepFun / Yuewen",
+      "domener": [
+        "stepfun.com",
+        "yuewen.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "01.AI (Yi)",
+      "domener": [
+        "01.ai",
+        "lingyiwanwu.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Baichuan",
+      "domener": [
+        "baichuan-ai.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "iFlytek Spark",
+      "domener": [
+        "xinghuo.xfyun.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "SenseChat (SenseTime)",
+      "domener": [
+        "chat.sensetime.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI-chat",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
+    },
+    {
+      "navn": "Vidu (Shengshu)",
+      "domener": [
+        "vidu.com",
+        "vidu.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI for video",
+      "hvorfor": "Det du skriver lagres i Kina. Flere land, også Norge, har advart mot å bruke kinesiske AI-tjenester til sensitive data.",
+      "rad": "Ikke bruk den på jobb-PC eller med jobbdata."
     }
   ],
   "hoyrisikoLand": [
@@ -1675,6 +1937,125 @@
       "land": "CN",
       "enkelt": "Kinesisk AI brukt av et program",
       "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Tencent Hunyuan API",
+      "domener": [
+        "hunyuan.tencentcloudapi.com",
+        "api.hunyuan.cloud.tencent.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "BytePlus ModelArk (ByteDance)",
+      "domener": [
+        "ark.ap-southeast.bytepluses.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Coze API (ByteDance)",
+      "domener": [
+        "api.coze.com",
+        "api.coze.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Trae / MarsCode (ByteDance)",
+      "domener": [
+        "trae.ai",
+        "marscode.com",
+        "marscode.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "StepFun API",
+      "domener": [
+        "api.stepfun.com",
+        "api.stepfun.ai"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "01.AI API (Yi)",
+      "domener": [
+        "api.lingyiwanwu.com",
+        "api.01.ai"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "Baichuan API",
+      "domener": [
+        "api.baichuan-ai.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "iFlytek Spark API",
+      "domener": [
+        "spark-api.xf-yun.com",
+        "spark-api-open.xf-yun.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "SenseNova API (SenseTime)",
+      "domener": [
+        "api.sensenova.cn"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Programmet sender innhold til en kinesisk AI-tjeneste. Kinesisk lov kan gi myndighetene tilgang til dataene."
+    },
+    {
+      "navn": "SiliconFlow",
+      "domener": [
+        "api.siliconflow.cn",
+        "api.siliconflow.com"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Kinesisk tjeneste som kjører DeepSeek, Qwen og andre modeller for programmer. Innholdet sendes til Kina."
+    },
+    {
+      "navn": "ModelScope (Alibaba, modeller)",
+      "domener": [
+        "modelscope.cn",
+        "modelscope.ai"
+      ],
+      "risiko": "rod",
+      "land": "CN",
+      "enkelt": "Kinesisk AI brukt av et program",
+      "hvorfor": "Alibabas modellbibliotek, den kinesiske motparten til Hugging Face. Programmet laster ned modeller eller bruker AI derfra."
     }
   ],
   "_modellfamilier": "Modellfamilier gjenkjennes på arkitektur og størrelsen på ordforrådet (vokab), som følger modellen selv om filen får nytt navn eller finjusteres. 'ord' er tekst i modellnavnet. deltVokab: vokabstørrelsen brukes av mange familier og teller mindre.",
@@ -1728,7 +2109,9 @@
         "qwen3moe",
         "qwen2vl",
         "qwen25vl",
-        "qwen3vl"
+        "qwen3vl",
+        "qwen3next",
+        "qwen3vlmoe"
       ],
       "vokab": [
         151936,
@@ -1851,7 +2234,9 @@
         "glm4",
         "chatglm",
         "glm4moe",
-        "glm"
+        "glm",
+        "glm4v",
+        "glm4v_moe"
       ],
       "vokab": [
         151552,
@@ -1898,7 +2283,8 @@
       "land": "CN",
       "arkitekturer": [
         "internlm2",
-        "internlm3"
+        "internlm3",
+        "internvl_chat"
       ],
       "vokab": [
         92544
@@ -2041,6 +2427,93 @@
         "e5-"
       ],
       "type": "søkemodell"
+    },
+    {
+      "navn": "Hunyuan",
+      "utgiver": "Tencent",
+      "land": "CN",
+      "arkitekturer": [
+        "hunyuan-moe",
+        "hunyuan-dense",
+        "hunyuan_v1_moe",
+        "hunyuan_v1_dense"
+      ],
+      "vokab": [],
+      "ord": [
+        "hunyuan"
+      ]
+    },
+    {
+      "navn": "ERNIE",
+      "utgiver": "Baidu",
+      "land": "CN",
+      "arkitekturer": [
+        "ernie4_5",
+        "ernie4_5-moe"
+      ],
+      "vokab": [],
+      "ord": [
+        "ernie-4",
+        "ernie4"
+      ]
+    },
+    {
+      "navn": "Seed-OSS",
+      "utgiver": "ByteDance",
+      "land": "CN",
+      "arkitekturer": [
+        "seed_oss"
+      ],
+      "vokab": [],
+      "ord": [
+        "seed-oss"
+      ]
+    },
+    {
+      "navn": "MiniMax",
+      "utgiver": "MiniMax",
+      "land": "CN",
+      "arkitekturer": [
+        "minimax-m2",
+        "minimax_m2"
+      ],
+      "vokab": [],
+      "ord": [
+        "minimax-m1",
+        "minimax-m2",
+        "minimax-text"
+      ]
+    },
+    {
+      "navn": "Ling / Ring",
+      "utgiver": "Ant Group",
+      "land": "CN",
+      "arkitekturer": [
+        "bailingmoe",
+        "bailingmoe2",
+        "bailing_moe_v2"
+      ],
+      "vokab": [],
+      "ord": [
+        "ling-lite",
+        "ling-plus",
+        "ling-mini",
+        "ling-flash",
+        "ring-mini",
+        "ring-flash"
+      ]
+    },
+    {
+      "navn": "dots.llm",
+      "utgiver": "rednote (Xiaohongshu)",
+      "land": "CN",
+      "arkitekturer": [
+        "dots1"
+      ],
+      "vokab": [],
+      "ord": [
+        "dots.llm"
+      ]
     }
   ],
   "godkjentAi": [],
@@ -2115,7 +2588,34 @@
     "Phi": "US:Microsoft",
     "Gemma": "US:Google",
     "Edge": "US:Microsoft",
-    "Chrome": "US:Google"
+    "Chrome": "US:Google",
+    "StepFun": "CN",
+    "01.AI": "CN",
+    "Baichuan": "CN",
+    "iFlytek": "CN",
+    "SenseTime": "CN",
+    "SiliconFlow": "CN",
+    "MiniMax": "CN",
+    "Kuaishou": "CN",
+    "Kling": "CN:Kuaishou",
+    "Ant Group": "CN",
+    "Shengshu": "CN",
+    "Vidu": "CN:Shengshu",
+    "Doubao": "CN:ByteDance",
+    "Coze": "CN:ByteDance",
+    "Trae": "CN:ByteDance",
+    "MarsCode": "CN:ByteDance",
+    "Dreamina": "CN:ByteDance",
+    "Jimeng": "CN:ByteDance",
+    "Hunyuan": "CN:Tencent",
+    "Yuanbao": "CN:Tencent",
+    "CodeBuddy": "CN:Tencent",
+    "ERNIE": "CN:Baidu",
+    "Comate": "CN:Baidu",
+    "Tongyi": "CN:Alibaba",
+    "ModelScope": "CN:Alibaba",
+    "CodeGeeX": "CN:Zhipu",
+    "Yuewen": "CN:StepFun"
   },
   "_daarligeVersjoner": "Pakkeversjoner som er kjent kapret eller ondsinnede og som misbruker AI-verktøy. Treff vises som «Ukjent AI-spor» (rødt). Bare navn og versjon sammenlignes.",
   "daarligeVersjoner": [
