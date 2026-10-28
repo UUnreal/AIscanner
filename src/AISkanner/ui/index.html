@@ -195,10 +195,13 @@
 
   /* ---------- Søker ---------- */
   #soker { align-items: center; justify-content: center; text-align: center; gap: 10px; }
-  .ring { width: 130px; height: 130px; margin-bottom: 18px; animation: snurr 1.4s linear infinite; }
+  /* Søkesirkelen fylles fra 0 til 100 % etter hvor langt søket faktisk har kommet */
+  .ringBoks { position: relative; width: 130px; height: 130px; margin-bottom: 18px; }
+  .ring { width: 130px; height: 130px; transform: rotate(-90deg); }
   .ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
   .ring .spor { stroke: var(--linje); }
-  .ring .bue { stroke: var(--bla); stroke-dasharray: 80 200; }
+  .ring .bue { stroke: var(--bla); stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .35s ease; }
+  .ringBoks .prosent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
   @keyframes snurr { to { transform: rotate(360deg); } }
 
   /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
@@ -369,7 +372,7 @@
 </section>
 
 <section id="soker" class="side">
-  <svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" cx="50" cy="50" r="44"/></svg>
+  <div class="ringBoks"><svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" id="ringBue" cx="50" cy="50" r="44"/></svg><div class="prosent" id="ringProsent" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</div></div>
   <div class="storTittel" style="font-size:26px" data-en="Scanning for AI…">Søker etter AI…</div>
 </section>
 
@@ -1004,6 +1007,7 @@ function motta(m) {
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "nettdata") mottaNett(m);
+  else if (m.type === "prosent") settProsent(m.p);
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
   else if (m.type === "start") { sisteValg = "admin"; start(); }
@@ -1053,7 +1057,13 @@ function settSpråk(l, fraProgram) {
   }
 }
 document.querySelectorAll("#sprak button").forEach(b => b.onclick = () => { if (b.dataset.l !== språk) settSpråk(b.dataset.l); });
-function start() { $("feil").textContent = ""; lukkArk(); vis("soker"); send({ type: sisteValg, revisjon }); }
+function settProsent(p) {
+  p = Math.max(0, Math.min(100, Math.round(p)));
+  $("ringBue").style.strokeDashoffset = (276.46 * (1 - p / 100)).toFixed(2);
+  $("ringProsent").textContent = p + " %";
+  $("ringProsent").setAttribute("aria-valuenow", p);
+}
+function start() { $("feil").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
 $("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon }); } };
 $("igjen").onclick = start;

@@ -181,7 +181,9 @@ public sealed class Hovedvindu : Form
             _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args) };
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
-            _resultat = await Task.Run(() => _skanner.KjorAsync(false));
+            // Progress<int> sender tilbake til UI-tråden; søkesirkelen viser 0–100 % fra faktisk fremdrift
+            var prosent = new Progress<int>(p => Send(new { type = "prosent", p }));
+            _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
             _vist = true;

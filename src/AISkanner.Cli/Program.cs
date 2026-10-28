@@ -50,7 +50,7 @@ var status = new Progress<string>(t => Console.Error.WriteLine(t));
 var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
-var funn = await skanner.KjorAsync(nvd, status);
+var funn = await skanner.KjorAsync(nvd, status, prosent: args.Contains("--prosent") ? new Progress<int>(p => Console.Error.WriteLine($"  {p} %")) : null);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null, funn), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }

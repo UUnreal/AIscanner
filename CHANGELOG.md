@@ -29,6 +29,19 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.1] - 2026-10-28
+
+Ikke testet på Windows.
+
+### Endret
+- **Søkesirkelen viser 0–100 %.** Prosenten regnes ut fra faktisk fremdrift: ferdige sjekker (70 %), hvor lenge
+  lyttevinduet har lyttet mot lengden (25 %) og analysen til slutt (5 %). Den går aldri bakover og når 100 % først når
+  søket er ferdig. `AISkanner.Cli --prosent` skriver prosenten til standard feil.
+
+### Rettet
+- Telleren for ferdige sjekker ble aldri talt opp når ingen lyttet på den (`steg?.Report(Interlocked.Increment(...))`
+  hoppet over hele kallet). Ingen synlig feil før nå, men prosenten hadde stått på 0.
+
 ## [2.19.0] - 2026-10-28
 
 Ikke testet på Windows. Visningen er testet i nettleser med eksempeldata, kjernen med et falskt nettbilde på Linux.

@@ -50,7 +50,7 @@ public sealed partial class Skanner
     /// <summary>Hendelser fra Defender under søket som gjelder dette programmet.</summary>
     public Antivirus.Resultat? Forsvar { get; private set; }
 
-    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null)
+    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null, IProgress<int>? prosent = null)
     {
         _funn.Clear();
         _status = status;
@@ -84,8 +84,35 @@ public sealed partial class Skanner
         using var maling = TestNett == null ? Datamaling.Start() : null;
         // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
         using var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
-        int ferdig = 0;
+        var ferdig = new int[1];
         steg?.Report(0);
+        // Prosent for søkesirkelen, regnet ut fra faktisk fremdrift: ferdige sjekker (70 %), tid brukt av lyttevinduet
+        // mot lengden (25 %) og analysen til slutt (5 %). Sjekkene og lyttevinduet går samtidig. Går aldri bakover.
+        var minstLytt = lytting != null ? Math.Min(60, LytteSekunder) : maling != null ? 5 : 0;
+        int sistProsent = -1;
+        void Rapporter(bool helt = false)
+        {
+            if (prosent == null) return;
+            double lyttet = minstLytt <= 0 ? (Volatile.Read(ref ferdig[0]) == stegliste.Length ? 1 : 0)
+                : Math.Min(1, (lytting?.Sekunder ?? maling?.Sekunder ?? 0) / minstLytt);
+            int p = helt ? 100 : (int)Math.Min(99, 70.0 * Volatile.Read(ref ferdig[0]) / stegliste.Length + 25 * lyttet);
+            lock (stegliste)
+            {
+                if (p <= sistProsent) return;
+                sistProsent = p;
+            }
+            prosent.Report(p);
+        }
+        using var prosentStopp = new CancellationTokenSource();
+        var prosentLop = prosent == null ? Task.CompletedTask : Task.Run(async () =>
+        {
+            while (!prosentStopp.IsCancellationRequested)
+            {
+                Rapporter();
+                try { await Task.Delay(250, prosentStopp.Token).ConfigureAwait(false); } catch (OperationCanceledException) { break; }
+            }
+        });
+        Rapporter();
         await Task.WhenAll(stegliste.Select(x => Task.Run(() =>
         {
             ct.ThrowIfCancellationRequested();
@@ -98,13 +125,15 @@ public sealed partial class Skanner
                 Tilgangslogg.Logg("Sjekk", x.Tekst.TrimEnd('.'), Utfall.Feil, $"Sjekken stoppet: {Tilgangslogg.Beskriv(e)}");
             }
             lock (Tider) Tider[x.Tekst.TrimEnd('.')] = tid.Elapsed;
-            steg?.Report(Interlocked.Increment(ref ferdig));
+            var n = Interlocked.Increment(ref ferdig[0]);   // ikke inne i steg?.Report(...): ?. hopper over hele kallet når steg er null
+            steg?.Report(n);
+            Rapporter();
             _status?.Report(x.Tekst);
         }, ct)));
         // Til slutt: hvor AI-programmene sender data akkurat nå
         try
         {
-            var minst = lytting != null ? Math.Min(60, LytteSekunder) : maling != null ? 5 : 0;
+            var minst = minstLytt;
             var brukt = lytting?.Sekunder ?? maling?.Sekunder ?? 0;
             if (brukt < minst)
             {
@@ -127,6 +156,9 @@ public sealed partial class Skanner
         Tilgangslogg.Sjekk.Value = null;
         Tider["Totalt"] = klokke.Elapsed;
         Ferdig = DateTime.Now;
+        prosentStopp.Cancel();
+        await prosentLop.ConfigureAwait(false);
+        Rapporter(helt: true);
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
