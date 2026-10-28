@@ -44,6 +44,7 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `Sanntid.cs` | Prosesser og AI-motorer, lokale AI-servere, AI-nøkler, filgjennomgang (modeller og AI-kode). |
 | `Misbruk.cs` | Flere ukjente AI-spor (hooks, skjulte tegn, ferdigheter, autostart med farlige flagg, lenker, kjente filer). Filgjennomgangen samler kandidater; de vurderes etterpå. |
 | `Nettverkvisning.cs` | «Nettverk» (live): hvilke programmer som snakker med AI-tjenester nå, per sekund. Bare i minnet. |
+| `Prosesstre.cs` | Hvem som startet en prosess (Toolhelp), signatur, filinfo og starttid. Skannerens egne prosesser. Aldri kommandolinjer. |
 | `Lytting.cs` | Lyttevindu under søket og «Følg med» (datamengde live). Bare i minnet. |
 | `Kart.cs` | Kartet i Datagrunnlag: steder fra `Tilgangslogg` og diskgjennomgangen som et tre med antall, størrelse, utfall og funn. Bare i minnet. |
 | `Kontroll.cs` | Kontrollmodus (`--kontroll`): falske spor i en midlertidig mappe, sjekker at hver alarm slår ut, sletter mappa. |

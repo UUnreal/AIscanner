@@ -60,7 +60,7 @@ internal sealed class Lyttevindu : IDisposable
             foreach (var t in Nettverk.LokaleAiKlienter(alle))
             {
                 _lokale[t.Nokkel] = t;
-                if (t.Pid > 4 && t.Pid != Plattform.EgenPid && !_prosesser.ContainsKey(t.Pid) && !_ukjentPid.Contains(t.Pid))
+                if (t.Pid > 4 && !Plattform.ErEgen(t.Pid) && !_prosesser.ContainsKey(t.Pid) && !_ukjentPid.Contains(t.Pid))
                 {
                     try { using var p = Process.GetProcessById(t.Pid); _prosesser[t.Pid] = (p.ProcessName, ProsessSti.Hent(p)); }
                     catch { _ukjentPid.Add(t.Pid); }
@@ -75,7 +75,7 @@ internal sealed class Lyttevindu : IDisposable
                     _maling?.Legg(t);
                 }
                 // Prosessen slås opp første gang, mens den ennå kjører
-                if (t.Pid > 4 && t.Pid != Plattform.EgenPid && !_prosesser.ContainsKey(t.Pid) && !_ukjentPid.Contains(t.Pid))
+                if (t.Pid > 4 && !Plattform.ErEgen(t.Pid) && !_prosesser.ContainsKey(t.Pid) && !_ukjentPid.Contains(t.Pid))
                 {
                     try { using var p = Process.GetProcessById(t.Pid); _prosesser[t.Pid] = (p.ProcessName, ProsessSti.Hent(p)); }
                     catch { _ukjentPid.Add(t.Pid); }

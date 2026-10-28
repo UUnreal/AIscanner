@@ -14,6 +14,9 @@ public sealed partial class Skanner
     private const string LeverandorKategori = "Innebygd AI fra leverandør";
 
     /// <summary>Modellformater som programmer bygger inn. Gjenkjennes på endelsen, og må være minst 1 MB.</summary>
+    private static readonly Regex Installasjonsprogram = new(
+        @"(?:^|[\\/])(?:installer|setup|install|update|updater|uninst\w*|elevation_service|notification_helper|crashpad\w*)(?:[\\/.]|$)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Dictionary<string, string> InnebygdeFormater = new(StringComparer.OrdinalIgnoreCase)
     {
         [".onnx"] = "ONNX", [".ort"] = "ONNX Runtime", [".tflite"] = "TensorFlow Lite", [".lite"] = "TensorFlow Lite",
@@ -230,7 +233,11 @@ public sealed partial class Skanner
         string? exe = null;
         try
         {
-            exe = Plattform.Filer(rot, "*.exe", 3).Take(200).OrderByDescending(f => f.Length).Select(f => f.FullName).FirstOrDefault();
+            // Største exe, men ikke installasjons- og oppdateringsprogrammer: i Edge WebView2 er Installer\setup.exe
+            // størst, og da het funnet «Microsoft Edge Installer» i stedet for WebView2
+            exe = Plattform.Filer(rot, "*.exe", 3).Take(200)
+                .OrderBy(f => Installasjonsprogram.IsMatch(f.FullName.Substring(rot.Length)) ? 1 : 0).ThenByDescending(f => f.Length)
+                .Select(f => f.FullName).FirstOrDefault();
         }
         catch { }
         var signert = exe != null ? Signatur.Utgiver(exe) : null;

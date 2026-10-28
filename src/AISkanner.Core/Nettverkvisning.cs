@@ -29,6 +29,8 @@ public sealed class Nettverkvisning : IDisposable
     private readonly Dictionary<string, (long Ut, long Inn)> _forrige = new();
     private HashSet<(int, int)> _lyttere = new();
     private Dictionary<int, int> _udp = new();
+    private Dictionary<int, (int Forelder, string Exe)> _liste = new();
+    private readonly Dictionary<int, string?> _vertsprogram = new();
     private DateTime _sistDns = DateTime.MinValue, _sistLyttere = DateTime.MinValue, _forrigeTid = DateTime.Now;
 
     public bool MalerData => _maling != null;
@@ -69,6 +71,7 @@ public sealed class Nettverkvisning : IDisposable
             {
                 _lyttere = new HashSet<(int, int)>(TcpTabell.Hent().Select(l => (l.Pid, l.Port)));
                 _udp = TcpTabell.UdpPerProgram();
+                _liste = Prosesstre.Liste();
                 _sistLyttere = naa;
             }
         }
@@ -79,7 +82,7 @@ public sealed class Nettverkvisning : IDisposable
         var navngitt = new List<(Tilkobling T, string? Vert, AiNettsted? Tj)>();
         foreach (var t in alle)
         {
-            if (t.Pid <= 4 || t.Pid == Plattform.EgenPid || _lyttere.Contains((t.Pid, t.LokalPort))) continue;
+            if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || _lyttere.Contains((t.Pid, t.LokalPort))) continue;
             string? vert = null; AiNettsted? tj = null;
             if (_dns.TryGetValue(t.Fjern, out var navn))
                 foreach (var n in navn) if (_skanner.Tjeneste(n) is { } x) { vert = n; tj = x; break; }
@@ -145,6 +148,7 @@ public sealed class Nettverkvisning : IDisposable
             var (cdn, land) = steder.Count == 1 ? steder[0] : (null, null);
             var alleLand = steder.Where(x => x.Land != null).Select(x => x.Land!).Distinct().ToList();
             var nettleser = Skanner.Nettleserprosesser.TryGetValue(prog, out var nl) ? nl : null;
+            if (nettleser == "WebView2" && Vertsprogram(pid) is { } vp) nettleser = $"WebView2 i {vp}";
             var funn = nettleser == null ? AiFor(pid, prog, sti) : null;
             // Et ukjent AI-spor er ikke «kjent» selv om programmet hører til et funn
             bool kjent = nettleser != null || (funn != null && funn.Gruppe != "spor");
@@ -160,7 +164,7 @@ public sealed class Nettverkvisning : IDisposable
         var udp = new Dictionary<string, (int Porter, bool Nettleser)>(StringComparer.OrdinalIgnoreCase);
         foreach (var (pid, n) in _udp)
         {
-            if (pid <= 4 || pid == Plattform.EgenPid) continue;
+            if (pid <= 4 || Plattform.ErEgen(pid)) continue;
             var (prog, sti) = Prosess(pid);
             bool nettleser = Skanner.Nettleserprosesser.TryGetValue(prog, out var nl);
             if (!nettleser && AiFor(pid, prog, sti) == null) continue;
@@ -174,6 +178,25 @@ public sealed class Nettverkvisning : IDisposable
     // Regelsøket per program gjøres én gang mens visningen er åpen, ikke for hver forbindelse hvert sekund
     private readonly Dictionary<int, Funn?> _ai = new();
     private Funn? AiFor(int pid, string prog, string? sti) => _ai.TryGetValue(pid, out var f) ? f : _ai[pid] = _skanner.FunnForProsess(prog, sti);
+
+    /// <summary>Programmet en WebView2-prosess viser nettsider for (Teams, Outlook, Widgets …): første forelder som ikke er WebView2.</summary>
+    private string? Vertsprogram(int pid)
+    {
+        if (_vertsprogram.TryGetValue(pid, out var v)) return v;
+        if (_liste.Count == 0) _liste = Prosesstre.Liste();
+        string? svar = null;
+        var sett = new HashSet<int>();
+        for (int p = pid; _liste.TryGetValue(p, out var x) && sett.Add(p) && x.Forelder > 4; p = x.Forelder)
+        {
+            if (!_liste.TryGetValue(x.Forelder, out var f)) break;
+            if (Path.GetFileNameWithoutExtension(f.Exe).Equals("msedgewebview2", StringComparison.OrdinalIgnoreCase)) continue;
+            var (navn, sti) = Prosess(x.Forelder);
+            svar = navn;
+            try { if (sti != null && FileVersionInfo.GetVersionInfo(sti).ProductName is { } pn && pn.Trim().Length > 0) svar = pn.Trim(); } catch { }
+            break;
+        }
+        return _vertsprogram[pid] = svar;
+    }
 
     private (string Navn, string? Sti) Prosess(int pid)
     {

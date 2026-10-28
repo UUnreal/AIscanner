@@ -29,6 +29,26 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.4] - 2026-10-28
+
+Ikke testet på Windows. Visningen er testet i nettleser med eksempeldata.
+
+### Lagt til
+- **Trykk på en rad i Nettverk for å finne opphavet.** Under raden vises prosessen: navn fra filinfo, PID, når den
+  startet, hvem som har signert fila (eller at den ikke har gyldig signatur), full sti med «Vis» som åpner mappa, og
+  hvem som startet den med sti og resten av kjeden (for eksempel ms-teams ‹ explorer). Er forelderen avsluttet, står
+  det. Prosesslista leses fra Windows (Toolhelp), prosesser åpnes bare med minst mulig tilgang. Kommandolinjer leses
+  aldri. Ingenting lagres. Samme linjer som «Ligger her»; ingen ny layout.
+
+### Rettet
+- **AI-skannerens egen nettleserdel ble vist og talt.** Vinduet bruker WebView2, og msedgewebview2-prosessene den
+  starter ble tatt med i Nettverk og i søket. Nå hoppes AI-skanneren og alt den har startet over overalt.
+- **msedgewebview2 het «Microsoft Edge Installer».** Navnet på innebygd AI hos leverandører ble tatt fra den største
+  exe-fila i mappa, og i WebView2 er det `Installer\setup.exe`. Nå velges ikke installasjons- og oppdateringsprogrammer.
+- **WebView2 regnes som en nettleser.** Teams, Outlook og Widgets viser nettsider i WebView2; forbindelsene er deres,
+  ikke WebView2-ens. Før ble alle forbindelsene vist som «Kan ikke avgjøre» under WebView2. Nå vises bare de som går
+  til AI-tjenester, merket med programmet den kjører i («WebView2 i Microsoft Teams»). Resten telles som nettleser.
+
 ## [2.19.3] - 2026-10-28
 
 Ikke testet på Windows. Kjernen er testet på Linux med falske nettbilder, visningen i nettleser med eksempeldata.

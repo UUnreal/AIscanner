@@ -552,9 +552,9 @@ function settFolg(f, pa) {
 }
 
 // ---------- Nettverk: hvem som snakker med AI-tjenester akkurat nå (live, bare mens visningen er åpen) ----------
-let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null;
+let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {};
 function apneNett() {
-  valgt = null; dataApen = false; nettApen = true; nettValgt = null; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
+  valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
   $("ark").classList.add("apen"); tegnNett(); send({ type: "nettverk", pa: true });
 }
 function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); }
@@ -611,18 +611,54 @@ function tegnNett() {
     ? L(`${nett.andre} andre forbindelser${nett.andreNettleser ? ` (${nett.andreNettleser} fra nettlesere)` : ""} har ingen kjent AI-adresse og vises ikke. Navnet kan ha gått ut av DNS-bufferen, eller nettleseren bruker DNS over HTTPS.`,
         `${nett.andre} other connections${nett.andreNettleser ? ` (${nett.andreNettleser} from browsers)` : ""} have no known AI address and are not shown. The name may have expired from the DNS cache, or the browser uses DNS over HTTPS.`)
     : "";
+  // Valgt rad: bare den raden, og under den hva prosessen er og hvem som startet den (samme linjer som «Ligger her»)
+  const vistRader = valgtRad ? [valgtRad] : nett.rader;
+  const pi = valgtRad && nettProsess[valgtRad.pid];
+  const pLinje = (tittel, meta, sti, under) => `<li class="sted" title="${esc(sti || under || "")}"><div><div class="l1"><b>${esc(tittel)}</b>${meta ? `<small>${esc(meta)}</small>` : ""}</div>` +
+    `<div class="l2">${esc(sti || under || "")}</div></div>${sti && vert ? `<button class="vis" data-sti="${esc(sti)}">${L("Vis", "Show")}</button>` : ""}</li>`;
+  const ingenSti = L("Stien er ikke tilgjengelig (systemprosess, eller krever admin)", "The path is not available (system process, or requires admin)");
+  const egen = L("AI-skanner (dette programmet)", "AI scanner (this program)");
+  // To linjer, så det får plass: selve programmet (sti, PID, signatur), og hvem som startet det (forelderens sti, resten av kjeden)
+  const signatur = pi => pi.signert ? L(`signert av ${pi.signert}`, `signed by ${pi.signert}`) : L("ingen gyldig signatur i fila", "no valid signature in the file");
+  const forelder = pi => {
+    const av = pi.av || [];
+    if (!av.length) return pi.brutt
+      ? `<li class="mer">${L("Programmet som startet den, er avsluttet.", "The program that started it has ended.")}</li>`
+      : `<li class="mer">${L("Startet av Windows.", "Started by Windows.")}</li>`;
+    const resten = av.slice(1).map(a => `‹ ${a.egen ? egen : a.navn} (${a.pid})`).concat(pi.brutt ? [L("‹ avsluttet", "‹ ended")] : []).join(" ");
+    return pLinje(`${L("Startet av", "Started by")} ${av[0].egen ? egen : av[0].navn}`,
+      [`PID ${av[0].pid}`, av[0].startet ? L(`startet ${av[0].startet}`, `started ${av[0].startet}`) : "", resten].filter(Boolean).join(" · "), av[0].sti, ingenSti);
+  };
+  const prosessLinjer = !valgtRad ? "" : !pi ? `<li class="mer">${L("Leser prosessen…", "Reading the process…")}</li>` : pi.borte ? `<li class="mer">${L("Prosessen er avsluttet.", "The process has ended.")}</li>` :
+    pLinje(pi.egen ? egen : (pi.produkt || pi.navn),
+      [`PID ${pi.pid}`, pi.startet ? L(`startet ${pi.startet}`, `started ${pi.startet}`) : "", signatur(pi), pi.selskap && pi.selskap !== pi.signert ? L(`filinfo: ${pi.selskap}`, `file info: ${pi.selskap}`) : ""].filter(Boolean).join(" · "),
+      pi.sti, ingenSti)
+    + forelder(pi);
   d.innerHTML = hode + `<div class="nettTopp">${graf}</div>`
-    + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${nett.rader.length ? nett.rader.map(rad).join("") : tom}</ul></div>`
+    + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${vistRader.length ? vistRader.map(rad).join("") : tom}</ul>`
+    + (valgtRad ? `<h3>${L("Prosessen", "The process")}</h3><ul id="nettProsess">${prosessLinjer}</ul>` : "") + `</div>`
     + `<div class="avLinje ikke">${esc(L("Bare TCP.", "TCP only.") + udp + (andre ? " " + andre : "") + " " + L("Ikke noe innhold leses, ingenting lagres.", "No content is read, nothing is saved."))}</div>`;
   $("tilbake").onclick = lukkArk;
   // Rader som ikke får plass, telles i stedet for å rulle
   const dl = $("nettDl"), ul = $("nettUl");
-  if (dl && ul && nett.rader.length) {
+  const pu = $("nettProsess");
+  if (dl && pu) {
+    const bunn = dl.getBoundingClientRect().bottom; let skjult = 0;
+    for (const li of [...pu.children]) if (li.getBoundingClientRect().bottom > bunn + 1) { li.remove(); skjult++; }
+    if (skjult) { const li = pu.lastElementChild; if (li) { li.remove(); skjult++; } pu.insertAdjacentHTML("beforeend", `<li class="mer">+ ${skjult} ${L("til", "more")}</li>`); }
+  }
+  d.querySelectorAll("#nettProsess .vis").forEach(b => b.onclick = e => { e.stopPropagation(); send({ type: "vis", sti: b.dataset.sti }); });
+  if (dl && ul && nett.rader.length && !valgtRad) {
     const bunn = dl.getBoundingClientRect().bottom, lis = [...ul.children]; let skjult = 0;
     for (const li of lis) if (li.getBoundingClientRect().bottom > bunn + 1) { li.remove(); skjult++; }
     if (skjult) { const li = ul.lastElementChild; if (li) { li.remove(); skjult++; } ul.insertAdjacentHTML("beforeend", `<li class="mer">+ ${skjult} ${L("til", "more")}</li>`); }
   }
-  d.querySelectorAll(".nettRad[data-n]").forEach(li => li.onclick = () => { nettValgt = nettValgt === li.dataset.n ? null : li.dataset.n; tegnNett(); });
+  d.querySelectorAll(".nettRad[data-n]").forEach(li => li.onclick = () => {
+    nettValgt = nettValgt === li.dataset.n ? null : li.dataset.n;
+    const r = nettValgt && nett.rader.find(x => x.nokkel === nettValgt);
+    if (r) { delete nettProsess[r.pid]; send({ type: "prosess", pid: r.pid }); }
+    tegnNett();
+  });
 }
 function apneArk(f) { stoppNett(); dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
 function lukkArk() { stoppNett(); valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
@@ -1024,6 +1060,7 @@ function motta(m) {
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "nettdata") mottaNett(m);
+  else if (m.type === "prosessinfo") { nettProsess[m.pid] = m; if (nettApen) tegnNett(); }
   else if (m.type === "prosent") settProsent(m.p);
   else if (m.type === "lytter") { lytterIgjen = m.igjen; if (info && info.lytter) tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }

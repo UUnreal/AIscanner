@@ -30,7 +30,7 @@ internal sealed class NettBilde
         nb.Dns = Nettverk.DnsBuffer(out nb.DnsNavn);
         foreach (var pid in nb.Tilkoblinger.Concat(nb.Lokale).Select(t => t.Pid).Distinct())
         {
-            if (pid <= 4 || pid == Plattform.EgenPid) continue;
+            if (pid <= 4 || Plattform.ErEgen(pid)) continue;
             try { using var p = Process.GetProcessById(pid); nb.Prosesser[pid] = (p.ProcessName, ProsessSti.Hent(p)); } catch { }
         }
         if (maling != null)
@@ -72,6 +72,8 @@ public sealed partial class Skanner
     {
         ["chrome"] = "Chrome", ["msedge"] = "Edge", ["firefox"] = "Firefox", ["brave"] = "Brave", ["opera"] = "Opera",
         ["vivaldi"] = "Vivaldi", ["arc"] = "Arc", ["waterfox"] = "Waterfox", ["librewolf"] = "LibreWolf", ["iexplore"] = "Internet Explorer",
+        // Nettleserdelen andre programmer (Teams, Outlook, Widgets) viser nettsider i. Forbindelsene er programmets, ikke WebView2-ens
+        ["msedgewebview2"] = "WebView2",
     };
 
     private void HuskMappe(string? exe, Funn f)
@@ -111,7 +113,7 @@ public sealed partial class Skanner
         foreach (var t in nb.Tilkoblinger)
         {
             if (Inn(t) || skjulte.ContainsKey(t.Pid) || oppslag[t].Tj is not { } tj || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
-            if (t.Pid <= 4 || t.Pid == Plattform.EgenPid || Nettleserprosesser.ContainsKey(p.Navn) || FunnForProsess(p.Navn, p.Sti) != null) continue;
+            if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || Nettleserprosesser.ContainsKey(p.Navn) || FunnForProsess(p.Navn, p.Sti) != null) continue;
             skjulte[t.Pid] = SkjultAi(t.Pid, p.Navn, p.Sti, tj);
         }
 
@@ -119,7 +121,7 @@ public sealed partial class Skanner
         var sett = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var t in nb.Tilkoblinger)
         {
-            if (t.Pid <= 4 || t.Pid == Plattform.EgenPid || Inn(t) || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
+            if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || Inn(t) || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
             var (vert, tj) = oppslag[t];
             Funn? f;
             if (Nettleserprosesser.TryGetValue(p.Navn, out var nettleser))
@@ -277,7 +279,7 @@ public sealed partial class Skanner
         var lyttere = nb.Lyttere ?? TcpTabell.Hent();
         var porter = lyttere.ToLookup(l => (l.Pid, l.Port));
         var grupper = nb.Tilkoblinger
-            .Where(t => t.Pid > 4 && t.Pid != Plattform.EgenPid && porter.Contains((t.Pid, t.LokalPort)) && !IPAddress.IsLoopback(t.Fjern))
+            .Where(t => t.Pid > 4 && !Plattform.ErEgen(t.Pid) && porter.Contains((t.Pid, t.LokalPort)) && !IPAddress.IsLoopback(t.Fjern))
             .GroupBy(t => (t.Pid, t.LokalPort));
         foreach (var g in grupper)
         {
@@ -314,7 +316,7 @@ public sealed partial class Skanner
 
         // Program på PC-en som ikke er kjent AI, men bruker den lokale AI-serveren (PromptLock-mønsteret)
         var serverPid = new HashSet<int>(lyttere.Where(l => Nettverk.AiServerPorter.Contains(l.Port)).Select(l => l.Pid));
-        foreach (var g in nb.Lokale.Where(t => t.Pid > 4 && t.Pid != Plattform.EgenPid && !serverPid.Contains(t.Pid)).GroupBy(t => t.Pid))
+        foreach (var g in nb.Lokale.Where(t => t.Pid > 4 && !Plattform.ErEgen(t.Pid) && !serverPid.Contains(t.Pid)).GroupBy(t => t.Pid))
         {
             if (!nb.Prosesser.TryGetValue(g.Key, out var p) || FunnForProsess(p.Navn, p.Sti) != null) continue;
             var portene = string.Join(", ", g.Select(t => t.FjernPort).Distinct());
@@ -363,7 +365,7 @@ public sealed partial class Skanner
         {
             using (p)
             {
-                if (p.Id <= 4 || p.Id == Plattform.EgenPid || pider.Contains(p.Id)) continue;
+                if (p.Id <= 4 || Plattform.ErEgen(p.Id) || pider.Contains(p.Id)) continue;
                 string? sti = null;
                 try { sti = ProsessSti.Hent(p); } catch { }
                 if (FunnForProsess(p.ProcessName, sti) == f) pider.Add(p.Id);

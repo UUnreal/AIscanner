@@ -164,6 +164,7 @@ public sealed class Hovedvindu : Form
             if (m.TryGetProperty("pa", out var pa) && pa.ValueKind == JsonValueKind.True) StartFolg(id);
             else StoppFolg(id);
         }
+        else if (type == "prosess" && m.TryGetProperty("pid", out var ppid) && ppid.TryGetInt32(out var pid)) await SendProsessAsync(pid);
         else if (type == "nettverk")
         {
             if (m.TryGetProperty("pa", out var npa) && npa.ValueKind == JsonValueKind.True) StartNettverk();
@@ -329,7 +330,7 @@ public sealed class Hovedvindu : Form
     private void VisIUtforsker(string? sti)
     {
         if (string.IsNullOrWhiteSpace(sti)) return;
-        if (sti != _revisjonSti && !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
+        if (sti != _revisjonSti && !_visbare.Contains(sti!) && !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
         sti = sti!.Trim();
         if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
         if (sti == null || (!File.Exists(sti) && !Directory.Exists(sti))) return;
@@ -473,6 +474,26 @@ public sealed class Hovedvindu : Form
         _nettverk = (visning, klokke);
         klokke.Start();
         Tikk();
+    }
+
+    // Stier vist i prosessdetaljene i Nettverk; bare de kan åpnes i Utforsker derfra
+    private readonly HashSet<string> _visbare = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Hva en prosess i Nettverk er og hvem som startet den. Leser aldri kommandolinjen.</summary>
+    private async Task SendProsessAsync(int pid)
+    {
+        var info = await Task.Run(() => Prosesstre.Om(pid));
+        string? T(string? x) => _engelsk ? Engelsk.Til(x) : x;
+        string? Tid(DateTime? t) => t == null ? null : t.Value.Date == DateTime.Today ? t.Value.ToString("HH:mm:ss") : T(Skanner.Tid(t));
+        if (info == null) { Send(new { type = "prosessinfo", pid, borte = true }); return; }
+        foreach (var s in new[] { info.Sti }.Concat(info.StartetAv.Select(l => l.Sti)))
+            if (s != null) { _visbare.Add(s); if (Path.GetDirectoryName(s) is { } d) _visbare.Add(d); }
+        Send(new
+        {
+            type = "prosessinfo", pid, navn = info.Navn, sti = info.Sti, startet = Tid(info.Startet),
+            produkt = info.Produkt, beskrivelse = info.Beskrivelse, selskap = info.Selskap, signert = info.Signert, egen = info.Egen, brutt = info.KjedenBrutt,
+            av = info.StartetAv.Select(l => new { pid = l.Pid, navn = l.Navn, sti = l.Sti, startet = Tid(l.Startet), egen = l.Egen }),
+        });
     }
 
     private void StoppNettverk()

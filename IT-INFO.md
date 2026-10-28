@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.3. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.4. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -182,7 +182,13 @@ diagram for alle eller for ett valgt program. Program som ikke er kjent fra søk
 åpen. Kjente AI-programmer fra søket, og programmer som snakker med en AI-tjeneste, vises med alle forbindelsene sine;
 der navnet ikke er i DNS-bufferen står «Kan ikke avgjøre». Andre forbindelser telles (med hvor mange som er fra
 nettlesere) men vises ikke. Antall åpne UDP-porter hos nettlesere og AI-programmer vises som hint om QUIC (UDP-tabellen
-sier ikke hvor det sendes). Ingen pakkefangst, ingen driver, ingen
+sier ikke hvor det sendes). WebView2 (msedgewebview2) regnes som nettleser og merkes med programmet den kjører i. AI-skanneren
+selv og alt den har startet, tas aldri med.
+
+Trykk på en rad for å se prosessen: PID, starttid, signatur (WinVerifyTrust, uten nettoppslag), filinfo, full sti og
+hvem som startet den (foreldrekjeden fra Toolhelp-lista, med sjekk for gjenbrukte PID-er). «Vis» åpner mappa i
+Utforsker; bare stier som er vist, kan åpnes. Prosesser åpnes med `PROCESS_QUERY_LIMITED_INFORMATION`, sikkerhets- og
+systemprosesser røres ikke, og kommandolinjer leses aldri. Ingen pakkefangst, ingen driver, ingen
 innhold. Ingenting lagres og ingenting kommer i rapporten. Bare TCP: UDP og QUIC (HTTP/3) vises ikke, og det står i
 visningen. `AISkanner.Cli --nettverk` skriver tre avlesninger som JSON.
 

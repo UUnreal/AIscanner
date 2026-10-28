@@ -11,6 +11,24 @@ internal static class Plattform
     public static readonly bool ErWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
     public static readonly int EgenPid = Process.GetCurrentProcess().Id;
 
+    private static HashSet<int> _egne = new() { EgenPid };
+    private static DateTime _egneLest = DateTime.MinValue;
+
+    /// <summary>
+    /// AI-skanneren selv eller noe den har startet (WebView2-delen av vinduet). Listen leses på nytt høyst hvert 5. sekund.
+    /// </summary>
+    public static bool ErEgen(int pid)
+    {
+        if (pid == EgenPid) return true;
+        if (!ErWindows) return false;
+        if (DateTime.UtcNow - _egneLest > TimeSpan.FromSeconds(5))
+        {
+            _egneLest = DateTime.UtcNow;
+            try { _egne = Prosesstre.Egne(); } catch { }
+        }
+        return _egne.Contains(pid);
+    }
+
     public static bool Inneholder(this string s, string verdi) => s.IndexOf(verdi, StringComparison.OrdinalIgnoreCase) >= 0;
 
     public static void LesAlt(this Stream s, byte[] buf)

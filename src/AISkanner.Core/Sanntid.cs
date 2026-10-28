@@ -68,7 +68,7 @@ public sealed partial class Skanner
             using (p)
             {
                 var sti = ProsessSti.Hent(p);
-                if (sti == null || p.Id == Plattform.EgenPid) continue;
+                if (sti == null || Plattform.ErEgen(p.Id)) continue;
                 var mappe = Path.GetDirectoryName(sti);
                 if (mappe == null || ErSystemmappe(mappe) || UnderLeverandorRot(mappe) || !sett.Add(mappe)) continue;
                 var motorer = FinnMotorer(mappe, 2);
@@ -135,7 +135,7 @@ public sealed partial class Skanner
     private void LokaleServere()
     {
         var lyttere = TcpTabell.Hent()
-            .Where(l => l.Pid > 4 && l.Pid != Plattform.EgenPid && l.Port >= 1024)
+            .Where(l => l.Pid > 4 && !Plattform.ErEgen(l.Pid) && l.Port >= 1024)
             .Where(l => IPAddress.IsLoopback(l.Adresse) || l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any))
             .GroupBy(l => l.Port).Select(g => g.OrderBy(l => IPAddress.IsLoopback(l.Adresse) ? 1 : 0).First())
             .Take(80).ToList();
