@@ -6,19 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI-skanner</title>
 <style>
+  /* Fargene er dempet for lange økter: ingen ren hvit på ren svart, signalfargene (trafikklyset) er avmettet, og all
+     tekst har minst 4,5:1 kontrast (WCAG AA) mot kort og bakgrunn. --x-tekst brukes til tekst, --x til prikker og
+     søyler, --x-myk til flater bak tekst. --bla-knapp er bakgrunn bak hvit tekst. */
   :root {
-    --bg: #f2f2f7; --kort: #ffffff; --tekst: #1c1c1e; --dempet: #6e6e73; --linje: rgba(60,60,67,.12); --fyll: rgba(120,120,128,.08);
-    --bla: #007aff; --rod: #ff3b30; --gul: #ff9f0a; --gronn: #34c759;
-    --rod-myk: #ffebea; --gul-myk: #fff4e0; --gronn-myk: #e7f8ec; --bla-myk: #e5f1ff;
-    --gul-tekst: #c77700; --gronn-tekst: #1f9d48;
-    --skygge: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    --bg: #f2f2f5; --kort: #ffffff; --tekst: #1d1d1f; --dempet: #5f5f66; --linje: rgba(60,60,67,.12); --fyll: rgba(120,120,128,.08);
+    --bla: #0062c4; --bla-knapp: #0062c4; --rod: #d65a50; --gul: #d9a032; --gronn: #4aa56a;
+    --rod-myk: #fbefee; --gul-myk: #fbf4e6; --gronn-myk: #ecf6ef; --bla-myk: #e8f0fb;
+    --rod-tekst: #b3261e; --gul-tekst: #875400; --gronn-tekst: #1b7339;
+    --skygge: 0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.05);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #000000; --kort: #1c1c1e; --tekst: #f5f5f7; --dempet: #98989d; --linje: rgba(84,84,88,.45); --fyll: rgba(120,120,128,.16);
-      --bla: #0a84ff; --rod: #ff453a; --gul: #ff9f0a; --gronn: #30d158;
-      --rod-myk: rgba(255,69,58,.16); --gul-myk: rgba(255,159,10,.16); --gronn-myk: rgba(48,209,88,.16); --bla-myk: rgba(10,132,255,.18);
-      --gul-tekst: #ff9f0a; --gronn-tekst: #30d158;
+      --bg: #111113; --kort: #1c1c1f; --tekst: #e6e6eb; --dempet: #9d9da4; --linje: rgba(84,84,88,.40); --fyll: rgba(120,120,128,.14);
+      --bla: #5aa2f0; --bla-knapp: #2f6fc0; --rod: #d9665c; --gul: #cf9f45; --gronn: #5aab74;
+      --rod-myk: rgba(217,102,92,.16); --gul-myk: rgba(207,159,69,.16); --gronn-myk: rgba(90,171,116,.16); --bla-myk: rgba(90,162,240,.16);
+      --rod-tekst: #f0958b; --gul-tekst: #e3b660; --gronn-tekst: #83c99a;
       --skygge: none;
     }
   }
@@ -42,17 +45,17 @@
   .valg { position: relative; width: 260px; height: 260px; margin: 22px 0 16px; flex: none; }
   .ring2 {
     position: absolute; inset: 0; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
-    background: radial-gradient(circle, transparent 0 46%, rgba(0,122,255,.10) 46.5% 100%);
-    box-shadow: inset 0 0 0 2px rgba(0,122,255,.35); color: var(--bla); font: inherit; transition: background .15s;
+    background: radial-gradient(circle, transparent 0 46%, rgba(0,98,196,.10) 46.5% 100%);
+    box-shadow: inset 0 0 0 2px rgba(0,98,196,.35); color: var(--bla); font: inherit; transition: background .15s;
   }
-  .ring2:hover { background: radial-gradient(circle, transparent 0 46%, rgba(0,122,255,.18) 46.5% 100%); }
+  .ring2:hover { background: radial-gradient(circle, transparent 0 46%, rgba(0,98,196,.18) 46.5% 100%); }
   .ring2 .rtekst { position: absolute; left: 0; right: 0; top: 20px; font-size: 15px; font-weight: 700; letter-spacing: .02em; }
   .ring2 .rliten { position: absolute; left: 0; right: 0; bottom: 26px; font-size: 12px; font-weight: 500; opacity: .85; }
   .sokKnapp {
     position: absolute; left: 50%; top: 50%; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%; border: 0; cursor: pointer;
-    background: linear-gradient(160deg, #3d9bff, var(--bla) 55%, #0060df); color: #fff;
+    background: linear-gradient(160deg, #3a86d6, var(--bla-knapp) 55%, #0a4f9c); color: #fff;
     font-size: 26px; font-weight: 600; letter-spacing: -.01em; line-height: 1.1;
-    box-shadow: 0 12px 32px rgba(0,122,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
+    box-shadow: 0 10px 28px rgba(0,98,196,.25), inset 0 1px 0 rgba(255,255,255,.2);
     transition: transform .15s ease; z-index: 1;
   }
   .sokKnapp small { display: block; font-size: 13px; font-weight: 500; opacity: .9; margin-top: 4px; }
@@ -68,7 +71,7 @@
   .tillit span { display: inline-flex; align-items: center; gap: 6px; }
   .tillit svg { width: 15px; height: 15px; }
   .inkludert { margin-top: 22px; max-width: 470px; color: var(--dempet); font-size: 13px; line-height: 1.45; }
-  .feil { color: var(--rod); font-size: 14px; min-height: 20px; }
+  .feil { color: var(--rod-tekst); font-size: 14px; min-height: 20px; }
   .tillit i { font-style: normal; }
   .revisjon { display: inline-flex; align-items: center; gap: 10px; background: var(--kort); border-radius: 980px; padding: 4px 4px 4px 16px; box-shadow: var(--skygge); margin-bottom: 14px; font-size: 13.5px; max-width: 100%; }
   .revisjon b { font-weight: 600; white-space: nowrap; }
@@ -88,7 +91,7 @@
   /* Utviklermodus: datagrunnlaget */
   .faner { display: flex; gap: 6px; flex: none; margin: 10px 0 2px; flex-wrap: wrap; }
   .faner button, .filter button { border: 0; background: var(--fyll); color: var(--tekst); font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
-  .faner button.valgt, .filter button.valgt { background: var(--bla); color: #fff; }
+  .faner button.valgt, .filter button.valgt { background: var(--bla-knapp); color: #fff; }
   .faner button .ant { opacity: .7; margin-left: 4px; }
   .filter { display: flex; gap: 5px; flex-wrap: wrap; flex: none; margin-bottom: 6px; }
   .filter button { font-size: 12px; padding: 3px 10px; }
@@ -101,7 +104,7 @@
   .filter .sjekkValg { background: var(--bla-myk); color: var(--bla); }
   .uflis b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
   .uflis small { display: block; font-size: 12px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .uflis.mangler.har b { color: var(--rod); }
+  .uflis.mangler.har b { color: var(--rod-tekst); }
   .uflis.u-blokkert.har { background: var(--rod-myk); }
   .avLinje { display: flex; gap: 8px; align-items: center; background: var(--fyll); border-radius: 10px; padding: 7px 10px; font-size: 13px; flex: none; margin-top: 6px; }
   .avLinje.ok::before, .avLinje.ikke::before { content: ""; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--gronn); }
@@ -114,13 +117,13 @@
   .post .ut.u-ikkefunnet::before, .post .ut.u-hoppetover::before { background: var(--dempet); opacity: .5; }
   .post .ut.u-nektet::before, .post .ut.u-laast::before, .post .ut.u-tidsgrense::before, .post .ut.u-feil::before { background: var(--gul); }
   .post .ut.u-blokkert::before { background: var(--rod); }
-  .post .ut.u-blokkert { color: var(--rod); }
+  .post .ut.u-blokkert { color: var(--rod-tekst); }
   .post time { flex: none; color: var(--dempet); font-size: 11.5px; font-variant-numeric: tabular-nums; }
   .sjekkRad { display: grid !important; grid-template-columns: minmax(0, 1fr) 58px 70px 92px 96px 96px; gap: 8px; font-size: 13px; padding: 5px 10px !important; }
   .sjekkRad span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; font-variant-numeric: tabular-nums; }
   .sjekkRad span:first-child { text-align: left; }
   .sjekkRad.hode { background: none !important; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0 !important; padding-bottom: 0 !important; }
-  .sjekkRad .rodt { color: var(--rod); font-weight: 600; }
+  .sjekkRad .rodt { color: var(--rod-tekst); font-weight: 600; }
   .detalj ul.kildeGrid { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
   .kilde .sha { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11px; color: var(--dempet); user-select: text; overflow-wrap: anywhere; }
   .ingenAi { display: flex; gap: 10px; align-items: center; background: var(--gronn-myk); color: var(--gronn-tekst); border-radius: 10px; padding: 8px 12px; font-size: 13px; flex: none; margin-top: 8px; }
@@ -144,8 +147,8 @@
   .skFlis.niva1.r0 { box-shadow: inset 0 3px 0 var(--gronn); } .skFlis.niva1.r1 { box-shadow: inset 0 3px 0 var(--gul); } .skFlis.niva1.r2 { box-shadow: inset 0 3px 0 var(--rod); }
   .skFlis.mangler { border: 1.5px dashed var(--gul); }
   .skFlis.rest { opacity: .7; }
-  .skFunn { display: inline-block; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--rod); color: #fff; font-size: 10.5px; font-weight: 700; text-align: center; line-height: 15px; margin-left: 4px; vertical-align: 1px; }
-  .skFunn.r1 { background: var(--gul); } .skFunn.r0 { background: var(--gronn); }
+  .skFunn { display: inline-block; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--rod-myk); color: var(--rod-tekst); font-size: 10.5px; font-weight: 700; text-align: center; line-height: 15px; margin-left: 4px; vertical-align: 1px; }
+  .skFunn.r1 { background: var(--gul-myk); color: var(--gul-tekst); } .skFunn.r0 { background: var(--gronn-myk); color: var(--gronn-tekst); }
   .skForklaring { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--dempet); flex: none; margin-top: 6px; }
   .skForklaring span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--fyll); }
   .skForklaring .r2::before { background: var(--rod-myk); box-shadow: inset 0 0 0 1.5px var(--rod); } .skForklaring .r1::before { background: var(--gul-myk); box-shadow: inset 0 0 0 1.5px var(--gul); }
@@ -164,7 +167,7 @@
   .skRuter { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
   .skRuter div { background: var(--fyll); border-radius: 10px; padding: 6px 10px; }
   .skRuter b { display: block; font-size: 16px; } .skRuter small { color: var(--dempet); font-size: 11.5px; }
-  .skRuter .mangler b { color: var(--rod); }
+  .skRuter .mangler b { color: var(--rod-tekst); }
   .skListe { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
   .skListe li { background: var(--fyll); border-radius: 9px; padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; min-width: 0; }
   .skListe li.klikk { cursor: pointer; } .skListe li.klikk:hover { background: var(--bla-myk); }
@@ -179,7 +182,7 @@
   .nettRad > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nettRad small { display: block; color: var(--dempet); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
   .nettRad .prog i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gronn); margin-right: 6px; vertical-align: 1px; }
-  .nettRad.ukjent .prog i { background: var(--rod); } .nettRad.ukjent .prog small { color: var(--rod); font-weight: 600; }
+  .nettRad.ukjent .prog i { background: var(--rod); } .nettRad.ukjent .prog small { color: var(--rod-tekst); font-weight: 600; }
   .nettRad .tall { text-align: right; font-variant-numeric: tabular-nums; }
   .nettRad.valgt { box-shadow: inset 0 0 0 2px var(--bla); } .nettRad:not(.hode):hover { background: var(--bla-myk); }
   .nettRad.hode { background: none; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0; padding-bottom: 2px; cursor: default; }
@@ -210,12 +213,20 @@
   .topp .tittel { flex: 1; min-width: 0; }
   .topp h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
   .knapp { border: 0; border-radius: 980px; padding: 9px 18px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
-  .knapp.primar { background: var(--bla); color: #fff; }
+  .knapp.primar { background: var(--bla-knapp); color: #fff; }
+  .knapp.tonal { background: var(--bla-myk); color: var(--bla); }
+  /* Kompakt (32 px) for handlingene i resultatet */
+  .knapp.liten { height: 32px; padding: 0 14px; font-size: 13.5px; display: inline-flex; align-items: center; }
+  /* Visningene som en segmentert kontroll, samme form som språkvalget */
+  .segment { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; height: 32px; }
+  .segment button { border: 0; background: none; color: var(--tekst); border-radius: 980px; padding: 0 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .segment button:hover { background: var(--fyll); }
+  .segment button.paa { background: var(--kort); color: var(--tekst); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
   .knapp.sekundar { background: var(--kort); color: var(--bla); box-shadow: var(--skygge); }
   /* Alle valgene i resultatet samlet til høyre, like tydelige. Den som er åpen, får en ring. */
   .meny { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
-  .meny .knapper { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-  .meny .knapp.paa { box-shadow: 0 0 0 2px var(--kort), 0 0 0 4px var(--bla); }
+  .meny .knapper { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+
   #resultat .hoved { flex: 1; }
   .andreFunn { font-size: 16px; color: var(--dempet); margin-top: 3px; font-weight: 500; }
   .andreFunn:empty { display: none; }
@@ -225,7 +236,7 @@
   .bar .rod { background: var(--rod); } .bar .gul { background: var(--gul); } .bar .gronn { background: var(--gronn); }
   .fordeling { display: flex; gap: 18px; color: var(--dempet); font-size: 13.5px; }
   .fordeling b { font-size: 18px; font-weight: 700; margin-right: 4px; }
-  .fordeling .rod b { color: var(--rod); } .fordeling .gul b { color: var(--gul-tekst); } .fordeling .gronn b { color: var(--gronn-tekst); }
+  .fordeling .rod b { color: var(--rod-tekst); } .fordeling .gul b { color: var(--gul-tekst); } .fordeling .gronn b { color: var(--gronn-tekst); }
 
   /* Tabellen: AI, risiko, type, hvor den ligger, hvor den sender data. Detaljer ved trykk. */
   .panel { background: var(--kort); border-radius: 18px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
@@ -238,11 +249,11 @@
   .rad .type, .rad .lok { color: var(--dempet); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rad .land { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rad .land .ingen { color: var(--dempet); }
-  .fare { color: var(--rod); font-weight: 600; }
+  .fare { color: var(--rod-tekst); font-weight: 600; }
   .rad .pil { color: var(--dempet); font-size: 18px; text-align: right; opacity: .6; }
   .pille { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 3px 11px 3px 9px; border-radius: 20px; white-space: nowrap; }
   .pille::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-  .pille.rod { background: var(--rod-myk); color: var(--rod); } .pille.rod::before { background: var(--rod); }
+  .pille.rod { background: var(--rod-myk); color: var(--rod-tekst); } .pille.rod::before { background: var(--rod); }
   .pille.gul { background: var(--gul-myk); color: var(--gul-tekst); } .pille.gul::before { background: var(--gul); }
   .pille.gronn { background: var(--gronn-myk); color: var(--gronn-tekst); } .pille.gronn::before { background: var(--gronn); }
   .flyt { display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; flex: none; margin-top: 12px; }
@@ -257,7 +268,7 @@
   .ark { position: absolute; inset: 0; background: var(--kort); display: none; flex-direction: column; z-index: 2; }
   .ark.apen { display: flex; }
   .merke { flex: none; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod); }
+  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod-tekst); }
   .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: var(--gul-tekst); }
   .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: var(--gronn-tekst); }
   .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 38px; color: var(--dempet); font-size: 13.5px; }
@@ -293,7 +304,7 @@
   .folgGraf .ut { stroke: var(--rod); } .folgGraf .inn { stroke: var(--bla); } .folgGraf .n { stroke: var(--dempet); }
   .folgGraf polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
   .folgTekst { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--dempet); margin-top: 4px; }
-  .folgTekst b { font-weight: 600; } .folgTekst .ut b { color: var(--rod); } .folgTekst .inn b { color: var(--bla); }
+  .folgTekst b { font-weight: 600; } .folgTekst .ut b { color: var(--rod-tekst); } .folgTekst .inn b { color: var(--bla); }
   .medSider { display: flex; align-items: center; justify-content: space-between; }
   .sidevalg { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-weight: 500; }
   .sidevalg button { border: 0; background: var(--fyll); color: var(--bla); width: 26px; height: 22px; border-radius: 7px; cursor: pointer; font-size: 15px; line-height: 1; }
@@ -320,13 +331,13 @@
   .kart .nal text { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; }
   .kart .cdn { position: absolute; left: 12px; bottom: 8px; font-size: 11.5px; color: var(--dempet); }
   .kartInfo { font-size: 13.5px; color: var(--dempet); padding: 8px 4px; }
-  .mal .ip span { display: block; } .mal .ip .farlig { color: var(--rod); }
+  .mal .ip span { display: block; } .mal .ip .farlig { color: var(--rod-tekst); }
   .mal .land.skjult { color: var(--gul-tekst); font-weight: 600; text-align: right; } .mal .land.skjult small { display: block; font-weight: 400; color: var(--dempet); }
   .mal .ip { display: block; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); font-weight: 400; }
   .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
   .mal .vert small { color: var(--dempet); font-weight: 400; font-size: 12.5px; }
   .mal .land { flex: none; font-size: 13px; color: var(--dempet); }
-  .mal .land.farlig { color: var(--rod); font-weight: 600; }
+  .mal .land.farlig { color: var(--rod-tekst); font-weight: 600; }
   .mal .data { flex: none; font-size: 12.5px; color: var(--dempet); font-variant-numeric: tabular-nums; text-align: right; min-width: 92px; }
   .kilde { margin-top: auto; padding-top: 8px; color: var(--dempet); font-size: 11px; flex: none; }
 
@@ -344,7 +355,7 @@
     .uflis { padding: 5px 8px; } .uflis b { font-size: 15px; } .uflis small { font-size: 11px; }
     .topp { flex-wrap: wrap; } .topp .tittel { flex-basis: 100%; }
     .meny { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-    .meny .knapper { justify-content: flex-start; } .meny .knapp { padding: 8px 14px; font-size: 14px; }
+    .meny .knapper { justify-content: flex-start; }
   }
 </style>
 </head>
@@ -386,10 +397,9 @@
   <div class="topp">
     <div class="tittel"><h1 id="hodeTittel"></h1><div class="andreFunn" id="andreFunn"></div><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
     <div class="meny" id="meny"><div class="knapper">
-      <button class="knapp primar" id="nettKnapp" data-en="Network">Nettverk</button>
-      <button class="knapp primar" id="dataKnapp" data-en="Data basis">Datagrunnlag</button>
-      <button class="knapp primar" id="igjen" data-en="Scan again">Søk igjen</button>
-      <button class="knapp primar" id="lagre" data-en="Download report">Last ned rapport</button>
+      <div class="segment" role="group" aria-label="Visning / View"><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
+      <button class="knapp tonal liten" id="igjen" data-en="Scan again">Søk igjen</button>
+      <button class="knapp primar liten" id="lagre" data-en="Download report">Last ned rapport</button>
     </div></div>
   </div>
   <div class="panel hoved" id="hoved">
@@ -491,7 +501,7 @@ function tegnBunn() {
   $("hodeInfo").textContent = deler.join(" · ");
   const rev = info.revisjon
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
-    : info.revisjonFeil ? `<span style="color:var(--rod)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
+    : info.revisjonFeil ? `<span style="color:var(--rod-tekst)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
   // Mens lyttingen går i bakgrunnen vises ingen datamengde: tallet er ikke ferdig, og et halvt tall skal ikke stå der
   $("bunnHoyre").innerHTML = rev + `<span class="maaling">` + (info.lytter
     ? `<span class="lytter">${esc(lytterIgjen > 0 ? L(`Lytter på nettverket: ${lytterIgjen} s igjen`, `Listening to the network: ${lytterIgjen} s left`) : L("Lytter på nettverket…", "Listening to the network…"))}</span>`

@@ -29,6 +29,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.8] - 2026-10-28
+
+Ikke testet på Windows ennå. `--kontroll` gir 104 av 104.
+
+### Endret
+- **De fire knappene øverst til høyre tar mye mindre plass.** Høyde 32 px (8 pt-rutenett, som Apple og Material 3).
+  Nettverk og Datagrunnlag er nå én segmentkontroll (samme form som språkvalget); den åpne visningen er en hvit pille,
+  og nytt trykk lukker den som før. Søk igjen er en lys tonal knapp. Last ned rapport er eneste fylte knapp, så den
+  viktigste handlingen er tydeligst.
+- **Roligere farger for lang bruk.** Ingen ren svart eller ren hvit flate: bakgrunn `#f2f2f5`/`#111113`, tekst
+  `#1d1d1f`/`#e6e6eb`. Trafikklyset er beholdt, men tonet ned (rød `#d65a50`, gul `#d9a032`, grønn `#4aa56a`).
+  Fargene er delt i tre roller: signal (prikker og streker), myk (bakgrunn bak merker) og tekst (mørkere/lysere
+  variant som er lett å lese).
+- **All tekst oppfyller WCAG 2.2 AA (minst 4,5:1).** Målt blant annet: hvit på blå knapp 5,9:1 (lys) og 5,1:1 (mørk),
+  rød tekst `#b3261e` på hvitt 6,5:1, gul tekst `#875400` 6,4:1, grønn tekst `#1b7339` 5,9:1. På de myke merkebakgrunnene er
+  laveste verdi 5,3:1.
+
 ## [2.19.7] - 2026-10-28
 
 Ikke testet på Windows. `--kontroll` gir 104 av 104.
