@@ -143,9 +143,18 @@ public sealed partial class Skanner
 
         // MaxResponseContentBufferSize: et ondsinnet lokalt program kan ikke svare med et svar på flere GB og spise opp minnet.
         using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(800), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
-        foreach (var l in lyttere)
+        // Alle portene spørres samtidig (16 om gangen). Før tok det 0,8 s per port som ikke svarte, én etter én.
+        var svar = new List<string>?[lyttere.Count];
+        using (var kø = new SemaphoreSlim(16))
+            Task.WaitAll(lyttere.Select((l, i) => Task.Run(async () =>
+            {
+                await kø.WaitAsync().ConfigureAwait(false);
+                try { svar[i] = Spor(klient, l.Port); } finally { kø.Release(); }
+            })).ToArray());
+        for (int i = 0; i < lyttere.Count; i++)
         {
-            var modeller = Spor(klient, l.Port);
+            var l = lyttere[i];
+            var modeller = svar[i];
             if (modeller == null) continue;
             string prosess = "ukjent program", sti = "";
             try { using var p = Process.GetProcessById(l.Pid); prosess = p.ProcessName; sti = ProsessSti.Hent(p) ?? ""; } catch { }
@@ -191,7 +200,12 @@ public sealed partial class Skanner
                 else continue;
                 return navn;
             }
-            catch (Exception e) { Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? "svarte ikke innen 0,8 s" : "svarte ikke som en AI-tjeneste"); }
+            catch (Exception e)
+            {
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? "svarte ikke innen 0,8 s; de andre adressene på porten ble ikke prøvd" : "svarte ikke som en AI-tjeneste");
+                // Et program som ikke svarer på HTTP innen 0,8 s, svarer heller ikke på neste adresse. Spar 1,6 s per port.
+                if (e is TaskCanceledException) break;
+            }
         }
         return null;
     }

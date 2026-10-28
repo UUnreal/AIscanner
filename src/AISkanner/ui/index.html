@@ -171,6 +171,20 @@
   .skListe li .prikk { width: 8px; height: 8px; border-radius: 50%; flex: none; }
   .skListe li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .skListe li small { color: var(--dempet); margin-left: auto; flex: none; }
+  /* Nettverk (live) */
+  .nettTopp { flex: none; margin: 6px 0 8px; }
+  .nettTopp .folgGraf svg { height: 92px; }
+  .nettListe { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .nettRad { display: grid !important; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr) 54px 88px 88px; gap: 10px; align-items: center; background: var(--fyll); border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .nettRad > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nettRad small { display: block; color: var(--dempet); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+  .nettRad .prog i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gronn); margin-right: 6px; vertical-align: 1px; }
+  .nettRad.ukjent .prog i { background: var(--rod); } .nettRad.ukjent .prog small { color: var(--rod); font-weight: 600; }
+  .nettRad .tall { text-align: right; font-variant-numeric: tabular-nums; }
+  .nettRad.valgt { box-shadow: inset 0 0 0 2px var(--bla); } .nettRad:not(.hode):hover { background: var(--bla-myk); }
+  .nettRad.hode { background: none; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0; padding-bottom: 2px; cursor: default; }
+  .nettListe .mer { list-style: none; color: var(--dempet); font-size: 13px; padding: 6px 10px; }
+  #nettDl { margin-top: 4px; }
   /* Språkvalg: øverst til høyre før søket, ved knappene i resultatet. Ett trykk bytter all tekst. */
   .sprak { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; z-index: 5; }
   body > .sprak { position: fixed; top: 14px; right: 18px; }
@@ -464,11 +478,12 @@ function tegnBunn() {
   const rev = info.revisjon
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
     : info.revisjonFeil ? `<span style="color:var(--rod)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
-  $("bunnHoyre").innerHTML = rev + `<button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.dataMalt
+  $("bunnHoyre").innerHTML = rev + `<button id="nettKnapp">${L("Nettverk", "Network")}</button><span class="skille"> · </span><button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.dataMalt
     ? esc(L(`Sendt ut: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
     : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`) + `</span>`;
   const m = $("maal"); if (m) m.onclick = () => send({ type: "admin", revisjon });
   $("dataKnapp").onclick = apneData;
+  $("nettKnapp").onclick = apneNett;
   const rv = $("revVis"); if (rv) rv.onclick = () => send({ type: "vis", sti: info.revisjon });
 }
 
@@ -529,8 +544,68 @@ function settFolg(f, pa) {
   tegnDetalj(true);
 }
 
-function apneArk(f) { dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
-function lukkArk() { valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
+// ---------- Nettverk: hvem som snakker med AI-tjenester akkurat nå (live, bare mens visningen er åpen) ----------
+let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null;
+function apneNett() {
+  valgt = null; dataApen = false; nettApen = true; nettValgt = null; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
+  $("ark").classList.add("apen"); tegnNett(); send({ type: "nettverk", pa: true });
+}
+function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); }
+function mottaNett(m) {
+  if (!nettApen) return;
+  nett.admin = m.admin; nett.andre = m.andre; nett.rader = m.rader || []; nett.tid = m.tid;
+  nett.p.push({ ut: m.ut, inn: m.inn, n: nett.rader.reduce((a, r) => a + r.n, 0) });
+  if (nett.p.length > 120) nett.p.shift();
+  const sett = new Set();
+  for (const r of nett.rader) {
+    sett.add(r.nokkel);
+    const h = nett.hist[r.nokkel] = nett.hist[r.nokkel] || [];
+    h.push({ ut: r.ut, inn: r.inn, n: r.n }); if (h.length > 120) h.shift();
+  }
+  // Rader som er borte får null, så kurven faller til null og ikke henger igjen
+  for (const k in nett.hist) if (!sett.has(k)) { nett.hist[k].push({ ut: 0, inn: 0, n: 0 }); if (nett.hist[k].length > 120) nett.hist[k].shift(); }
+  tegnNett();
+}
+function nettGraf(p, admin, tittel) {
+  if (!p.length) return `<div class="folgTekst">${L("Venter på første måling…", "Waiting for the first measurement…")}</div>`;
+  const N = 120, sist = p[p.length - 1];
+  const maks = Math.max(1, ...(admin ? p.flatMap(x => [x.ut || 0, x.inn || 0]) : p.map(x => x.n || 0)));
+  const linje = (velg, kl) => `<polyline class="${kl}" points="${p.map((x, i) => `${((N - p.length + i) / (N - 1) * 300).toFixed(1)},${(62 - (velg(x) || 0) / maks * 58).toFixed(1)}`).join(" ")}"/>`;
+  const svg = `<svg viewBox="0 0 300 64" preserveAspectRatio="none">${admin ? linje(x => x.ut, "ut") + linje(x => x.inn, "inn") : linje(x => x.n, "n")}</svg>`;
+  const tekst = admin
+    ? `<span><b>${esc(tittel)}</b></span><span class="ut">${L("Sendt", "Sent")} <b>${fart(sist.ut)}</b></span><span class="inn">${L("Mottatt", "Received")} <b>${fart(sist.inn)}</b></span><span>${L("Topp", "Peak")} ${fart(maks)}</span>`
+    : `<span><b>${esc(tittel)}</b></span><span>${tall(sist.n)} ${sist.n === 1 ? L("forbindelse", "connection") : L("forbindelser", "connections")}</span><span>${L("Datamengde krever administrator. Viser antall forbindelser.", "Data volume requires administrator. Showing number of connections.")}</span>`;
+  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
+}
+function tegnNett() {
+  const d = $("detalj");
+  const valgtRad = nettValgt && nett.rader.find(r => r.nokkel === nettValgt);
+  const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Nettverk", "Network")}</h2><span class="dtype">${L("Live · hvilke programmer som snakker med AI-tjenester nå · lagres ikke", "Live · which programs are talking to AI services now · not saved")}${nett.tid ? " · " + esc(nett.tid) : ""}</span></div>`;
+  const graf = nettValgt && nett.hist[nettValgt]
+    ? nettGraf(nett.hist[nettValgt], nett.admin, valgtRad ? `${valgtRad.program} → ${valgtRad.tjeneste}` : L("Avsluttet", "Ended"))
+    : nettGraf(nett.p, nett.admin, L("Alle AI-forbindelser", "All AI connections"));
+  const rad = r => `<li class="nettRad${r.kjent ? "" : " ukjent"}${r.nokkel === nettValgt ? " valgt" : ""}" data-n="${esc(r.nokkel)}" title="${esc(r.sti || r.program)}">
+      <span class="prog"><i></i><b>${esc(r.program)}</b><small>${r.kjent ? esc(r.nettleser || L("kjent fra søket", "known from the scan")) : L("Ukjent program", "Unknown program")}</small></span>
+      <span>${esc(r.tjeneste)}<small>${esc(r.vert || "")}</small></span>
+      <span class="${r.farlig ? "fare" : ""}">${esc(r.land || L("ukjent", "unknown"))}${r.eier && r.eier !== r.land ? `<small>${L("selskap", "company")}: ${esc(r.eier)}</small>` : ""}</span>
+      <span class="tall">${tall(r.n)}</span><span class="tall">${fart(r.ut)}</span><span class="tall">${fart(r.inn)}</span></li>`;
+  const kolonner = `<li class="nettRad hode"><span>${L("Program", "Program")}</span><span>${L("AI-tjeneste", "AI service")}</span><span>${L("Land", "Country")}</span><span class="tall">${L("Forb.", "Conn.")}</span><span class="tall">${L("Sendt", "Sent")}</span><span class="tall">${L("Mottatt", "Received")}</span></li>`;
+  const tom = `<li class="mer">${nett.tid ? L("Ingen programmer snakker med AI-tjenester akkurat nå.", "No programs are talking to AI services right now.") : L("Leser…", "Reading…")}</li>`;
+  d.innerHTML = hode + `<div class="nettTopp">${graf}</div>`
+    + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${nett.rader.length ? nett.rader.map(rad).join("") : tom}</ul></div>`
+    + `<div class="avLinje ikke">${esc(L(`Bare TCP: UDP og QUIC (HTTP/3) vises ikke. ${nett.andre} andre forbindelser går ikke til kjente AI-tjenester og vises ikke. Ingen innhold leses, ingenting lagres.`, `TCP only: UDP and QUIC (HTTP/3) are not shown. ${nett.andre} other connections do not go to known AI services and are not shown. No content is read, nothing is saved.`))}</div>`;
+  $("tilbake").onclick = lukkArk;
+  // Rader som ikke får plass, telles i stedet for å rulle
+  const dl = $("nettDl"), ul = $("nettUl");
+  if (dl && ul && nett.rader.length) {
+    const bunn = dl.getBoundingClientRect().bottom, lis = [...ul.children]; let skjult = 0;
+    for (const li of lis) if (li.getBoundingClientRect().bottom > bunn + 1) { li.remove(); skjult++; }
+    if (skjult) { const li = ul.lastElementChild; if (li) { li.remove(); skjult++; } ul.insertAdjacentHTML("beforeend", `<li class="mer">+ ${skjult} ${L("til", "more")}</li>`); }
+  }
+  d.querySelectorAll(".nettRad[data-n]").forEach(li => li.onclick = () => { nettValgt = nettValgt === li.dataset.n ? null : li.dataset.n; tegnNett(); });
+}
+function apneArk(f) { stoppNett(); dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
+function lukkArk() { stoppNett(); valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
 let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null, sjekkFilter = null;
@@ -562,7 +637,7 @@ function visPaKart(plass) {
   fane = "kart"; kartSti = kjede.slice(0, -1).map(x => x.n); kartInfo = null; tegnData(); apneKartInfo(kjede[kjede.length - 1]);
 }
 function apneListe(u, sjekk) { fane = "alt"; filter = u || null; sjekkFilter = sjekk || null; dataSide = 0; tegnData(); }
-function apneData() { valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
+function apneData() { stoppNett(); valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
 const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
 const postLinje = p => `<li class="post"${p.k ? ` data-k="${esc(p.k)}" title="${esc(L("Vis på kartet", "Show on the map"))}"` : ""}><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
 const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
@@ -902,15 +977,17 @@ document.addEventListener("keydown", e => {
 });
 
 let venter;
-window.addEventListener("resize", () => { clearTimeout(venter); venter = setTimeout(() => { if ($("resultat").classList.contains("aktiv")) { tegnListe(); if (valgt) tegnDetalj(); if (dataApen) tegnData(); } }, 80); });
+window.addEventListener("resize", () => { clearTimeout(venter); venter = setTimeout(() => { if ($("resultat").classList.contains("aktiv")) { tegnListe(); if (valgt) tegnDetalj(); if (dataApen) tegnData(); if (nettApen) tegnNett(); } }, 80); });
 
 // Meldinger fra programmet
 function motta(m) {
   if (m.type === "resultat") {
     // Samme resultat på nytt språk: bli stående på samme side og samme funn
-    const id = valgt && valgt.id, s0 = side, ss = stedSide, varData = dataApen;
+    const id = valgt && valgt.id, s0 = side, ss = stedSide, varData = dataApen, varNett = nettApen;
     if (!m.behold) folg = {};
+    if (!m.behold) stoppNett();
     visResultat(m.funn, m.info);
+    if (m.behold && varNett) { side = s0; tegnListe(); nettApen = true; $("ark").classList.add("apen"); send({ type: "nettverk", pa: true }); tegnNett(); return; }
     if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; $("ark").classList.add("apen"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
   }
@@ -926,6 +1003,7 @@ function motta(m) {
     if (valgt && valgt.id === m.id && $("folgGraf")) $("folgGraf").innerHTML = folgGraf(m.id);
   }
   else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
+  else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
   else if (m.type === "start") { sisteValg = "admin"; start(); }

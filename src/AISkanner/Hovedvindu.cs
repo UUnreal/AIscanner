@@ -100,6 +100,7 @@ public sealed class Hovedvindu : Form
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         StoppAlleFolg();
+        StoppNettverk();
         base.OnFormClosed(e);
         _web.Dispose();
         // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
@@ -154,6 +155,11 @@ public sealed class Hovedvindu : Form
             if (m.TryGetProperty("pa", out var pa) && pa.ValueKind == JsonValueKind.True) StartFolg(id);
             else StoppFolg(id);
         }
+        else if (type == "nettverk")
+        {
+            if (m.TryGetProperty("pa", out var npa) && npa.ValueKind == JsonValueKind.True) StartNettverk();
+            else StoppNettverk();
+        }
         else if (type == "sprak" && m.TryGetProperty("sprak", out var sp))
         {
             // Bytter språk uten nytt søk: samme funn sendes på nytt, oversatt
@@ -168,6 +174,7 @@ public sealed class Hovedvindu : Form
         _soker = true;
         _nvdStopp?.Cancel();
         StoppAlleFolg();
+        StoppNettverk();
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
@@ -382,6 +389,55 @@ public sealed class Hovedvindu : Form
         x.Klokke.Stop();
         x.Klokke.Dispose();
         x.Folger.Dispose();
+    }
+
+    // «Nettverk»: hvem som snakker med AI-tjenester nå, hvert sekund mens visningen er åpen. Bare i minnet.
+    private (Nettverkvisning Visning, System.Windows.Forms.Timer Klokke)? _nettverk;
+
+    private void StartNettverk()
+    {
+        if (_skanner == null || _soker || _nettverk != null) return;
+        var visning = new Nettverkvisning(_skanner);
+        var klokke = new System.Windows.Forms.Timer { Interval = 1000 };
+        var farlige = new HashSet<string>(_regler.HoyrisikoLand, StringComparer.OrdinalIgnoreCase);
+        bool opptatt = false;
+        async void Tikk()
+        {
+            if (opptatt) return;
+            opptatt = true;
+            try
+            {
+                var b = await Task.Run(visning.Les);
+                if (_nettverk?.Visning != visning) return;
+                string? T(string? x) => _engelsk ? Engelsk.Til(x) : x;
+                Send(new
+                {
+                    type = "nettdata", admin = visning.MalerData, tid = b.Tid.ToString("HH:mm:ss"), ut = b.UtPerSek, inn = b.InnPerSek, andre = b.AndreForbindelser,
+                    rader = b.Rader.Select(r => new
+                    {
+                        nokkel = $"{r.Pid}|{r.Tjeneste}", program = r.Program, sti = r.Sti, pid = r.Pid, tjeneste = r.Tjeneste, vert = r.Vert,
+                        land = T(r.Cdn != null ? $"Skjult bak {r.Cdn}" : IpLand.Navn(r.Land)), eier = r.EierLand == null ? null : T(IpLand.Navn(r.EierLand)),
+                        farlig = (r.Land != null && farlige.Contains(r.Land)) || (r.EierLand != null && farlige.Contains(r.EierLand)),
+                        n = r.Forbindelser, ut = r.UtPerSek, inn = r.InnPerSek, kjent = r.Kjent, nettleser = r.Nettleser,
+                    }),
+                });
+            }
+            catch (Exception e) { System.Diagnostics.Debug.WriteLine($"Nettverk: {e.Message}"); }
+            finally { opptatt = false; }
+        }
+        klokke.Tick += (_, _) => Tikk();
+        _nettverk = (visning, klokke);
+        klokke.Start();
+        Tikk();
+    }
+
+    private void StoppNettverk()
+    {
+        if (_nettverk is not { } x) return;
+        _nettverk = null;
+        x.Klokke.Stop();
+        x.Klokke.Dispose();
+        x.Visning.Dispose();
     }
 
     private void StoppAlleFolg() { foreach (var id in _folg.Keys.ToList()) StoppFolg(id); }

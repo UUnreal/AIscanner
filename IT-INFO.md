@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.18.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -44,7 +44,8 @@ Alt er bare lesing. Ingenting endres.
 - Lyttende TCP-porter med eierprosess (`GetExtendedTcpTable`).
 - For porter på localhost eller `0.0.0.0` som eies av vanlige brukerprosesser, sendes maks tre lesende `GET` til
   `127.0.0.1`: `/api/tags`, `/v1/models` og `/sdapi/v1/sd-models`. Tidsgrense 800 ms, maks 4 MB svar,
-  ingen omdirigering og ingen proxy. Maks 80 porter.
+  ingen omdirigering og ingen proxy. Maks 80 porter. Portene spørres samtidig, 16 om gangen. Svarer en port ikke innen
+  800 ms, prøves ikke de to andre adressene på den porten (det står i Datagrunnlag).
 
 ### Filer på disken
 
@@ -171,6 +172,16 @@ igjen etterpå.
 diagram. Det lagres ikke, logges ikke og forsvinner når haken tas bort eller vinduet lukkes. Bare TCP: UDP og QUIC
 (HTTP/3) vises ikke.
 
+### Nettverk (live)
+
+Knappen «Nettverk» nederst i resultatet viser hvilke programmer som snakker med AI-tjenester akkurat nå: program,
+AI-tjeneste og vertsnavn, land eller CDN, antall forbindelser, og som administrator sendt og mottatt per sekund i et
+diagram for alle eller for ett valgt program. Program som ikke er kjent fra søket eller er en nettleser, merkes
+«Ukjent program» i rødt. Den leser TCP-tabellen hvert sekund og DNS-bufferen hvert 2. sekund, bare mens visningen er
+åpen. Forbindelser som ikke går til kjente AI-tjenester, telles men vises ikke. Ingen pakkefangst, ingen driver, ingen
+innhold. Ingenting lagres og ingenting kommer i rapporten. Bare TCP: UDP og QUIC (HTTP/3) vises ikke, og det står i
+visningen. `AISkanner.Cli --nettverk` skriver tre avlesninger som JSON.
+
 ### Kontroll av alarmene
 
 `AISkanner.exe --kontroll` (eller `Kontroller-alarmene.cmd`) viser om alarmene virker på denne PC-en. Programmet
@@ -296,6 +307,7 @@ Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).
 AISkanner.exe [--uten-nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60]
 AISkanner.exe --kontroll [--en]
 AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.Cli --nettverk
 AISkanner.Cli --kontroll [--en]
 ```
 

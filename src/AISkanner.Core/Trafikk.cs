@@ -68,7 +68,7 @@ public sealed partial class Skanner
     /// <summary>Kun for testing: erstatter det ekte nettverksbildet.</summary>
     internal Func<NettBilde>? TestNett { get; set; }
 
-    private static readonly Dictionary<string, string> Nettleserprosesser = new(StringComparer.OrdinalIgnoreCase)
+    internal static readonly Dictionary<string, string> Nettleserprosesser = new(StringComparer.OrdinalIgnoreCase)
     {
         ["chrome"] = "Chrome", ["msedge"] = "Edge", ["firefox"] = "Firefox", ["brave"] = "Brave", ["opera"] = "Opera",
         ["vivaldi"] = "Vivaldi", ["arc"] = "Arc", ["waterfox"] = "Waterfox", ["librewolf"] = "LibreWolf", ["iexplore"] = "Internet Explorer",
@@ -80,7 +80,7 @@ public sealed partial class Skanner
         if (!string.IsNullOrEmpty(mappe) && !ErSystemmappe(mappe!)) _mappeFunn.TryAdd(mappe!, f);
     }
 
-    private AiNettsted? Tjeneste(string vert) =>
+    internal AiNettsted? Tjeneste(string vert) =>
         _regler.AiTjenester.FirstOrDefault(t => t.Treffer(vert)) ?? FinnNettsted(vert);
 
     private void Trafikk(NettBilde nb)
@@ -217,7 +217,7 @@ public sealed partial class Skanner
         }
     }
 
-    private Funn? FunnForProsess(string navn, string? sti)
+    internal Funn? FunnForProsess(string navn, string? sti)
     {
         var mappe = string.IsNullOrEmpty(sti) ? null : Path.GetDirectoryName(sti);
         if (mappe != null && _mappeFunn.TryGetValue(mappe, out var f)) return f;

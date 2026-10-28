@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll] [--en]
+//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll | --nettverk] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -54,6 +54,17 @@ var funn = await skanner.KjorAsync(nvd, status);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null, funn), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }
+// Nettverk (live) i kommandolinjen: tre avlesninger med ett sekunds mellomrom, skrevet som JSON. Ingenting lagres.
+if (args.Contains("--nettverk"))
+{
+    using var nv = new Nettverkvisning(skanner);
+    for (int r = 0; r < 3; r++)
+    {
+        if (r > 0) await Task.Delay(1000);
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(nv.Les(), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+    }
+    return 0;
+}
 if (args.Contains("--revisjon")) { Console.WriteLine(Revisjon.Tekst(funn, skanner, Nettverk.ErAdmin() ? "administrator" : "bruker", args.Contains("--en"))); return 0; }
 Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;

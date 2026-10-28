@@ -29,6 +29,22 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.0] - 2026-10-28
+
+Ikke testet på Windows. Visningen er testet i nettleser med eksempeldata, kjernen med et falskt nettbilde på Linux.
+
+### Lagt til
+- **Nettverk (live).** Ny knapp nederst i resultatet: hvilke programmer som snakker med AI-tjenester akkurat nå, med
+  AI-tjeneste, vertsnavn, land eller CDN og antall forbindelser, og som administrator sendt og mottatt per sekund i et
+  diagram (alle, eller trykk på en rad for ett program). Ukjente programmer står øverst i rødt. Oppdateres hvert sekund
+  bare mens visningen er åpen. Ingen pakkefangst, ingen driver, ingenting lagres. UDP og QUIC står som blindsone.
+- `AISkanner.Cli --nettverk`: tre avlesninger som JSON (virker også med `--test-nett`).
+
+### Endret
+- **«Spør lokale programmer» er raskere.** Portene spørres samtidig (16 om gangen), og en port som ikke svarer innen
+  0,8 s, spørres ikke om de to andre adressene. Mange porter som ikke svarer, gir ikke lenger lang ventetid.
+  Samme porter og adresser som før.
+
 ## [2.18.1] - 2026-10-27
 
 Ikke testet på Windows. Testet i nettleser med data fra en falsk PC-profil.
