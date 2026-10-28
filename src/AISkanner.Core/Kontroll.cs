@@ -162,7 +162,7 @@ public sealed partial class Skanner
         Sjekk(t.Modeller == 2, $"AI-modeller i overskriften skulle vært bare språkmodellen og modellfila, men ble {t.Modeller}");
         Sjekk(t.Innebygd == 3, $"programmer med innebygd AI skulle vært tre, men ble {t.Innebygd}");
         Sjekk(t.Apper == 0, "innebygd AI fra leverandør telles som AI-app eller agent");
-        Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("5 AI-funn: 2 lokale AI-modeller", StringComparison.Ordinal),
+        Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("5 lokale AI-funn på PC: 2 lokale AI-modeller", StringComparison.Ordinal),
             "overskriften er ikke summen av alle AI-funn med lokale AI-modeller først");
 
         // Samme komponent i flere versjoner eller med to utgivernavn skal bli én rad

@@ -94,6 +94,8 @@ AI-modeller funnet|AI models found
 1 AI-modell funnet|1 AI model found
 lokale AI-modeller|local AI models
 lokal AI-modell|local AI model
+1 lokalt AI-funn på PC|1 local AI finding on PC
+lokale AI-funn på PC|local AI findings on PC
 1 AI-funn|1 AI finding
 AI-funn|AI findings
 AI-modeller|AI models

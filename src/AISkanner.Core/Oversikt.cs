@@ -105,7 +105,7 @@ public static class Oversikt
         if (s > 0) deler.Add(s == 1 ? "1 ukjent AI-spor" : $"{s} ukjente AI-spor");
         int sum = m + n + u + a + i + s;
         if (sum == 0) return "Ingen AI";
-        var hode = sum == 1 ? "1 AI-funn" : $"{sum} AI-funn";
+        var hode = sum == 1 ? "1 lokalt AI-funn på PC" : $"{sum} lokale AI-funn på PC";
         return deler.Count == 1 ? hode : $"{hode}: " + string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
     }
 

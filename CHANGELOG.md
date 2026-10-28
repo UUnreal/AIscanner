@@ -29,6 +29,14 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.11] - 2026-10-28
+
+Venter på test på Windows.
+
+### Endret
+- Overskriften heter «lokale AI-funn på PC» i stedet for «AI-funn», så det er klart at alt er funnet på denne PC-en
+  (filer, nettleserdata og programmer). Samme tekst står øverst i rapporten.
+
 ## [2.19.10] - 2026-10-28
 
 Venter på test på Windows.

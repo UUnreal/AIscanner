@@ -460,13 +460,13 @@ function kart(f) {
 const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Ukjent AI-spor", "Unknown AI trace")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
-// Overskriften er alle AI-funn. Linja under viser hva de er: lokale AI-modeller (kan kjøres for seg selv på PC-en),
+// Overskriften er alle AI-funn på PC-en (alt er funnet lokalt: filer, nettleserdata, programmer). Linja under viser hva de er: lokale AI-modeller (kan kjøres for seg selv på PC-en),
 // nettsteder, utvidelser, apper, programmer med innebygd AI og ukjente spor. Summen av linja er tallet i overskriften.
 function visTelling(antall, t) {
   const deler = [[t.modeller, L("lokal AI-modell", "local AI model"), L("lokale AI-modeller", "local AI models")], [t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")]]
     .filter(x => x[0] > 0);
   const sum = deler.reduce((a, x) => a + x[0], 0) || antall;
-  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 AI-funn", "1 AI finding") : L(`${sum} AI-funn`, `${sum} AI findings`);
+  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 lokalt AI-funn på PC", "1 local AI finding on PC") : L(`${sum} lokale AI-funn på PC`, `${sum} local AI findings on PC`);
   // Står det bare én eller to lokale AI-modeller, vises navnet, så det er klart hva de er
   const navn = (t.modellNavn || []).length && t.modellNavn.length <= 2 ? ` (${t.modellNavn.join(", ")})` : "";
   $("andreFunn").textContent = deler.map((x, i) => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}${i === 0 && t.modeller > 0 ? navn : ""}`).join(" · ");
