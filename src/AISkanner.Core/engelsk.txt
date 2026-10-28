@@ -98,6 +98,10 @@ nettleserutvidelser|browser extensions
 nettleserutvidelse|browser extension
 AI-apper og agenter|AI apps and agents
 AI-app eller agent|AI app or agent
+programmer med innebygd AI|programs with built-in AI
+program med innebygd AI|program with built-in AI
+innebygde modellfiler|built-in model files
+innebygd modellfil|built-in model file
 
 # ---------- Rapport ----------
 Skanneren finner kjente spor. Forbindelser vises bare mens programmene er åpne, og et tomt resultat betyr ikke at PC-en er fri for AI.|The scanner finds known traces. Connections are only visible while the programs are open, and an empty result does not mean the PC is free of AI.
@@ -380,6 +384,9 @@ Edge versjon|Edge version
 AI som vurderer innhold (svindel og sikkerhet)|AI that assesses content (scams and security)
 små AI-modeller for nettleserfunksjoner|small AI models for browser features
 AI for søkeforslag|AI for search suggestions
+AI for utfylling av skjemaer|AI for filling in forms
+AI som vurderer bilder mot svindel|AI that checks images for scams
+AI som oppdager svindelsider|AI that detects scam sites
 oversettelse på PC-en|translation on the PC
 tekstgjenkjenning i bilder og PDF (OCR)|text recognition in images and PDF (OCR)
 tekstgjenkjenning (OCR) i skjermbilder|text recognition (OCR) in screenshots

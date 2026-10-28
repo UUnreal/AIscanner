@@ -4,4 +4,4 @@
 # Fjern # foran linjene under for å godkjenne dem.
 
 # Microsoft 365 Copilot
-# m365.cloud.microsoft
+# copilot.cloud.microsoft

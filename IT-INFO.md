@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.8. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.9. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -34,7 +34,8 @@ Alt er bare lesing. Ingenting endres.
 - Prosessliste og filsti, med `PROCESS_QUERY_LIMITED_INFORMATION` og `QueryFullProcessImageName`.
   **Minnet til andre prosesser leses aldri.** `lsass`, `csrss`, `winlogon` og Defender-prosesser åpnes ikke.
 - Filnavn i mappa til programmer som kjører, for å finne AI-motorer (`onnxruntime`, `ggml`/`llama`, `torch`,
-  `openvino`, `DirectML` m.fl.).
+  `openvino`, `DirectML` m.fl.). `DirectML` alene regnes ikke som AI, fordi det følger med mange programmer som
+  aldri kjører en AI-modell.
 - Installerte programmer (Uninstall-nøkler), Store-apper (nøkkelnavn), tjenester, Run- og RunOnce-nøkler,
   Oppstart-mapper og navn på planlagte oppgaver.
 - Globale npm-pakker og kommandoer i `PATH`, bare om fila finnes.

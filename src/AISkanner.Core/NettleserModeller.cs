@@ -41,6 +41,10 @@ public sealed partial class Skanner
         ["SODA"] = ("tale til tekst (Live Caption)", false),
         ["SODALanguagePacks"] = ("språkpakker for tale til tekst", false),
         ["WasmTtsEngine"] = ("tekst til tale", false),
+        // Edge sine egne småmodeller. Kilde: https://dev.to/jacquesgariepy/inside-chromes-edges-silent-4gb-ai-install-a-complete-hands-on-investigation-54g2
+        ["AutofillAiModelCache"] = ("AI for utfylling av skjemaer", false),
+        ["ProvenanceDataTensors"] = ("AI som vurderer bilder mot svindel", false),
+        ["Edge Techscam Detection"] = ("AI som oppdager svindelsider", false),
     };
 
     private static readonly Regex ModellAktigMappe = new(@"model|llm|onnx|genai|ondevice|\bai\b|ml_", RegexOptions.IgnoreCase);
@@ -138,7 +142,7 @@ public sealed partial class Skanner
                     enkelt: "Små AI-modeller i nettleseren", rad: "Ingenting å gjøre. Dette er vanlige funksjoner i nettleseren.");
                 f.Bruk = $"{andre.Count} {(andre.Count == 1 ? "funksjon" : "funksjoner")}: {string.Join(", ", andre.Select(a => a.Split(new[] { " · " }, StringSplitOptions.None)[1]).Take(3))}{(andre.Count > 3 ? " …" : "")}.";
                 foreach (var l in andre) f.Detalj(l);
-                f.LeggTilModeller(andre.Count);
+                f.LeggTilInnebygde(andre.Count);
                 hoved ??= f;
             }
 

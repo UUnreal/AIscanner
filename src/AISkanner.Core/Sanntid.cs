@@ -72,10 +72,17 @@ public sealed partial class Skanner
                 var mappe = Path.GetDirectoryName(sti);
                 if (mappe == null || ErSystemmappe(mappe) || UnderLeverandorRot(mappe) || !sett.Add(mappe)) continue;
                 var motorer = FinnMotorer(mappe, 2);
-                if (motorer.Count > 0) LeggTilMotorFunn(sti, motorer, kjorer: true);
+                if (motorer.Count > 0 && !BareGrafikkMotor(motorer)) LeggTilMotorFunn(sti, motorer, kjorer: true);
             }
         }
     }
+
+    /// <summary>
+    /// DirectML alene er ikke AI: det er Windows' grafikkbibliotek for maskinlæring, og følger med Edge, WebView2, Teams,
+    /// spill og videoprogrammer som aldri kjører en AI-modell. Det teller bare sammen med en ekte AI-motor eller modellfiler.
+    /// Kilde: https://learn.microsoft.com/windows/ai/directml/dml
+    /// </summary>
+    internal static bool BareGrafikkMotor(IReadOnlyCollection<string> motorer) => motorer.Count > 0 && motorer.All(m => m == "DirectML");
 
     private static bool ErSystemmappe(string mappe)
     {
@@ -317,6 +324,7 @@ public sealed partial class Skanner
         // AI-motorer i programmer som ikke kjører nå
         foreach (var (mappe, motorer) in ff.Motorer)
         {
+            if (BareGrafikkMotor(motorer)) continue;
             var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                       ?? Path.Combine(mappe, Path.GetFileName(mappe) + ".exe");
             LeggTilMotorFunn(exe, motorer, kjorer: false);

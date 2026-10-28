@@ -164,8 +164,10 @@ public sealed partial class Skanner
 
         foreach (var (n, s) in spor)
         {
-            // Et nettsted med lav score og uten lagrede data er bare besøkt i forbifarten
-            if (!s.LagretData && !s.App && s.Score < 1 && s.Besok < 2) continue;
+            // Et nettsted med lav score og uten merkbare lagrede data er bare besøkt i forbifarten. Små lagrede data
+            // (under 1 MB) er vanligvis statistikk eller innloggingsstatus fra ett besøk, ikke spor etter bruk av AI.
+            bool merkbarData = s.LagretData && s.Lagret >= 1024 * 1024;
+            if (!merkbarData && !s.App && s.Score < 1 && s.Besok < 2) continue;
             var hvor = string.Join(", ", s.Nettlesere);
             var f = LeggTil(n.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(n.Risiko), n.Hvorfor, hvor, null, enkelt: n.Enkelt, rad: n.Rad);
             f.Privat = true;

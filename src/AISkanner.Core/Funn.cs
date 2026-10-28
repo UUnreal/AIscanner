@@ -66,6 +66,13 @@ public sealed class Funn
     /// <summary>Hvor mange AI-modeller (modellfiler eller modellmapper) funnet hører til.</summary>
     public int Modeller => _modeller;
     public void LeggTilModeller(int n) => Interlocked.Add(ref _modeller, n);
+    private int _innebygde;
+    /// <summary>
+    /// Modellfiler en leverandør har bygget inn i et program eller en nettleser (ONNX i Office, Bilder, Teams, små
+    /// nettlesermodeller for tale og oversettelse). Telles ikke som AI-modeller i overskriften: programmet telles én gang.
+    /// </summary>
+    public int Innebygde => _innebygde;
+    public void LeggTilInnebygde(int n) => Interlocked.Add(ref _innebygde, n);
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }

@@ -63,10 +63,15 @@ public static class Oversikt
         };
     }
 
-    /// <summary>Hva som er funnet, telt opp: AI-modeller, AI-nettsteder, nettleserutvidelser og AI-apper/agenter uten egne modeller.</summary>
-    public static (int Modeller, int Nettsteder, int Utvidelser, int Apper) Telling(IEnumerable<Funn> funn)
+    /// <summary>
+    /// Hva som er funnet, telt opp: AI-modeller, AI-nettsteder, nettleserutvidelser, AI-apper/agenter uten egne modeller,
+    /// og programmer med AI som leverandøren har bygget inn. AI-modeller er bare modeller som kan kjøres for seg selv
+    /// (modellfiler på disk, farlige modellfiler, språkmodellen i nettleseren og ukjente modellfiler). Små modeller inne i
+    /// Office, Teams, Bilder, drivere og nettleserfunksjoner telles ikke som AI-modeller, men som ett program hver.
+    /// </summary>
+    public static (int Modeller, int Nettsteder, int Utvidelser, int Apper, int Innebygd) Telling(IEnumerable<Funn> funn)
     {
-        int modeller = 0, nettsteder = 0, utvidelser = 0, apper = 0;
+        int modeller = 0, nettsteder = 0, utvidelser = 0, apper = 0, innebygd = 0;
         foreach (var f in funn)
         {
             if (f.Type == "IT-regel" || f.Gruppe == "spor") continue;
@@ -74,19 +79,21 @@ public static class Oversikt
             if (f.Type is "AI-nettsted" or "Ukjent AI-nettsted" || f.Kategori.Contains("(nettsted)"))
                 nettsteder += Regex.Match(f.Navn, @"\((\d+)\)$") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 1;
             else if (f.Type == "Nettleserutvidelse") utvidelser++;
+            else if (f.Innebygde > 0 || f.Kategori.StartsWith("Innebygd AI fra leverandør", StringComparison.Ordinal)) innebygd++;
             else apper++;
         }
-        return (modeller, nettsteder, utvidelser, apper);
+        return (modeller, nettsteder, utvidelser, apper, innebygd);
     }
 
-    /// <summary>"N AI-modeller, N AI-nettsteder, N nettleserutvidelser og N AI-apper og agenter"</summary>
+    /// <summary>Tellingen som tekst, i samme rekkefølge som på skjermen.</summary>
     public static string TellingTekst(IEnumerable<Funn> funn)
     {
-        var (m, n, u, a) = Telling(funn);
+        var (m, n, u, a, i) = Telling(funn);
         var deler = new List<string> { m == 1 ? "1 AI-modell" : $"{m} AI-modeller" };
         if (n > 0) deler.Add(n == 1 ? "1 AI-nettsted" : $"{n} AI-nettsteder");
         if (u > 0) deler.Add(u == 1 ? "1 nettleserutvidelse" : $"{u} nettleserutvidelser");
         if (a > 0) deler.Add(a == 1 ? "1 AI-app eller agent" : $"{a} AI-apper og agenter");
+        if (i > 0) deler.Add(i == 1 ? "1 program med innebygd AI" : $"{i} programmer med innebygd AI");
         int s = funn.Count(f => f.Gruppe == "spor");
         if (s > 0) deler.Add(s == 1 ? "1 ukjent AI-spor" : $"{s} ukjente AI-spor");
         return deler.Count == 1 ? deler[0] : string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();

@@ -22,7 +22,7 @@ godkjentliste som ble brukt (`Regelsett.Kilde` og `GodkjentKilde` blir satt, men
 ```
 # AI bedriften har avtale med
 Microsoft 365 Copilot
-m365.cloud.microsoft
+copilot.cloud.microsoft
 GitHub Copilot
 ```
 

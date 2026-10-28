@@ -52,7 +52,10 @@ public static class ModellFormat
                 var navn = new byte[Math.Min(navnLengde, 512)];
                 fs.LesAlt(navn);
                 var s = Encoding.UTF8.GetString(navn);
-                if (s.EndsWith("data.pkl") || s.Contains("/data/") || s.EndsWith("/version") || s.EndsWith("/byteorder"))
+                // Bare oppsettet PyTorch selv lager (<navn>/data.pkl, <navn>/data/0, <navn>/version, <navn>/byteorder).
+                // «/data/» hvor som helst i stien traff vanlige zip-filer (.nupkg, .vsix, .jar) med en data-mappe.
+                // Kilde: https://github.com/pytorch/pytorch/blob/main/torch/serialization.py (_save: archive_name/data.pkl)
+                if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^[^/]+/(?:data\.pkl|data/\d+|version|byteorder|\.data/version)$") || s == "data.pkl")
                     return new Modell("PyTorch", null, null, null, true);
                 return null;
             }

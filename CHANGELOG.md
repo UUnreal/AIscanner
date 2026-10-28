@@ -29,6 +29,40 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.9] - 2026-10-28
+
+Gjennomgang av falske AI-funn i reglene for skygge-AI, nettsteder og nettverk. Venter på test på Windows.
+Hver endret regel har kilde i `regler.json` eller i en kommentar, og en linje i `--kontroll` (blokka «Falske treff»).
+
+### Endret
+- **Overskriften teller bare AI-modeller som kan kjøres for seg selv**: modellfiler på disk, farlige modellfiler,
+  språkmodellen i nettleseren og ukjente modellfiler. Små modeller som en leverandør har bygget inn i et program
+  (ONNX i Office, Teams, Bilder, Paint, drivere) eller i nettleseren (tale, oversettelse, svindelvern) ble før telt
+  som én AI-modell per fil. Nå telles hvert slikt program én gang, som «program med innebygd AI» i linja under
+  overskriften (`Funn.Innebygde`, `Oversikt.Telling`). Funnene er de samme, og risikoen er uendret.
+- Leverandørfunn skriver «innebygde modellfiler» i stedet for «AI-modeller».
+
+### Rettet
+- **DirectML alene gir ikke lenger et AI-funn.** DirectML følger med Edge, WebView2, Teams, spill og videoprogrammer
+  som aldri kjører en AI-modell. Det teller bare sammen med en ekte AI-motor (ONNX Runtime, llama.cpp osv.) eller
+  modellfiler (`BareGrafikkMotor`).
+- **Microsoft 365-startsiden er ikke Copilot.** `m365.cloud.microsoft` er startsiden for Microsoft 365 (tidligere
+  portal.office.com) og ga «Microsoft 365 Copilot» for alle som åpner Office på nett. Bare `copilot.cloud.microsoft`
+  teller nå. Eksemplet i `godkjent-ai.txt` og `docs/REGELFILER.md` er rettet.
+- **Presentasjonssider er ikke bruk av AI.** Et besøk på `devin.ai`, `cognition.ai`, `mistral.ai`, `x.ai` eller
+  `groq.com` ga et AI-nettsted. Nå teller bare stedene der tjenesten brukes: `app.devin.ai`, `console.mistral.ai`,
+  `grok.com`, `console.x.ai`, `console.groq.com` og `chat.groq.com`. `auth.mistral.ai` er fjernet, fordi Le Chat
+  bruker den samme innloggingen, så én bruk ble to funn (Mistral og Mistral Le Chat).
+- **Små lagrede data teller ikke som bruk.** Et nettsted som bare har lagret under 1 MB (statistikk eller
+  innloggingsstatus fra ett besøk) og ellers ikke er brukt, blir ikke et funn.
+- **Edge sine egne småmodeller er kjent**: `AutofillAiModelCache`, `ProvenanceDataTensors` og
+  `Edge Techscam Detection`. Før kunne de bli «Ukjent AI-modell i Edge» (rød).
+- **Nettverk: hele `volces.com` er ikke AI.** Det er Volcano Engine-skyen (lagring, CDN). Bare Doubao-API-et
+  `ark.cn-beijing.volces.com` teller.
+- **Zip-filer med en data-mappe er ikke PyTorch-modeller.** Gjenkjenningen krever nå oppsettet PyTorch selv lager
+  (`<navn>/data.pkl`, `<navn>/data/0`, `<navn>/version`). Før kunne en `.nupkg`, `.vsix` eller `.jar` over 20 MB
+  bli en rød modell.
+
 ## [2.19.8] - 2026-10-28
 
 Ikke testet på Windows ennå. `--kontroll` gir 104 av 104.

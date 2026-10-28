@@ -58,7 +58,7 @@ public sealed partial class Skanner
     private static readonly string[] IkkeAiVerter =
     {
         "www.baidu.com", "qq.com", "www.tencent.com", "cloud.tencent.com", "www.aliyun.com", "www.alibaba.com", "taobao.com",
-        "www.bytedance.com", "www.tiktok.com", "www.capcut.com", "www.xfyun.cn", "www.sensetime.com",
+        "www.bytedance.com", "www.tiktok.com", "www.capcut.com", "www.xfyun.cn", "www.sensetime.com", "tos-cn-beijing.volces.com",
     };
     // Programmer som skal kjennes igjen som kinesisk AI, og stier som ikke skal (f.eks. en bruker som heter Kimi)
     private static readonly (string Tekst, string Navn)[] KinaProgrammer =
@@ -101,6 +101,67 @@ public sealed partial class Skanner
             var fam = regler.Modellfamilier.Where(f => f.Arkitekturer.Any(x => ModellGjenkjenning.Norm(x) == ModellGjenkjenning.Norm(ark))).ToList();
             Sjekk(fam.Count == 1 && fam[0].Land == "CN", $"modellarkitektur {ark} peker ikke entydig på en kinesisk familie");
         }
+        return (ok, alle);
+    }
+
+    // Falske treff som er rettet: nettsteder som bare presenterer AI (eller er noe annet), og vertsnavn som ikke er AI
+    private static readonly string[] IkkeAiNettsteder =
+    {
+        "m365.cloud.microsoft", "devin.ai", "cognition.ai", "mistral.ai", "auth.mistral.ai", "x.ai", "groq.com",
+    };
+    private static readonly (string Vert, string Navn)[] AiNettstederSomSkalTreffe =
+    {
+        ("copilot.cloud.microsoft", "Microsoft 365 Copilot"), ("app.devin.ai", "Devin (Cognition)"), ("chat.mistral.ai", "Mistral Le Chat"),
+        ("console.mistral.ai", "Mistral"), ("grok.com", "Grok"), ("console.x.ai", "Grok"), ("console.groq.com", "Groq"), ("chatgpt.com", "ChatGPT"),
+    };
+    private static readonly string[] IkkeAiTjenester = { "lf3-cdn-tos.bytescm.com", "portal.office.com" };
+
+    /// <summary>Kontrollen av falske treff: det som ikke er AI, eller bare er AI bygget inn av en leverandør, skal ikke telles som AI-modeller.</summary>
+    private static (int Ok, int Alle) FalskeTreffKontroll(Skanner s, StringBuilder sb, string rot)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Falskt treff: {hva}"); }
+        foreach (var v in IkkeAiNettsteder)
+            Sjekk(s.FinnNettsted(v) == null, $"{v} er ikke bruk av AI, men ble gjenkjent som {s.FinnNettsted(v)?.Navn}");
+        foreach (var (v, navn) in AiNettstederSomSkalTreffe)
+            Sjekk(s.FinnNettsted(v)?.Navn == navn, $"{v} gjenkjennes ikke som {navn}");
+        foreach (var v in IkkeAiTjenester)
+            Sjekk(s.Tjeneste(v) == null, $"{v} er ikke AI, men ble gjenkjent som {s.Tjeneste(v)?.Navn}");
+        Sjekk(BareGrafikkMotor(new[] { "DirectML" }), "DirectML alene regnes som AI-motor");
+        Sjekk(!BareGrafikkMotor(new[] { "DirectML", "ONNX Runtime" }), "ONNX Runtime sammen med DirectML regnes ikke som AI-motor");
+        Sjekk(KjenteNettleserModeller.ContainsKey("AutofillAiModelCache") && KjenteNettleserModeller.ContainsKey("ProvenanceDataTensors"),
+            "Edge sine egne småmodeller er ikke kjent, og blir «Ukjent AI-modell i Edge»");
+
+        // Zip-filer: bare PyTorch sitt eget oppsett er en modell, ikke enhver zip med en data-mappe
+        string LagZip(string navn, string forste)
+        {
+            // Bare starten av en zip-fil (lokal filhode med navnet på første fil), det er alt Gjenkjenn leser
+            var sti = Path.Combine(rot, navn);
+            var navnBytes = Encoding.ASCII.GetBytes(forste);
+            var hode = new byte[30 + navnBytes.Length + 64];
+            hode[0] = (byte)'P'; hode[1] = (byte)'K'; hode[2] = 3; hode[3] = 4;
+            BitConverter.GetBytes((ushort)navnBytes.Length).CopyTo(hode, 26);
+            navnBytes.CopyTo(hode, 30);
+            File.WriteAllBytes(sti, hode);
+            return sti;
+        }
+        Sjekk(ModellFormat.Gjenkjenn(LagZip("pakke.nupkg", "lib/data/les-meg.txt")) == null, "zip med en data-mappe (.nupkg) ble tatt for en PyTorch-modell");
+        Sjekk(ModellFormat.Gjenkjenn(LagZip("modell.pt", "archive/data.pkl"))?.Format == "PyTorch", "PyTorch-modell (archive/data.pkl) ble ikke gjenkjent");
+
+        // Tellingen: innebygde modellfiler hos en leverandør er ett program, ikke mange AI-modeller
+        var lev = new Funn { Navn = "Kontroll: Office", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Fra leverandør" };
+        lev.LeggTilInnebygde(7);
+        var smaa = new Funn { Navn = "Andre AI-modeller i Edge", Kategori = "Innebygd AI fra leverandør (nettleser)", Hvorfor = "", Type = "Innebygd i nettleser" };
+        smaa.LeggTilInnebygde(5);
+        var nano = new Funn { Navn = "Gemini Nano i Chrome", Kategori = "Innebygd AI fra leverandør (nettleser)", Hvorfor = "", Type = "Innebygd i nettleser" };
+        nano.LeggTilModeller(1);
+        var gguf = new Funn { Navn = "AI-modell: kontroll", Kategori = "Lokal AI (modell)", Hvorfor = "", Type = "Lokal modell" };
+        gguf.LeggTilModeller(1);
+        var motor = new Funn { Navn = "Kontroll: bare AI-motor", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Fra leverandør" };
+        var t = Oversikt.Telling(new[] { lev, smaa, nano, gguf, motor });
+        Sjekk(t.Modeller == 2, $"AI-modeller i overskriften skulle vært bare språkmodellen og modellfila, men ble {t.Modeller}");
+        Sjekk(t.Innebygd == 3, $"programmer med innebygd AI skulle vært tre, men ble {t.Innebygd}");
+        Sjekk(t.Apper == 0, "innebygd AI fra leverandør telles som AI-app eller agent");
         return (ok, alle);
     }
 
@@ -172,7 +233,10 @@ public sealed partial class Skanner
             var (kinaOk, kinaAlle) = KinaKontroll(s, regler, sb);
             ok += kinaOk;
             sb.AppendLine($"{(kinaOk == kinaAlle ? "OK  " : "FEIL")}  Kinesisk AI: {kinaOk} av {kinaAlle} regler riktige (nettsteder, API-er, programmer, modellfamilier og navn som ikke skal treffe)");
-            int alle = Kontrollspor.Length + 2 + kinaAlle;
+            var (falskOk, falskAlle) = FalskeTreffKontroll(s, sb, rot);
+            ok += falskOk;
+            sb.AppendLine($"{(falskOk == falskAlle ? "OK  " : "FEIL")}  Falske treff: {falskOk} av {falskAlle} riktige (presentasjonssider, Microsoft 365-startsiden, skytjenester, DirectML, innebygde modeller i tellingen)");
+            int alle = Kontrollspor.Length + 2 + kinaAlle + falskAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

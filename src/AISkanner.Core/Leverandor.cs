@@ -124,7 +124,7 @@ public sealed partial class Skanner
         {
             var app = new AppAi { Rot = j.AppRot, Beskyttet = j.Beskyttet };
             LeverandorGaa(j.Mappe, j.Dybde, app, ff, hopp, frist);
-            if (app.Filer.Count > 0 || app.Motorer.Count > 0) lock (apper) apper[app.Rot] = app;
+            if (app.Filer.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) lock (apper) apper[app.Rot] = app;
         });
 
         // Programmer som kjører nå
@@ -284,7 +284,8 @@ public sealed partial class Skanner
                 rad: kjent ? "Vanligvis greit. På jobb bør IT vite om det og bestemme om AI-funksjonene skal være på."
                            : "Finn ut hva programmet er. Avinstaller det hvis ingen vet hvorfor det er der.");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
-        f.LeggTilModeller(app.Filer.Count);
+        // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
+        f.LeggTilInnebygde(app.Filer.Count);
 
         // Når kom det på PC-en
         DateTime? lagtInn = null, oppdatert = null;
@@ -296,7 +297,7 @@ public sealed partial class Skanner
 
         var deler = new List<string>();
         if (utgiver != null) deler.Add($"Fra {Forkort(utgiver)}");
-        if (app.Filer.Count > 0) deler.Add($"{app.Filer.Count} {(app.Filer.Count == 1 ? "AI-modell" : "AI-modeller")} ({Rapport.Storrelse(storrelse)})");
+        if (app.Filer.Count > 0) deler.Add($"{app.Filer.Count} {(app.Filer.Count == 1 ? "innebygd modellfil" : "innebygde modellfiler")} ({Rapport.Storrelse(storrelse)})");
         if (app.Motorer.Count > 0) deler.Add($"AI-motor: {string.Join(", ", app.Motorer)}");
         if (lagtInn != null) deler.Add($"lagt inn {Tid(lagtInn)}");
         f.Bruk = string.Join(", ", deler) + (iGang ? ". Kjører nå." : ".");

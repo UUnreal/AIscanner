@@ -1,6 +1,6 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-28k",
+  "versjon": "2026-10-28l",
   "produkter": [
     {
       "navn": "Ollama",
@@ -849,10 +849,9 @@
     {
       "navn": "Devin (Cognition)",
       "domener": [
-        "devin.ai",
-        "app.devin.ai",
-        "cognition.ai"
+        "app.devin.ai"
       ],
+      "kilde": "Bare appen der Devin brukes: https://docs.devin.ai/get-started/devin-intro. devin.ai og cognition.ai er presentasjonssider; et besøk der er ikke bruk av AI.",
       "risiko": "gul",
       "land": "US",
       "enkelt": "AI-programmerer fra Cognition",
@@ -884,10 +883,9 @@
     {
       "navn": "Mistral",
       "domener": [
-        "mistral.ai",
-        "console.mistral.ai",
-        "auth.mistral.ai"
+        "console.mistral.ai"
       ],
+      "kilde": "Utviklerkonsollen: https://docs.mistral.ai/getting-started/quickstart/. mistral.ai er presentasjonssiden, og auth.mistral.ai er innloggingen som også Le Chat bruker (ga samme bruk som to funn).",
       "risiko": "gul",
       "land": "FR",
       "enkelt": "AI fra Mistral (Frankrike)",
@@ -987,9 +985,10 @@
     {
       "navn": "Groq",
       "domener": [
-        "groq.com",
-        "console.groq.com"
+        "console.groq.com",
+        "chat.groq.com"
       ],
+      "kilde": "console.groq.com (API) og chat.groq.com (GroqChat): https://www.producthunt.com/products/groq-chat. groq.com er presentasjonssiden.",
       "risiko": "gul",
       "land": "US",
       "enkelt": "AI-chat og API",
@@ -1196,9 +1195,9 @@
     {
       "navn": "Microsoft 365 Copilot",
       "domener": [
-        "m365.cloud.microsoft",
         "copilot.cloud.microsoft"
       ],
+      "kilde": "m365.cloud.microsoft er startsiden for Microsoft 365 (erstatter portal.office.com), ikke Copilot: https://uwaterloo.ca/microsoft-365/blog/changes-m365-hompage og https://support.microsoft.com/en-US/Office/what-is-cloud-microsoft",
       "risiko": "gronn",
       "land": "US",
       "enkelt": "Copilot via jobbkontoen",
@@ -1220,8 +1219,9 @@
       "navn": "Grok",
       "domener": [
         "grok.com",
-        "x.ai"
+        "console.x.ai"
       ],
+      "kilde": "grok.com er chatten; console.x.ai er API-konsollen: https://docs.x.ai/developers/quickstart. x.ai er presentasjonssiden til selskapet.",
       "risiko": "gul",
       "land": "US",
       "enkelt": "AI-chat fra xAI",
@@ -1936,8 +1936,9 @@
     {
       "navn": "Doubao API (ByteDance)",
       "domener": [
-        "volces.com"
+        "ark.cn-beijing.volces.com"
       ],
+      "kilde": "Volcengine Ark (Doubao-API) har base_url https://ark.cn-beijing.volces.com/api/v3: https://docs.api7.ai/ai-gateway/providers/volcengine-ark. Hele volces.com er Volcano Engine-skyen (lagring, CDN) og ga falske treff.",
       "risiko": "rod",
       "land": "CN",
       "enkelt": "Kinesisk AI brukt av et program",

@@ -283,7 +283,7 @@ public sealed class Hovedvindu : Form
                 revisjonFeil = _revisjon && _revisjonSti == null && !_skanner.LytterNa,
                 lytter = _skanner.LytterNa,
                 lytteSekunder = _skanner.LytteSekunder,
-                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, spor = _resultat.Count(f => f.Gruppe == "spor") } : null,
+                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, innebygd = t.Innebygd, spor = _resultat.Count(f => f.Gruppe == "spor") } : null,
             },
             funn = _resultat.Select((f, id) => new
             {
