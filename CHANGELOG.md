@@ -29,6 +29,20 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.7] - 2026-10-28
+
+Ikke testet på Windows. `--kontroll` gir 104 av 104.
+
+### Rettet
+- **De kinesiske reglene fra 2.19.6 er sjekket mot kilder på nettet i dag, og hver regel har fått en `kilde`-URL.**
+  Rettet: Vidu bruker `vidu.io` (ikke vidu.com/vidu.cn), Baidu ERNIE bruker også `wenxin.baidu.com` (ernie.baidu.com
+  fjernet). Fjernet fordi de ikke kunne bekreftes: `yuewen.cn`, `moonshot.cn`, `tongyi.com`, `api.01.ai` og
+  `modelscope.ai`. Lagt til: `ark.eu-west.bytepluses.com` (BytePlus i Europa) og `token.sensenova.cn` (nyere
+  SenseNova-adresse).
+- **Trae ga feiltreff på Tencent QQ.** Regelen så etter ordet «trae», og QQ har en fil som heter `TRAE.DLL`. Nå kjennes
+  Trae bare igjen på `Trae.exe`, `Trae CN.exe` og installasjonsmappene `%LOCALAPPDATA%\Programs\Trae` og
+  `Trae CN`. Kontrollen sjekker at QQ-fila ikke treffer.
+
 ## [2.19.6] - 2026-10-28
 
 Ikke testet på Windows. Reglene er kontrollert med `--kontroll` (98 av 98) og selvtesten.

@@ -116,7 +116,8 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 ```
 
 `domener` treffer domenet og alle underdomener. Når flere passer, vinner det lengste domenet. `land` er landet
-selskapet hører hjemme i, og brukes i «Sender data til».
+selskapet hører hjemme i, og brukes i «Sender data til». `kilde` (valgfri, også på `produkter`) er hvor domenene
+eller stiene er sjekket, som URL. Programmet bruker den ikke; den er for den som vedlikeholder reglene.
 
 ### modellfamilier
 

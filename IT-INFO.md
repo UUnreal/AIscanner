@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.6. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.7. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -204,7 +204,7 @@ Symlinker, Prefetch, BAM og Run-nøkkelen kontrolleres ikke.
 Kontrollen sjekker også reglene for kinesisk AI: vertsnavn for kinesiske AI-nettsteder og API-er skal treffe en tjeneste
 i Kina med høy risiko, vanlige kinesiske nettsteder som ikke er AI (baidu.com, qq.com, aliyun.com, tiktok.com …) skal
 ikke treffe, kinesiske AI-programmer og VS Code-utvidelser skal kjennes igjen, og modellarkitekturer skal peke entydig
-på en kinesisk familie. Alt skal være OK; i 2.19.6 er det 98 av 98.
+på en kinesisk familie. Alt skal være OK; i 2.19.7 er det 104 av 104.
 
 ## Hva den aldri leser
 

@@ -53,7 +53,7 @@ public sealed partial class Skanner
         "chat.deepseek.com", "api.deepseek.com", "chat.qwen.ai", "dashscope.aliyuncs.com", "modelscope.cn", "kimi.com", "api.moonshot.ai",
         "doubao.com", "ark.cn-beijing.volces.com", "api.coze.com", "trae.ai", "yiyan.baidu.com", "qianfan.baidubce.com", "yuanbao.tencent.com",
         "hunyuan.tencentcloudapi.com", "chatglm.cn", "open.bigmodel.cn", "minimax.io", "api.stepfun.com", "api.lingyiwanwu.com",
-        "api.baichuan-ai.com", "spark-api.xf-yun.com", "api.sensenova.cn", "api.siliconflow.cn", "klingai.com", "vidu.com",
+        "api.baichuan-ai.com", "spark-api.xf-yun.com", "api.sensenova.cn", "api.siliconflow.cn", "klingai.com", "vidu.io", "api.hunyuan.cloud.tencent.com", "ark.eu-west.bytepluses.com", "token.sensenova.cn", "api-inference.modelscope.cn",
     };
     private static readonly string[] IkkeAiVerter =
     {
@@ -64,6 +64,7 @@ public sealed partial class Skanner
     private static readonly (string Tekst, string Navn)[] KinaProgrammer =
     {
         (@"C:\Users\a\AppData\Local\Programs\Trae\Trae.exe", "Trae / MarsCode (ByteDance)"),
+        (@"C:\Users\a\AppData\Local\Programs\Trae CN\Trae CN.exe", "Trae / MarsCode (ByteDance)"),
         (@"C:\Users\a\AppData\Local\Doubao\Application\Doubao.exe", "Doubao (ByteDance)"),
         (@"C:\Users\a\.vscode\extensions\alibaba-cloud.tongyi-lingma-2.5.0", "Qwen / Tongyi (Alibaba)"),
         (@"C:\Users\a\.vscode\extensions\aminer.codegeex-2.20.0", "CodeGeeX (Zhipu)"),
@@ -73,6 +74,7 @@ public sealed partial class Skanner
     private static readonly string[] IkkeKinaProgrammer =
     {
         @"C:\Users\Kimi\Documents\notater.exe", @"C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE", @"C:\Program Files\Ernie Ball\app.exe",
+        @"C:\Program Files (x86)\Tencent\QQIntl\Plugin\com.tencent.audiovideo\Bin\TRAE.DLL",
     };
     // Modellarkitekturer (GGUF general.architecture eller config.json model_type) som entydig peker på en kinesisk modellfamilie
     private static readonly string[] KinaArkitekturer =
