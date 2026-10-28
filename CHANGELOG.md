@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.5] - 2026-10-28
+
+Ikke testet på Windows. Visningen er testet i nettleser, bredt og smalt vindu, norsk og engelsk.
+
+### Endret
+- **Alle valgene samlet til høyre øverst.** Nettverk, Datagrunnlag, Søk igjen og Last ned rapport er fire like
+  knapper i én rad, med språkvalget over. Nettverk og Datagrunnlag var små lenker i bunnlinja og så ikke ut som noe
+  man kunne trykke på. Den som er åpen, har en ring rundt seg, og et nytt trykk lukker den. I smalt vindu brytes
+  raden under overskriften. Bunnlinja har bare status igjen (og «Mål datamengde» når man ikke er administrator).
+
 ## [2.19.4] - 2026-10-28
 
 Ikke testet på Windows. Visningen er testet i nettleser med eksempeldata.

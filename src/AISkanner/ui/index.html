@@ -212,6 +212,10 @@
   .knapp { border: 0; border-radius: 980px; padding: 9px 18px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
   .knapp.primar { background: var(--bla); color: #fff; }
   .knapp.sekundar { background: var(--kort); color: var(--bla); box-shadow: var(--skygge); }
+  /* Alle valgene i resultatet samlet til høyre, like tydelige. Den som er åpen, får en ring. */
+  .meny { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
+  .meny .knapper { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .meny .knapp.paa { box-shadow: 0 0 0 2px var(--kort), 0 0 0 4px var(--bla); }
   #resultat .hoved { flex: 1; }
   .andreFunn { font-size: 16px; color: var(--dempet); margin-top: 3px; font-weight: 500; }
   .andreFunn:empty { display: none; }
@@ -339,6 +343,8 @@
     .detalj .navnRad .dtype { display: none; }
     .uflis { padding: 5px 8px; } .uflis b { font-size: 15px; } .uflis small { font-size: 11px; }
     .topp { flex-wrap: wrap; } .topp .tittel { flex-basis: 100%; }
+    .meny { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .meny .knapper { justify-content: flex-start; } .meny .knapp { padding: 8px 14px; font-size: 14px; }
   }
 </style>
 </head>
@@ -379,8 +385,12 @@
 <section id="resultat" class="side">
   <div class="topp">
     <div class="tittel"><h1 id="hodeTittel"></h1><div class="andreFunn" id="andreFunn"></div><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
-    <button class="knapp sekundar" id="igjen" data-en="Scan again">Søk igjen</button>
-    <button class="knapp primar" id="lagre" data-en="Download report">Last ned rapport</button>
+    <div class="meny" id="meny"><div class="knapper">
+      <button class="knapp primar" id="nettKnapp" data-en="Network">Nettverk</button>
+      <button class="knapp primar" id="dataKnapp" data-en="Data basis">Datagrunnlag</button>
+      <button class="knapp primar" id="igjen" data-en="Scan again">Søk igjen</button>
+      <button class="knapp primar" id="lagre" data-en="Download report">Last ned rapport</button>
+    </div></div>
   </div>
   <div class="panel hoved" id="hoved">
     <div class="tr th"><span>AI</span><span data-en="Risk">Risiko</span><span>Type</span><span data-en="Location">Ligger her</span><span data-en="Sends data to">Sender data til</span><span></span></div>
@@ -405,7 +415,7 @@ function vis(id) {
   document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id));
   // Språkvalget står øverst til høyre, og ved knappene når resultatet vises
   const sp = $("sprak");
-  if (id === "resultat") $("igjen").before(sp); else if (sp.parentElement !== document.body) document.body.prepend(sp);
+  if (id === "resultat") $("meny").prepend(sp); else if (sp.parentElement !== document.body) document.body.prepend(sp);
 }
 
 // Språk: følger Windows til brukeren trykker på et flagg. Valget lagres ikke.
@@ -483,14 +493,12 @@ function tegnBunn() {
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
     : info.revisjonFeil ? `<span style="color:var(--rod)">${L("Revisjonslogg kunne ikke lagres", "Audit trail could not be saved")}</span> · ` : "";
   // Mens lyttingen går i bakgrunnen vises ingen datamengde: tallet er ikke ferdig, og et halvt tall skal ikke stå der
-  $("bunnHoyre").innerHTML = rev + `<button id="nettKnapp">${L("Nettverk", "Network")}</button><span class="skille"> · </span><button id="dataKnapp">${L("Datagrunnlag", "Data basis")}</button><span class="skille"> · </span><span class="maaling">` + (info.lytter
+  $("bunnHoyre").innerHTML = rev + `<span class="maaling">` + (info.lytter
     ? `<span class="lytter">${esc(lytterIgjen > 0 ? L(`Lytter på nettverket: ${lytterIgjen} s igjen`, `Listening to the network: ${lytterIgjen} s left`) : L("Lytter på nettverket…", "Listening to the network…"))}</span>`
     : info.dataMalt
     ? esc(L(`Sendt ut under søket: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out during the scan: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
     : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`) + `</span>`;
   const m = $("maal"); if (m) m.onclick = () => send({ type: "admin", revisjon });
-  $("dataKnapp").onclick = apneData;
-  $("nettKnapp").onclick = apneNett;
   const rv = $("revVis"); if (rv) rv.onclick = () => send({ type: "vis", sti: info.revisjon });
 }
 
@@ -557,7 +565,7 @@ function apneNett() {
   valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
   $("ark").classList.add("apen"); tegnNett(); send({ type: "nettverk", pa: true });
 }
-function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); }
+function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); merkMeny(); }
 function mottaNett(m) {
   if (!nettApen) return;
   nett.admin = m.admin; nett.andre = m.andre; nett.andreNettleser = m.andreNettleser || 0; nett.udp = m.udp || []; nett.rader = m.rader || []; nett.tid = m.tid;
@@ -585,6 +593,7 @@ function nettGraf(p, admin, tittel) {
   return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
 }
 function tegnNett() {
+  merkMeny();
   const d = $("detalj");
   const valgtRad = nettValgt && nett.rader.find(r => r.nokkel === nettValgt);
   const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Nettverk", "Network")}</h2><span class="dtype">${L("Live · hvilke programmer som snakker med AI-tjenester nå · lagres ikke", "Live · which programs are talking to AI services now · not saved")}${nett.tid ? " · " + esc(nett.tid) : ""}</span></div>`;
@@ -660,8 +669,8 @@ function tegnNett() {
     tegnNett();
   });
 }
-function apneArk(f) { stoppNett(); dataApen = false; valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
-function lukkArk() { stoppNett(); valgt = null; dataApen = false; $("ark").classList.remove("apen"); }
+function apneArk(f) { stoppNett(); dataApen = false; merkMeny(); valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
+function lukkArk() { stoppNett(); valgt = null; dataApen = false; merkMeny(); $("ark").classList.remove("apen"); }
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
 let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null, sjekkFilter = null;
@@ -693,7 +702,7 @@ function visPaKart(plass) {
   fane = "kart"; kartSti = kjede.slice(0, -1).map(x => x.n); kartInfo = null; tegnData(); apneKartInfo(kjede[kjede.length - 1]);
 }
 function apneListe(u, sjekk) { fane = "alt"; filter = u || null; sjekkFilter = sjekk || null; dataSide = 0; tegnData(); }
-function apneData() { stoppNett(); valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); tegnData(); send({ type: "logg" }); }
+function apneData() { stoppNett(); valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); merkMeny(); tegnData(); send({ type: "logg" }); }
 const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
 const postLinje = p => `<li class="post"${p.k ? ` data-k="${esc(p.k)}" title="${esc(L("Vis på kartet", "Show on the map"))}"` : ""}><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
 const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
@@ -713,6 +722,7 @@ function fordelSider(rader, linje) {
   if (n) n.onclick = () => { dataSide++; tegnData(); };
 }
 function tegnData() {
+  merkMeny();
   const d = $("detalj"), g = logg;
   const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Datagrunnlag", "Data basis")}</h2><span class="dtype">${L("Utviklermodus · hva søket leste, og hvorfor", "Developer mode · what the scan read, and why")}</span></div>`;
   if (!g) { d.innerHTML = hode + `<div class="tom">${L("Henter…", "Loading…")}</div>`; $("tilbake").onclick = lukkArk; return; }
@@ -1125,6 +1135,10 @@ $("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else 
 $("igjen").onclick = start;
 settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });
+// Nettverk og Datagrunnlag: trykk igjen for å lukke
+$("nettKnapp").onclick = () => nettApen ? lukkArk() : apneNett();
+$("dataKnapp").onclick = () => dataApen ? lukkArk() : apneData();
+function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); }
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------
 function demo(m) {

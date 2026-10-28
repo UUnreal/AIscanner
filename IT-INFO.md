@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.4. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.19.5. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -175,7 +175,7 @@ diagram. Det lagres ikke, logges ikke og forsvinner når haken tas bort eller vi
 
 ### Nettverk (live)
 
-Knappen «Nettverk» nederst i resultatet viser hvilke programmer som snakker med AI-tjenester akkurat nå: program,
+Knappen «Nettverk» øverst til høyre i resultatet viser hvilke programmer som snakker med AI-tjenester akkurat nå: program,
 AI-tjeneste og vertsnavn, land eller CDN, antall forbindelser, og som administrator sendt og mottatt per sekund i et
 diagram for alle eller for ett valgt program. Program som ikke er kjent fra søket eller er en nettleser, merkes
 «Ukjent program» i rødt. Den leser TCP-tabellen hvert sekund og DNS-bufferen hvert 2. sekund, bare mens visningen er
@@ -235,7 +235,7 @@ og sted for slike funn.
 
 ## Datagrunnlag og revisjonslogg
 
-**Datagrunnlag** (knappen nederst i resultatet) viser alt søket prøvde å lese: hvilken sjekk, hva (fil, mappe,
+**Datagrunnlag** (knappen øverst til høyre i resultatet) viser alt søket prøvde å lese: hvilken sjekk, hva (fil, mappe,
 register, database, port, prosess, nettverk, hendelseslogg), hvor, og utfallet:
 
 | Utfall | Betyr |

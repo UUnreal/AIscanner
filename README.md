@@ -6,7 +6,7 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.19.4 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.19.5 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
 - **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
@@ -91,7 +91,7 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
   hvis du velger Ja på startskjermen.
 - **Ingen AI i programmet.** Funnene kommer fra faste regler (filformat, YARA, `regler.json` og kjente adresser),
   ikke fra en AI-modell. Samme PC og samme regler gir samme svar.
-- **Datagrunnlag.** Knappen nederst i resultatet viser alt søket leste, hva det ikke fikk lest (nektet, låst,
+- **Datagrunnlag.** Knappen øverst til høyre i resultatet viser alt søket leste, hva det ikke fikk lest (nektet, låst,
   stoppet av antivirus, tidsgrense) og SHA-256 av reglene som ga resultatet.
 - **Sender nesten ingenting ut.** Etter søket sendes bare produktord som `ollama` til NVD (nvd.nist.gov).
   PC-navn, brukernavn og stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
