@@ -22,17 +22,16 @@ public sealed partial class Skanner
 
     private static readonly ISet<string> Skriptendelser = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        ".py", ".pyw", ".js", ".mjs", ".cjs", ".ts", ".mts", ".tsx", ".ps1", ".psm1",
+        ".py", ".pyw", ".js", ".mjs", ".cjs", ".ts", ".mts", ".tsx", ".ps1", ".psm1", ".vbs", ".vbe", ".jse", ".wsf", ".bat", ".cmd",
     };
 
     private void Kommandolinjer()
     {
         if (!Plattform.ErWindows) return;
-        if (!Kommandolinje.Tillatt(_regler, out var grunn))
-        {
-            Tilgangslogg.Logg("Kommandolinje", "Kommandolinjene til tolkere og AI-programmer", Utfall.Blokkert, grunn);
-            return;
-        }
+        bool tillatt = Kommandolinje.Tillatt(_regler, out var grunn);
+        if (!tillatt) Tilgangslogg.Logg("Kommandolinje", "Kommandolinjene til tolkere og AI-programmer", Utfall.Blokkert, grunn);
+        var tre = Prosesstre.Liste();
+        var vist = new Dictionary<Funn, int>();
         int lest = 0, nektet = 0;
         foreach (var p in Process.GetProcesses())
         {
@@ -42,23 +41,37 @@ public sealed partial class Skanner
                 bool tolk = Kommandolinje.ErTolk(p.ProcessName);
                 _aiPid.TryGetValue(p.Id, out var ai);
                 if (!tolk && ai.Funn == null) continue;
-                var linje = Kommandolinje.Les(p.Id);
-                if (linje == null) { nektet++; continue; }
-                lest++;
-                Vurder(p.ProcessName, ai.Sti ?? ProsessSti.Hent(p), p.Id, linje, ai.Funn, null);
-                linje = null;
+                var sti = ai.Sti ?? ProsessSti.Hent(p);
+                if (tillatt)
+                {
+                    var linje = Kommandolinje.Les(p.Id);
+                    if (linje == null) nektet++;
+                    else { lest++; Vurder(p.ProcessName, sti, p.Id, linje, ai.Funn, null); }
+                    linje = null;
+                }
+                // Hvem og hvordan, for de fem første prosessene i hvert funn
+                var f = ai.Funn ?? (_pidFunn.TryGetValue(p.Id, out var pf) ? pf : null);
+                if (f == null) continue;
+                vist.TryGetValue(f, out var n);
+                if (n >= 5) continue;
+                vist[f] = n + 1;
+                HvemOgHvordan(f, p.Id, sti, tre);
             }
         }
-        Tilgangslogg.Logg("Kommandolinje", "Kommandolinjene til tolkere og AI-programmer", lest > 0 || nektet == 0 ? Utfall.Lest : Utfall.Nektet,
-            $"{lest} lest{(nektet > 0 ? $", {nektet} nektet av Windows" : "")}; sammenlignet med reglene i minnet og kastet; bare regeltreff og skriptfila vises, aldri argumentene");
+        if (tillatt)
+            Tilgangslogg.Logg("Kommandolinje", "Kommandolinjene til tolkere og AI-programmer", lest > 0 || nektet == 0 ? Utfall.Lest : Utfall.Nektet,
+                $"{lest} lest{(nektet > 0 ? $", {nektet} nektet av Windows" : "")}; sammenlignet med reglene i minnet og kastet; bare regeltreff og skriptfila vises, aldri argumentene");
+        AgentBarn(tre);
     }
 
     /// <summary>
     /// Vurderer én kommandolinje. <paramref name="nar"/> er satt når linjen kommer fra en hendelseslogg (kjørt før),
     /// ellers kjører prosessen nå. Brukes også av kontrollen med laget tekst.
     /// </summary>
-    internal Funn? Vurder(string prosess, string? exe, int pid, string linje, Funn? ai, DateTime? nar, string kilde = "")
+    internal Funn? Vurder(string prosess, string? exe, int pid, string linje, Funn? ai, DateTime? nar, string kilde = "", string? oppsett = null, string? oppsettTekst = null)
     {
+        // oppsett: kommandoen kommer fra oppstart eller en planlagt oppgave («Starter med Windows», «Planlagt oppgave»)
+        var sted = oppsett ?? (nar == null ? "Kjører nå" : "Kjørt før");
         var arg = Kommandolinje.Del(linje);
         if (arg.Count == 0) return null;
         var navn = Path.GetFileNameWithoutExtension(prosess);
@@ -91,7 +104,7 @@ public sealed partial class Skanner
             t.Kode = null;
 
             var hva = t.Skript != null ? $"kjører {t.Skript}" : t.Modul != null ? $"kjører modulen {t.Modul}" : t.Pakke != null ? $"kjører pakken {TolkPakke(t.Pakke)}" : "kjører kode skrevet på kommandolinjen (vises ikke)";
-            var detalj = $"{(nar == null ? "Kjører nå" : "Kjørt før")}: {navn}{(pid > 0 ? $" (PID {pid})" : "")} {hva}"
+            var detalj = $"{oppsettTekst ?? sted}: {navn}{(pid > 0 ? $" (PID {pid})" : "")} {hva}"
                 + (bruker.Count > 0 ? $" · bruker {string.Join(", ", bruker)}" : "")
                 + (verter.Count > 0 ? $" · snakker med {string.Join(", ", verter)}" : "")
                 + (nokkel ? " · har en API-nøkkel i seg (vises ikke)" : "") + tid;
@@ -103,13 +116,13 @@ public sealed partial class Skanner
                 f.Advarsel("Koden er gjemt som base64 på kommandolinjen.");
             }
             else if (regel != null)
-                f = FraRegel(regel, nar == null ? "Kjører nå" : "Kjørt før", detalj);
+                f = FraRegel(regel, sted, detalj);
             else if (bruker.Count > 0 || verter.Count > 0)
             {
                 var hvem = t.Skript != null ? Kommandolinje.Filnavn(t.Skript) : t.Modul ?? TolkPakke(t.Pakke) ?? "kode på kommandolinjen";
                 f = LeggTil($"{t.Sprak}-skript med AI: {hvem}", agent ? "Skygge-AI (agent)" : "Skygge-AI", Risiko.Rod,
                     "Et skript bruker AI. Kjent igjen på skriptfila og på hva tolken ble startet med; argumentene vises ikke.",
-                    nar == null ? "Kjører nå" : "Kjørt før", detalj, enkelt: $"{t.Sprak}-skript med AI");
+                    sted, detalj, enkelt: $"{t.Sprak}-skript med AI");
             }
             if (f != null && nokkel) f.Advarsel("Skriptet har en API-nøkkel skrevet rett i seg.");
             if (f != null && (bruker.Count > 0 || verter.Count > 0)) f.Sterkt();
@@ -117,9 +130,12 @@ public sealed partial class Skanner
         }
         if (f == null) return null;
 
-        if (nar == null) { f.Bruk ??= "Kjører nå."; f.Tidspunkt(null, DateTime.Now); if (pid > 0) _pidFunn[pid] = f; }
-        else { f.Bruk ??= "Brukt før."; f.Tidspunkt(nar, nar); }
-        if (nar == null) f.Merk(Tilstand.KjorerNa); else f.Merk(Tilstand.BruktFor);
+        if (oppsett == null)
+        {
+            if (nar == null) { f.Bruk ??= "Kjører nå."; f.Tidspunkt(null, DateTime.Now); if (pid > 0) _pidFunn[pid] = f; }
+            else { f.Bruk ??= "Brukt før."; f.Tidspunkt(nar, nar); }
+            if (nar == null) f.Merk(Tilstand.KjorerNa); else f.Merk(Tilstand.BruktFor);
+        }
         if (t.Modellfil != null) f.Detalj($"Modellfil lastet: {t.Modellfil}{tid}");
         if (t.Flagg.Count > 0)
         {
@@ -127,6 +143,33 @@ public sealed partial class Skanner
             foreach (var x in t.Flagg) f.Advarsel(x + ".");
             f.Risiko = Risiko.Rod;
         }
+        return f;
+    }
+
+    /// <summary>
+    /// En kommando fra oppstart eller en planlagt oppgave som ikke traff en regel på navnet: tolker vurderes som over,
+    /// og et skript som startes direkte (.ps1, .vbs, .bat …) sjekkes for AI på innholdet.
+    /// </summary>
+    private Funn? OppsettKommando(string kommando, string sted, string tekst)
+    {
+        var arg = Kommandolinje.Del(Environment.ExpandEnvironmentVariables(kommando));
+        if (arg.Count == 0) return null;
+        var exe = arg[0];
+        var navn = Path.GetFileNameWithoutExtension(Kommandolinje.Filnavn(exe));
+        if (Kommandolinje.ErTolk(navn)) return Vurder(navn, exe, 0, kommando, null, null, oppsett: sted, oppsettTekst: tekst);
+        if (!Skriptendelser.Contains(Path.GetExtension(exe)) || !Path.IsPathRooted(exe) || LesSkript(exe) is not { } innhold) return null;
+        var bruker = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        var verter = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool agent = false, nokkel = false;
+        Innhold(innhold, bruker, verter, ref agent, ref nokkel);
+        innhold = "";
+        if (bruker.Count == 0 && verter.Count == 0) return null;
+        var f = LeggTil($"Skript med AI som starter av seg selv: {Kommandolinje.Filnavn(exe)}", agent ? "Skygge-AI (agent)" : "Skygge-AI", Risiko.Rod,
+            "Et skript som Windows starter av seg selv, bruker AI. Kjent igjen på innholdet i skriptet; argumentene vises ikke.", sted,
+            $"{tekst}: {exe}{(bruker.Count > 0 ? $" · bruker {string.Join(", ", bruker)}" : "")}{(verter.Count > 0 ? $" · snakker med {string.Join(", ", verter)}" : "")}{(nokkel ? " · har en API-nøkkel i seg (vises ikke)" : "")}",
+            enkelt: "Skript med AI som starter av seg selv");
+        if (nokkel) f.Advarsel("Skriptet har en API-nøkkel skrevet rett i seg.");
+        f.Sterkt();
         return f;
     }
 

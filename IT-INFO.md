@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.27.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.28.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -169,7 +169,10 @@ fil»), fordi endringstider kan forfalskes.
 | Prefetch (admin) | `C:\Windows\Prefetch\*.pf` | Programnavn, de siste kjøretidene og filnavnene programmet åpnet (AI-biblioteker i `site-packages`/`node_modules`, `.gguf`/`.safetensors`) |
 | BAM (admin) | `HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings` | Programsti og siste kjøretid per konto, for AI-programmer |
 | Amcache (admin) | `C:\Windows\appcompat\Programs\Amcache.hve`, lest rett fra disken og tolket i minnet | Sti, navn, versjon, utgiver og SHA-1 for AI-programmer, også avinstallerte. Transaksjonsloggene leses ikke. |
-| Planlagte oppgaver (admin) | `TaskCache` i registeret | Siste kjøretid for oppgaver som starter AI |
+| Planlagte oppgaver (admin) | `TaskCache` i registeret, `System32\Tasks` | Siste kjøretid for oppgaver som starter AI. Starter oppgaven en tolk eller et skript, leses argumentene i minnet som en kommandolinje, og skriptet sjekkes for AI. |
+| Oppstart som er slått av | `Explorer\StartupApproved\Run` og `Run32` (HKCU og HKLM) | Om en oppstart med AI er slått av i Oppgavebehandling, og når |
+| Skript i oppstart | Skriptet en Run-oppføring eller oppgave starter (`.ps1 .vbs .js .py .bat .cmd` …, maks 2 MB) | AI-biblioteker, navn på AI-tjenester, om noe ligner en nøkkel. Teksten beholdes aldri. |
+| Hvem og hvordan | Tilgangsbilletten til AI-prosesser (`TOKEN_QUERY`), Toolhelp-lista, programfila | Konto, om den kjører som administrator, hvem som startet den, SHA-256 av programfila (maks 512 MB), og hvilke programmer en AI-agent har startet nå (bare programnavn) |
 | Hendelseslogger (admin) | Security 4688, Sysmon 1 og 22, `Microsoft-Windows-DNS-Client/Operational` 3008, siste 30 dager | Programnavn, tid, konto og AI-navn som ble slått opp. Kommandolinjen i 4688 og Sysmon behandles som over. Loggene slås aldri på av programmet. |
 
 | Hooks og oppgaver | `hooks` i `.claude\settings*.json`, `.vscode\tasks.json` med `runOn: folderOpen`, skript rett i `.claude\` og `.vscode\` | Hendelse og første ord i kommandoen, filsti, tid |

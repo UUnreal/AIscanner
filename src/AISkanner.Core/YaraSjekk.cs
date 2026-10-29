@@ -47,8 +47,7 @@ public sealed partial class Skanner
             DateTime? endret = null, opprettet = null;
             try { var fi = new FileInfo(sti); endret = fi.LastWriteTime; opprettet = fi.CreationTime; } catch { }
             var f = LeggTil($"Farlig AI-modellfil: {Path.GetFileName(sti)}", "Lokal AI (modell)", Risiko.Rod, treff[0].Beskrivelse, "YARA",
-                $"Fil: {sti} · {Rapport.Storrelse(lengde)} · endret {Tid(endret)}",
-                rad: "Ikke last inn eller åpne fila. Gi den til IT for analyse, eller slett den.");
+                $"Fil: {sti} · {Rapport.Storrelse(lengde)} · endret {Tid(endret)}");
             f.Bruk = $"Funnet av YARA-regelen {treff[0].Navn}.";
             f.Sterkt();
             f.LeggTilModeller(1);

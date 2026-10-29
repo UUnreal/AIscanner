@@ -128,7 +128,7 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `kunUtvidelse` | `true` når regelen bare skal treffe nettleserutvidelser. |
 | `nvd` | Ordet som sendes til NVD for å telle kjente sårbarheter. Bruk et produktord, aldri noe som kan identifisere en person eller bedrift. |
 | `hvorfor`, `hvorforEnkelt`, `enkelt` | Forklaringer i rapport og detaljvisning. |
-| `rad` | Brukes ikke lenger. Råd ble fjernet fra skjerm og rapport i 2.8. |
+| `rad` | Fjernet i 2.28.0. Leses ikke. |
 
 ### aiNettsteder og aiTjenester
 

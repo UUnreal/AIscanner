@@ -43,7 +43,6 @@ public sealed class Funn
     public string Gruppe => Kategori == Skanner.SporKategori ? "spor" : Kategori.StartsWith("Nettleser") ? "nettleser" : Kategori.StartsWith("Lokal") ? "lokal" : "skjult";
     public required string Hvorfor { get; init; }
     public string? Enkelt { get; init; }
-    public string? Rad { get; init; }
     /// <summary>Kort om hvor mye noe brukes, f.eks. "Brukes ofte i Chrome."</summary>
     public string? Bruk { get; set; }
     public List<string> Advarsler { get; } = new();

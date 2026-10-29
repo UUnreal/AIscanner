@@ -137,6 +137,11 @@
   .fordeling { display: flex; gap: 14px; color: var(--tekst); }
   .fordeling span { display: inline-flex; align-items: center; gap: 6px; }
   .fordeling b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .fordeling button { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; background: none; border: 0; padding: 2px 8px; margin: -2px -8px; border-radius: 999px; cursor: pointer; }
+  .fordeling button:hover { background: var(--flate2, rgba(127,127,127,.12)); }
+  .fordeling button.valgt { background: var(--flate2, rgba(127,127,127,.18)); box-shadow: inset 0 0 0 1px var(--kant, rgba(127,127,127,.35)); }
+  .fordeling button.av { opacity: .45; }
+  .fordeling button:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
   .prikk { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--svak); }
   .prikk.rod { background: var(--rod); } .prikk.gul { background: var(--gul); } .prikk.gronn { background: var(--gronn); }
   .prikk.ukjent { background: transparent; box-shadow: inset 0 0 0 2px var(--rod); }
@@ -474,6 +479,9 @@ const STI = /[A-Za-z]:\\[^:*?"<>|()]+[^:*?"<>|()\s]/;
 const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 20V10M7 20v-5M17 20V4"/></svg>`;
 
 let alle = [], info = {}, side = 0, valgt = null;
+// Risikofilter fra toppmenyen (Høy, Middels, Lav, Ukjent). null = alle.
+let risikoValg = null;
+const synlige = () => risikoValg ? alle.filter(f => f.risiko === risikoValg) : alle;
 
 // IP-adressene til et mål, hver med land. Er det ingen IP-er, brukes målets eget land.
 const ipListe = m => (m.ip && m.ip.length ? m.ip : [m.adresse]).map(x => typeof x === "string" ? { ip: x, kode: m.landKode, land: m.land, cdn: m.landKode === "CDN" ? m.cdn : null, farlig: m.farlig } : x);
@@ -513,7 +521,7 @@ function visTelling(antall, t) {
 function visResultat(funn, inf) {
   const RISIKO = r => Math.max(0, RISIKOGRUPPER.indexOf(r));
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO(a[0].risiko) - RISIKO(b[0].risiko) || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
-  info = inf || {}; side = 0; valgt = null;
+  info = inf || {}; side = 0; valgt = null; risikoValg = null;
   const ant = r => alle.filter(f => f.risiko === r).length;
   visTelling(funn.length, info.telling || { totalt: funn.length });
   $("bar").innerHTML = funn.length ? RISIKOGRUPPER.filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
@@ -528,8 +536,14 @@ function tegnFordeling() {
   const funn = alle, ant = r => alle.filter(f => f.risiko === r).length;
   // Høy, Middels, Lav og Ukjent: hvert funn står i nøyaktig én, så de summerer til overskriften. Ukjent vises bare når det finnes.
   $("fordeling").innerHTML = funn.length
-    ? RISIKOGRUPPER.filter(r => r !== "ukjent" || ant(r)).map(r => `<span><span class="prikk ${r}"></span><b>${ant(r)}</b>${merke(r)}</span>`).join("")
+    ? RISIKOGRUPPER.filter(r => r !== "ukjent" || ant(r)).map(r => `<button data-r="${r}" class="${risikoValg === r ? "valgt" : risikoValg ? "av" : ""}" aria-pressed="${risikoValg === r}" title="${esc(risikoValg === r ? L("Vis alle", "Show all") : L(`Vis bare ${merke(r).toLowerCase()}`, `Show only ${merke(r).toLowerCase()}`))}"><span class="prikk ${r}"></span><b>${ant(r)}</b>${merke(r)}</button>`).join("")
+      + (risikoValg ? `<button data-r="" title="${esc(L("Vis alle", "Show all"))}"><b>${alle.length}</b>${L("Alle", "All")}</button>` : "")
     : L("Ingen spor etter AI", "No traces of AI");
+  $("fordeling").querySelectorAll("button[data-r]").forEach(b => b.onclick = () => {
+    const r = b.dataset.r || null;
+    risikoValg = risikoValg === r ? null : r;
+    side = 0; lukkArk(); tegnFordeling(); tegnListe();
+  });
 }
 
 function tegnBunn() {
@@ -572,7 +586,7 @@ let sideDeling = [];
 function delSider() {
   const h = ($("liste").clientHeight || 400) - 12, sider = [];
   let side = [], brukt = 0, forrige = null;
-  for (const f of alle) {
+  for (const f of synlige()) {
     const ny = f.risiko !== forrige || !side.length, trengs = RAD_H + (ny ? GRUPPE_H : 0);
     if (side.length && brukt + trengs > h) { sider.push(side); side = []; brukt = 0; }
     brukt += RAD_H + (f.risiko !== forrige || !side.length ? GRUPPE_H : 0);
@@ -861,7 +875,8 @@ function tegnData() {
     const kilde = k => `<li class="kilde"><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(k.navn)}</b><small>${esc(k.hvor)}</small></div><div class="sha">SHA-256 ${esc(k.sha || "–")}</div></div></li>`;
     kropp = `<div class="ingenAi">${BRIKKE}<span>${esc(g.ingenAi)}</span></div>`
       + `<h3>${L("Program og regler som ga resultatet", "Program and rules behind the result")}</h3><ul class="kildeGrid">${g.kilder.map(kilde).join("")}</ul>`
-      + `<h3>${L("Aldri lest, med vilje", "Never read, by design")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
+      + `<h3>${L("Aldri åpnet, med vilje", "Never opened, by design")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
+      + `<h3>${L("Lest i minnet, aldri vist", "Read in memory, never shown")}</h3><div class="brikker" style="margin-top:0">${(g.lestAldriVist || []).map(a => `<span>${esc(a)}</span>`).join("")}</div>`
       + `<h3>${L("Revisjonslogg", "Audit trail")}</h3><div class="avLinje boks ${g.revisjon ? "ok" : ""}" style="margin-top:0">${g.revisjon ? esc(L(`Lagret: ${g.revisjon}`, `Saved: ${g.revisjon}`)) : esc(L("Av for dette søket. Ingenting er lagret.", "Off for this scan. Nothing is saved."))}</div>`;
   }
   d.innerHTML = hode + `<div class="faner">${faner.map(f => `<button data-fane="${f[0]}" class="${fane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? `<span class="ant">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>` + kropp;
@@ -1134,10 +1149,10 @@ document.addEventListener("keydown", e => {
   if (!$("resultat").classList.contains("aktiv")) return;
   if (e.key === "Escape" && (nettApen || dataApen) && !$("skVindu")?.offsetParent) { lukkArk(); return; }
   if (valgt) {
-    const i = alle.indexOf(valgt);
+    const liste = synlige(), i = liste.indexOf(valgt);
     if (e.key === "Escape") lukkArk();
     else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      const ny = alle[Math.min(alle.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];
+      const ny = liste[Math.min(liste.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];
       if (ny && ny !== valgt) { valgt = ny; visIdent = false; side = sideFor(ny); tegnListe(); tegnDetalj(); }
       e.preventDefault();
     } else if (e.key === "ArrowRight" && $("stedNeste") && !$("stedNeste").disabled) { stedSide++; tegnDetalj(true); }
@@ -1159,7 +1174,10 @@ function motta(m) {
     const id = valgt && valgt.id, s0 = side, ss = stedSide, varData = dataApen, varNett = nettApen;
     if (!m.behold) folg = {};
     if (!m.behold) stoppNett();
+    const r0 = risikoValg;
     visResultat(m.funn, m.info);
+    // Samme filter etter oppdatering, så lenge det fortsatt finnes funn med den risikoen
+    if (m.behold && r0 && alle.some(f => f.risiko === r0)) { risikoValg = r0; tegnFordeling(); tegnListe(); }
     if (m.behold && varNett) { side = s0; tegnListe(); nettApen = true; visArk("full"); send({ type: "nettverk", pa: true }); tegnNett(); return; }
     if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; visArk("full"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }

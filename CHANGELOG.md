@@ -29,6 +29,29 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.28.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 177 av 177.
+
+### Lagt til
+- **Filter på risiko:** Høy, Middels, Lav og Ukjent øverst i resultatet kan trykkes på for å vise bare den gruppen.
+  Trykk igjen eller på «Alle» for å se alt. Tallene er de samme som før, og lista viser nøyaktig så mange rader.
+- **Hvem og hvordan** for AI som kjører: konto, om den kjører som administrator, hvem som startet den og SHA-256 av
+  programfila.
+- **AI-agenter som kjører kommandoer nå:** skall, tolkere og verktøy en AI-agent har startet, vises på agenten
+  (bare programnavnet).
+- **Oppstart som er slått av** i Oppgavebehandling (StartupApproved) vises med tid, og teller ikke som «Satt opp».
+- **Skript i oppstart og planlagte oppgaver** sjekkes for AI på innholdet, også `.vbs`, `.bat` og `.cmd`. For tolkere
+  leses argumentene i oppgaven i minnet, som en kommandolinje, og vises aldri.
+- `wscript` og `cscript` regnes som tolkere.
+
+### Endret
+- «Aldri lest, med vilje» er delt i «Aldri åpnet» og «Lest i minnet, aldri vist», så lista stemmer med hva søket
+  faktisk gjør etter 2.26.0.
+
+### Fjernet
+- Rådtekstene (`rad`) i `regler.json` og i koden. De ble ikke vist, og programmet skal bare vise data.
+
 ## [2.27.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 175 av 175.

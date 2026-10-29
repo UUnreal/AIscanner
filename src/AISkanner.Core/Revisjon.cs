@@ -17,15 +17,25 @@ public static class Revisjon
     public static readonly Utfall[] IkkeDekket = { Utfall.Blokkert, Utfall.Nektet, Utfall.Laast, Utfall.Tidsgrense, Utfall.Feil };
 
     /// <summary>Det programmet aldri åpner, med vilje (sikkerhetssperre i koden).</summary>
-    public static readonly string[] AldriLest =
+    /// <summary>Det søket aldri åpner, verken som bruker eller administrator.</summary>
+    public static readonly string[] AldriApnet =
     {
         "Passord, informasjonskapsler og skjemadata i nettleseren (Login Data, Cookies, Web Data)",
         "Lagrede data fra nettleserutvidelser (Local Extension Settings)",
-        "Verdier av API-nøkler og miljøvariabler (bare navnene)",
-        "Minnet til andre programmer, lsass og kommandolinjer",
-        "Andre brukeres profiler (også som administrator)",
-        "Kommandolinjene til programmer som kjører, også i Windows-hendelseslogger",
-        "Teksten i instruksjonsfiler (CLAUDE.md, AGENTS.md), ferdigheter, hooks (bare første ord) og .env",
+        "Minnet til andre programmer og lsass",
+        "Windows Legitimasjonsbehandling og PowerShell-historikken",
+        "E-post",
+        ".env-filer (bare om de finnes)",
+    };
+
+    /// <summary>Det søket leser i minnet for å kjenne igjen AI, men aldri viser, lagrer eller sender.</summary>
+    public static readonly string[] LestAldriVist =
+    {
+        "Verdier av API-nøkler (bare navnet, eller at noe ligner en nøkkel)",
+        "Argumentene i kommandolinjer, også i hendelseslogger (bare skriptfila og regelen som slo til)",
+        "Kode skrevet på kommandolinjen, også gjemt som base64",
+        "De første bytene i filer (filhodet), bare for å kjenne igjen AI-modeller",
+        "Teksten i skript, instruksjonsfiler (CLAUDE.md, AGENTS.md), ferdigheter og hooks (bare treff og første ord)",
         "Innholdet i AI-agentenes økter, kommandoer og svar (bare tidspunkter og om en økt nevner nøkler eller systemfiler)",
     };
 
@@ -153,8 +163,11 @@ public static class Revisjon
         else foreach (var (tid, id, tekst) in av.Vaare) L($"{tid:HH:mm:ss}  {id}  {tekst}");
 
         L();
-        L("ALDRI LEST (MED VILJE)");
-        foreach (var a in AldriLest) L("- " + a);
+        L("ALDRI ÅPNET (MED VILJE)");
+        foreach (var a in AldriApnet) L("- " + a);
+        L();
+        L("LEST I MINNET, ALDRI VIST");
+        foreach (var a in LestAldriVist) L("- " + a);
 
         L();
         L($"FUNN ({funn.Count})");
@@ -243,7 +256,8 @@ public static class Revisjon
             defenderOk = av != null && av.Lest && av.Vaare.Count == 0,
             defHendelser = av?.Vaare.Select(h => new { t = h.Tid.ToString("HH:mm:ss"), id = h.Id, tekst = T(h.Tekst) }),
             kilder = Revisjon.Kilder(s).Select(k => new { navn = T(k.Navn), hvor = T(k.Hvor), sha = k.Sha256 }),
-            aldri = Revisjon.AldriLest.Select(T),
+            aldri = Revisjon.AldriApnet.Select(T),
+            lestAldriVist = Revisjon.LestAldriVist.Select(T),
             ingenAi = T(Revisjon.IngenAi),
             revisjon = revisjonSti,
             kart = s.Logg.Kart.Tre(funn, T),

@@ -18,7 +18,6 @@ public sealed class Produkt
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
     [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
     [JsonPropertyName("hvorforEnkelt")] public string? HvorforEnkelt { get; set; }
-    [JsonPropertyName("rad")] public string? Rad { get; set; }
 }
 
 /// <summary>Et AI-nettsted som kan gjenkjennes fra spor i nettleserne.</summary>
@@ -31,7 +30,6 @@ public sealed class AiNettsted
     [JsonPropertyName("land")] public string? Land { get; set; }
     [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
-    [JsonPropertyName("rad")] public string? Rad { get; set; }
 
     public bool Treffer(string vert) => Domener.Any(d => vert.Equals(d, StringComparison.OrdinalIgnoreCase) || vert.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
 }
@@ -71,7 +69,6 @@ public sealed class InnebygdAI
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
     [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
     [JsonPropertyName("hvorforEnkelt")] public string? HvorforEnkelt { get; set; }
-    [JsonPropertyName("rad")] public string? Rad { get; set; }
 }
 
 public sealed class DaarligVersjon

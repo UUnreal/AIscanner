@@ -142,8 +142,7 @@ public sealed partial class Skanner
             bool av = policy?.Verdi == 0;
             var f = LeggTil($"Leo (AI-assistent i {navn})", LeverandorKategori + " (nettleser)", av ? Risiko.Gronn : Risiko.Gul,
                 $"{navn} har AI-assistenten Leo innebygd. Den bruker AI-modeller i skyen hos Brave, eller en modell brukeren har koblet til selv.",
-                navn, $"Mappe: {sti}", enkelt: $"AI bygd inn i {navn}",
-                rad: "På jobb bør IT bestemme om den skal være på.");
+                navn, $"Mappe: {sti}", enkelt: $"AI bygd inn i {navn}");
             if (av) f.Merknad($"IT har slått av Leo (BraveAIChatEnabled = 0, {policy!.Value.Hvor}).");
             else if (policy == null) f.Merknad("Ingen regel fra IT (policyen BraveAIChatEnabled er ikke satt).");
         }
@@ -157,7 +156,7 @@ public sealed partial class Skanner
             var navn = n.Replace(" Stable", "");
             LeggTil($"Aria (AI-assistent i {navn})", LeverandorKategori + " (nettleser)", Risiko.Gul,
                 $"{navn} har AI-assistenten Aria innebygd. Spørsmål og innhold fra sider sendes til AI-tjenesten hos Opera.",
-                navn, $"Mappe: {d}", enkelt: $"AI bygd inn i {navn}", rad: "På jobb bør IT bestemme om den skal være på.");
+                navn, $"Mappe: {d}", enkelt: $"AI bygd inn i {navn}");
         }
 
         // Firefox og varianter
@@ -177,8 +176,7 @@ public sealed partial class Skanner
                     var tjeneste = FinnNettsted(uri.Host)?.Navn;
                     var f = LeggTil($"AI-chatbot i sidefeltet i {navn}", "Skygge-AI (nettleserflagg)", Risiko.Rod,
                         $"{navn} er satt opp med en AI-chatbot i sidefeltet ({tjeneste ?? uri.Host}). Tekst brukeren markerer på sider kan sendes dit.",
-                        navn, $"Innstilling: browser.ml.chat.provider = {uri.Host} · {profil}", enkelt: "AI-chatbot i nettleseren",
-                        rad: "På jobb: bruk bare AI-tjenester bedriften har avtale med.");
+                        navn, $"Innstilling: browser.ml.chat.provider = {uri.Host} · {profil}", enkelt: "AI-chatbot i nettleseren");
                     f.Merknad("Lest fra prefs.js (bare browser.ml.*).");
                 }
             }
@@ -189,8 +187,7 @@ public sealed partial class Skanner
                 .Where(x => x.Extension is ".onnx" or ".gguf" or ".tflite" || ModellFormat.Gjenkjenn(x.FullName) != null || ModellFormat.ErOnnxUtenEndelse(x.FullName)).Take(50).ToList();
             if (modeller.Count == 0) continue;
             var lm = LeggTil($"Lokale AI-modeller i {navn}", LeverandorKategori + " (nettleser)", Risiko.Gul,
-                $"{navn} har lastet ned AI-modeller som kjører på PC-en.", navn, null, enkelt: $"AI bygd inn i {navn}",
-                rad: "Greit for privat bruk. På jobb bør IT bestemme om den skal være på.");
+                $"{navn} har lastet ned AI-modeller som kjører på PC-en.", navn, null, enkelt: $"AI bygd inn i {navn}");
             foreach (var m in modeller.OrderByDescending(x => x.Length).Take(10)) lm.Detalj($"Fil: {m.FullName} · {Rapport.Storrelse(m.Length)}");
             lm.Tidspunkt(modeller.Min(x => x.CreationTime), modeller.Max(x => x.LastWriteTime));
         }

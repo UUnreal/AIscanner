@@ -417,7 +417,7 @@ public sealed partial class Skanner
             }
             if (!_regler.AiTjenester.Contains(tj))
             {
-                var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, prosess != null ? Nettleserprosesser[prosess] : "Windows", null, enkelt: tj.Enkelt, rad: tj.Rad);
+                var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, prosess != null ? Nettleserprosesser[prosess] : "Windows", null, enkelt: tj.Enkelt);
                 f.Privat = true;
                 f.Bruk ??= "Åpnet før.";
                 f.Merk(Tilstand.BruktFor);

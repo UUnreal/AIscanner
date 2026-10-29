@@ -15,7 +15,7 @@ internal static class Kommandolinje
     /// <summary>Tolkere som kjører skript. Navnet på prosessen, uten .exe.</summary>
     public static readonly ISet<string> Tolkere = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "python", "pythonw", "python3", "py", "pyw", "node", "bun", "deno", "powershell", "pwsh", "java", "javaw", "uv", "uvx",
+        "python", "pythonw", "python3", "py", "pyw", "node", "bun", "deno", "powershell", "pwsh", "java", "javaw", "uv", "uvx", "wscript", "cscript",
     };
 
     public static bool ErTolk(string prosess) =>
@@ -123,7 +123,7 @@ internal static class Kommandolinje
         var t = new Tolket();
         var p = prosess.ToLowerInvariant();
         bool python = p.StartsWith("py"), ps = p is "powershell" or "pwsh", java = p.StartsWith("java"), uv = p.StartsWith("uv");
-        t.Sprak = python ? "Python" : ps ? "PowerShell" : java ? "Java" : uv ? "Python" : p == "deno" ? "Deno" : p == "bun" ? "Bun" : p == "node" ? "Node" : "";
+        t.Sprak = p is "wscript" or "cscript" ? "Windows Script" : python ? "Python" : ps ? "PowerShell" : java ? "Java" : uv ? "Python" : p == "deno" ? "Deno" : p == "bun" ? "Bun" : p == "node" ? "Node" : "";
         int n = 1;
         if (python)
             for (; n < a.Count; n++)
@@ -183,6 +183,7 @@ internal static class Kommandolinje
                 if (n == 1 && p is "bun" or "deno" && x is "run" or "x" or "exec" or "serve") continue;
                 if (x is "-e" or "--eval" or "-p" or "--print" && n + 1 < a.Count) { t.Kode = a[++n]; n++; break; }
                 if (x is "-r" or "--require" or "--import" or "--loader" or "--experimental-loader" or "--env-file") { n++; continue; }
+                if (x.StartsWith("//")) continue;   // wscript og cscript: //B, //Nologo
                 if (x.StartsWith("-")) continue;
                 if (p == "bun" && n == 1 && !x.Contains('.') && !x.Contains('\\') && !x.Contains('/')) { t.Pakke = x; n++; break; }
                 t.Skript = x; n++;

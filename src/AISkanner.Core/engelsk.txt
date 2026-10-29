@@ -1389,3 +1389,29 @@ Ikke vurdert|Not assessed
 Blokkert av IT|Blocked by IT
 Blokkert av IT, men finnes på PC-en.|Blocked by IT, but present on the PC.
 ~^  Status: (.+) · treffsikkerhet (høy|middels|lav) \((\d+) (spor|uavhengige spor)\) · (godkjent av it|blokkert av it|ikke vurdert)$|  Status: $1 · confidence $2 ($3 traces) · $5
+ALDRI ÅPNET (MED VILJE)|NEVER OPENED (BY DESIGN)
+LEST I MINNET, ALDRI VIST|READ IN MEMORY, NEVER SHOWN
+Minnet til andre programmer og lsass|The memory of other programs and lsass
+Windows Legitimasjonsbehandling og PowerShell-historikken|Windows Credential Manager and the PowerShell history
+E-post|Email
+.env-filer (bare om de finnes)|.env files (only whether they exist)
+Verdier av API-nøkler (bare navnet, eller at noe ligner en nøkkel)|Values of API keys (only the name, or that something looks like a key)
+Argumentene i kommandolinjer, også i hendelseslogger (bare skriptfila og regelen som slo til)|The arguments in command lines, also in event logs (only the script file and the rule that matched)
+Kode skrevet på kommandolinjen, også gjemt som base64|Code written on the command line, also hidden as base64
+De første bytene i filer (filhodet), bare for å kjenne igjen AI-modeller|The first bytes of files (the file header), only to recognise AI models
+Teksten i skript, instruksjonsfiler (CLAUDE.md, AGENTS.md), ferdigheter og hooks (bare treff og første ord)|The text in scripts, instruction files (CLAUDE.md, AGENTS.md), skills and hooks (only matches and the first word)
+Oppstart (slått av)|Startup (disabled)
+~^Oppstarten er slått av i Oppgavebehandling \((.+) \(StartupApproved i registeret\)\)\.$|Startup is disabled in Task Manager ($1 (StartupApproved in the registry)).
+Oppstarten er slått av i Oppgavebehandling.|Startup is disabled in Task Manager.
+~^Skript med AI som starter av seg selv: (.+)$|Script with AI that starts by itself: $1
+Skript med AI som starter av seg selv|Script with AI that starts by itself
+Et skript som Windows starter av seg selv, bruker AI. Kjent igjen på innholdet i skriptet; argumentene vises ikke.|A script that Windows starts by itself uses AI. Recognised by the content of the script; the arguments are not shown.
+~^Windows Script-skript med AI: (.+)$|Windows Script script with AI: $1
+Kjører som administrator.|Runs as administrator.
+kjører som|runs as
+(som administrator)|(as administrator)
+startet av|started by
+Kjører nå, startet av|Running now, started by
+ledd ned|levels down
+~^Oppgaven (.+) sist kjørt (.+)$|The task $1 last ran $2
+Planlagt oppgave|Scheduled task

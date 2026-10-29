@@ -155,8 +155,7 @@ public sealed partial class Skanner
             var hvorM = string.Join(", ", sp.Nettlesere);
             var f = LeggTil($"Mulig AI-nettsted: {vert}", "Nettleser-AI (nettsted)", Risiko.Gul,
                 "Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.",
-                hvorM, null, enkelt: "Mulig AI-nettsted",
-                rad: "Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.");
+                hvorM, null, enkelt: "Mulig AI-nettsted");
             f.Svakt();
             f.Bruk = $"Besøkt i {hvorM}{(sp.Sist is { } t ? ", sist " + Tid(t) : "")}.";
             f.Merk(Tilstand.BruktFor);
@@ -172,7 +171,7 @@ public sealed partial class Skanner
             bool merkbarData = s.LagretData && s.Lagret >= 1024 * 1024;
             if (!merkbarData && !s.App && s.Score < 1 && s.Besok < 2) continue;
             var hvor = string.Join(", ", s.Nettlesere);
-            var f = LeggTil(n.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(n.Risiko), n.Hvorfor, hvor, null, enkelt: n.Enkelt, rad: n.Rad);
+            var f = LeggTil(n.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(n.Risiko), n.Hvorfor, hvor, null, enkelt: n.Enkelt);
             f.Privat = true;
             f.Land ??= n.Land;
             f.OpprinnelseLand ??= n.Land;

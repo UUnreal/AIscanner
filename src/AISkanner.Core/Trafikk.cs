@@ -148,7 +148,7 @@ public sealed partial class Skanner
             if (Nettleserprosesser.TryGetValue(p.Navn, out var nettleser))
             {
                 if (tj == null) continue;   // annen surfing angår ikke oss
-                f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, nettleser, null, enkelt: tj.Enkelt, rad: tj.Rad);
+                f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, nettleser, null, enkelt: tj.Enkelt);
                 f.Privat = true;
                 if (viaIp.Contains(t))
                     f.Detalj($"Kjent igjen på IP-adressen: {t.Fjern} er {vert} nå, og {nettleser} har {vert} i nettverkslageret sitt (nettleseren slår opp navn selv, så Windows' DNS-buffer har det ikke)");
@@ -224,7 +224,7 @@ public sealed partial class Skanner
             if (!_regler.AiTjenester.Contains(tj))
             {
                 // Et AI-nettsted: legg til på nettstedsfunnet
-                var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, "Windows", null, enkelt: tj.Enkelt, rad: tj.Rad);
+                var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, "Windows", null, enkelt: tj.Enkelt);
                 f.Privat = true;
                 f.Bruk ??= "Åpnet nylig.";
                 f.Merk(Tilstand.BruktFor);
@@ -240,7 +240,7 @@ public sealed partial class Skanner
             var risiko = api.Select(a => RisikoTekst.Fra(a.Tj.Risiko)).Aggregate(Risiko.Gronn, RisikoTekst.Hoyeste);
             var f = LeggTil("AI-tjenester kontaktet nylig", "Skygge-AI", fraLand ? Risiko.Rod : RisikoTekst.Hoyeste(risiko, Risiko.Gul),
                 "Et program på PC-en har nylig snakket med AI-tjenester. Windows forteller ikke hvilket program, bare at navnet ble slått opp.",
-                "Windows", null, enkelt: "AI-tjenester kontaktet", rad: "Søk igjen mens programmene er åpne for å se hvem som sender.");
+                "Windows", null, enkelt: "AI-tjenester kontaktet");
             f.Bruk = $"{string.Join(", ", api.Select(a => a.Tj.Navn).Distinct().Take(4))}.";
             f.Merk(Tilstand.BruktFor);
             foreach (var (tj, verter) in api)
@@ -289,8 +289,7 @@ public sealed partial class Skanner
         var risiko = RisikoTekst.Fra(tj.Risiko);
         var f = LeggTil(produkt, "Skygge-AI", risiko,
             $"Programmet snakker med {tj.Navn} i bakgrunnen. Det kan sende innhold fra PC-en til en AI-tjeneste.",
-            "Snakker med AI", null, enkelt: "Program som bruker AI i det stille",
-            rad: kjent ? "Sjekk at bruken er godkjent." : "Finn ut hva programmet er og hva det sender. Avinstaller det hvis ingen vet.");
+            "Snakker med AI", null, enkelt: "Program som bruker AI i det stille");
         f.Detalj($"Program som kjører: {sti ?? prosess} (PID {pid})");
         HuskMappe(sti, f);
         return f;

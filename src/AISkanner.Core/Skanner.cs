@@ -264,13 +264,13 @@ public sealed partial class Skanner
     }
 
     private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj,
-                         Produkt? regel = null, string? enkelt = null, string? rad = null)
+                         Produkt? regel = null, string? enkelt = null)
     {
         Funn? f;
         lock (_funn)
         {
             if (!_funn.TryGetValue(navn, out f))
-                _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt, Rad = rad };
+                _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt };
             f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         }
         if (hvor != null)
@@ -284,6 +284,23 @@ public sealed partial class Skanner
         return f;
     }
 
+    /// <summary>
+    /// Om en oppstartsoppføring er slått av i Oppgavebehandling: StartupApproved\Run, Run32 eller StartupFolder.
+    /// Første byte er partall når den er på og oddetall når den er av; da står tiden den ble slått av i byte 4–11.
+    /// </summary>
+    internal static bool SlattAv(RegistryKey rot, string liste, string navn, out DateTime? siden)
+    {
+        siden = null;
+        try
+        {
+            using var k = rot.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\{liste}");
+            if (k?.GetValue(navn) is not byte[] b || b.Length < 1 || (b[0] & 1) == 0) return false;
+            if (b.Length >= 12 && BitConverter.ToInt64(b, 4) is var ft && ft > 0) try { siden = DateTime.FromFileTimeUtc(ft).ToLocalTime(); } catch { }
+            return true;
+        }
+        catch { return false; }
+    }
+
     private static Tilstand TilstandFra(string hvor) => hvor switch
     {
         "Kjører nå" or "Lytter på nettverksport" or "AI-server" => Tilstand.KjorerNa,
@@ -295,7 +312,7 @@ public sealed partial class Skanner
     };
 
     private Funn FraRegel(Produkt p, string hvor, string detalj) =>
-        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt, p.Rad);
+        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt);
 
     internal static IEnumerable<string> Mapper(string sti) =>
         Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateDirectories(sti).ToList(), new List<string>());
@@ -415,7 +432,17 @@ public sealed partial class Skanner
                 var exe = Environment.ExpandEnvironmentVariables(WebUtility.HtmlDecode(m.Groups[1].Value).Trim().Trim('"'));
                 var oppgave = fil.Substring(rot.Length).TrimStart('\\');
                 var r = FinnRegel($"{oppgave} {exe}");
-                if (r == null) continue;
+                if (r == null)
+                {
+                    // Tolk eller skript: argumentene leses i minnet (samme regel som kommandolinjer) og vises aldri
+                    var navnUten = Path.GetFileNameWithoutExtension(Kommandolinje.Filnavn(exe));
+                    if (!Kommandolinje.ErTolk(navnUten) && !Skriptendelser.Contains(Path.GetExtension(exe))) continue;
+                    if (Kommandolinje.ErTolk(navnUten) && !Kommandolinje.Tillatt(_regler, out _)) continue;
+                    var arg = Regex.Match(tekst.Substring(m.Index), @"^<Command>[^<]*</Command>\s*<Arguments>([^<]{0,4000})</Arguments>");
+                    var g = OppsettKommando($"\"{exe}\" {(arg.Success ? WebUtility.HtmlDecode(arg.Groups[1].Value) : "")}", "Planlagt oppgave", $"Planlagt oppgave {oppgave}");
+                    if (g != null && OppgaveSistKjort(oppgave) is { } n0) g.Detalj($"Oppgaven {oppgave} sist kjørt {Nar(n0, "oppgavelageret i Windows")}");
+                    continue;
+                }
                 var sist = OppgaveSistKjort(oppgave);
                 var f = FraRegel(r, "Planlagt oppgave", $"Planlagt oppgave: {oppgave} · starter {exe}{(sist is { } n ? $" · sist kjørt {Nar(n, "oppgavelageret i Windows")}" : "")}");
                 f.Merknad("Startes av en planlagt oppgave i Windows.");
@@ -479,21 +506,29 @@ public sealed partial class Skanner
                 }
             }
 
-            var run = new (RegistryKey Rot, string Sti)[]
+            // Run-nøklene, og om oppføringen er slått av i Oppgavebehandling (StartupApproved)
+            var run = new (RegistryKey Rot, string Sti, string? Godkjent)[]
             {
-                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
-                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
-                (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
-                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
-                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
+                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", "Run"),
+                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", "Run"),
+                (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run", "Run32"),
+                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", null),
+                (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", null),
             };
-            foreach (var (rot, sti) in run)
+            foreach (var (rot, sti, godkjent) in run)
             {
                 using var k = Tilgangslogg.Nokkel(rot, sti);
                 foreach (var verdi in k?.GetValueNames() ?? Array.Empty<string>())
                 {
-                    var r = FinnRegel($"{verdi} {k!.GetValue(verdi)}");
-                    if (r != null) FraRegel(r, "Starter med Windows", $"Oppstart: {verdi}").Merknad("Starter automatisk når PC-en slås på.");
+                    var kommando = k!.GetValue(verdi) as string ?? "";
+                    DateTime? avSiden = null;
+                    bool av = godkjent != null && SlattAv(rot, godkjent, verdi, out avSiden);
+                    var sted = av ? "Oppstart (slått av)" : "Starter med Windows";
+                    var r = FinnRegel($"{verdi} {kommando}");
+                    var f = r != null ? FraRegel(r, sted, $"Oppstart: {verdi}") : OppsettKommando(kommando, sted, $"Oppstart: {verdi}");
+                    if (f == null) continue;
+                    if (av) f.Merknad($"Oppstarten er slått av i Oppgavebehandling{(avSiden is { } t ? $" ({Nar(t, "StartupApproved i registeret")})" : "")}.");
+                    else f.Merknad("Starter automatisk når PC-en slås på.");
                 }
             }
 
@@ -676,14 +711,14 @@ public sealed partial class Skanner
         var tekst0 = $" {navn} {beskrivelse} ".ToLowerInvariant();
         UtvidelseMisbruk(hvor, navn!, tilganger, mappe, erAi: r != null || _regler.UkjentUtvidelseOrd.Any(tekst0.Contains));
         if (r != null)
-            f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {mappe}", r, r.Enkelt, r.Rad);
+            f = LeggTil(visning, r.Kategori, RisikoTekst.Fra(r.Risiko), r.HvorforEnkelt ?? r.Hvorfor, $"Utvidelse i {hvor}", $"{hvor}: {mappe}", r, r.Enkelt);
         else
         {
             var tekst = $" {navn} {beskrivelse} ".ToLowerInvariant();
             if (!_regler.UkjentUtvidelseOrd.Any(tekst.Contains)) return;
             f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
                 "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
-                $"Utvidelse i {hvor}", $"{hvor}: {mappe}", rad: "Fjern den hvis du ikke vet hva den gjør.");
+                $"Utvidelse i {hvor}", $"{hvor}: {mappe}");
         }
         f.SettVersjon(versjon, "utvidelsens manifest");
         if (alleSider)

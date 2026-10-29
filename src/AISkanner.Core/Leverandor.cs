@@ -144,8 +144,7 @@ public sealed partial class Skanner
         {
             var f = LeggTil($"{sprak}-prosjekt med AI: {Prosjektnavn(sti)}", "Skygge-AI (utvikling)", agent ? Risiko.Rod : Risiko.Gul,
                 agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-                sprak, $"Mappe: {sti} ({string.Join(", ", pakkeliste)})",
-                rad: agent ? "Sjekk hva agenten har tilgang til, og at den ikke bruker jobbdata uten avtale." : "Ingenting å gjøre hvis du vet hva prosjektet er.");
+                sprak, $"Mappe: {sti} ({string.Join(", ", pakkeliste)})");
             f.Bruk = $"Bruker {string.Join(", ", pakkeliste.Take(4))}{(pakkeliste.Count > 4 ? " …" : "")}.";
         }
     }
@@ -294,9 +293,7 @@ public sealed partial class Skanner
             : "Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.";
         var f = regel != null ? FraRegel(regel, "Innebygd AI", null!)
             : LeggTil(navn, LeverandorKategori, risiko, hvorfor, "Innebygd AI", null,
-                enkelt: kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI",
-                rad: kjent ? "Vanligvis greit. På jobb bør IT vite om det og bestemme om AI-funksjonene skal være på."
-                           : "Finn ut hva programmet er. Avinstaller det hvis ingen vet hvorfor det er der.");
+                enkelt: kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
         f.LeggTilInnebygde(app.Filer.Count);

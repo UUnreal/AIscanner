@@ -67,7 +67,7 @@ public sealed partial class Skanner
         if (AiRegler.Count == 0) return;
         var f = LeggTil("AI-regler fra IT", "Regler", Risiko.Gronn,
             "IT har satt regler for innebygd AI på denne PC-en.", "Registeret", null,
-            enkelt: "Regler fra IT", rad: "Ingenting å gjøre. Reglene viser hva bedriften har bestemt.");
+            enkelt: "Regler fra IT");
         f.Bruk = $"{AiRegler.Count} {(AiRegler.Count == 1 ? "regel" : "regler")}.";
         foreach (var r in AiRegler) f.Detalj($"Regel: {r}");
     }
@@ -119,8 +119,7 @@ public sealed partial class Skanner
                     var navn = Path.GetFileNameWithoutExtension(exe);
                     try { var vi = System.Diagnostics.FileVersionInfo.GetVersionInfo(exe); if (!string.IsNullOrWhiteSpace(vi.ProductName)) navn = vi.ProductName.Trim(); } catch { }
                     var f = LeggTil($"Program for AI-modeller: {navn}", "Lokal AI", Risiko.Rod,
-                        "Ukjent program som er satt opp til å åpne AI-modellfiler. Det kan kjøre AI på PC-en.", "Registeret", detalj,
-                        rad: "Finn ut hva programmet er. Avinstaller det hvis ingen vet.");
+                        "Ukjent program som er satt opp til å åpne AI-modellfiler. Det kan kjøre AI på PC-en.", "Registeret", detalj);
                     HuskMappe(exe, f);
                 }
             }
@@ -204,7 +203,7 @@ public sealed partial class Skanner
         var f = LeggTil("Windows Recall", "Skygge-AI", av ? Risiko.Gul : Risiko.Rod,
             "Windows tar skjermbilder av alt du gjør og lar AI søke i dem. Det kan fange passord, kundedata og meldinger.",
             "Windows", $"Mappe: {mappe} (innholdet er ikke lest)",
-            enkelt: "Skjermbilder av alt du gjør", rad: "Slå av Recall i Innstillinger > Personvern hvis du ikke trenger det. På jobb bør IT bestemme.");
+            enkelt: "Skjermbilder av alt du gjør");
         f.Bruk = av ? "Har vært i bruk, men IT har slått av skjermbildene." : "Er satt opp på denne PC-en.";
         f.Merk(av ? Tilstand.BruktFor : Tilstand.SattOpp);
     }

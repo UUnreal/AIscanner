@@ -197,8 +197,7 @@ public sealed partial class Skanner
             var navn = regel?.Navn ?? $"Lokal AI-server ({prosess})";
             bool apen = l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any);
             var f = regel != null ? FraRegel(regel, "AI-server", null!)
-                : LeggTil(navn, "Lokal AI", Risiko.Rod, "Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.", "AI-server", null,
-                          rad: "Finn ut hva programmet er. Slå det av hvis du ikke bruker det.");
+                : LeggTil(navn, "Lokal AI", Risiko.Rod, "Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.", "AI-server", null);
             f.Detalj($"Nettverksport {l.Port} på {l.Adresse}, program: {(sti.Length > 0 ? sti : prosess)}");
             f.Sterkt();   // svarte som en AI-tjeneste
             HuskMappe(sti, f);
@@ -271,8 +270,7 @@ public sealed partial class Skanner
         if (File.Exists(hfToken)) navn.Add("Hugging Face-innlogging");
         if (navn.Count == 0) return;
         var f = LeggTil("AI-nøkler lagret på PC-en", "Skygge-AI", Risiko.Gul,
-            "Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.", null, null,
-            rad: "Fjern nøkler du ikke bruker. På jobb: bruk bare nøkler bedriften har godkjent.");
+            "Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.", null, null);
         f.Bruk = $"{navn.Count} {(navn.Count == 1 ? "nøkkel" : "nøkler")}: {string.Join(", ", navn.Take(4))}{(navn.Count > 4 ? " …" : "")}.";
         foreach (var n in navn)
             f.Detalj(n == "Hugging Face-innlogging" ? $"Fil: {hfToken} (innholdet er ikke lest)" : $"Miljøvariabel: {n} (verdien er ikke lest)");
@@ -356,7 +354,7 @@ public sealed partial class Skanner
         {
             var f = LeggTil($"AI-modell i OneDrive: {Kutt(Modellnavn(sti), 50)}", "Lokal AI (modell)", Risiko.Gul,
                 "AI-modell som ligger i OneDrive og lastes ned til PC-en når den åpnes.", Path.GetExtension(sti).TrimStart('.').ToUpperInvariant(),
-                $"Fil: {sti} · {Gb(lengde)} · bare i skyen, innholdet er ikke lest", rad: "Slett den hvis du ikke bruker den.");
+                $"Fil: {sti} · {Gb(lengde)} · bare i skyen, innholdet er ikke lest");
             f.LeggTilModeller(1);
             f.Bruk = $"{Gb(lengde)}, bare i OneDrive (ikke lastet ned).";
         }
@@ -376,8 +374,7 @@ public sealed partial class Skanner
             var prosjekt = Prosjektnavn(sti);
             var f = LeggTil($"{sprak}-prosjekt med AI: {prosjekt}", "Skygge-AI (utvikling)", agent ? Risiko.Rod : Risiko.Gul,
                 agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-                sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})",
-                rad: agent ? "Sjekk hva agenten har tilgang til, og at den ikke bruker jobbdata uten avtale." : "Ingenting å gjøre hvis du vet hva prosjektet er.");
+                sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
             f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
         }
     }
@@ -660,8 +657,7 @@ public sealed partial class Skanner
             : "AI-modell som kan kjøres på PC-en uten internett og uten kontroll.";
         DateTime? opprettet = null, endret = null;
         try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
-        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}",
-                        rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
+        var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}");
         f.Sterkt();   // kjent igjen på innholdet i fila, ikke på navnet
         f.LeggTilModeller(1);
         f.SettVersjon(m.Versjon, "modellfila");

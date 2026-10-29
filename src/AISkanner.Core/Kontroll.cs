@@ -275,6 +275,15 @@ public sealed partial class Skanner
         var ai = s.Vurder("llama-server.exe", null, 9106, @"llama-server.exe -m C:\modeller\qwen.gguf --host 0.0.0.0 --port 8080", new Funn { Navn = "llama.cpp", Kategori = "Lokal AI", Hvorfor = "" }, null);
         Sjekk(ai != null && ai.Risiko == Risiko.Rod && ai.Detaljer.Any(d => d == @"Modellfil lastet: C:\modeller\qwen.gguf"), "AI-program med --host 0.0.0.0 og -m modell fikk ikke modellfil og rødt");
         Sjekk(new[] { f1, f2, f3, f4, ai }.Where(f => f != null).All(f => !f!.Detaljer.Concat(f.Advarsler).Any(d => d.Contains("hemmelig123") || d.Contains("--passord"))), "argumenter fra kommandolinjen ble vist");
+        var oppstart = Path.Combine(rot, "tolk", "start.ps1");
+        File.WriteAllText(oppstart, "$r = Invoke-RestMethod -Uri https://api.anthropic.com/v1/messages\n");
+        var f5 = s.OppsettKommando($"powershell.exe -NoProfile -File \"{oppstart}\" -Token hemmelig123", "Starter med Windows", "Oppstart: Hjelper");
+        Sjekk(f5 != null && f5.Tilstander.HasFlag(Tilstand.SattOpp) && !f5.Tilstander.HasFlag(Tilstand.KjorerNa) && !f5.Detaljer.Any(d => d.Contains("hemmelig123")),
+            "PowerShell-skript med AI i oppstart ble ikke «Satt opp» uten argumenter");
+        var vbs = Path.Combine(rot, "tolk", "skjult.vbs");
+        File.WriteAllText(vbs, "Set h = CreateObject(\"MSXML2.ServerXMLHTTP\")\nh.open \"POST\", \"https://api.openai.com/v1/chat/completions\", False\n");
+        var f6 = s.OppsettKommando($"\"{vbs}\"", "Oppstart (slått av)", "Oppstart: Skjult");
+        Sjekk(f6 != null && f6.Navn == "Skript med AI som starter av seg selv: skjult.vbs" && !f6.Tilstander.HasFlag(Tilstand.SattOpp), "VBScript med AI i en oppstart som er slått av ble feil");
         var av = new Regelsett { LesKommandolinjer = false };
         Sjekk(!Kommandolinje.Tillatt(av, out _), "IT kunne ikke slå av lesing av kommandolinjer");
         return (ok, alle);
@@ -464,7 +473,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(ipOk == ipAlle ? "OK  " : "FEIL")}  AI-trafikk uten navn i DNS-bufferen: {ipOk} av {ipAlle} riktige (nettleser med DoH kjent igjen på IP, andre programmer ikke)");
             var (tolkOk, tolkAlle) = TolkKontroll(regler, sb, rot);
             ok += tolkOk;
-            sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, aldri argumentene, IT kan slå av)");
+            sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, skript i oppstart, aldri argumentene, IT kan slå av)");
             var (stOk, stAlle) = StatusKontroll(regler, sb);
             ok += stOk;
             sb.AppendLine($"{(stOk == stAlle ? "OK  " : "FEIL")}  Status, treffsikkerhet og godkjenning: {stOk} av {stAlle} riktige (kjører nå, brukt før, høy, middels, lav, godkjent, blokkert)");
