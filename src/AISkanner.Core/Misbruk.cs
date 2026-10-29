@@ -502,7 +502,8 @@ public sealed partial class Skanner
                 if (pakke.IndexOf("mcp", StringComparison.OrdinalIgnoreCase) < 0 && pakke.IndexOf("modelcontextprotocol", StringComparison.OrdinalIgnoreCase) < 0) continue;
                 foreach (var fil in Plattform.Filer(pakke, "*", 4).Where(x => x.Extension is ".js" or ".mjs" or ".cjs" or ".ts"))
                 {
-                    if (lest >= 200 || klokke.Elapsed > TimeSpan.FromSeconds(20)) { Tilgangslogg.EnGang("npx-200", "Mappe", rot, Utfall.Tidsgrense, "200 filer eller 20 sekunder brukt i npx-cachen"); goto ferdig; }
+                    // Fullt søk: hele npx-cachen. Hurtigsøk: 200 filer eller 20 sekunder.
+                    if (!Fullt && (lest >= 200 || klokke.Elapsed > TimeSpan.FromSeconds(20))) { Tilgangslogg.EnGang("npx-200", "Mappe", rot, Utfall.Tidsgrense, "200 filer eller 20 sekunder brukt i npx-cachen"); goto ferdig; }
                     if (fil.Length > 1024 * 1024) continue;
                     string tekst;
                     try { tekst = File.ReadAllText(fil.FullName); lest++; Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName); }

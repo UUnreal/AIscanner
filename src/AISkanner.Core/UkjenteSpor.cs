@@ -457,7 +457,7 @@ public sealed partial class Skanner
     {
         if (!MedAgentlogger) { Tilgangslogg.Logg("Fil", "agentøkter", Utfall.HoppetOver, "slått av av IT (--uten-agentlogger)"); return; }
         var klokke = Stopwatch.StartNew();
-        bool Stopp() => klokke.Elapsed > TimeSpan.FromSeconds(20);
+        bool Stopp() => klokke.Elapsed > TimeSpan.FromSeconds(Fullt ? 600 : 20);
         var kilder = new (string Program, string Mappe, string Monster, int Dybde)[]
         {
             ("Claude Code", Utvid(@"%USERPROFILE%\.claude\projects"), "*.jsonl", 2),
@@ -472,7 +472,7 @@ public sealed partial class Skanner
             var filer = Plattform.Filer(mappe, monster, dybde).Where(x => program != "GitHub Copilot" || x.Directory?.Name == "chatSessions");
             foreach (var fil in filer.OrderByDescending(x => x.LastWriteTime).Take(500))
             {
-                if (Stopp()) { Tilgangslogg.EnGang("agent-20", "Fil", fil.FullName, Utfall.Tidsgrense, "20 sekunder brukt på agentøkter; resten ble ikke lest"); break; }
+                if (Stopp()) { Tilgangslogg.EnGang("agent-20", "Fil", fil.FullName, Utfall.Tidsgrense, Fullt ? "10 minutter brukt på agentøkter; resten ble ikke lest" : "20 sekunder brukt på agentøkter; resten ble ikke lest"); break; }
                 var o = new Okt();
                 LesLinjer(fil.FullName, 50, l =>
                 {

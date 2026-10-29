@@ -68,7 +68,7 @@ public static class Admintilgang
     /// Åpner en fil bare for lesing. Hvis Windows nekter og søket kjører som administrator, åpnes den på nytt
     /// med lesing for sikkerhetskopi. Filen endres aldri, og tidsstemplene røres ikke.
     /// </summary>
-    public static FileStream AapneLes(string sti, int buffer = 4096, FileOptions valg = FileOptions.None)
+    public static Stream AapneLes(string sti, int buffer = 4096, FileOptions valg = FileOptions.None)
     {
         // Skjult datastrøm (fil.txt:navn): .NET Framework godtar ikke kolon i stien, så den åpnes direkte
         if (sti.IndexOf(':', 2) > 0)
@@ -85,6 +85,12 @@ public static class Admintilgang
             if (h.IsInvalid) { h.Dispose(); throw; }
             Tilgangslogg.Tell("Fil", Utfall.Lest, sted: sti, detalj: "lest med administratorens lesing for sikkerhetskopi (fila var låst for vanlig lesing)");
             return new FileStream(h, FileAccess.Read, buffer);
+        }
+        catch (IOException e) when (Aktiv && (e.HResult & 0xFFFF) is 32 or 33 && Raafil.Apne(sti) is { } raa)
+        {
+            // Holdt åpen av Windows eller et program: lest rett fra disken, bare lesing
+            Tilgangslogg.Tell("Fil", Utfall.Lest, sted: sti, detalj: "holdt låst av Windows; lest rett fra disken som administrator (bare lesing)");
+            return raa;
         }
     }
 

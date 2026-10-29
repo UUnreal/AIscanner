@@ -278,7 +278,9 @@
   .avLinje.boks { display: flex; background: var(--flate); border-radius: var(--r1); padding: 8px 12px; margin-top: 8px; }
   .stabel { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; flex: none; margin: 12px 0 10px; background: var(--fyll); }
   .stabel i { display: block; min-width: 4px; }
-  .s-lest { background: var(--bla); } .s-ikkefunnet { background: #9aa3b5; } .s-hoppetover { background: var(--fyll); box-shadow: inset 0 0 0 1px rgba(127,127,140,.35); } .s-mangler { background: var(--rod); }
+  .s-lest { background: var(--bla); } .s-ikkefunnet { background: #9aa3b5; } .s-hoppetover { background: var(--fyll); box-shadow: inset 0 0 0 1px rgba(127,127,140,.35); } .s-mangler { background: var(--rod); } .s-dekket { background: var(--bla); opacity: .45; }
+  .disker { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--dempet); margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+  .disker b { color: var(--tekst); font-weight: 600; }
   .ufliser { display: flex; gap: 28px; flex-wrap: wrap; flex: none; margin-bottom: 6px; }
   .uflis { display: flex; flex-direction: column; min-width: 0; border-radius: var(--r1); padding: 2px 4px; margin: -2px -4px; }
   .uflis.har { cursor: pointer; } .uflis.har:hover { background: var(--bla-myk); }
@@ -817,12 +819,13 @@ function tegnData() {
     // Fire deler som til sammen er alt søket sjekket: lest, ingenting der, hoppet over og ikke dekket (nektet, låst, …)
     const del = u => g.totalt.filter(x => x.u === u).reduce((a, x) => a + x.n, 0);
     const ikkeDekket = g.totalt.filter(x => x.mangler && x.n);
-    const deler = [["lest", del("lest"), L("Lest", "Read")], ["ikkefunnet", del("ikkefunnet"), L("Sjekket, ingenting der", "Checked, nothing there")], ["hoppetover", del("hoppetover"), L("Hoppet over", "Skipped")],
+    const deler = [["lest", del("lest"), L("Lest", "Read")], ["ikkefunnet", del("ikkefunnet"), L("Sjekket, ingenting der", "Checked, nothing there")], ["hoppetover", del("hoppetover"), L("Hoppet over", "Skipped")], ["dekket", del("dekket"), L("Dekket av annen sjekk", "Covered by another check")],
       ["mangler", mangler, L("Ikke dekket", "Not covered") + (ikkeDekket.length ? " · " + ikkeDekket.map(x => `${tall(x.n)} ${x.tekst}`).join(", ") : "")]];
     const andre = sjekket - deler.reduce((a, x) => a + x[1], 0);
     if (andre > 0) deler.push(["annet", andre, L("Annet", "Other")]);
     kropp = `<div class="dSum"><span class="t20">${L(`${tall(sjekket)} steder sjekket`, `${tall(sjekket)} places checked`)}</span><span class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</span></div>`
       + `<div class="stabel">${deler.filter(x => x[1]).map(x => `<i class="s-${x[0]}" style="flex:${x[1]}"></i>`).join("")}</div>`
+      + (g.disker && g.disker.length ? `<div class="disker">${g.disker.map(k => `<span><b>${esc(k.disk)}</b> ${tall(k.filer)} ${L("filer", "files")} · ${esc(byteTekst(k.bytes))} ${L("av", "of")} ${esc(byteTekst(k.brukt))} ${L("i bruk", "used")} (${k.brukt ? Math.min(100, Math.round(100 * k.bytes / k.brukt)) : 0} %)</span>`).join("")}<span>${tall(g.filhoder || 0)} ${L("filhoder lest", "file headers read")}</span></div>` : "")
       + `<div class="ufliser">${deler.map(x => `<div class="uflis${x[0] === "mangler" ? " mangler" : ""}${x[1] ? " har" : ""}"${x[1] && x[0] !== "annet" ? ` data-u="${x[0]}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x[1])}</b><small><i class="s-${x[0]}"></i>${esc(x[2])}</small></div>`).join("")}</div>`
       + `<h3 class="medSider"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
       + `<ul class="sjekkTabell"><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Ingenting der", "Nothing there")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
@@ -1262,7 +1265,8 @@ function settProsent(p) {
 function start() { $("om").classList.remove("apen"); $("feil").textContent = ""; $("fremdrift").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon, fullt }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
 $("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon, fullt }); } };
-$("igjen").onclick = start;
+// «Søk igjen» går tilbake til startskjermen, så man kan velge bruker eller admin og hurtig- eller fullt søk
+$("igjen").onclick = () => { lukkArk(); $("feil").textContent = ""; vis("start"); };
 settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });
 // Funn, Nettverk og Datagrunnlag er tre faner: trykk på den som er åpen gjør ingenting

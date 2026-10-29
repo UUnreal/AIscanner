@@ -84,6 +84,7 @@ public static class Revisjon
         Utfall.Blokkert => "stoppet av antivirus",
         Utfall.HoppetOver => "hoppet over",
         Utfall.Tidsgrense => "tidsgrense",
+        Utfall.Dekket => "dekket av annen sjekk",
         _ => "feil",
     };
 
@@ -183,6 +184,26 @@ public static class Revisjon
         return sb + (engelsk ? "SHA-256 of the whole file above: " : "SHA-256 av hele fila over: ") + Sha256(alt) + "\r\n";
     }
 
+    private static object Disker(Skanner s)
+    {
+        var talt = s.Logg.Disker.ToDictionary(x => x.Disk, StringComparer.OrdinalIgnoreCase);
+        var liste = new List<object>();
+        if (!Plattform.ErWindows) return liste;
+        foreach (var d in DriveInfo.GetDrives())
+        {
+            try
+            {
+                if (d.DriveType is not (DriveType.Fixed or DriveType.Removable) || !d.IsReady) continue;
+                var rot = d.RootDirectory.FullName.ToUpperInvariant();
+                talt.TryGetValue(rot, out var t);
+                long brukt = d.TotalSize - d.TotalFreeSpace;
+                liste.Add(new { disk = rot.TrimEnd('\\'), mapper = t.Mapper, filer = t.Filer, bytes = t.Bytes, brukt, storrelse = d.TotalSize });
+            }
+            catch { }
+        }
+        return liste;
+    }
+
     /// <summary>Datagrunnlaget for utviklermodus i vinduet (samme innhold som revisjonsloggen, men bare i minnet).</summary>
     public static object Datagrunnlag(Skanner s, bool engelsk, string? revisjonSti, IReadOnlyList<Funn>? funn = null)
     {
@@ -211,6 +232,9 @@ public static class Revisjon
             ikkeDekket = poster.Where(p => Revisjon.IkkeDekket.Contains(p.Utfall)).Take(1000).Select(Post),
             poster = vises.OrderBy(p => p.Tid).Select(Post),
             antallPoster = poster.Count,
+            // Dekning per disk: det søket listet (mapper, filer, byte) mot det disken har i bruk. Målt, ikke anslått.
+            disker = Disker(s),
+            filhoder = ModellFormat.Filhoder,
             avkortet = s.Logg.Avkortet,
             defender = av == null ? T("Defender-loggen ble ikke lest.")
                 : !av.Lest ? T($"Defender-loggen ble ikke lest: {av.Grunn}. Filer antivirus stoppet, vises likevel som «stoppet av antivirus».")

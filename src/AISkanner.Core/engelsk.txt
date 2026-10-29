@@ -1293,3 +1293,12 @@ modellmappa i nettleseren|the model folder in the browser
 ~^Gjemt i en skjult datastrøm i (.+)\. Utforsker viser den ikke\.$|Hidden in an alternate data stream in $1. Explorer does not show it.
 Fila er merket som skjult, så Utforsker viser den ikke.|The file is marked hidden, so Explorer does not show it.
 ~^Forkledd: AI-modell \((.+)\) med endelsen (.+)\.$|Disguised: AI model ($1) with the extension $2.
+dekket av annen sjekk|covered by another check
+holdt låst av Windows; lest rett fra disken som administrator (bare lesing)|held locked by Windows; read directly from the disk as administrator (read only)
+~^Windows' egen tjeneste \((.+)\), ikke AI; ikke spurt$|Windows' own service ($1), not AI; not asked
+~^svarte ikke på HTTP innen ([\d,.]+) s, så ikke en AI-tjeneste for HTTP; de andre adressene på porten ble ikke prøvd$|did not answer HTTP within $1 s, so not an HTTP AI service; the other addresses on the port were not tried
+DNS-oppslag av kjente AI-adresser|DNS lookups of known AI addresses
+~^(\d+) av (\d+) navn svarte; brukes bare til å kjenne igjen forbindelser nettleseren selv har slått opp$|$1 of $2 names answered; used only to recognise connections the browser looked up itself
+~^(.+): sikker DNS \(DoH\)$|$1: secure DNS (DoH)
+~^(.+); navn nettleseren slår opp selv, mangler i Windows' DNS-buffer og kjennes igjen på IP-adressen$|$1; names the browser looks up itself are missing from the Windows DNS cache and are recognised by IP address
+~^Kjent igjen på IP-adressen: (.+) er (.+) nå, og (.+) har (.+) i nettverkslageret sitt \(nettleseren slår opp navn selv, så Windows' DNS-buffer har det ikke\)$|Recognised by IP address: $1 is $2 now, and $3 has $4 in its network state (the browser looks up names itself, so the Windows DNS cache does not have it)

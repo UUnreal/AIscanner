@@ -29,6 +29,28 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.25.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 158 av 158.
+
+### Lagt til
+- **Målt dekning per disk** i datagrunnlaget: filer og GB søket gikk gjennom, mot GB i bruk på disken, og hvor mange
+  filhoder som ble lest. Gjør det mulig å se om fullt søk faktisk dekker PC-en.
+- **AI-trafikk fra nettlesere med egen DNS.** Chrome og Edge slår ofte opp navn selv (sikker DNS, DoH), så Windows'
+  DNS-buffer mangler navnet og forbindelsen til ChatGPT så ut som en ukjent IP-adresse. Programmet slår nå selv opp
+  adressene til de kjente AI-tjenestene og kjenner igjen forbindelsen når nettleseren har tjenesten i nettverkslageret
+  sitt. Om sikker DNS er på, står i datagrunnlaget.
+- **Låste filer leses rett fra disken** som administrator (for eksempel `WebCacheV01.dat`), bare lesing.
+- Nytt utfall i datagrunnlaget: **«dekket av annen sjekk»** for lenker og mapper som søkes et annet sted.
+
+### Endret
+- **Fullt søk går gjennom alt**, også Windows-mappa, papirkurven, `Config.Msi` og `System Volume Information`.
+  Lenkene `All Users`, `Default User` og `Documents and Settings`, og Program Files og ProgramData, står som «dekket av
+  annen sjekk» i stedet for «hoppet over».
+- Porter som ikke svarer på HTTP, er «sjekket, ingenting der» i stedet for «tidsgrense». Windows' egne tjenester
+  spørres ikke. Fullt søk har ikke lenger tidsgrense for npx-cachen og agentøkter.
+- **«Søk igjen»** går tilbake til startskjermen, så man kan velge bruker eller admin og hurtig- eller fullt søk.
+
 ## [2.24.0] - 2026-10-29
 
 Nytt utseende. Ingen endring i hva som søkes, hvordan risiko settes eller hva rapporten inneholder.

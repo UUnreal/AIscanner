@@ -217,6 +217,38 @@ public sealed partial class Skanner
         return (ok, alle);
     }
 
+    /// <summary>
+    /// Nettleser med egen DNS (DoH): forbindelsen har ingen navn i Windows' DNS-buffer. Den skal kjennes igjen på IP-adressen
+    /// når nettleseren har tjenesten i nettverkslageret sitt, men ikke for andre programmer (de kan dele IP med andre tjenester).
+    /// </summary>
+    private static (int Ok, int Alle) NettIpKontroll(Regelsett regler, StringBuilder sb)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  AI-trafikk: {hva}"); }
+        var ip = IPAddress.Parse("104.18.32.47");
+        Funn? Kjor(bool iLager, string prosess)
+        {
+            var s = new Skanner(regler);
+            s._aiIp = Task.FromResult(new Dictionary<IPAddress, List<string>> { [ip] = new() { "chatgpt.com" } });
+            s._nettleserVerter = iLager ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "chatgpt.com" } : new HashSet<string>();
+            var nb = new NettBilde { Prosesser = { [7001] = (prosess, $@"C:\Prog\{prosess}.exe") }, Lyttere = new() };
+            nb.Tilkoblinger.Add(new Tilkobling(7001, IPAddress.Parse("192.168.1.10"), 52000, ip, 443));
+            s.Trafikk(nb);
+            return s._funn.Values.FirstOrDefault(f => f.Navn == "ChatGPT");
+        }
+        var treff = Kjor(true, "chrome");
+        Sjekk(treff != null && treff.Detaljer.Any(d => d.StartsWith("Kjent igjen på IP-adressen")), "ChatGPT i Chrome med egen DNS ble ikke kjent igjen på IP-adressen");
+        Sjekk(Kjor(false, "chrome") == null, "IP-treff uten at nettleseren har tjenesten i nettverkslageret ble regnet som AI");
+        var s2 = new Skanner(regler);
+        s2._aiIp = Task.FromResult(new Dictionary<IPAddress, List<string>> { [ip] = new() { "chatgpt.com" } });
+        s2._nettleserVerter = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "chatgpt.com" };
+        var nb2 = new NettBilde { Prosesser = { [7002] = ("verktoy", @"C:\Prog\verktoy.exe") }, Lyttere = new() };
+        nb2.Tilkoblinger.Add(new Tilkobling(7002, IPAddress.Parse("192.168.1.10"), 52001, ip, 443));
+        s2.Trafikk(nb2);
+        Sjekk(s2._funn.Count == 0, "et vanlig program med samme IP som ChatGPT ble regnet som AI (IP-en kan deles på CDN-et)");
+        return (ok, alle);
+    }
+
     /// <summary>Kontrollen av falske treff: det som ikke er AI, eller bare er AI bygget inn av en leverandør, skal ikke telles som AI-modeller.</summary>
     private static (int Ok, int Alle) FalskeTreffKontroll(Skanner s, StringBuilder sb, string rot)
     {
@@ -366,7 +398,10 @@ public sealed partial class Skanner
             var (nettOk, nettAlle) = NettleserKontroll(regler, sb, rot);
             ok += nettOk;
             sb.AppendLine($"{(nettOk == nettAlle ? "OK  " : "FEIL")}  Nettlesere og nye regler: {nettOk} av {nettAlle} riktige (Comet, LibreWolf, Brave Leo, Firefox-chatbot og -modeller, Thunderbird ikke, AI-agenter og møteopptakere)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle;
+            var (ipOk, ipAlle) = NettIpKontroll(regler, sb);
+            ok += ipOk;
+            sb.AppendLine($"{(ipOk == ipAlle ? "OK  " : "FEIL")}  AI-trafikk uten navn i DNS-bufferen: {ipOk} av {ipAlle} riktige (nettleser med DoH kjent igjen på IP, andre programmer ikke)");
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

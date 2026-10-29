@@ -167,7 +167,9 @@ public sealed partial class Skanner
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;
         try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
-        Tilgangslogg.TellMappe(mappe, Utfall.Lest, innhold.LongCount(e => e is FileInfo));
+        long bytes = 0;
+        foreach (var e in innhold) if (e is FileInfo fi) try { bytes += fi.Length; } catch { }
+        Tilgangslogg.TellMappe(mappe, Utfall.Lest, innhold.LongCount(e => e is FileInfo), bytes);
         Interlocked.Increment(ref _mapperLest);
         foreach (var e in innhold)
         {

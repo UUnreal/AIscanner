@@ -151,6 +151,23 @@ public sealed partial class Skanner
             .Where(l => IPAddress.IsLoopback(l.Adresse) || l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any))
             .GroupBy(l => l.Port).Select(g => g.OrderBy(l => IPAddress.IsLoopback(l.Adresse) ? 1 : 0).First())
             .Take(80).ToList();
+        // Hvem lytter? Windows' egne tjenester (programfila ligger i Windows-mappa) er ikke AI og spørres ikke.
+        var system = Utvid("%SystemRoot%").TrimEnd('\\') + "\\";
+        var eiere = new Dictionary<int, (string Navn, string Sti)>();
+        foreach (var pid in lyttere.Select(l => l.Pid).Distinct())
+        {
+            string navn = "ukjent program", sti = "";
+            try { using var p = Process.GetProcessById(pid); navn = p.ProcessName; sti = ProsessSti.Hent(p) ?? Admintilgang.ProsessBilde(pid) ?? ""; } catch { }
+            eiere[pid] = (navn, sti);
+        }
+        if (Plattform.ErWindows)
+            lyttere = lyttere.Where(l =>
+            {
+                var (navn, sti) = eiere[l.Pid];
+                if (!sti.StartsWith(system, StringComparison.OrdinalIgnoreCase) || FinnRegel($"{navn} {sti}") != null) return true;
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{l.Port}", Utfall.IkkeFunnet, $"Windows' egen tjeneste ({navn}), ikke AI; ikke spurt");
+                return false;
+            }).ToList();
         if (lyttere.Count == 0) return;
 
         // MaxResponseContentBufferSize: et ondsinnet lokalt program kan ikke svare med et svar på flere GB og spise opp minnet.
@@ -221,7 +238,8 @@ public sealed partial class Skanner
             }
             catch (Exception e)
             {
-                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? $"svarte ikke på HTTP innen {klient.Timeout.TotalSeconds:0.#} s (ikke en web-tjeneste); de andre adressene på porten ble ikke prøvd" : "svarte ikke som en AI-tjeneste");
+                // En AI-server svarer på HTTP med en gang. Svarer porten ikke på HTTP, er den ikke en AI-tjeneste for HTTP.
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", Utfall.IkkeFunnet, e is TaskCanceledException ? $"svarte ikke på HTTP innen {klient.Timeout.TotalSeconds:0.#} s, så ikke en AI-tjeneste for HTTP; de andre adressene på porten ble ikke prøvd" : "svarte ikke som en AI-tjeneste");
                 // Et program som ikke svarer på HTTP innen 0,8 s, svarer heller ikke på neste adresse. Spar 1,6 s per port.
                 if (e is TaskCanceledException) break;
             }
@@ -377,7 +395,7 @@ public sealed partial class Skanner
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         if (Fullt && navn is ".git" or ".svn" or ".hg") { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "versjonskontroll (git), ikke AI"); return; }
         if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
-        if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
+        if (!Fullt && navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
         try { innhold = new DirectoryInfo(mappe).EnumerateFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
@@ -436,13 +454,17 @@ public sealed partial class Skanner
                 if (d.DriveType is not (DriveType.Fixed or DriveType.Removable) || !d.IsReady) continue;
                 var rot = d.RootDirectory.FullName;
                 if (!rot.StartsWith(Path.GetPathRoot(Utvid("%SystemRoot%")) ?? "C:\\", StringComparison.OrdinalIgnoreCase)) { liste.Add((rot, 64)); continue; }
+                // Filene i roten av C: (pagefile.sys, hiberfil.sys …) telles med i dekningen
+                RotFiler(rot);
                 foreach (var m in Mapper(rot))
                 {
                     var n = Path.GetFileName(m);
                     if (brukere != null && m.Equals(brukere, StringComparison.OrdinalIgnoreCase)) continue;
-                    if (n is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData" or "Recovery" or "$WinREAgent" or "Config.Msi")
+                    // Program Files og ProgramData gås gjennom av sjekken for leverandør-AI (som også finner hvem som la AI-en der).
+                    // Alt annet, også Windows, papirkurven og Config.Msi, gås gjennom her: AI-filer kan gjemmes overalt.
+                    if (n is "Program Files" or "Program Files (x86)" or "ProgramData")
                     {
-                        Tilgangslogg.Logg("Mappe", m, Utfall.HoppetOver, n is "Program Files" or "Program Files (x86)" or "ProgramData" ? "gås gjennom av sjekken for leverandør-AI" : "systemmappe uten brukerdata");
+                        Tilgangslogg.Logg("Mappe", m, Utfall.Dekket, "gås gjennom av sjekken «Leter etter AI som leverandører har lagt inn»");
                         continue;
                     }
                     if (Lenke(m)) continue;
@@ -465,12 +487,44 @@ public sealed partial class Skanner
         catch { return false; }
         var mal = Reparse.Mal(mappe);
         var hjem = Utvid("%USERPROFILE%");
-        Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver,
-            mal == null ? "lenke til en annen mappe, følges ikke"
-            : mal.StartsWith(hjem.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase) ? $"kompatibilitetslenke, innholdet søkt i {mal}"
+        // Målet søkes direkte når det er i profilen, eller (fullt søk) på en lokal disk. Lenken følges ikke, så ingenting telles to ganger.
+        bool dekket = mal != null && (mal.StartsWith(hjem.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase)
+                                      || Fullt && LokalDisk(mal) && Directory.Exists(mal));
+        Tilgangslogg.Logg("Mappe", mappe, dekket ? Utfall.Dekket : Utfall.HoppetOver,
+            dekket ? $"lenke til {mal}, som søkes direkte"
+            : mal == null ? "lenke til en annen mappe, følges ikke"
             : $"lenke til {mal}, følges ikke");
         SjekkLenke(new DirectoryInfo(mappe));
         return true;
+    }
+
+    private static bool LokalDisk(string sti)
+    {
+        try
+        {
+            var rot = Path.GetPathRoot(sti);
+            return rot != null && rot.Length <= 3 && new DriveInfo(rot).DriveType is DriveType.Fixed or DriveType.Removable;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>
+    /// Filene i roten av systemdisken: bare navn og størrelse, så dekningen per disk blir riktig.
+    /// pagefile.sys, hiberfil.sys og swapfile.sys er Windows' minnefiler og holdes låst av Windows.
+    /// </summary>
+    private void RotFiler(string rot)
+    {
+        long filer = 0, bytes = 0;
+        try
+        {
+            foreach (var f in new DirectoryInfo(rot).GetFiles())
+            {
+                filer++;
+                try { bytes += f.Length; } catch { }
+            }
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Mappe", rot, e); return; }
+        Tilgangslogg.TellMappe(rot, Utfall.Lest, filer, bytes, "filene i roten av disken (navn og størrelse; Windows' minnefiler er låst av Windows)");
     }
 
     /// <summary>Bare filene i selve mappa (brukes for rotmappene, der undermappene gås gjennom parallelt).</summary>

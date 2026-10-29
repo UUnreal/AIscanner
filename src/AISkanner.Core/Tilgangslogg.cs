@@ -5,7 +5,8 @@ using Microsoft.Win32;
 namespace AISkanner;
 
 /// <summary>Hvordan det gikk da programmet prøvde å lese noe.</summary>
-public enum Utfall { Lest, IkkeFunnet, Nektet, Laast, Blokkert, HoppetOver, Tidsgrense, Feil }
+/// <summary>Dekket: stedet er en lenke eller en mappe som en annen sjekk går gjennom, så innholdet er søkt der.</summary>
+public enum Utfall { Lest, IkkeFunnet, Nektet, Laast, Blokkert, HoppetOver, Tidsgrense, Feil, Dekket }
 
 /// <summary>Én ting programmet prøvde å lese: hvilken sjekk, hva slags ting, hvor, og hvordan det gikk.</summary>
 public sealed record Tilgang(DateTime Tid, string Sjekk, string Hva, string Mal, Utfall Utfall, string? Detalj);
@@ -24,6 +25,13 @@ public sealed class Tilgangslogg
     private readonly ConcurrentDictionary<(string Sjekk, string Hva, Utfall Utfall), int> _antall = new();
     private readonly ConcurrentDictionary<string, byte> _engang = new();
     private int _lagt;
+    // Dekning per disk: mapper som er listet, filer og byte i dem. Hver mappe telles én gang.
+    private readonly ConcurrentDictionary<string, long[]> _disk = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> _talteMapper = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Per disk (C:\): mapper listet, filer og byte i dem. Grunnlaget for «dekket X av Y» i datagrunnlaget.</summary>
+    public IEnumerable<(string Disk, long Mapper, long Filer, long Bytes)> Disker =>
+        _disk.Select(x => (x.Key, Interlocked.Read(ref x.Value[0]), Interlocked.Read(ref x.Value[1]), Interlocked.Read(ref x.Value[2]))).OrderBy(x => x.Key);
 
     /// <summary>Loggen for søket som kjører nå. Ett søk om gangen.</summary>
     public static Tilgangslogg? Aktiv { get; set; }
@@ -75,6 +83,18 @@ public sealed class Tilgangslogg
         if (l == null) return;
         l._antall.AddOrUpdate((Navn, "Mappe", utfall), 1, (_, x) => x + 1);
         l.Kart.Legg(Kart.Plass("Mappe", mappe), Navn, utfall, detalj, filer, bytes);
+        if (utfall == Utfall.Lest && l._talteMapper.TryAdd(mappe.TrimEnd('\\', '/'), 0))
+        {
+            string? rot = null;
+            try { rot = Path.GetPathRoot(mappe); } catch { }
+            if (!string.IsNullOrEmpty(rot))
+            {
+                var t = l._disk.GetOrAdd(rot!.ToUpperInvariant(), _ => new long[3]);
+                Interlocked.Increment(ref t[0]);
+                Interlocked.Add(ref t[1], filer);
+                Interlocked.Add(ref t[2], bytes);
+            }
+        }
     }
 
     /// <summary>Logger bare første gang per nøkkel i søket (f.eks. at tidsgrensen ble nådd).</summary>

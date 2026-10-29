@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.24.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.25.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -55,8 +55,11 @@ Alt er bare lesing. Ingenting endres.
 
 - **Brukerprofilen og andre faste disker** (ikke Windows, Program Files, ProgramData eller AppData). Stopper etter 45 sekunder.
 - **Fullt søk av PC** (valg på startskjermen, CLI `--fullt`): i tillegg alle brukerprofiler i `C:\Users`, alt i roten av
-  C:\ (unntatt Windows, papirkurv og systemmapper), alle faste og flyttbare disker (USB, SD), uten dybdegrense og med
-  30 minutters tidsgrense. Filhodet sjekkes på alle filer over 20 MB uansett endelse. Programstien (`<Command>`) i
+  C:\ (også `Windows`, `$Recycle.Bin`, `Config.Msi`, `System Volume Information` og `Recovery`; Program Files og
+  ProgramData gås gjennom av sjekken for leverandør-AI og står som «dekket av annen sjekk»), alle faste og flyttbare
+  disker (USB, SD), uten dybdegrense og med 30 minutters tidsgrense. Lenker (`All Users`, `Documents and Settings`)
+  følges ikke; målet søkes direkte og lenken står som «dekket av annen sjekk». Datagrunnlaget viser per disk hvor mange
+  filer og hvor mange GB som ble gått gjennom, mot GB i bruk, og hvor mange filhoder som ble lest. Filhodet sjekkes på alle filer over 20 MB uansett endelse. Programstien (`<Command>`) i
   `System32\Tasks` leses; argumentene brukes aldri. Run/RunOnce og avinstallering leses for andre innloggede brukere
   (`HKEY_USERS\<SID>`). Nettverksdisker tas aldri med. Uten admin hoppes mapper uten tilgang over og vises i Datagrunnlag.
 - **Flyttede modellmapper:** `OLLAMA_MODELS`, `HF_HOME`, `HF_HUB_CACHE` og `TRANSFORMERS_CACHE` følges i begge søk.
@@ -65,7 +68,10 @@ Alt er bare lesing. Ingenting endres.
   - Modell-ID: fra filnavnet når Ollama eller Hugging Face har lagret fila under SHA-256. Ellers et fingeravtrykk av
     størrelse, første MB og siste MB (2 MB lesing per modell). `config.json` og Ollama-manifester leses for navn.
   - Mappenavn i `site-packages` og `node_modules`, for å finne AI-biblioteker.
-  - Filer i OneDrive som bare ligger i skyen, hoppes over, så ingenting lastes ned.
+  - Filer i OneDrive som bare ligger i skyen, sjekkes på navn og størrelse og lastes aldri ned.
+  - **Låste filer** (feil 32/33, for eksempel `WebCacheV01.dat`) leses som administrator rett fra disken: fila åpnes bare
+    for å finne hvor den ligger (`FSCTL_GET_RETRIEVAL_POINTERS`), og de samme klyngene leses fra `\\.\C:`. Bare lesing,
+    ingen skyggekopi lages. Komprimerte og krypterte filer leses ikke slik.
 - **AI lagt inn av leverandører:** `%LOCALAPPDATA%`, `%APPDATA%`, `AppData\LocalLow`, `%ProgramData%`, `Program Files`,
   `Program Files (x86)`, `Program Files\WindowsApps` og `Windows\SystemApps`. Stopper etter 40 sekunder.
   Defender-mapper, cacher, nettleserdata og spillbiblioteker hoppes over.
@@ -226,11 +232,12 @@ på en kinesisk familie. Alt skal være OK; i 2.19.7 er det 104 av 104.
 ## Hva den aldri leser
 
 Passord (`Login Data`), informasjonskapsler (`Cookies`), `Web Data`, `Local State` (unntatt `--flagg` i
-kommandolinjen), krypteringsnøkler, lommebokdata i utvidelser (`Local Extension Settings`), verdien av API-nøkler,
+kommandolinjen og innstillingen for sikker DNS), krypteringsnøkler, lommebokdata i utvidelser (`Local Extension Settings`), verdien av API-nøkler,
 e-post, dokumentinnhold, innholdet i AI-agentenes økter og minnet til andre prosesser.
 
 Håndhevet i koden: `Skanner.LovligeFiler` er de eneste filnavnene som åpnes for å lese innholdet: `manifest.json`,
-`messages.json`, `extensions.json`, `Preferences`, `History` og `places.sqlite`. I tillegg leses begrensede deler av
+`messages.json`, `extensions.json`, `Preferences`, `History` og `places.sqlite`, og for nettverket `Network Persistent State`
+og `dns_over_https` i `Local State` (bare om sikker DNS er på). I tillegg leses begrensede deler av
 modellfiler som beskrevet over.
 
 ## Hva den sender ut
@@ -238,9 +245,14 @@ modellfiler som beskrevet over.
 | Til | Hva | Når |
 |---|---|---|
 | `127.0.0.1` | Maks tre `GET` per lyttende port | Under søket |
+| Vanlig DNS (PC-ens egen DNS-server) | Navnene på de kjente AI-tjenestene fra `regler.json` (for eksempel `chatgpt.com`, `api.openai.com`), slått opp én gang per søk | Under søket, bare på Windows |
 | `services.nvd.nist.gov` (HTTPS) | Bare produktordet fra `regler.json` for kjente produkter som ble funnet, for eksempel `ollama` | Etter at resultatet vises. Av med `--uten-nvd`. |
 
-PC-navn, brukernavn, stier og funn sendes aldri. Det gjøres ingen DNS-oppslag og ingen IP-oppslag på nett.
+PC-navn, brukernavn, stier og funn sendes aldri. DNS-oppslagene er de samme som når en nettside åpnes, og inneholder
+bare navnet på tjenesten. De brukes til å kjenne igjen forbindelser nettleseren har slått opp selv (egen DNS eller
+sikker DNS, DoH), som derfor mangler i Windows' DNS-buffer. Et slikt IP-treff regnes bare når nettleseren selv har
+tjenesten i nettverkslageret sitt (`Network Persistent State`, bare vertsnavn; alt som ikke er AI, forkastes), fordi
+mange tjenester deler IP-adresser på samme CDN. For andre programmer regnes IP-treff aldri. Ingen IP-oppslag på nett.
 
 ## Hva den skriver
 

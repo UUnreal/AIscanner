@@ -27,8 +27,14 @@ public static class ModellFormat
         public string? Versjon { get; init; }
     }
 
+    private static long _filhoder;
+    /// <summary>Antall filer der filhodet er lest i dette søket (innholdet sjekket, ikke bare navnet).</summary>
+    public static long Filhoder => Interlocked.Read(ref _filhoder);
+    public static void NullstillTelling() => Interlocked.Exchange(ref _filhoder, 0);
+
     public static Modell? Gjenkjenn(string sti)
     {
+        Interlocked.Increment(ref _filhoder);
         try
         {
             using var fs = Admintilgang.AapneLes(sti, 4096, FileOptions.SequentialScan);
@@ -74,7 +80,7 @@ public static class ModellFormat
     private static string Ascii(byte[] b, int fra, int lengde) => Encoding.ASCII.GetString(b, fra, lengde);
 
     // ---------- GGUF ----------
-    private static Modell Gguf(FileStream fs)
+    private static Modell Gguf(Stream fs)
     {
         string? navn = null, arkitektur = null, storrelse = null, basenavn = null, base0 = null, baseOrg = null, org = null, modellVersjon = null;
         int? vokab = null, lag = null, bredde = null;
@@ -163,7 +169,7 @@ public static class ModellFormat
     // ---------- safetensors ----------
     private static readonly System.Text.RegularExpressions.Regex LagNr = new(@"(?:^|\.)(?:layers|h|blocks|layer)\.(\d+)\.", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-    private static Modell? Safetensors(FileStream fs, long hodeLengde)
+    private static Modell? Safetensors(Stream fs, long hodeLengde)
     {
         if (hodeLengde > 20_000_000) return new Modell("safetensors", null, null, null, false);
         fs.Position = 8;
@@ -228,7 +234,7 @@ public static class ModellFormat
     }
 
     // ---------- ONNX: les produsentnavnet fra starten av filen (protobuf) ----------
-    private static Modell Onnx(FileStream fs)
+    private static Modell Onnx(Stream fs)
     {
         string? produsent = null;
         try

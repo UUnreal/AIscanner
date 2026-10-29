@@ -85,17 +85,34 @@ public sealed partial class Skanner
     internal AiNettsted? Tjeneste(string vert) =>
         _regler.AiTjenester.FirstOrDefault(t => t.Treffer(vert)) ?? FinnNettsted(vert);
 
+    private Task<Dictionary<IPAddress, List<string>>>? _aiIp;
+    private HashSet<string>? _nettleserVerter;
+
     private void Trafikk(NettBilde nb)
     {
         DataMalt = nb.Bytes != null;
         MaleSekunder = nb.Sekunder;
 
+        // Egne oppslag av AI-adressene, og AI-tjenestene nettleserne har i nettverkslageret sitt
+        Dictionary<IPAddress, List<string>>? egne = null;
+        try { if (_aiIp != null && _aiIp.Wait(TimeSpan.FromSeconds(5))) egne = _aiIp.Result; } catch { }
+        if (egne != null) _nettleserVerter ??= AiAdresser.NettleserVerter(ChromiumRotter(), v => Tjeneste(v) != null);
+        var viaIp = new HashSet<Tilkobling>();
+
         (string? Vert, AiNettsted? Tj) Navn(IPAddress ip)
         {
-            if (!nb.Dns.TryGetValue(ip, out var navn) || navn.Count == 0) return (null, null);
-            foreach (var n in navn)
-                if (Tjeneste(n) is { } t) return (n, t);
-            return (navn[0], null);
+            if (nb.Dns.TryGetValue(ip, out var navn) && navn.Count > 0)
+            {
+                foreach (var n in navn)
+                    if (Tjeneste(n) is { } t) return (n, t);
+                return (navn[0], null);
+            }
+            // Ikke i Windows' DNS-buffer: kjent igjen på IP-adressen, men bare tjenester nettleseren selv har brukt nylig
+            var nokkel = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+            if (egne != null && _nettleserVerter != null && egne.TryGetValue(nokkel, out var verter))
+                foreach (var v in verter)
+                    if (_nettleserVerter.Contains(v) && Tjeneste(v) is { } t) return (v, t);
+            return (null, null);
         }
 
         // Forbindelser inn til en port programmet selv lytter på er klienter, ikke steder det sender til
@@ -105,14 +122,18 @@ public sealed partial class Skanner
         _funnPid.Clear();
 
         var oppslag = new Dictionary<Tilkobling, (string? Vert, AiNettsted? Tj)>();
-        foreach (var t in nb.Tilkoblinger) oppslag[t] = Navn(t.Fjern);
+        foreach (var t in nb.Tilkoblinger)
+        {
+            oppslag[t] = Navn(t.Fjern);
+            if (oppslag[t].Tj != null && !(nb.Dns.TryGetValue(t.Fjern, out var dn) && dn.Count > 0)) viaIp.Add(t);
+        }
         _vertForIp.Clear();
         foreach (var (t, v) in oppslag) if (v.Tj != null && v.Vert != null) _vertForIp[t.Fjern.ToString()] = v.Vert;
         // Programmer vi ikke kjente som AI, men som snakker med en AI-tjeneste. Da vises alt programmet er koblet til.
         var skjulte = new Dictionary<int, Funn>();
         foreach (var t in nb.Tilkoblinger)
         {
-            if (Inn(t) || skjulte.ContainsKey(t.Pid) || oppslag[t].Tj is not { } tj || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
+            if (Inn(t) || viaIp.Contains(t) || skjulte.ContainsKey(t.Pid) || oppslag[t].Tj is not { } tj || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
             if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || Nettleserprosesser.ContainsKey(p.Navn) || FunnForProsess(p.Navn, p.Sti) != null) continue;
             skjulte[t.Pid] = SkjultAi(t.Pid, p.Navn, p.Sti, tj);
         }
@@ -129,6 +150,8 @@ public sealed partial class Skanner
                 if (tj == null) continue;   // annen surfing angår ikke oss
                 f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, nettleser, null, enkelt: tj.Enkelt, rad: tj.Rad);
                 f.Privat = true;
+                if (viaIp.Contains(t))
+                    f.Detalj($"Kjent igjen på IP-adressen: {t.Fjern} er {vert} nå, og {nettleser} har {vert} i nettverkslageret sitt (nettleseren slår opp navn selv, så Windows' DNS-buffer har det ikke)");
                 var apen = $"Åpen i {nettleser} nå.";
                 if (f.Bruk == null) f.Bruk = apen;
                 else if (!f.Bruk.Contains(apen)) f.Bruk = f.Bruk.TrimEnd('.') + ". " + apen;   // trafikken kan leses to ganger (lytting i bakgrunnen)
@@ -137,6 +160,8 @@ public sealed partial class Skanner
             {
                 f = skjulte.TryGetValue(t.Pid, out var sk) ? sk : FunnForProsess(p.Navn, p.Sti);
                 if (f == null) continue;
+                // IP-treff uten navn gjelder bare nettlesere: andre programmer kan dele adressen med en annen tjeneste
+                if (viaIp.Contains(t)) { vert = null; tj = null; }
             }
             if (vert != null) sett.Add(vert);
             _funnPid.GetOrAdd(f, _ => new HashSet<int>()).Add(t.Pid);

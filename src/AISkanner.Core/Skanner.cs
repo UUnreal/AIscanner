@@ -58,6 +58,7 @@ public sealed partial class Skanner
         Startet = DateTime.Now;
         Logg = new Tilgangslogg();
         Tilgangslogg.Aktiv = Logg;
+        ModellFormat.NullstillTelling();
         // Som administrator: låste mapper og filer leses med lesing for sikkerhetskopi (bare lesing)
         Admintilgang.SlaPa();
         var stegliste = new (string Tekst, Action Gjor)[]
@@ -87,6 +88,11 @@ public sealed partial class Skanner
         var maling = TestNett == null ? Datamaling.Start() : null;
         // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
         var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
+        // Adressene til kjente AI-tjenester slås opp mens søket går, så nettleserens egne oppslag (DoH) kan kjennes igjen
+        _nettleserVerter = null;
+        _aiIp = TestNett == null && Plattform.ErWindows
+            ? Task.Run(() => AiAdresser.SlaOpp(_regler.AiTjenester.Concat(_regler.AiNettsteder).SelectMany(t => t.Domener), TimeSpan.FromSeconds(4)))
+            : null;
         // Med LyttIBakgrunnen vises resultatet straks sjekkene er ferdige; lyttingen fortsetter og fullføres med FullforLyttingAsync
         bool bakgrunn = LyttIBakgrunnen && lytting != null;
         var ferdig = new int[1];
