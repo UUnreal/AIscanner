@@ -29,6 +29,37 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.26.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 167 av 167.
+
+### Lagt til
+- **Kommandolinjer for tolkere og AI-funn.** For python, node, bun, deno, powershell, pwsh, java og uv leses
+  kommandolinjen fra Windows og sammenlignes med reglene i minnet. Skriptet tolken kjører, sjekkes for AI-biblioteker
+  (`import openai`, `require("@anthropic-ai/sdk")` …), navn på AI-tjenester og nøkler. Det som vises, er skriptfila,
+  modul eller pakke og regelen som slo til. Argumentene vises aldri.
+- Flagg som øker risikoen gir rødt: åpen mot nettverket (`--host 0.0.0.0`, `--listen`), offentlig lenke (`--share`),
+  agent uten spørsmål (`--dangerously-skip-permissions`, `--yolo`, `--full-auto`) og `--trust-remote-code`.
+  Modellfila etter `-m` vises.
+- PowerShell med base64-kodet kode (`-enc`) som bruker AI blir et ukjent AI-spor. Koden pakkes ut i minnet og vises aldri.
+- IT kan slå av kommandolinjene med `lesKommandolinjer: false` i `regler.json` eller `LesKommandolinjer` = 0 under
+  `HKLM\SOFTWARE\Policies\AISkanner`.
+- **Windows-historikk som administrator**, i en egen sjekk:
+  - Prefetch for alle programmer: kjent AI kjørt før, AI-biblioteker Python og Node har lastet, og programmer som har
+    åpnet `.gguf`- eller `.safetensors`-filer.
+  - BAM: siste kjøretid per konto for AI-programmer.
+  - Amcache.hve, lest rett fra disken og tolket med en egen leser for registerfiler: sti, versjon, utgiver og SHA-1, også
+    for AI som er avinstallert.
+  - Siste kjøretid for planlagte oppgaver som starter AI (TaskCache).
+  - Hendelse 4688, Sysmon 1 og 22 og DNS-loggen i Windows når de er slått på: AI-programmer startet de siste 30
+    dagene, og programmer som har slått opp AI-tjenester.
+- `AISkanner.Cli --amcache <fil>` leser en kopi av Amcache.hve og viser AI-funnene i den.
+
+### Endret
+- Sjekken «Når AI-programmer sist kjørte (admin)», som bare så på en fast liste med programnavn, er erstattet av
+  Windows-historikken over. Prefetch og BAM sjekkes nå mot alle reglene.
+- Trafikk fra en tolk knyttes til skriptet den kjører, ikke til python.exe.
+
 ## [2.25.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 158 av 158.

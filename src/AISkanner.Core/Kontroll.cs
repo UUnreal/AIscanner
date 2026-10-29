@@ -249,6 +249,37 @@ public sealed partial class Skanner
         return (ok, alle);
     }
 
+    /// <summary>Kommandolinjer: skript i tolkere kjennes igjen på skriptfila og flaggene, uten at argumentene vises.</summary>
+    private static (int Ok, int Alle) TolkKontroll(Regelsett regler, StringBuilder sb, string rot)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Kommandolinje: {hva}"); }
+        var del = Kommandolinje.Del("a \"b c\" d\\\"e f\\\\\"g h\"");
+        Sjekk(del.SequenceEqual(new[] { "a", "b c", "d\"e", "f\\g h" }), $"deling av kommandolinjen ga {string.Join(" | ", del)}");
+        var app = Path.Combine(rot, "tolk", "app.py");
+        var hei = Path.Combine(rot, "tolk", "hei.py");
+        Directory.CreateDirectory(Path.GetDirectoryName(app)!);
+        File.WriteAllText(app, "import os\nfrom openai import OpenAI\nklient = OpenAI()\n");
+        File.WriteAllText(hei, "print('hei')\n");
+        var s = new Skanner(regler);
+        var f1 = s.Vurder("python.exe", @"C:\Python\python.exe", 9101, $"python.exe -u \"{app}\" --passord hemmelig123", null, null);
+        Sjekk(f1 != null && f1.Navn == "Python-skript med AI: app.py" && f1.Risiko == Risiko.Rod && f1.Detaljer.Any(d => d.Contains("bruker openai")), "Python-skript som importerer openai ble ikke funnet");
+        Sjekk(s.Vurder("python.exe", null, 9102, $"python \"{hei}\"", null, null) == null, "Python-skript uten AI ble regnet som AI");
+        var f2 = s.Vurder("python", null, 9103, "python -m vllm.entrypoints.openai.api_server --host 0.0.0.0 --api-key hemmelig123", null, null);
+        Sjekk(f2 != null && f2.Advarsler.Any(a => a.StartsWith("Åpen mot nettverket")), "python -m vllm --host 0.0.0.0 ble ikke merket åpen mot nettverket");
+        var kode = Convert.ToBase64String(Encoding.Unicode.GetBytes("Invoke-RestMethod -Uri https://api.openai.com/v1/chat/completions -Headers @{a='hemmelig123'}"));
+        var f3 = s.Vurder("powershell.exe", null, 9104, $"powershell.exe -NoProfile -WindowStyle Hidden -enc {kode}", null, null);
+        Sjekk(f3 != null && f3.Navn == "PowerShell med gjemt AI-kode" && f3.Gruppe == "spor", "PowerShell med base64-kodet AI-kall ble ikke et ukjent AI-spor");
+        var f4 = s.Vurder("node.exe", null, 9105, @"""C:\Program Files\nodejs\node.exe"" ""C:\Program Files\nodejs\node_modules\npm\bin\npx-cli.js"" -y openai@4.20.0 hemmelig123", null, null);
+        Sjekk(f4 != null && f4.Navn == "Node-skript med AI: openai", "npx openai ble ikke kjent igjen som pakke");
+        var ai = s.Vurder("llama-server.exe", null, 9106, @"llama-server.exe -m C:\modeller\qwen.gguf --host 0.0.0.0 --port 8080", new Funn { Navn = "llama.cpp", Kategori = "Lokal AI", Hvorfor = "" }, null);
+        Sjekk(ai != null && ai.Risiko == Risiko.Rod && ai.Detaljer.Any(d => d == @"Modellfil lastet: C:\modeller\qwen.gguf"), "AI-program med --host 0.0.0.0 og -m modell fikk ikke modellfil og rødt");
+        Sjekk(new[] { f1, f2, f3, f4, ai }.Where(f => f != null).All(f => !f!.Detaljer.Concat(f.Advarsler).Any(d => d.Contains("hemmelig123") || d.Contains("--passord"))), "argumenter fra kommandolinjen ble vist");
+        var av = new Regelsett { LesKommandolinjer = false };
+        Sjekk(!Kommandolinje.Tillatt(av, out _), "IT kunne ikke slå av lesing av kommandolinjer");
+        return (ok, alle);
+    }
+
     /// <summary>Kontrollen av falske treff: det som ikke er AI, eller bare er AI bygget inn av en leverandør, skal ikke telles som AI-modeller.</summary>
     private static (int Ok, int Alle) FalskeTreffKontroll(Skanner s, StringBuilder sb, string rot)
     {
@@ -401,10 +432,13 @@ public sealed partial class Skanner
             var (ipOk, ipAlle) = NettIpKontroll(regler, sb);
             ok += ipOk;
             sb.AppendLine($"{(ipOk == ipAlle ? "OK  " : "FEIL")}  AI-trafikk uten navn i DNS-bufferen: {ipOk} av {ipAlle} riktige (nettleser med DoH kjent igjen på IP, andre programmer ikke)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle;
+            var (tolkOk, tolkAlle) = TolkKontroll(regler, sb, rot);
+            ok += tolkOk;
+            sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, aldri argumentene, IT kan slå av)");
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
-            sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");
+            sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");
             sb.AppendLine("Nettverksalarmene er kontrollert med et kunstig nettbilde: reglene virker, men ikke at Windows ga data.");
         }
         catch (Exception e) { sb.AppendLine($"Kontrollen stoppet: {Tilgangslogg.Beskriv(e)}"); }

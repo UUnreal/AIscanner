@@ -164,7 +164,7 @@ public static class Admintilgang
     }
 
     /// <summary>\Device\HarddiskVolume3\Program Files\x.exe → C:\Program Files\x.exe</summary>
-    private static string TilDos(string sti)
+    internal static string TilDos(string sti)
     {
         var enheter = _enheter;
         if (enheter == null)

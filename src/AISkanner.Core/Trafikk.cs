@@ -134,7 +134,7 @@ public sealed partial class Skanner
         foreach (var t in nb.Tilkoblinger)
         {
             if (Inn(t) || viaIp.Contains(t) || skjulte.ContainsKey(t.Pid) || oppslag[t].Tj is not { } tj || !nb.Prosesser.TryGetValue(t.Pid, out var p)) continue;
-            if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || Nettleserprosesser.ContainsKey(p.Navn) || FunnForProsess(p.Navn, p.Sti) != null) continue;
+            if (t.Pid <= 4 || Plattform.ErEgen(t.Pid) || Nettleserprosesser.ContainsKey(p.Navn) || _pidFunn.ContainsKey(t.Pid) || FunnForProsess(p.Navn, p.Sti) != null) continue;
             skjulte[t.Pid] = SkjultAi(t.Pid, p.Navn, p.Sti, tj);
         }
 
@@ -158,7 +158,7 @@ public sealed partial class Skanner
             }
             else
             {
-                f = skjulte.TryGetValue(t.Pid, out var sk) ? sk : FunnForProsess(p.Navn, p.Sti);
+                f = skjulte.TryGetValue(t.Pid, out var sk) ? sk : _pidFunn.TryGetValue(t.Pid, out var pf) ? pf : FunnForProsess(p.Navn, p.Sti);
                 if (f == null) continue;
                 // IP-treff uten navn gjelder bare nettlesere: andre programmer kan dele adressen med en annen tjeneste
                 if (viaIp.Contains(t)) { vert = null; tj = null; }

@@ -128,6 +128,8 @@ public sealed class Regelsett
     [JsonPropertyName("daarligeUtvidelser")] public List<DaarligUtvidelse> DaarligeUtvidelser { get; set; } = new();
     [JsonPropertyName("iocFiler")] public List<IocFil> IocFiler { get; set; } = new();
     [JsonPropertyName("iocDomener")] public List<IocDomene> IocDomener { get; set; } = new();
+    /// <summary>false: IT har slått av lesing av kommandolinjer (tolkere og AI-programmer).</summary>
+    [JsonPropertyName("lesKommandolinjer")] public bool? LesKommandolinjer { get; set; }
 
     /// <summary>Kilde reglene ble lastet fra, vises i vinduet.</summary>
     [JsonIgnore] public string Kilde { get; private set; } = "innebygd";

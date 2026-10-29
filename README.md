@@ -6,7 +6,7 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.25.0 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.26.0 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
 - **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
@@ -158,7 +158,7 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 
 - Skanneren finner spor, ikke alt. Et tomt resultat betyr ikke at PC-en er fri for AI.
 - Den skanner bare innlogget bruker.
-- Filene inne i WSL leses ikke. SRUM, Amcache og MFT leses ikke.
+- Filene inne i WSL leses ikke. SRUM og MFT leses ikke ennå.
 - Forbindelser vises bare mens programmene er åpne. QUIC/UDP vises ikke.
 - «Sender data til» viser hvor serveren står eller hvor selskapet hører hjemme, ikke nødvendigvis hvor dataene lagres.
 - YARA-motoren mangler modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`.

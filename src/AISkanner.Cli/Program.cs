@@ -49,6 +49,18 @@ if (args.Contains("--kontroll"))
     return k.Contains("FEIL") ? 1 : 0;
 }
 
+// Leser en kopi av Amcache.hve og viser AI-funnene i den (for å prøve lesingen uten Windows)
+int am = Array.IndexOf(args, "--amcache");
+if (am >= 0 && am + 1 < args.Length)
+{
+    var sk = new Skanner(regler);
+    int n = sk.LesAmcache(File.ReadAllBytes(args[am + 1]));
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+    Console.WriteLine($"{n} oppføringer");
+    foreach (var f in sk.FunnHittil()) { Console.WriteLine(f.Navn); foreach (var d in f.Detaljer.Take(3)) Console.WriteLine("  " + d); }
+    return n < 0 ? 1 : 0;
+}
+
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
 var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), Fullt = args.Contains("--fullt"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
 int tn = Array.IndexOf(args, "--test-nett");

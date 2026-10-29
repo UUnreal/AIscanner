@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.25.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.26.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -164,7 +164,13 @@ fil»), fordi endringstider kan forfalskes.
 | Agentøkter | `.claude\projects\*.jsonl`, `.codex\sessions\rollout-*.jsonl`, `.gemini\tmp`, VS Code `chatSessions` | Tidsstempler, antall meldinger fra mennesket og treff per kategori. Teksten beholdes aldri. Maks 500 filer per program og 20 sekunder totalt. Av med `--uten-agentlogger`. |
 | Skript med AI-nøkkel | `.vbs .js .ps1 .py .bat .cmd` i Oppstart, `%TEMP%` og `%ProgramData%` (ett nivå) | Om fila nevner en AI-tjeneste og har noe som ligner en nøkkel. Nøkkelen vises aldri. |
 | Dårlige pakkeversjoner | `%APPDATA%\npm\node_modules\*\package.json`, `%LOCALAPPDATA%\npm-cache\_logs`, `.vscode\extensions` | Navn og versjon mot `daarligeVersjoner` i `regler.json` |
-| Sist kjørt (admin) | `C:\Windows\Prefetch\*.pf`, BAM i registeret | Programnavn og kjøretider for kjente AI-programmer |
+| Kommandolinjer | Tolkere (python, pythonw, node, bun, deno, powershell, pwsh, java, uv, uvx) og programmer som allerede er AI-funn, med `ProcessCommandLineInformation` | Sammenlignes med reglene i minnet og kastes. Vises: skriptfila, modul eller pakke, modellfil og flagg som `--host 0.0.0.0`, `--share`, `--dangerously-skip-permissions`. Aldri resten av argumentene. Kode etter `-enc` pakkes ut i minnet og vises aldri. |
+| Skriptet en tolk kjører | Skriptfila fra kommandolinjen (`.py .js .mjs .ts .ps1` …, maks 2 MB) | `import`/`require` av AI-biblioteker, navn på AI-tjenester, om noe ligner en nøkkel. Teksten beholdes aldri. |
+| Prefetch (admin) | `C:\Windows\Prefetch\*.pf` | Programnavn, de siste kjøretidene og filnavnene programmet åpnet (AI-biblioteker i `site-packages`/`node_modules`, `.gguf`/`.safetensors`) |
+| BAM (admin) | `HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings` | Programsti og siste kjøretid per konto, for AI-programmer |
+| Amcache (admin) | `C:\Windows\appcompat\Programs\Amcache.hve`, lest rett fra disken og tolket i minnet | Sti, navn, versjon, utgiver og SHA-1 for AI-programmer, også avinstallerte. Transaksjonsloggene leses ikke. |
+| Planlagte oppgaver (admin) | `TaskCache` i registeret | Siste kjøretid for oppgaver som starter AI |
+| Hendelseslogger (admin) | Security 4688, Sysmon 1 og 22, `Microsoft-Windows-DNS-Client/Operational` 3008, siste 30 dager | Programnavn, tid, konto og AI-navn som ble slått opp. Kommandolinjen i 4688 og Sysmon behandles som over. Loggene slås aldri på av programmet. |
 
 | Hooks og oppgaver | `hooks` i `.claude\settings*.json`, `.vscode\tasks.json` med `runOn: folderOpen`, skript rett i `.claude\` og `.vscode\` | Hendelse og første ord i kommandoen, filsti, tid |
 | MCP som starter selv, uttak | `.claude\settings*.json` | `enableAllProjectMcpServers`, `enabledMcpjsonServers`, `WebFetch` i `permissions.allow` |
@@ -179,8 +185,15 @@ fil»), fordi endringstider kan forfalskes.
 | Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |
 | npx-cachen | `%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\*mcp*` (maks 200 filer, 20 s) | Antall skjulte tegn og `<IMPORTANT>`-blokker |
 
-Ikke dekket: SRUM, Amcache, MFT og filene inne i WSL. Kommandolinjene til programmer som kjører, og kommandoer i
-Windows-hendelseslogger, leses aldri. Er WSL installert, står det som blindsone i rapporten.
+Ikke dekket ennå: SRUM, MFT og filene inne i WSL. Er WSL installert, står det som blindsone i rapporten.
+
+### Kommandolinjer
+
+Kommandolinjer leses bare for tolkere og for programmer som allerede er AI-funn. Python.exe sier ingenting om hva som
+kjører; skriptet gjør det. Linjen leses fra Windows (ikke fra prosessminnet), sammenlignes med reglene og kastes. Det som
+vises, er regelen som slo til og skriptfila. IT kan slå det av med `"lesKommandolinjer": false` i `regler.json`, eller
+med `HKLM\SOFTWARE\Policies\AISkanner` `LesKommandolinjer` = 0 (DWORD, kan rulles ut med Intune). Da står det som
+«blokkert av IT» i datagrunnlaget, og hendelsesloggene leses uten kommandolinjen.
 Agentøkter kan inneholde personopplysninger. Bare tider og treff leses, men på jobb-PC bør bruken avklares
 (e-postforskriften kan gjelde når agenten har lest e-post). Slå av med `--uten-agentlogger`.
 
@@ -211,7 +224,7 @@ selv og alt den har startet, tas aldri med.
 Trykk på en rad for å se prosessen: PID, starttid, signatur (WinVerifyTrust, uten nettoppslag), filinfo, full sti og
 hvem som startet den (foreldrekjeden fra Toolhelp-lista, med sjekk for gjenbrukte PID-er). «Vis» åpner mappa i
 Utforsker; bare stier som er vist, kan åpnes. Prosesser åpnes med `PROCESS_QUERY_LIMITED_INFORMATION`, sikkerhets- og
-systemprosesser røres ikke, og kommandolinjer leses aldri. Ingen pakkefangst, ingen driver, ingen
+systemprosesser røres ikke, og kommandolinjer leses bare for tolkere og AI-funn (se Kommandolinjer). Ingen pakkefangst, ingen driver, ingen
 innhold. Ingenting lagres og ingenting kommer i rapporten. Bare TCP: UDP og QUIC (HTTP/3) vises ikke, og det står i
 visningen. `AISkanner.Cli --nettverk` skriver tre avlesninger som JSON.
 
@@ -222,7 +235,7 @@ lager ufarlige falske spor i `%TEMP%\AISkanner-kontroll-xxxxxxxx`, peker sjekken
 viser OK eller FEIL for hver alarm og sletter mappa. Ingen ekte mapper leses, ingenting lagres, ingenting sendes.
 Antivirus kan reagere på de falske sporene (for eksempel en fil som ser ut som en kjent skadevare-fil). Nettverksreglene
 kontrolleres med et kunstig nettbilde, så kontrollen viser at reglene virker, ikke at Windows ga nettverksdata.
-Symlinker, Prefetch, BAM og Run-nøkkelen kontrolleres ikke.
+Kommandolinjene kontrolleres med lagde linjer. Symlinker, Prefetch, BAM, hendelsesloggene og Run-nøkkelen kontrolleres ikke.
 
 Kontrollen sjekker også reglene for kinesisk AI: vertsnavn for kinesiske AI-nettsteder og API-er skal treffe en tjeneste
 i Kina med høy risiko, vanlige kinesiske nettsteder som ikke er AI (baidu.com, qq.com, aliyun.com, tiktok.com …) skal

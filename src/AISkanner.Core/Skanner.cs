@@ -63,7 +63,7 @@ public sealed partial class Skanner
         Admintilgang.SlaPa();
         var stegliste = new (string Tekst, Action Gjor)[]
         {
-            ("Ser etter AI som kjører nå...", () => { Prosesser(); MotorerIProsesser(); }),
+            ("Ser etter AI som kjører nå...", () => { Prosesser(); Kommandolinjer(); MotorerIProsesser(); }),
             ("Sjekker installerte programmer...", Installert),
             ("Sjekker hva som starter av seg selv...", Oppstart),
             ("Ser etter AI-verktøy og AI-nøkler...", () => { Spor(); Nokler(); }),
@@ -75,10 +75,13 @@ public sealed partial class Skanner
             ("Sjekker registeret...", Register),
             ("Leter etter AI som leverandører har lagt inn...", LeverandorAi),
             ("Ser etter ukjente AI-spor...", UkjenteSporSjekk),
+            ("Ser i Windows' historikk etter AI som er brukt før...", WindowsHistorikk),
         };
         // Alle sjekkene kjører samtidig. Fremdriften er antall ferdige sjekker.
         Tider.Clear();
         _mappeFunn.Clear();
+        _pidFunn.Clear();
+        _aiPid.Clear();
         while (_prosjektOppsett.TryTake(out _)) { }
         TomMisbruk();
         lock (Blindsoner) Blindsoner.Clear();
@@ -338,6 +341,7 @@ public sealed partial class Skanner
                     f.Detalj($"Omdøpt: {sti} · navnet i programfila er {egentlig}");
                 }
                 HuskMappe(sti, f);
+                _aiPid[p.Id] = (f, p.ProcessName, sti);
             }
         }
     }
@@ -394,7 +398,11 @@ public sealed partial class Skanner
                 var exe = Environment.ExpandEnvironmentVariables(WebUtility.HtmlDecode(m.Groups[1].Value).Trim().Trim('"'));
                 var oppgave = fil.Substring(rot.Length).TrimStart('\\');
                 var r = FinnRegel($"{oppgave} {exe}");
-                if (r != null) FraRegel(r, "Planlagt oppgave", $"Planlagt oppgave: {oppgave} · starter {exe}").Merknad("Startes av en planlagt oppgave i Windows.");
+                if (r == null) continue;
+                var sist = OppgaveSistKjort(oppgave);
+                var f = FraRegel(r, "Planlagt oppgave", $"Planlagt oppgave: {oppgave} · starter {exe}{(sist is { } n ? $" · sist kjørt {Nar(n, "oppgavelageret i Windows")}" : "")}");
+                f.Merknad("Startes av en planlagt oppgave i Windows.");
+                if (sist != null) f.Tidspunkt(null, sist);
             }
         }
         Tilgangslogg.Logg("Mappe", rot, lest > 0 ? Utfall.Lest : Utfall.Nektet, lest > 0 ? $"{lest} oppgavefiler: bare programstien (Command), aldri argumentene" : "oppgavefilene krever administrator");

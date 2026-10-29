@@ -944,7 +944,6 @@ MCP-oppsett i en prosjektmappe: kan følge med kode fra andre og starte når pro
 Samme navn og sted som en fil kjent fra skadevare som brukte AI (2025).|Same name and location as a file known from malware that used AI (2025).
 Skript med AI-nøkkel i oppstart, Temp eller ProgramData. Ukjent hvem som la det der.|Script with an AI key in Startup, Temp or ProgramData. Unknown who put it there.
 Windows husker når programmer kjørte. Viser når AI-programmer sist ble startet. Bare som administrator.|Windows remembers when programs ran. Shows when AI programs were last started. Administrator only.
-Når AI-programmer sist kjørte (admin)|When AI programs last ran (admin)
 Pakker på lista over kjente dårlige versjoner|Packages on the list of known bad versions
 Skript som bruker AI med nøkkel|Script that uses AI with a key
 Fil med kjent navn fra AI-skadevare|File with a known name from AI malware
@@ -1160,7 +1159,7 @@ Ferdighet for AI-agent|Skill for AI agent
 alle prosjekter|all projects
 KONTROLL AV ALARMENE (falske spor i en midlertidig mappe)|ALARM CHECK (fake traces in a temporary folder)
 alarmer slo ut riktig på|alarms triggered correctly in
-Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.|Not checked here: symlinks (need rights), Prefetch/BAM (admin), the Run key and real network tables.
+Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.|Not checked here: symlinks (need rights), Prefetch, BAM and event logs (Windows and admin), the Run key and real network tables. The Amcache reader was tried with --amcache on a real Amcache.hve.
 Nettverksalarmene er kontrollert med et kunstig nettbilde: reglene virker, men ikke at Windows ga data.|The network alarms were checked with a synthetic network picture: the rules work, but this does not show that Windows supplied data.
 Den midlertidige mappa er slettet.|The temporary folder has been deleted.
 Kontrollen stoppet:|The check stopped:
@@ -1302,3 +1301,81 @@ DNS-oppslag av kjente AI-adresser|DNS lookups of known AI addresses
 ~^(.+): sikker DNS \(DoH\)$|$1: secure DNS (DoH)
 ~^(.+); navn nettleseren slår opp selv, mangler i Windows' DNS-buffer og kjennes igjen på IP-adressen$|$1; names the browser looks up itself are missing from the Windows DNS cache and are recognised by IP address
 ~^Kjent igjen på IP-adressen: (.+) er (.+) nå, og (.+) har (.+) i nettverkslageret sitt \(nettleseren slår opp navn selv, så Windows' DNS-buffer har det ikke\)$|Recognised by IP address: $1 is $2 now, and $3 has $4 in its network state (the browser looks up names itself, so the Windows DNS cache does not have it)
+Kommandolinjene til tolkere og AI-programmer|Command lines of interpreters and AI programs
+sammenlignet med reglene i minnet og kastet; bare regeltreff og skriptfila vises, aldri argumentene|compared with the rules in memory and discarded; only rule hits and the script file are shown, never the arguments
+nektet av Windows|denied by Windows
+skriptfil en tolk kjører|script file run by an interpreter
+skript større enn 2 MB|script larger than 2 MB
+Kjører nå:|Running now:
+Kjørt før:|Ran before:
+kjører modulen|runs the module
+kjører pakken|runs the package
+kjører kode skrevet på kommandolinjen (vises ikke)|runs code written on the command line (not shown)
+ · bruker| · uses
+ · snakker med| · talks to
+ · har en API-nøkkel i seg (vises ikke)| · has an API key in it (not shown)
+PowerShell med gjemt AI-kode|PowerShell with hidden AI code
+PowerShell kjører kode som er gjort om til base64 på kommandolinjen, så den ikke kan leses direkte. Koden bruker AI.|PowerShell runs code turned into base64 on the command line, so it cannot be read directly. The code uses AI.
+Koden er gjemt som base64 på kommandolinjen.|The code is hidden as base64 on the command line.
+Et skript bruker AI. Kjent igjen på skriptfila og på hva tolken ble startet med; argumentene vises ikke.|A script uses AI. Recognised by the script file and by what the interpreter was started with; the arguments are not shown.
+Skriptet har en API-nøkkel skrevet rett i seg.|The script has an API key written straight into it.
+~^(Python|Node|PowerShell|Java|Deno|Bun)-skript med AI: (.+)$|$1 script with AI: $2
+~^(Python|Node|PowerShell|Java|Deno|Bun)-skript med AI$|$1 script with AI
+Brukt før.|Used before.
+Har vært på PC-en.|Has been on the PC.
+Åpnet før.|Opened before.
+Modellfil lastet:|Model file loaded:
+Startet med:|Started with:
+Åpen mot nettverket|Open to the network
+Deler en offentlig lenke på nettet|Shares a public link on the internet
+Agent som kjører kommandoer uten å spørre|Agent that runs commands without asking
+Kjører kode som følger med modellen|Runs code that comes with the model
+Kjørt før|Ran before
+Windows-historikk|Windows history
+Ser i Windows' historikk etter AI som er brukt før|Looking in the Windows history for AI used before
+Ser i Windows' historikk etter AI som er brukt før...|Looking in the Windows history for AI used before...
+Prefetch i Windows|Prefetch in Windows
+ av de siste kjøringene registrert| of the latest runs recorded
+sist kjørt|last ran
+~^(Python|Node) har kjørt AI-biblioteker$|$1 has run AI libraries
+~^(Python|Node) med AI-biblioteker$|$1 with AI libraries
+~^(Python|Node) på PC-en har lastet AI-biblioteker\. Windows har registrert det i Prefetch\. Viser AI som er kjørt fra skript, også når skriptet er borte\.$|$1 on the PC has loaded AI libraries. Windows recorded it in Prefetch. Shows AI run from scripts, even when the script is gone.
+: lastet|: loaded
+ · skript:| · scripts:
+Program med AI-modeller|Program with AI models
+~^Program som har lastet AI-modeller: (.+)$|Program that has loaded AI models: $1
+Et program har åpnet AI-modellfiler. Windows har registrert det i Prefetch.|A program has opened AI model files. Windows recorded it in Prefetch.
+ åpnet| opened
+ukjent Prefetch-format|unknown Prefetch format
+programnavn, kjøretider og filnavn programmet åpnet|program names, run times and file names the program opened
+~^(\d+) Prefetch-filer: programnavn, kjøretider og filnavn programmet åpnet$|$1 Prefetch files: program names, run times and file names the program opened
+Prefetch krever administrator|Prefetch requires administrator
+BAM i Windows|BAM in Windows
+ · konto| · account
+~^(\d+) programmer med siste kjøretid$|$1 programs with last run time
+Windows' programhistorikk (Amcache)|Windows program history (Amcache)
+~^(\d+) programfiler og programmer; transaksjonsloggene leses ikke, så de siste minuttene kan mangle$|$1 program files and programs; the transaction logs are not read, so the last few minutes may be missing
+ukjent format|unknown format
+ · versjon| · version
+ · registrert| · recorded
+Amcache: program|Amcache: program
+ · installert| · installed
+oppgavelageret i Windows|the task store in Windows
+hendelse 4688 (programstart)|event 4688 (process start)
+hendelse 4688 i Windows|event 4688 in Windows
+Sysmon 1 og 22 (programstart og DNS)|Sysmon 1 and 22 (process start and DNS)
+Sysmon i Windows|Sysmon in Windows
+DNS-loggen (oppslag)|the DNS log (lookups)
+DNS-loggen i Windows|the DNS log in Windows
+hendelsesloggen i Windows|the event log in Windows
+Startet:|Started:
+ siste 30 dager| in the last 30 days
+krever administrator|requires administrator
+loggen finnes ikke på denne PC-en (ikke installert)|the log does not exist on this PC (not installed)
+~^(.+): ingen hendelser siste 30 dager \(loggen er av eller tom\)$|$1: no events in the last 30 days (the log is off or empty)
+~^(.+): (\d+) hendelser siste 30 dager(, de \d+ nyeste)?; bare programnavn, tid og AI-navn brukes$|$1: $2 events in the last 30 days; only program names, times and AI names are used
+Program som har kontaktet AI|Program that has contacted AI
+~^Program som har kontaktet AI: (.+)$|Program that has contacted AI: $1
+Et program som ikke er en nettleser, har slått opp navnet til en AI-tjeneste. Windows har registrert det.|A program that is not a browser has looked up the name of an AI service. Windows recorded it.
+ slo opp| looked up
+Slått opp:|Looked up:

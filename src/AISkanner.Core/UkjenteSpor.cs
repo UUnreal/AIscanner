@@ -13,7 +13,7 @@ namespace AISkanner;
 /// <summary>
 /// Ukjente AI-spor: oppsett og logger etter AI-agenter og AI-tjenester der vi ikke vet hvem som satte dem opp eller hvorfor.
 /// MCP-servere, «godkjenn alt»-innstillinger, lokale AI-servere brukt fra andre maskiner, agentøkter uten menneske,
-/// skript som snakker med AI-API-er med nøkkel, kjente dårlige pakkeversjoner og (som administrator) når AI-programmer sist kjørte.
+/// skript som snakker med AI-API-er med nøkkel og kjente dårlige pakkeversjoner.
 ///
 /// Bare lesing og bare metadata ut: tid, antall, kategori og filsti. Aldri innhold fra økter, kommandoer, nøkler eller
 /// miljøvariabler. Ingenting lagres. Endringstid på filer kan forfalskes, så kilden til hvert tidspunkt står ved siden av.
@@ -72,12 +72,11 @@ public sealed partial class Skanner
                 "Lesing av nøkkelfiler uten revisjon i Windows.",
                 "MCP-servere på nettet som endrer seg etter at de ble godkjent.",
                 "AI-nettlesere som handler på egen hånd i agentmodus.",
-                "Kommandolinjene til programmer som kjører, også i hendelseslogger (leses aldri).",
             });
         foreach (var (navn, steg) in new (string, Action)[]
         {
             ("MCP", McpBruker), ("Godkjenn alt", GodkjennAltBruker), ("Serverlogger", Serverlogger),
-            ("Agentøkter", Agentokter), ("Misbruk", MisbrukBruker), ("Skript", SkriptMedAi), ("Pakker", DaarligePakker), ("Admin", AdminSpor), ("WSL", Wsl),
+            ("Agentøkter", Agentokter), ("Misbruk", MisbrukBruker), ("Skript", SkriptMedAi), ("Pakker", DaarligePakker), ("WSL", Wsl),
         })
         {
             try { steg(); }
@@ -641,52 +640,6 @@ public sealed partial class Skanner
         foreach (var t in treff) f.Detalj(t);
     }
 
-    // ---------- P4: bare som administrator ----------
-
-    private static readonly string[] AiProgrammer = { "ollama.exe", "claude.exe", "codex.exe", "cursor.exe", "lm studio.exe", "lms.exe", "gemini.exe", "copilot.exe", "windsurf.exe", "llama-server.exe" };
-
-    private void AdminSpor()
-    {
-        if (!Plattform.ErWindows) return;
-        if (!Nettverk.ErAdmin())
-        {
-            Tilgangslogg.Logg("Mappe", @"C:\Windows\Prefetch", Utfall.HoppetOver, "krever administrator");
-            Tilgangslogg.Logg("Register", @"HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings", Utfall.HoppetOver, "krever administrator");
-            return;
-        }
-        var linjer = new List<string>();
-        DateTime? sist = null;
-        // Prefetch: siste 8 kjøretider for AI-programmer
-        var prefetch = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Prefetch");
-        foreach (var fil in Filer(prefetch).Where(x => AiProgrammer.Any(a => Path.GetFileName(x).StartsWith(a + "-", StringComparison.OrdinalIgnoreCase))).Take(40))
-        {
-            var p = Prefetch.Les(fil);
-            if (p == null || p.Tider.Count == 0) continue;
-            if (sist == null || p.Tider[0] > sist) sist = p.Tider[0];
-            linjer.Add($"Fil: {fil} · {p.Exe} · kjørt {string.Join(", ", p.Tider.Take(8).Select(t => t.ToString("d. MMM yyyy HH:mm", NbKultur)))} (Prefetch, bare som admin)");
-        }
-        // BAM: sist kjørt per program for denne brukeren (FILETIME i de første 8 bytene)
-        try
-        {
-            var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value;
-            using var k = sid == null ? null : Tilgangslogg.Nokkel(Registry.LocalMachine, $@"SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\{sid}");
-            foreach (var n in k?.GetValueNames() ?? Array.Empty<string>())
-            {
-                var exe = Path.GetFileName(n);
-                if (!AiProgrammer.Contains(exe, StringComparer.OrdinalIgnoreCase) && !Regex.IsMatch(exe, @"ai|gpt|llm|agent|claude|ollama|copilot|gemini", RegexOptions.IgnoreCase)) continue;
-                if (k!.GetValue(n) is not byte[] b || b.Length < 8) continue;
-                var tid = DateTime.FromFileTime(BitConverter.ToInt64(b, 0));
-                if (sist == null || tid > sist) sist = tid;
-                linjer.Add($"Register: BAM · {n} · sist kjørt {tid.ToString("d. MMM yyyy HH:mm", NbKultur)} (BAM, bare som admin)");
-            }
-        }
-        catch (Exception e) { Tilgangslogg.Feil("Register", "BAM", e); }
-        if (linjer.Count == 0) return;
-        var f = Spor("Når AI-programmer sist kjørte (admin)", "Windows husker når programmer kjørte. Viser når AI-programmer sist ble startet. Bare som administrator.", null);
-        f.Tidspunkt(sist, sist);
-        foreach (var l in linjer) f.Detalj(l);
-    }
-
     // ---------- Blindsone: WSL ----------
 
     private void Wsl()
@@ -719,20 +672,35 @@ public static class Prefetch
             if (info.Length > 4 * 1024 * 1024) { Tilgangslogg.Logg("Fil", sti, Utfall.HoppetOver, "større enn 4 MB"); return null; }
             var b = File.ReadAllBytes(sti);
             Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "bare programnavn og kjøretider");
-            if (b.Length > 8 && b[0] == 'M' && b[1] == 'A' && b[2] == 'M')
-            {
-                int lengde = BitConverter.ToInt32(b, 4);
-                if (lengde <= 0 || lengde > 16 * 1024 * 1024) return null;
-                RtlGetCompressionWorkSpaceSize(XpressHuff, out var arbeid, out _);
-                var ut = new byte[lengde];
-                var inn = new byte[b.Length - 8];
-                Buffer.BlockCopy(b, 8, inn, 0, inn.Length);
-                if (RtlDecompressBufferEx(XpressHuff, ut, ut.Length, inn, inn.Length, out _, new byte[arbeid]) != 0) return null;
-                b = ut;
-            }
-            return Tolk(b);
+            var ut = Pakkut(b);
+            return ut == null ? null : Tolk(ut);
         }
         catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
+    }
+
+    /// <summary>Windows 10 og 11 pakker Prefetch-filer (MAM, Xpress Huffman). Ukomprimerte filer gis tilbake som de er.</summary>
+    public static byte[]? Pakkut(byte[] b)
+    {
+        if (b.Length < 8) return null;
+        if (b[0] != 'M' || b[1] != 'A' || b[2] != 'M') return b;
+        int lengde = BitConverter.ToInt32(b, 4);
+        if (lengde <= 0 || lengde > 16 * 1024 * 1024) return null;
+        if (RtlGetCompressionWorkSpaceSize(XpressHuff, out var arbeid, out _) != 0) return null;
+        var ut = new byte[lengde];
+        var inn = new byte[b.Length - 8];
+        Buffer.BlockCopy(b, 8, inn, 0, inn.Length);
+        return RtlDecompressBufferEx(XpressHuff, ut, ut.Length, inn, inn.Length, out var fikk, new byte[arbeid]) == 0 && fikk > 0 ? ut : null;
+    }
+
+    /// <summary>Filene programmet åpnet de første sekundene (seksjonen med filnavn: forskyvning 0x64, lengde 0x68).</summary>
+    public static List<string> Filer(byte[] b)
+    {
+        var liste = new List<string>();
+        if (b.Length < 0x6C) return liste;
+        int off = BitConverter.ToInt32(b, 0x64), len = BitConverter.ToInt32(b, 0x68);
+        if (off <= 0 || len <= 0 || off + len > b.Length) return liste;
+        foreach (var s in Encoding.Unicode.GetString(b, off, len).Split('\0')) if (s.Length > 0) liste.Add(s);
+        return liste;
     }
 
     /// <summary>Ukomprimert Prefetch: versjon (0), "SCCA" (4), programnavn UTF-16 (0x10, 60 byte), kjøretider (0x80, 8 × FILETIME).</summary>
