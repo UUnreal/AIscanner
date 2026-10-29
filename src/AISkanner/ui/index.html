@@ -776,7 +776,9 @@ function tegnData() {
   const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Datagrunnlag", "Data basis")}</h2><span class="dtype">${L("Utviklermodus · hva søket leste, og hvorfor", "Developer mode · what the scan read, and why")}</span></div>`;
   if (!g) { d.innerHTML = hode + `<div class="tom">${L("Henter…", "Loading…")}</div>`; $("tilbake").onclick = lukkArk; return; }
   const mangler = g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0);
-  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket leste", "Everything read"), g.antallPoster], ["regler", L("Regler og bevis", "Rules and proof")]];
+  // Samme tall som flisene i Oversikt til sammen: alt søket sjekket, også det som bare er talt (filer i en mappe)
+  const sjekket = g.totalt.reduce((a, x) => a + x.n, 0);
+  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket sjekket", "Everything checked"), sjekket], ["regler", L("Regler og bevis", "Rules and proof")]];
   let kropp = "", rader = null, linje = null;
   if (fane === "oversikt") {
     kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"${x.n ? ` data-u="${x.u}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
@@ -802,8 +804,8 @@ function tegnData() {
       : g.totalt.map(x => ({ ...x, n: Math.max(fraSjekk(x.u) || 0, allePoster(g).filter(p => p.s === sjekkFilter && p.u === x.u).reduce((a, p) => a + (p.n || 1), 0)) })).filter(x => x.n || x.u === filter);
     const liste = filtrert(g);
     // Hvor mange tallet i Oversikt sier, mot hvor mange som har en sti i lista
-    const totalt = !filter ? null : filter === "mangler" ? g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0) : (g.totalt.find(x => x.u === filter) || {}).n;
-    const antall = !sjekkRad ? totalt : !filter ? null : filter === "lest" ? sjekkRad.lest : filter === "ikkefunnet" ? sjekkRad.ikke : filter === "hoppetover" ? sjekkRad.hoppet : filter === "mangler" ? sjekkRad.mangler : null;
+    const totalt = !filter ? sjekket : filter === "mangler" ? g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0) : (g.totalt.find(x => x.u === filter) || {}).n;
+    const antall = !sjekkRad ? totalt : !filter ? typer.reduce((a, x) => a + x.n, 0) : filter === "lest" ? sjekkRad.lest : filter === "ikkefunnet" ? sjekkRad.ikke : filter === "hoppetover" ? sjekkRad.hoppet : filter === "mangler" ? sjekkRad.mangler : null;
     const steder = liste.reduce((a, p) => a + (p.n || 1), 0);
     const tittel = antall != null && antall > steder
       ? L(`${tall(liste.length)} steder · ${tall(antall - steder)} av ${tall(antall)} er bare talt (filer i en mappe, skyfiler) og har ingen egen linje`, `${tall(liste.length)} places · ${tall(antall - steder)} of ${tall(antall)} are only counted (files in a folder, cloud files) and have no line of their own`)

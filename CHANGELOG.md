@@ -29,6 +29,13 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.23.1] - 2026-10-29
+
+### Rettet
+- Datagrunnlag: fanen «Alt søket leste» talte linjer i lista, mens flisene i Oversikt talte alt som ble sjekket, så de
+  to tallene var ulike. Fanen heter nå «Alt søket sjekket» og viser samme tall som flisene til sammen. Lista sier hvor
+  mange av dem som bare er talt (filer i en mappe) og ikke har egen linje.
+
 ## [2.23.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 155 av 155.
