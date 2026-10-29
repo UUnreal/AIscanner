@@ -112,6 +112,24 @@ internal static class Program
             var tekst = Skanner.Kontroll(Regelsett.Last());
             var feil = tekst.Contains("FEIL");
             Console.WriteLine(tekst.Split('\n').LastOrDefault(l => l.Trim().Length > 0)?.Trim());
+            if (feil) Console.WriteLine(string.Join("\n", tekst.Split('\n').Where(l => l.Contains("FEIL"))));
+
+            // SQLite fra Windows (winsqlite3.dll i System32), slik nettleserhistorikken leses
+            var tom = Path.GetTempFileName();
+            try
+            {
+                long svar = 0;
+                using (var db = new WinSqlite(tom)) db.Les("SELECT 41 + ?", 1, r => svar = r.Tall(0));
+                Console.WriteLine($"SQLite: {(svar == 42 ? "OK" : "FEIL")}");
+                feil |= svar != 42;
+            }
+            finally { try { File.Delete(tom); } catch { } }
+
+            // WebView2: begge DLL-ene og WebView2Loader.dll (runtimes\win-x64\native) lastes
+            using (var vindu = new Microsoft.Web.WebView2.WinForms.WebView2()) { }
+            try { Console.WriteLine("WebView2: " + Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()); }
+            catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException) { Console.WriteLine("WebView2: lasteren virker, Edge WebView2 Runtime er ikke installert"); }
+
             lock (Omdirigert) foreach (var o in Omdirigert) Console.WriteLine("Annen versjon lastet: " + o);
             Console.WriteLine(feil ? "LASTETEST FEIL" : "LASTETEST OK");
             return feil ? 1 : 0;

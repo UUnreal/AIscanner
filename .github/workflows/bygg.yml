@@ -59,9 +59,11 @@ jobs:
         run: |
           Copy-Item publish lastetest -Recurse
           Get-ChildItem lastetest -Recurse -File | ForEach-Object { Set-Content -Path $_.FullName -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3" }
-          $p = Start-Process lastetest/AISkanner.exe -ArgumentList '--lastetest' -Wait -PassThru -NoNewWindow -RedirectStandardOutput lastetest.txt
-          Get-Content lastetest.txt
-          if ($p.ExitCode -ne 0 -or -not (Select-String -Path lastetest.txt -Pattern 'LASTETEST OK' -Quiet)) { Write-Error "AISkanner.exe startet ikke riktig (kode $($p.ExitCode))"; exit 1 }
+          $p = Start-Process lastetest/AISkanner.exe -ArgumentList '--lastetest' -Wait -PassThru -NoNewWindow -RedirectStandardOutput lastetest.txt -RedirectStandardError lastetest-feil.txt
+          # Hver linje som merknad, så resultatet kan leses uten hele loggen
+          Get-Content lastetest.txt, lastetest-feil.txt -ErrorAction SilentlyContinue | Select-Object -First 40 | ForEach-Object { if ($_.Trim()) { "::notice title=Lastetest::$_" } }
+          "::notice title=Lastetest::Avslutningskode $($p.ExitCode)"
+          if ($p.ExitCode -ne 0 -or -not (Select-String -Path lastetest.txt -Pattern 'LASTETEST OK' -Quiet)) { "::error title=Lastetest::AISkanner.exe startet ikke riktig (kode $($p.ExitCode))"; exit 1 }
 
       # Størrelsesgrense: programmet skal være lite, som 7-Zip. Bygget stopper hvis det blir for stort.
       - name: Sjekk størrelse (maks 10 MB)
