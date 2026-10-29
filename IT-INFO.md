@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.21.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.22.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -81,7 +81,11 @@ Alt er bare lesing. Ingenting endres.
 
 ### Nettlesere
 
-Chrome, Edge (alle kanaler), Brave, Vivaldi, Opera og Firefox.
+Chrome, Edge (alle kanaler), Brave, Vivaldi, Opera og Firefox, og alle andre nettlesere som finnes på PC-en:
+hver Chromium-nettleser (Comet, Arc, Yandex, Chromium, Thorium …) har en mappe `User Data` med fila `Local State`
+to nivåer ned i `%LOCALAPPDATA%` eller `%APPDATA%`. Bare at fila finnes sjekkes; `Local State` åpnes ikke.
+Firefox-varianter (LibreWolf, Waterfox, Zen, Floorp, Firefox fra Microsoft Store) finnes med `profiles.ini`, der bare
+stiene til profilene leses. Thunderbird tas ikke med.
 
 | Fil eller sted | Hva som brukes |
 |---|---|
@@ -91,6 +95,9 @@ Chrome, Edge (alle kanaler), Brave, Vivaldi, Opera og Firefox.
 | `IndexedDB`, Firefox `storage\default` | Mappenavn og størrelse, for modeller lagret av nettsider |
 | Modellmapper i brukerdata | Mappenavn, størrelse og dato, for eksempel `OptGuideOnDeviceModel` (Gemini Nano), `EdgeLLMOnDeviceModel`, `TranslateKit`, `screen_ai`, `SODA` |
 | Versjonsmappe under `Application` | Nettleserversjon, for AI-API-status |
+| `prefs.js` (Firefox og varianter) | Bare `browser.ml.enable`, `browser.ml.chat.enabled` og `browser.ml.chat.provider` (hvilken AI-chatbot sidefeltet bruker) |
+| Firefox `storage` | Filer over 5 MB som er AI-modeller (GGUF, ONNX med produsentnavn, TFLite …), for lokale AI-modeller |
+| `HKLM`/`HKCU\SOFTWARE\Policies\BraveSoftware\Brave` | `BraveAIChatEnabled`: om IT har slått av Leo |
 
 **Historikk:** fila åpnes direkte, skrivebeskyttet og uten låser (`immutable`), med SQLite-motoren i Windows
 (`winsqlite3.dll`). Den kopieres aldri. Bare vertsnavn som matcher AI-tjenester, antall besøk og første og siste

@@ -326,6 +326,23 @@
       "rad": "Ingenting å gjøre."
     },
     {
+      "navn": "Comet (AI-nettleser fra Perplexity)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "perplexity\\comet"
+      ],
+      "mapper": [
+        "%LOCALAPPDATA%\\Perplexity\\Comet"
+      ],
+      "porter": [],
+      "hvorfor": "Nettleser med AI-agent som kan lese sider og handle på nettet med brukerens innloggede økter.",
+      "enkelt": "AI-nettleser med agent",
+      "hvorforEnkelt": "En nettleser der AI-en kan lese det du ser og gjøre ting på nettet for deg, også der du er logget inn.",
+      "rad": "På jobb: bruk bare nettlesere bedriften har godkjent.",
+      "kilde": "Installeres i %LOCALAPPDATA%\\Perplexity\\Comet\\Application (comet.exe): https://www.advanceduninstaller.com/Comet-13db63f29f86d10a886ddfe68d01ef87-application.htm"
+    },
+    {
       "navn": "Perplexity",
       "kategori": "Skygge-AI",
       "risiko": "gul",
@@ -537,6 +554,181 @@
       "enkelt": "Kinesisk AI for koding",
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data.",
       "rad": "Avinstaller den på jobb-PC-er."
+    },
+    {
+      "navn": "opencode",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "opencode-ai",
+        "opencode.exe"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.config\\opencode",
+        "%USERPROFILE%\\.local\\share\\opencode"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://opencode.ai/docs/config/"
+    },
+    {
+      "navn": "Goose (Block)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "goose.exe",
+        "goose-cli"
+      ],
+      "mapper": [
+        "%APPDATA%\\Block\\goose"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://block.github.io/goose/docs/guides/config-file"
+    },
+    {
+      "navn": "GitHub Copilot CLI",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@github/copilot"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.copilot"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli"
+    },
+    {
+      "navn": "Qwen Code (Alibaba)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@qwen-code/qwen-code"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.qwen"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://github.com/QwenLM/qwen-code"
+    },
+    {
+      "navn": "Kiro (AWS)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "kiro.exe",
+        "\\programs\\kiro\\"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.kiro",
+        "%LOCALAPPDATA%\\Programs\\Kiro"
+      ],
+      "porter": [],
+      "hvorfor": "Kodeeditor med AI-agent som leser og endrer prosjektet.",
+      "enkelt": "AI-kodeeditor med agent",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://kiro.dev/docs/"
+    },
+    {
+      "navn": "Amp (Sourcegraph)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@sourcegraph/amp"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.config\\amp"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://ampcode.com/manual"
+    },
+    {
+      "navn": "Crush (Charm)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "@charmland/crush",
+        "crush.exe"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "rad": "På jobb: bruk bare agenter bedriften har godkjent.",
+      "kilde": "https://github.com/charmbracelet/crush"
+    },
+    {
+      "navn": "Granola (møtenotater)",
+      "kategori": "Skygge-AI",
+      "risiko": "rod",
+      "treff": [
+        "granola.exe",
+        "\\programs\\granola\\"
+      ],
+      "mapper": [
+        "%APPDATA%\\Granola"
+      ],
+      "porter": [],
+      "hvorfor": "Lytter på møter og lager notater med AI i skyen.",
+      "enkelt": "AI som tar notater fra møter",
+      "hvorforEnkelt": "Lytter på møtene dine. Det som blir sagt, sendes til AI-tjenesten.",
+      "rad": "Si fra til dem du har møte med. På jobb: bare med avtale.",
+      "kilde": "https://www.granola.ai/"
+    },
+    {
+      "navn": "Krisp (møte-AI)",
+      "kategori": "Skygge-AI",
+      "risiko": "gul",
+      "treff": [
+        "krisp.exe"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Fjerner støy i samtaler og kan lage møtenotater med AI.",
+      "enkelt": "AI for lyd og møtenotater",
+      "hvorforEnkelt": "Behandler lyden fra mikrofonen. Møtenotater sendes til AI-tjenesten.",
+      "rad": "På jobb: bare med avtale.",
+      "kilde": "https://krisp.ai/"
+    },
+    {
+      "navn": "Møteopptakere i nettleseren (Otter, Fireflies, tl;dv, Read AI)",
+      "kategori": "Nettleser-AI",
+      "risiko": "rod",
+      "treff": [
+        "otter.ai",
+        "fireflies",
+        "tl;dv",
+        "tldv",
+        "read ai"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Utvidelse som tar opp eller skriver ned møter og sender lyd og tekst til AI-tjenesten.",
+      "enkelt": "AI som tar opp møter",
+      "hvorforEnkelt": "Tar opp eller skriver ned møtene dine og sender dem til AI-tjenesten.",
+      "rad": "Si fra til dem du har møte med. På jobb: bare med avtale.",
+      "kilde": "https://otter.ai/ · https://fireflies.ai/ · https://tldv.io/ · https://www.read.ai/"
     }
   ],
   "ukjentUtvidelseOrd": [

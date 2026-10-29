@@ -208,6 +208,22 @@ public static class ModellFormat
         };
     }
 
+    /// <summary>
+    /// ONNX-fil uten .onnx-endelse (f.eks. i nettleserens egen lagring): protobuf-start og et lesbart produsentnavn
+    /// («pytorch», «onnx.quantize», «tf2onnx» …). Uten produsentnavn regnes fila ikke som modell.
+    /// </summary>
+    public static bool ErOnnxUtenEndelse(string sti)
+    {
+        try
+        {
+            using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            if (fs.ReadByte() != 0x08) return false;
+            var p = Onnx(fs).Produsent;
+            return p != null && System.Text.RegularExpressions.Regex.IsMatch(p, @"^[A-Za-z][\w.\- ]{1,60}$");
+        }
+        catch { return false; }
+    }
+
     // ---------- ONNX: les produsentnavnet fra starten av filen (protobuf) ----------
     private static Modell Onnx(FileStream fs)
     {

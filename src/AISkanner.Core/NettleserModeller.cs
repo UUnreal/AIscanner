@@ -51,7 +51,12 @@ public sealed partial class Skanner
 
     private void InnebygdAi()
     {
-        foreach (var (nettleser, rotSti) in Nettleserdata)
+        // De kjente, og andre Chromium-nettlesere som er funnet (de har samme mapper for modeller)
+        var alle = Nettleserdata.Select(x => (x.Nettleser, Sti: Utvid(x.Sti))).ToList();
+        foreach (var (navn, sti) in ChromiumRotter())
+            if (sti.EndsWith("User Data", StringComparison.OrdinalIgnoreCase) && !alle.Any(x => x.Sti.Equals(sti, StringComparison.OrdinalIgnoreCase))) alle.Add((navn, sti));
+        AndreNettleseresAi();
+        foreach (var (nettleser, rotSti) in alle)
         {
             var rot = Utvid(rotSti);
             if (!Directory.Exists(rot)) continue;

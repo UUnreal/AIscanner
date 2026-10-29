@@ -195,7 +195,7 @@ public static class Oversikt
 
     private static string? Nettleser(string s)
     {
-        foreach (var n in new[] { "Edge Dev", "Edge Beta", "Edge Canary", "Chrome Beta", "Chrome Dev", "Chrome Canary", "Chrome", "Edge", "Firefox", "Brave", "Opera", "Vivaldi" })
+        foreach (var n in new[] { "Edge Dev", "Edge Beta", "Edge Canary", "Chrome Beta", "Chrome Dev", "Chrome Canary", "Chrome", "Edge", "Firefox", "Brave", "Opera", "Vivaldi", "Comet", "Arc", "LibreWolf", "Waterfox", "Zen", "Floorp", "Yandex", "Chromium" })
             if (s.StartsWith(n, StringComparison.OrdinalIgnoreCase)) return n;
         return null;
     }
@@ -205,6 +205,8 @@ public static class Oversikt
         (@"\Microsoft\Edge Dev\", "Edge Dev"), (@"\Microsoft\Edge Beta\", "Edge Beta"), (@"\Microsoft\Edge SxS\", "Edge Canary"), (@"\Microsoft\Edge\", "Edge"),
         (@"\Google\Chrome Beta\", "Chrome Beta"), (@"\Google\Chrome Dev\", "Chrome Dev"), (@"\Google\Chrome SxS\", "Chrome Canary"), (@"\Google\Chrome\", "Chrome"),
         (@"\Mozilla\Firefox\", "Firefox"), (@"\BraveSoftware\", "Brave"), (@"\Opera Software\", "Opera"), (@"\Vivaldi\", "Vivaldi"),
+        (@"\Perplexity\Comet\", "Comet"), (@"\Arc\User Data\", "Arc"), (@"\LibreWolf\", "LibreWolf"), (@"\Waterfox\", "Waterfox"),
+        (@"\zen\Profiles\", "Zen"), (@"\Floorp\", "Floorp"), (@"\Yandex\YandexBrowser\", "Yandex"), (@"\Chromium\User Data\", "Chromium"),
     };
 
     private static readonly Dictionary<string, string> Kjente = new(StringComparer.OrdinalIgnoreCase)

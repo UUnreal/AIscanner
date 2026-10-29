@@ -70,7 +70,7 @@ public sealed partial class Skanner
         var spor = new Dictionary<AiNettsted, Brukspor>();
         Brukspor For(AiNettsted n) => spor.TryGetValue(n, out var s) ? s : spor[n] = new Brukspor();
 
-        foreach (var (nettleser, rotSti) in Chromium)
+        foreach (var (nettleser, rotSti) in ChromiumRotter())
         {
             foreach (var profil in Mapper(Utvid(rotSti)))
             {
@@ -112,7 +112,7 @@ public sealed partial class Skanner
         }
 
         // Firefox: storage\default\https+++chatgpt.com
-        foreach (var profil in Mapper(Utvid(@"%APPDATA%\Mozilla\Firefox\Profiles")))
+        foreach (var (ffNavn, profil) in FirefoxProfiler())
         {
             foreach (var d in Mapper(Path.Combine(profil, "storage", "default")))
             {
@@ -122,7 +122,7 @@ public sealed partial class Skanner
                 if (n == null) continue;
                 var s = For(n);
                 s.LagretData = true;
-                s.Merk("Firefox", $"Firefox ({Path.GetFileName(profil)}), lagret data: {m.Groups[1].Value}", Directory.GetLastWriteTime(d), Directory.GetCreationTime(d), lagret: MappeStorrelse(d));
+                s.Merk(ffNavn, $"{ffNavn} ({Path.GetFileName(profil)}), lagret data: {m.Groups[1].Value}", Directory.GetLastWriteTime(d), Directory.GetCreationTime(d), lagret: MappeStorrelse(d));
             }
         }
 
@@ -203,7 +203,7 @@ public sealed partial class Skanner
 
         // Første besøk hentes fra besøkstabellen. Finnes den ikke, brukes bare siste besøk.
         long chromeGrense = grense.ToFileTimeUtc() / 10;
-        foreach (var (nettleser, rotSti) in Chromium)
+        foreach (var (nettleser, rotSti) in ChromiumRotter())
             foreach (var profil in Mapper(Utvid(rotSti)))
             {
                 var p = Path.GetFileName(profil);
@@ -216,14 +216,14 @@ public sealed partial class Skanner
 
         long firefoxGrense = new DateTimeOffset(grense).ToUnixTimeMilliseconds() * 1000;
         DateTime? FirefoxTid(long mikro) => mikro <= 0 ? null : DateTimeOffset.FromUnixTimeMilliseconds(mikro / 1000).LocalDateTime;
-        foreach (var profil in Mapper(Utvid(@"%APPDATA%\Mozilla\Firefox\Profiles")))
+        foreach (var (ffNavn, profil) in FirefoxProfiler())
         {
             var p = Path.GetFileName(profil);
             var db = Path.Combine(profil, "places.sqlite");
             if (!LesSqlite(db, "SELECT p.url, p.visit_count, p.last_visit_date, (SELECT MIN(h.visit_date) FROM moz_historyvisits h WHERE h.place_id = p.id) FROM moz_places p WHERE p.last_visit_date > $g", firefoxGrense,
-                    r => Tell("Firefox", p, r.Tekst(0), r.Tall(1), FirefoxTid(r.Tall(2)), r.ErTom(3) ? null : FirefoxTid(r.Tall(3)))))
+                    r => Tell(ffNavn, p, r.Tekst(0), r.Tall(1), FirefoxTid(r.Tall(2)), r.ErTom(3) ? null : FirefoxTid(r.Tall(3)))))
                 LesSqlite(db, "SELECT url, visit_count, last_visit_date FROM moz_places WHERE last_visit_date > $g", firefoxGrense,
-                    r => Tell("Firefox", p, r.Tekst(0), r.Tall(1), FirefoxTid(r.Tall(2)), null));
+                    r => Tell(ffNavn, p, r.Tekst(0), r.Tall(1), FirefoxTid(r.Tall(2)), null));
         }
     }
 

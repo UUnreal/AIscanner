@@ -116,6 +116,64 @@ public sealed partial class Skanner
     };
     private static readonly string[] IkkeAiTjenester = { "lf3-cdn-tos.bytescm.com", "portal.office.com" };
 
+    /// <summary>Nettlesere som ikke står i lista finnes på «Local State» og profiles.ini; AI i Brave og Firefox; nye produktregler.</summary>
+    private static (int Ok, int Alle) NettleserKontroll(Regelsett regler, StringBuilder sb, string rot)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Nettlesere: {hva}"); }
+        var lokal = Path.Combine(rot, "nett", "Local");
+        var roam = Path.Combine(rot, "nett", "Roaming");
+        var comet = Path.Combine(lokal, "Perplexity", "Comet", "User Data");
+        Directory.CreateDirectory(Path.Combine(comet, "Default"));
+        File.WriteAllText(Path.Combine(comet, "Local State"), "{}");
+        var brave = Path.Combine(lokal, "BraveSoftware", "Brave-Browser", "User Data");
+        Directory.CreateDirectory(Path.Combine(brave, "Default"));
+        File.WriteAllText(Path.Combine(brave, "Local State"), "{}");
+        var lw = Path.Combine(roam, "LibreWolf");
+        var lwProfil = Path.Combine(lw, "Profiles", "abc.default");
+        Directory.CreateDirectory(lwProfil);
+        File.WriteAllText(Path.Combine(lw, "profiles.ini"), "[Profile0]\nName=default\nIsRelative=1\nPath=Profiles/abc.default\n");
+        File.WriteAllText(Path.Combine(lwProfil, "prefs.js"), "user_pref(\"browser.ml.chat.provider\", \"https://chatgpt.com\");\n");
+        // Firefox lagrer modeller uten endelse i sin egen lagring: ONNX med produsentnavn
+        var lagring = Path.Combine(lwProfil, "storage", "permanent", "chrome", "fs");
+        Directory.CreateDirectory(lagring);
+        var onnx = new byte[6 * 1024 * 1024];
+        var start = new byte[] { 0x08, 0x07, 0x12, 0x07, (byte)'p', (byte)'y', (byte)'t', (byte)'o', (byte)'r', (byte)'c', (byte)'h' };
+        start.CopyTo(onnx, 0);
+        File.WriteAllBytes(Path.Combine(lagring, "17"), onnx);
+        var tb = Path.Combine(roam, "Thunderbird", "Profiles", "x.default");
+        Directory.CreateDirectory(tb);
+        File.WriteAllText(Path.Combine(roam, "Thunderbird", "profiles.ini"), "[Profile0]\nIsRelative=1\nPath=Profiles/x.default\n");
+        var gamle = (Environment.GetEnvironmentVariable("LOCALAPPDATA"), Environment.GetEnvironmentVariable("APPDATA"));
+        try
+        {
+            Environment.SetEnvironmentVariable("LOCALAPPDATA", lokal);
+            Environment.SetEnvironmentVariable("APPDATA", roam);
+            var s = new Skanner(regler);
+            var cr = s.ChromiumRotter();
+            Sjekk(cr.Any(x => x.Navn == "Comet" && x.Sti.Equals(comet, StringComparison.OrdinalIgnoreCase)), "Comet ble ikke funnet på «User Data\\Local State»");
+            var ff = s.FirefoxProfiler();
+            Sjekk(ff.Any(x => x.Navn == "LibreWolf" && x.Profil.EndsWith("abc.default", StringComparison.Ordinal)), "LibreWolf-profilen ble ikke funnet i profiles.ini");
+            Sjekk(!ff.Any(x => x.Profil.Contains("Thunderbird")), "Thunderbird (e-post) ble tatt med som nettleser");
+            s.AndreNettleseresAi();
+            Sjekk(s._funn.Values.Any(f => f.Navn == "Leo (AI-assistent i Brave)"), "Leo i Brave ble ikke funnet");
+            Sjekk(s._funn.Values.Any(f => f.Navn == "AI-chatbot i sidefeltet i LibreWolf"), "AI-chatbot i sidefeltet (browser.ml.chat.provider) ble ikke funnet");
+            Sjekk(s._funn.Values.Any(f => f.Navn == "Lokale AI-modeller i LibreWolf"), "ONNX-modell uten endelse i nettleserens lagring ble ikke funnet");
+            Sjekk(s.FinnRegel(@"C:\Users\a\AppData\Local\Perplexity\Comet\Application\comet.exe")?.Navn == "Comet (AI-nettleser fra Perplexity)", "comet.exe ble ikke kjent igjen som Comet");
+            Sjekk(s.FinnRegel("Perplexity")?.Navn == "Perplexity", "Perplexity-appen ble tatt for Comet");
+            Sjekk(s.FinnRegel("npm i -g opencode-ai")?.Navn == "opencode", "opencode ble ikke kjent igjen");
+            Sjekk(s.FinnRegel(@"C:\Users\a\.copilot @github/copilot")?.Navn == "GitHub Copilot CLI", "GitHub Copilot CLI ble ikke kjent igjen");
+            Sjekk(s.FinnRegel("tl;dv - Record, Transcribe & ChatGPT for Google Meet", utvidelse: true)?.Navn?.StartsWith("Møteopptakere", StringComparison.Ordinal) == true, "tl;dv-utvidelsen ble ikke kjent igjen som møteopptaker");
+            Sjekk(s.FinnRegel("Read Aloud: A Text to Speech Voice Reader", utvidelse: true)?.Navn?.StartsWith("Møteopptakere", StringComparison.Ordinal) != true, "Read Aloud ble tatt for møteopptaker");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("LOCALAPPDATA", gamle.Item1);
+            Environment.SetEnvironmentVariable("APPDATA", gamle.Item2);
+        }
+        return (ok, alle);
+    }
+
     /// <summary>Fullt søk: en GGUF-modell omdøpt til .mp4, og en i en punktum-mappe, skal bare finnes med Fullt.</summary>
     private static (int Ok, int Alle) FulltKontroll(Regelsett regler, StringBuilder sb, string rot)
     {
@@ -287,7 +345,10 @@ public sealed partial class Skanner
             var (fulltOk, fulltAlle) = FulltKontroll(regler, sb, rot);
             ok += fulltOk;
             sb.AppendLine($"{(fulltOk == fulltAlle ? "OK  " : "FEIL")}  Fullt søk: {fulltOk} av {fulltAlle} riktige (modell omdøpt til .mp4 finnes bare i fullt søk, punktum-mapper gås gjennom)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle;
+            var (nettOk, nettAlle) = NettleserKontroll(regler, sb, rot);
+            ok += nettOk;
+            sb.AppendLine($"{(nettOk == nettAlle ? "OK  " : "FEIL")}  Nettlesere og nye regler: {nettOk} av {nettAlle} riktige (Comet, LibreWolf, Brave Leo, Firefox-chatbot og -modeller, Thunderbird ikke, AI-agenter og møteopptakere)");
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

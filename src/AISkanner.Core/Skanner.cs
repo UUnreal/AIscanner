@@ -558,7 +558,7 @@ public sealed partial class Skanner
 
     private void Nettlesere()
     {
-        foreach (var (nettleser, rotSti) in Chromium)
+        foreach (var (nettleser, rotSti) in ChromiumRotter())
         {
             foreach (var profil in Mapper(Utvid(rotSti)))
             {
@@ -582,7 +582,7 @@ public sealed partial class Skanner
             }
         }
 
-        foreach (var profil in Mapper(Utvid(@"%APPDATA%\Mozilla\Firefox\Profiles")))
+        foreach (var (ffNavn, profil) in FirefoxProfiler())
         {
             using var doc = LesJson(Path.Combine(profil, "extensions.json"));
             if (doc == null) continue;
@@ -591,7 +591,7 @@ public sealed partial class Skanner
                 if (Str(a, "type") != "extension" || Str(a, "location") != "app-profile") continue;
                 a.TryGetProperty("defaultLocale", out var dl);
                 var tilg = a.TryGetProperty("userPermissions", out var up) ? Liste(up, "origins").Select(e => e.GetString() ?? "") : Enumerable.Empty<string>();
-                VurderUtvidelse($"Firefox ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg,
+                VurderUtvidelse($"{ffNavn} ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg,
                     Path.Combine(profil, "extensions", (Str(a, "id") ?? "") + ".xpi"));
             }
         }

@@ -29,6 +29,25 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.22.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 152 av 152.
+
+### Lagt til
+- **Alle nettlesere på PC-en, ikke bare de kjente.** Chromium-nettlesere finnes på `User Data\Local State` (bare at
+  fila finnes), for eksempel Comet, Arc, Yandex, Chromium og Thorium. Firefox-varianter finnes med `profiles.ini`
+  (LibreWolf, Waterfox, Zen, Floorp og Firefox fra Microsoft Store). Utvidelser, AI-nettsteder i historikken og
+  innebygde modeller sjekkes i alle. Thunderbird tas ikke med.
+- **AI bygget inn i flere nettlesere:**
+  - Leo i Brave, med IT-policyen `BraveAIChatEnabled` (grønn når IT har slått den av);
+  - Aria i Opera, Opera GX og Opera Air;
+  - AI-chatbot i sidefeltet i Firefox og varianter (`browser.ml.chat.provider` i `prefs.js`, bare `browser.ml.*` leses);
+  - lokale AI-modeller som Firefox har lastet ned (også ONNX uten endelse i nettleserens lagring).
+- **Nye regler:** Comet (AI-nettleser fra Perplexity), AI-agenter i terminalen (opencode, Goose, GitHub Copilot CLI,
+  Qwen Code, Amp, Crush), Kiro, møteapper (Granola, Krisp) og møteopptakere som nettleserutvidelser (Otter, Fireflies,
+  tl;dv, Read AI). Hver regel har en `kilde`.
+- `--kontroll` har en ny linje for nettlesere og de nye reglene, også at Thunderbird og «Read Aloud» ikke treffer.
+
 ## [2.21.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 140 av 140.

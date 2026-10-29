@@ -1222,3 +1222,42 @@ oppgavefilene krever administrator|the task files require administrator
 ~^Oppstart for annen bruker \((.+)\): (.+)$|Startup for another user ($1): $2
 ~^Installert for annen bruker \((.+)\): (.+)$|Installed for another user ($1): $2
 Planlagt oppgave|Scheduled task
+
+# ---------- 2.22: flere nettlesere og AI i dem ----------
+~^Leo \(AI-assistent i (.+)\)$|Leo (AI assistant in $1)
+~^Aria \(AI-assistent i (.+)\)$|Aria (AI assistant in $1)
+~^AI-chatbot i sidefeltet i (.+)$|AI chatbot in the sidebar of $1
+~^Lokale AI-modeller i (.+)$|Local AI models in $1
+~^AI bygd inn i (.+)$|AI built into $1
+~^(.+) har AI-assistenten Leo innebygd\. Den bruker AI-modeller i skyen hos Brave, eller en modell brukeren har koblet til selv\.$|$1 has the AI assistant Leo built in. It uses AI models in Brave's cloud, or a model the user has connected.
+~^(.+) har AI-assistenten Aria innebygd\. Spørsmål og innhold fra sider sendes til AI-tjenesten hos Opera\.$|$1 has the AI assistant Aria built in. Questions and page content are sent to Opera's AI service.
+~^(.+) er satt opp med en AI-chatbot i sidefeltet \((.+)\)\. Tekst brukeren markerer på sider kan sendes dit\.$|$1 is set up with an AI chatbot in the sidebar ($2). Text the user selects on pages can be sent there.
+~^(.+) har lastet ned AI-modeller som kjører på PC-en\.$|$1 has downloaded AI models that run on the PC.
+~^IT har slått av Leo \(BraveAIChatEnabled = 0, (.+)\)\.$|IT has turned off Leo (BraveAIChatEnabled = 0, $1).
+Ingen regel fra IT (policyen BraveAIChatEnabled er ikke satt).|No rule from IT (the BraveAIChatEnabled policy is not set).
+Lest fra prefs.js (bare browser.ml.*).|Read from prefs.js (only browser.ml.*).
+AI-chatbot i nettleseren|AI chatbot in the browser
+~^nettleser funnet: (.+) \(Chromium, «Local State»\)$|browser found: $1 (Chromium, “Local State”)
+bare stiene til profilene|only the profile paths
+bare AI-innstillingene (browser.ml.*)|only the AI settings (browser.ml.*)
+AI-nettleser med agent|AI browser with agent
+AI-agent i terminalen|AI agent in the terminal
+AI-kodeeditor med agent|AI code editor with agent
+AI som tar notater fra møter|AI that takes meeting notes
+AI for lyd og møtenotater|AI for audio and meeting notes
+AI som tar opp møter|AI that records meetings
+Nettleser med AI-agent som kan lese sider og handle på nettet med brukerens innloggede økter.|Browser with an AI agent that can read pages and act on the web with the user's signed-in sessions.
+En nettleser der AI-en kan lese det du ser og gjøre ting på nettet for deg, også der du er logget inn.|A browser where the AI can read what you see and do things on the web for you, also where you are signed in.
+På jobb: bruk bare nettlesere bedriften har godkjent.|At work: only use browsers the company has approved.
+Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen.|Agent that reads and changes files and runs commands on the PC with AI in the cloud.
+Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.|Can read your files and run commands. What it sees is sent to the AI service.
+På jobb: bruk bare agenter bedriften har godkjent.|At work: only use agents the company has approved.
+Kodeeditor med AI-agent som leser og endrer prosjektet.|Code editor with an AI agent that reads and changes the project.
+Lytter på møter og lager notater med AI i skyen.|Listens to meetings and makes notes with AI in the cloud.
+Lytter på møtene dine. Det som blir sagt, sendes til AI-tjenesten.|Listens to your meetings. What is said is sent to the AI service.
+Si fra til dem du har møte med. På jobb: bare med avtale.|Tell the people you meet with. At work: only with an agreement.
+Fjerner støy i samtaler og kan lage møtenotater med AI.|Removes noise in calls and can make meeting notes with AI.
+Behandler lyden fra mikrofonen. Møtenotater sendes til AI-tjenesten.|Processes the sound from the microphone. Meeting notes are sent to the AI service.
+På jobb: bare med avtale.|At work: only with an agreement.
+Utvidelse som tar opp eller skriver ned møter og sender lyd og tekst til AI-tjenesten.|Extension that records or transcribes meetings and sends audio and text to the AI service.
+Tar opp eller skriver ned møtene dine og sender dem til AI-tjenesten.|Records or transcribes your meetings and sends them to the AI service.
