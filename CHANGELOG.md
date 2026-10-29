@@ -29,6 +29,21 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.32.0] - 2026-10-29
+
+Ikke testet på Windows utover lastetesten i byggeløypa.
+
+### Lagt til
+- **Docker:** når Docker-motoren allerede kjører, spørres dens eget API (`\\.\pipe\docker_engine`, bare `GET`)
+  om bilder og beholdere. AI-bilder (Ollama, vLLM, Open WebUI, LocalAI, llama.cpp, Triton, NIM, Qdrant, Chroma m.fl.)
+  vises med størrelse og om beholderen kjører, og åpne porter mot nettverket (0.0.0.0) gir en advarsel. Docker
+  startes aldri, og `~/.docker/config.json` (innlogginger) åpnes aldri.
+- **WSL:** når Linux allerede kjører, leses modellmappene for Ollama, Hugging Face og LM Studio i hjemmemappene.
+  Kjører den ikke, står det i blindsonene; søket starter aldri Linux.
+- **AI-adresser i utvidelsenes kode:** adressene til AI-tjenestene i regelfila søkes i utvidelsens JavaScript (maks
+  4 MB per utvidelse, 12 MB i fullt søk). Det viser at utvidelsen er laget for å snakke med tjenesten, ikke at den har
+  sendt noe. Ukjente utvidelser med slike adresser blir røde.
+
 ## [2.31.0] - 2026-10-29
 
 Ikke testet på Windows utover lastetesten i byggeløypa.

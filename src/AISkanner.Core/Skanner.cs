@@ -67,7 +67,7 @@ public sealed partial class Skanner
             ("Sjekker installerte programmer...", Installert),
             ("Sjekker hva som starter av seg selv...", Oppstart),
             ("Ser etter AI-verktøy og AI-nøkler...", () => { Spor(); Nokler(); }),
-            ("Spør lokale programmer om de er AI...", () => { Porter(); LokaleServere(); }),
+            ("Spør lokale programmer om de er AI...", () => { Porter(); LokaleServere(); Beholdere(); }),
             ("Sjekker utvidelser i nettleserne...", Nettlesere),
             ("Ser etter AI-nettsteder du har brukt...", Nettsteder),
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
@@ -730,6 +730,7 @@ public sealed partial class Skanner
                         .Concat(Liste(m, "content_scripts").SelectMany(cs => Liste(cs, "matches")))
                         .Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!);
                     VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg, idMappe, Str(m, "version"));
+                    UtvidelseAiAdresser($"{nettleser} ({Path.GetFileName(profil)})", navn, ver);
                 }
             }
         }

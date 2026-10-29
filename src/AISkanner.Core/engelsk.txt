@@ -1003,7 +1003,7 @@ defaultMode = bypassPermissions (spør aldri)|defaultMode = bypassPermissions (n
 approval_policy = never (spør aldri før kommandoer)|approval_policy = never (never asks before commands)
 sandbox_mode = danger-full-access (ingen sandkasse)|sandbox_mode = danger-full-access (no sandbox)
 ~tillater (\S+) uten å spørre|allows $1 without asking
-~WSL \(Linux i Windows\) er installert \((\d+)\)\. AI og spor inne i WSL er ikke sjekket\.|WSL (Linux in Windows) is installed ($1). AI and traces inside WSL were not checked.
+~WSL \(Linux i Windows\) er installert \((\d+)\), men kjørte ikke\. AI inne i WSL er ikke sjekket; søket starter aldri Linux\.|WSL (Linux in Windows) is installed ($1), but was not running. AI inside WSL was not checked; the scan never starts Linux.
 bare tider, antall og adresser; innhold lagres ikke|only times, counts and addresses; content is not stored
 finnes fila? (innholdet åpnes ikke)|does the file exist? (content is not opened)
 slått av av IT (--uten-agentlogger)|turned off by IT (--uten-agentlogger)
@@ -1466,3 +1466,15 @@ Windows' DNS-buffer ble ikke brukt: den er full av oppslag fra en eldre AI-skann
 Ingen tilkobling sett under søket|No connection seen during the scan
 ~^Land: (.+) · sett i forbindelse under søket \(se under\)$|Country: $1 · seen in a connection during the scan (see below)
 ~^Land: (.+) · land fra leverandør, ingen tilkobling sett under søket$|Country: $1 · country from vendor, no connection seen during the scan
+~^AI i Docker: (.+)$|AI in Docker: $1
+~^(.+) \(Docker\)$|$1 (Docker)
+Et Docker-bilde for å kjøre AI-modeller eller AI-tjenester lokalt.|A Docker image for running AI models or AI services locally.
+~^Docker-bilde: (.+)$|Docker image: $1
+~^Beholder kjører nå · åpne porter: (.+)$|Container running now · open ports: $1
+Beholder kjører nå|Container running now
+Beholderen er åpen mot nettverket (0.0.0.0), ikke bare denne PC-en.|The container is open to the network (0.0.0.0), not just this PC.
+~^AI-modeller i Linux \(WSL\): (.+)$|AI models in Linux (WSL): $1
+AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Windows ser programmet.|AI models stored in the Linux part of Windows (WSL). They can run without Windows seeing the program.
+Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi vet ikke hva den sender.|The extension is built to talk to AI services: the addresses are in its code. We do not know what it sends.
+Utvidelse med AI-adresser|Extension with AI addresses
+~^Koden nevner: (.+)$|The code mentions: $1

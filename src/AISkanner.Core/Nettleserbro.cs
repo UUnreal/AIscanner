@@ -87,3 +87,51 @@ public sealed partial class Skanner
         return _tvungne = sett;
     }
 }
+
+public sealed partial class Skanner
+{
+    private System.Text.RegularExpressions.Regex? _aiApiRegex;
+
+    /// <summary>
+    /// Adresser til AI-tjenester (API-ene i regelfila) i utvidelsens egen JavaScript. Viser at utvidelsen er laget for å
+    /// snakke med AI-tjenesten, ikke at den har sendt noe. Maks 200 filer og 4 MB per utvidelse (12 MB i fullt søk); teksten beholdes aldri.
+    /// </summary>
+    internal void UtvidelseAiAdresser(string hvor, string? navn, string mappe)
+    {
+        if (string.IsNullOrWhiteSpace(navn) || !Directory.Exists(mappe)) return;
+        _aiApiRegex ??= new System.Text.RegularExpressions.Regex(
+            @"(?<![\w.-])(" + string.Join("|", _regler.AiTjenester.SelectMany(t => t.Domener).Where(d => d.Contains('.')).Distinct().OrderByDescending(d => d.Length).Select(System.Text.RegularExpressions.Regex.Escape)) + @")(?![\w-])",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+        var treff = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        long lest = 0;
+        foreach (var fil in Plattform.Filer(mappe, "*.js", 6).Take(200))
+        {
+            if (fil.Length > 2 * 1024 * 1024 || lest > (Fullt ? 12 : 4) * 1024 * 1024) continue;
+            try
+            {
+                var tekst = File.ReadAllText(fil.FullName);
+                lest += fil.Length;
+                foreach (System.Text.RegularExpressions.Match m in _aiApiRegex.Matches(tekst)) treff.Add(m.Value.ToLowerInvariant());
+            }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); }
+        }
+        if (lest > 0) Tilgangslogg.Tell("Fil", Utfall.Lest, sted: mappe, detalj: "utvidelsens JavaScript: bare adresser til AI-tjenester");
+        if (treff.Count == 0) return;
+        var tjenester = treff.Select(v => (Vert: v, Tj: Tjeneste(v))).ToList();
+        var nettleser = hvor.Split(' ')[0];
+        var visning = $"{Kutt(navn!, 40)} ({nettleser}-utvidelse)";
+        Funn f;
+        lock (_funn) _funn.TryGetValue(visning, out f!);
+        if (f == null)
+        {
+            // Ukjent AI er rødt (skygge-AI) til IT har godkjent den
+            f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
+                "Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi vet ikke hva den sender.",
+                $"Utvidelse i {hvor}", $"{hvor}: {mappe}", enkelt: "Utvidelse med AI-adresser");
+            f.Svakt();
+        }
+        else f.Sterkt();
+        f.Detalj($"Koden nevner: {string.Join(", ", tjenester.Take(8).Select(t => t.Tj != null ? $"{t.Vert} ({t.Tj.Navn}{(t.Tj.Land != null ? ", " + IpLand.Navn(t.Tj.Land) : "")})" : t.Vert))}");
+        f.Merk(Tilstand.SattOpp);
+    }
+}

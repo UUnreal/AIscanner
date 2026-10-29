@@ -184,6 +184,14 @@ public sealed partial class Skanner
             // GPT for Excel: ukjent AI (rødt). Grammarly: kjent AI fra regelfila. Teams-møter: ikke AI.
             Sjekk(office.Count == 2 && office.Any(f => f.Navn.StartsWith("GPT for Excel", StringComparison.Ordinal) && f.Risiko == Risiko.Rod) && office.Any(f => f.Navn.StartsWith("Grammarly", StringComparison.Ordinal) && f.Regel != null),
                 $"Office-tillegg: ukjent AI-tillegg ble ikke rødt, Grammarly ble ikke kjent igjen, eller Teams ble tatt for AI ({string.Join(", ", office.Select(f => f.Navn))})");
+            var utvMappe = Path.Combine(bro, "utv", "1.0");
+            Directory.CreateDirectory(Path.Combine(utvMappe, "js"));
+            File.WriteAllText(Path.Combine(utvMappe, "js", "bg.js"), "const u='https://api.deepseek.com/chat/completions';fetch(u)");
+            File.WriteAllText(Path.Combine(utvMappe, "js", "vanlig.js"), "const x='https://myapi.openai.com.example.org/'");
+            s.UtvidelseAiAdresser("Chrome (Default)", "Kontroll Oversetter", utvMappe);
+            var utvF = s._funn.Values.FirstOrDefault(f => f.Navn == "Kontroll Oversetter (Chrome-utvidelse)");
+            Sjekk(utvF != null && utvF.Risiko == Risiko.Rod && utvF.Detaljer.Any(d => d.Contains("api.deepseek.com")) && !utvF.Detaljer.Any(d => d.Contains("openai")),
+                "AI-adresse i utvidelsens kode ble ikke funnet, eller en adresse som bare ligner ble tatt med");
             Sjekk(broer.Count == 2, $"vanlig nettleserbro (PDF) ble tatt for AI ({broer.Count} broer)");
             Sjekk(s._funn.Values.Any(f => f.Navn == "AI-chatbot i sidefeltet i LibreWolf"), "AI-chatbot i sidefeltet (browser.ml.chat.provider) ble ikke funnet");
             Sjekk(s._funn.Values.Any(f => f.Navn == "Lokale AI-modeller i LibreWolf"), "ONNX-modell uten endelse i nettleserens lagring ble ikke funnet");
@@ -318,6 +326,8 @@ public sealed partial class Skanner
             .Concat(new byte[] { 0xC0, 0x0C, 0, 1, 0, 1, 0, 0, 0, 60, 0, 4, 1, 2, 3, 4 }).ToArray();
         var ip = EgenDns.Tolk(svar, 0x1234);
         Sjekk(ip != null && ip.Count == 1 && ip[0].ToString() == "1.2.3.4" && EgenDns.Tolk(svar, 0x9999) == null, "egen DNS-klient tolket ikke svaret riktig, eller godtok svar på en annen spørring");
+        Sjekk(ErAiBilde("ollama/ollama:latest") && ErAiBilde("ghcr.io/open-webui/open-webui:main") && ErAiBilde("vllm/vllm-openai:v0.6") && ErAiBilde("nvcr.io/nim/meta/llama3:1")
+              && !ErAiBilde("postgres:16") && !ErAiBilde("nginx:latest") && !ErAiBilde("mcr.microsoft.com/dotnet/sdk:8.0"), "Docker-bilder for AI ble ikke kjent igjen, eller vanlige bilder ble tatt for AI");
         Directory.CreateDirectory(Path.Combine(rot, "asar"));
         var asarAi = Path.Combine(rot, "asar", "ai.asar");
         File.WriteAllBytes(asarAi, Asar("\"lodash\":{\"files\":{}},\"@langchain\":{\"files\":{\"core\":{\"files\":{}}}}", "{\"name\":\"x\",\"dependencies\":{\"openai\":\"^4\",\"react\":\"^18\"}}"));
