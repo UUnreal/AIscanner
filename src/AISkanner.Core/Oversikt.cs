@@ -127,6 +127,26 @@ public static class Oversikt
         return deler.Count == 1 ? hode : $"{hode}: " + string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
     }
 
+    public static string Tilstandtekst(Tilstand t) => t switch
+    {
+        Tilstand.KjorerNa => "Kjører nå", Tilstand.BruktFor => "Brukt før", Tilstand.SattOpp => "Satt opp", _ => "Finnes",
+    };
+
+    /// <summary>Det sterkeste sporet (Kjører nå, Brukt før, Satt opp, Finnes).</summary>
+    public static string Status(Funn f) => Tilstandtekst(f.Status);
+
+    /// <summary>Alle tilstandene sporene viser, sterkeste først.</summary>
+    public static List<string> Tilstander(Funn f)
+    {
+        var t = f.Tilstander;
+        var l = new[] { Tilstand.KjorerNa, Tilstand.BruktFor, Tilstand.SattOpp, Tilstand.Finnes }.Where(x => t.HasFlag(x)).Select(Tilstandtekst).ToList();
+        if (l.Count == 0) l.Add("Finnes");
+        return l;
+    }
+
+    /// <summary>Hvor sikkert det er at funnet er AI: Høy, Middels eller Lav.</summary>
+    public static string Treffsikkerhet(Funn f) => f.Sikkerhet switch { Sikkerhet.Hoy => "Høy", Sikkerhet.Middels => "Middels", _ => "Lav" };
+
     /// <summary>Navnet uten forklarende forstavelse: "AI-modell: Llama" blir "Llama".</summary>
     public static string Navn(Funn f)
     {

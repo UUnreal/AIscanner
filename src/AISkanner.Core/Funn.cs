@@ -22,6 +22,13 @@ public static class RisikoTekst
     public static Risiko Hoyeste(Risiko a, Risiko b) => (Risiko)Math.Min((int)a, (int)b);
 }
 
+/// <summary>Hva sporene viser om AI-en. Flere kan gjelde samme funn.</summary>
+[Flags]
+public enum Tilstand { Finnes = 1, SattOpp = 2, BruktFor = 4, KjorerNa = 8 }
+
+/// <summary>Hvor sikkert det er at funnet er AI, ut fra hvor sterke og hvor mange uavhengige spor som peker dit.</summary>
+public enum Sikkerhet { Hoy = 0, Middels = 1, Lav = 2 }
+
 /// <summary>Ett produkt på listen. Samme produkt funnet flere steder slås sammen til ett funn.</summary>
 public sealed class Funn
 {
@@ -88,6 +95,37 @@ public sealed class Funn
     }
 
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
+
+    private int _tilstand;
+    /// <summary>Alt sporene viser: finnes på PC-en nå, satt opp til å starte, brukt før, kjører nå. Tom når bare historikken viser den.</summary>
+    public Tilstand Tilstander => (Tilstand)Volatile.Read(ref _tilstand);
+    public void Merk(Tilstand t) { int gammel; do gammel = _tilstand; while (Interlocked.CompareExchange(ref _tilstand, gammel | (int)t, gammel) != gammel); }
+
+    /// <summary>Det sterkeste sporet: Kjører nå, så Brukt før, så Satt opp, ellers Finnes.</summary>
+    public Tilstand Status =>
+        Tilstander.HasFlag(Tilstand.KjorerNa) ? Tilstand.KjorerNa : Tilstander.HasFlag(Tilstand.BruktFor) ? Tilstand.BruktFor
+        : Tilstander.HasFlag(Tilstand.SattOpp) ? Tilstand.SattOpp : Tilstand.Finnes;
+
+    /// <summary>Spor som kjenner igjen AI på innholdet eller oppførselen (modellhode, import i kode, trafikk til AI-tjeneste, YARA, utvidelses-ID).</summary>
+    private int _sterke;
+    /// <summary>Spor som bare bygger på et navn eller et ord (mappenavn, «mulig AI-nettsted»).</summary>
+    private int _svake;
+    public void Sterkt() => Interlocked.Increment(ref _sterke);
+    public void Svakt() => Interlocked.Increment(ref _svake);
+
+    /// <summary>Uavhengige spor: steder funnet er sett (installert, kjører, oppstart, historikk …) og målt trafikk.</summary>
+    public int Spor { get { lock (this) return Hvor.Count + (Trafikk.Count > 0 && !Hvor.Contains("Koblet til nå") ? 1 : 0); } }
+
+    /// <summary>
+    /// Høy: et spor på innholdet eller oppførselen, eller minst to uavhengige spor. Lav: bare svake spor (navn alene).
+    /// Middels: ett spor på navnet til en kjent AI (regel).
+    /// </summary>
+    public Sikkerhet Sikkerhet =>
+        Volatile.Read(ref _sterke) > 0 || Spor >= 2 ? Sikkerhet.Hoy
+        : Volatile.Read(ref _svake) > 0 && Regel == null ? Sikkerhet.Lav : Sikkerhet.Middels;
+
+    /// <summary>Hva IT har sagt: godkjent, blokkert eller ikke vurdert. Settes av Risikoregler.</summary>
+    public string Godkjenning { get; set; } = "Ikke vurdert";
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }
 
     /// <summary>Én setning til vanlige folk: hvordan det brukes, og den viktigste grunnen.</summary>

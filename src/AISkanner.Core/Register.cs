@@ -206,6 +206,7 @@ public sealed partial class Skanner
             "Windows", $"Mappe: {mappe} (innholdet er ikke lest)",
             enkelt: "Skjermbilder av alt du gjør", rad: "Slå av Recall i Innstillinger > Personvern hvis du ikke trenger det. På jobb bør IT bestemme.");
         f.Bruk = av ? "Har vært i bruk, men IT har slått av skjermbildene." : "Er satt opp på denne PC-en.";
+        f.Merk(av ? Tilstand.BruktFor : Tilstand.SattOpp);
     }
 
     /// <summary>Filstien til programmet i en kommandolinje fra registeret.</summary>

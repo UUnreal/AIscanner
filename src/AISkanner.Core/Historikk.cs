@@ -93,6 +93,7 @@ public sealed partial class Skanner
             {
                 f = FraRegel(regel, "Kjørt før", $"Kjørt før: {programfil ?? exe} · {tid}");
                 f.Bruk ??= "Brukt før.";
+                f.Merk(Tilstand.BruktFor);
                 f.Tidspunkt(forst, sist);
             }
             // Python og Node: AI-bibliotekene de lastet
@@ -119,6 +120,7 @@ public sealed partial class Skanner
                         "Kjørt før", $"{exe}: lastet {string.Join(", ", bruker)}{(skript.Count > 0 ? $" · skript: {string.Join(", ", skript)}" : "")} · {tid}",
                         enkelt: $"{sprak} med AI-biblioteker");
                     t.Bruk ??= "Brukt før.";
+                    t.Merk(Tilstand.BruktFor); t.Sterkt();
                     t.Tidspunkt(forst, sist);
                 }
             }
@@ -129,6 +131,7 @@ public sealed partial class Skanner
                 f ??= LeggTil($"Program som har lastet AI-modeller: {exe}", "Lokal AI", Risiko.Rod,
                     "Et program har åpnet AI-modellfiler. Windows har registrert det i Prefetch.", "Kjørt før", null, enkelt: "Program med AI-modeller");
                 f.Bruk ??= "Brukt før.";
+                f.Merk(Tilstand.BruktFor); f.Sterkt();
                 f.Tidspunkt(forst, sist);
                 f.Detalj($"{exe} åpnet {string.Join(", ", modeller)} · {tid}");
             }
@@ -162,6 +165,7 @@ public sealed partial class Skanner
                     DateTime? t = bruker.GetValue(verdi) is byte[] b && b.Length >= 8 ? Filtid(BitConverter.ToInt64(b, 0)) : null;
                     var f = FraRegel(regel, "Kjørt før", $"Kjørt før: {prog}{(t is { } n ? $" · sist {Nar(n, "BAM i Windows")}" : "")} · konto {Konto(sid)}");
                     f.Bruk ??= "Brukt før.";
+                    f.Merk(Tilstand.BruktFor);
                     if (t != null) f.Tidspunkt(t, t);
                 }
             }
@@ -375,6 +379,7 @@ public sealed partial class Skanner
             if (r == null) continue;
             var f = FraRegel(r, "Kjørt før", $"Startet: {exe} · sist {Nar(sist, "hendelsesloggen i Windows")} · {antall} {(antall == 1 ? "gang" : "ganger")} siste 30 dager{(konto != null ? $" · konto {konto}" : "")}");
             f.Bruk ??= "Brukt før.";
+            f.Merk(Tilstand.BruktFor);
             f.Tidspunkt(null, sist);
         }
     }
@@ -406,6 +411,7 @@ public sealed partial class Skanner
                     enkelt: "Program som har kontaktet AI");
                 f.Detalj($"{exe} slo opp {navn} ({tj.Navn}) · {Nar(tid, kilde)}");
                 f.Bruk ??= "Brukt før.";
+                f.Merk(Tilstand.BruktFor);
                 f.Tidspunkt(null, tid);
                 return;
             }
@@ -414,6 +420,7 @@ public sealed partial class Skanner
                 var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, prosess != null ? Nettleserprosesser[prosess] : "Windows", null, enkelt: tj.Enkelt, rad: tj.Rad);
                 f.Privat = true;
                 f.Bruk ??= "Åpnet før.";
+                f.Merk(Tilstand.BruktFor);
                 f.Land ??= tj.Land;
                 f.OpprinnelseLand ??= tj.Land;
                 f.Detalj($"Slått opp: {navn} · {Nar(tid, kilde)}");

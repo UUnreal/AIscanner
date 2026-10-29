@@ -45,6 +45,26 @@ Regler:
 `regler.json` eller er et kjent nettsted. En ukjent utvidelse eller mappe som kaller seg det samme som en godkjent AI,
 blir ikke grønn. Et domene godkjennes bare mot forbindelser skanneren har målt, og mot nettstedsfunn.
 
+## blokkert-ai.txt
+
+Samme format som `godkjent-ai.txt`, men for AI bedriften har forbudt. Lages ikke av programmet; legg den ved siden av
+`AISkanner.exe`. Oppføringene legges sammen med `blokkertAi` i `regler.json`.
+
+- AI på lista blir 🔴 rød med «Blokkert av IT, men finnes på PC-en», også når den samtidig står på godkjentlista.
+- Samme sterke identitet som godkjentlista: navnet må komme fra `regler.json` eller være et kjent nettsted, og et
+  domene treffer bare målte forbindelser og nettstedsfunn. En mappe som tilfeldigvis heter det samme, treffer ikke.
+
+## Status, treffsikkerhet og godkjenning per funn
+
+Hvert funn har tre felt i vinduet og i rapporten:
+
+- **Status:** Kjører nå, Brukt før (historikk, logger, besøk), Satt opp (starter med Windows, planlagt oppgave,
+  tjeneste, MCP-oppsett) og Finnes (ligger på PC-en). Alle som gjelder, vises; den sterkeste står i lista.
+- **Treffsikkerhet:** Høy når AI-en er kjent igjen på innholdet eller oppførselen (modellhode, import i kode, svar som
+  AI-tjeneste, trafikk til en AI-tjeneste, YARA) eller av minst to uavhengige spor. Middels ved ett navnetreff på en
+  kjent AI. Lav når bare et ord eller navn peker dit («Mulig AI-nettsted», mappenavn).
+- **Godkjenning:** Godkjent av IT, Blokkert av IT (blokkeringslista, eller en IT-regel som slår den av) eller Ikke vurdert.
+
 ## regler.json
 
 JSON med kommentarer (`//`) og komma etter siste element tillatt. Nøkler som starter med `_`, er forklaringer og
@@ -52,7 +72,7 @@ leses ikke.
 
 > **Viktig:** en `regler.json` ved siden av programmet **erstatter** hele den innebygde fila. Den blir ikke slått sammen
 > med den. Start alltid med en kopi av [den innebygde fila](../src/AISkanner.Core/regler.json) og endre i den.
-> Bare `godkjent-ai.txt` legges i tillegg.
+> Bare `godkjent-ai.txt` og `blokkert-ai.txt` legges i tillegg.
 
 Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.json`.
 
@@ -66,6 +86,8 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `aiTjenester` | liste | AI-API-er som programmer snakker med i bakgrunnen, kjent på vertsnavn. |
 | `hoyrisikoLand` | liste med landkoder | Data hit gir alltid rødt. Standard: `CN`, `RU`, `IR`, `KP`, `BY`. |
 | `godkjentAi` | liste med tekst | Som `godkjent-ai.txt`. |
+| `blokkertAi` | liste med tekst | Som `blokkert-ai.txt`. |
+| `lesKommandolinjer` | true/false | `false` slår av lesing av kommandolinjer for tolkere og AI-funn. Standard er på. |
 | `daarligeVersjoner` | liste med objekter | Pakker og utvidelser i kjente dårlige versjoner. Se under. |
 | `selskapsland` | objekt | Selskap eller produkt → land, for «Kommer fra». Verdien er `"US"` eller `"US:Anthropic"` (land og selskap). |
 | `modellfamilier` | liste | Modellfamilier som kjennes igjen på innholdet. |

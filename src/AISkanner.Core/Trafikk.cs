@@ -155,6 +155,7 @@ public sealed partial class Skanner
                 var apen = $"Åpen i {nettleser} nå.";
                 if (f.Bruk == null) f.Bruk = apen;
                 else if (!f.Bruk.Contains(apen)) f.Bruk = f.Bruk.TrimEnd('.') + ". " + apen;   // trafikken kan leses to ganger (lytting i bakgrunnen)
+                f.Merk(Tilstand.KjorerNa); f.Sterkt();
             }
             else
             {
@@ -196,6 +197,7 @@ public sealed partial class Skanner
                 f.Trafikk.AddRange(liste.Values.OrderByDescending(x => x.Ut ?? 0).ThenByDescending(x => x.Tjeneste != null).ThenByDescending(x => x.Antall).Take(15));
             }
             if (f.Bruk == null) f.Bruk = "Koblet til nettet nå.";
+            f.Merk(Tilstand.KjorerNa); f.Sterkt();
             f.Tidspunkt(null, DateTime.Now);
             foreach (var m in liste.Values)
             {
@@ -225,6 +227,7 @@ public sealed partial class Skanner
                 var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, "Windows", null, enkelt: tj.Enkelt, rad: tj.Rad);
                 f.Privat = true;
                 f.Bruk ??= "Åpnet nylig.";
+                f.Merk(Tilstand.BruktFor);
                 f.Land ??= tj.Land;
                 f.OpprinnelseLand ??= tj.Land;
                 foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v}");
@@ -239,6 +242,7 @@ public sealed partial class Skanner
                 "Et program på PC-en har nylig snakket med AI-tjenester. Windows forteller ikke hvilket program, bare at navnet ble slått opp.",
                 "Windows", null, enkelt: "AI-tjenester kontaktet", rad: "Søk igjen mens programmene er åpne for å se hvem som sender.");
             f.Bruk = $"{string.Join(", ", api.Select(a => a.Tj.Navn).Distinct().Take(4))}.";
+            f.Merk(Tilstand.BruktFor);
             foreach (var (tj, verter) in api)
                 foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")})");
             if (fraLand) f.Advarsel("Minst én av tjenestene hører hjemme i et land der dataene ikke bør havne.");
@@ -336,6 +340,7 @@ public sealed partial class Skanner
             f.Detalj($"Program: {p.Sti ?? p.Navn} (PID {g.Key.Pid})");
             f.Tidspunkt(forst ?? DateTime.Now, sist ?? DateTime.Now);
             f.Bruk = $"{g.Select(t => t.Fjern).Distinct().Count()} klient(er) koblet til nå.";
+            f.Merk(Tilstand.KjorerNa); f.Sterkt();
             _funnPid.GetOrAdd(f, _ => new HashSet<int>()).Add(g.Key.Pid);
         }
 

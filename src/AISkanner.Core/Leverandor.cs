@@ -318,6 +318,7 @@ public sealed partial class Skanner
         if (app.Motorer.Count > 0) deler.Add($"AI-motor: {string.Join(", ", app.Motorer)}");
         if (lagtInn != null) deler.Add($"lagt inn {Tid(lagtInn)}");
         f.Bruk = string.Join(", ", deler) + (iGang ? ". Kjører nå." : ".");
+        if (iGang) f.Merk(Tilstand.KjorerNa);
 
         f.Detalj($"Mappe: {rot} · {hva}{(lagtInn != null ? $" · lagt inn {Tid(lagtInn)}" : "")}");
         f.Detalj($"Utgiver: {utgiver ?? "ukjent"}{(kilde != null ? $" · {kilde}" : "")}");

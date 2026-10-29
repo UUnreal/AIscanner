@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.26.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.27.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -371,6 +371,10 @@ Ikke testet på Windows ennå.
   eller er blokkert av IT, blir gul. Grunnen står som «Godkjent av IT, men: …».
 - Ukjent AI, farlige modellfiler og data til høyrisikoland (`hoyrisikoLand`, standard CN, RU, IR, KP og BY) er
   røde uansett hva som står på lista.
+- **Blokkert AI blir rød.** Legg `blokkert-ai.txt` ved siden av programmet (samme format), eller bruk `blokkertAi` i
+  `regler.json`. Finnes AI-en likevel, står det «Blokkert av IT, men finnes på PC-en», også om den er godkjent.
+- Hvert funn viser status (Kjører nå, Brukt før, Satt opp, Finnes), treffsikkerhet (Høy, Middels, Lav, med antall
+  uavhengige spor) og godkjenning (Godkjent av IT, Blokkert av IT, Ikke vurdert). Se [docs/REGELFILER.md](docs/REGELFILER.md).
 - På en jobb-PC uten godkjentliste blir de fleste funn røde.
 
 Format og eksempler: [docs/REGELFILER.md](docs/REGELFILER.md).

@@ -273,10 +273,26 @@ public sealed partial class Skanner
                 _funn[navn] = f = new Funn { Navn = navn, Kategori = kategori, Risiko = risiko, Hvorfor = hvorfor, Regel = regel, Enkelt = enkelt, Rad = rad };
             f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         }
-        if (hvor != null) f.LeggTilHvor(hvor);
+        if (hvor != null)
+        {
+            f.LeggTilHvor(hvor);
+            // Et nettsted «finnes» ikke på PC-en; nettleseren er bare der det ble sett
+            var t = TilstandFra(hvor);
+            if (t != Tilstand.Finnes || !kategori.Contains("(nettsted)")) f.Merk(t);
+        }
         if (detalj != null) f.Detalj(detalj);
         return f;
     }
+
+    private static Tilstand TilstandFra(string hvor) => hvor switch
+    {
+        "Kjører nå" or "Lytter på nettverksport" or "AI-server" => Tilstand.KjorerNa,
+        "Kjørt før" => Tilstand.BruktFor,
+        "Starter med Windows" or "Planlagt oppgave" or "Windows-tjeneste" => Tilstand.SattOpp,
+        // Historikk og DNS sier bare at den har vært der
+        "Windows' programhistorikk (Amcache)" or "Windows" => 0,
+        _ => Tilstand.Finnes,
+    };
 
     private Funn FraRegel(Produkt p, string hvor, string detalj) =>
         LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt, p.Rad);
@@ -333,6 +349,7 @@ public sealed partial class Skanner
                 if (r == null) continue;
                 var f = FraRegel(r, "Kjører nå", $"Program som kjører: {sti ?? p.ProcessName} (PID {p.Id})");
                 f.Bruk = "Kjører nå.";
+                f.Merk(Tilstand.KjorerNa);
                 f.SettVersjon(vi?.ProductVersion ?? vi?.FileVersion, "programfila");
                 if (egentlig != null)
                 {
@@ -523,7 +540,7 @@ public sealed partial class Skanner
             foreach (var m in r.Mapper)
             {
                 var sti = Utvid(m);
-                if (Directory.Exists(sti)) FraRegel(r, "Mappe på disk", $"Mappe: {sti}");
+                if (Directory.Exists(sti)) FraRegel(r, "Mappe på disk", $"Mappe: {sti}").Svakt();
             }
             foreach (var kommando in r.Kommandoer)
             {

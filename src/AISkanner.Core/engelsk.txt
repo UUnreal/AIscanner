@@ -1379,3 +1379,13 @@ Program som har kontaktet AI|Program that has contacted AI
 Et program som ikke er en nettleser, har slått opp navnet til en AI-tjeneste. Windows har registrert det.|A program that is not a browser has looked up the name of an AI service. Windows recorded it.
  slo opp| looked up
 Slått opp:|Looked up:
+Finnes|Present
+Brukt før|Used before
+Satt opp|Set up
+Høy|High
+Middels|Medium
+Lav|Low
+Ikke vurdert|Not assessed
+Blokkert av IT|Blocked by IT
+Blokkert av IT, men finnes på PC-en.|Blocked by IT, but present on the PC.
+~^  Status: (.+) · treffsikkerhet (høy|middels|lav) \((\d+) (spor|uavhengige spor)\) · (godkjent av it|blokkert av it|ikke vurdert)$|  Status: $1 · confidence $2 ($3 traces) · $5

@@ -138,6 +138,7 @@ public sealed partial class Skanner
         if (kjorer) HuskMappe(exe, f);
         if (fraNedlasting) f.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
         if (kjorer && f.Bruk == null) f.Bruk = "Kjører nå.";
+        if (kjorer) f.Merk(Tilstand.KjorerNa);
     }
 
     private static bool ErRisikabelPlass(string sti) =>
@@ -199,9 +200,11 @@ public sealed partial class Skanner
                 : LeggTil(navn, "Lokal AI", Risiko.Rod, "Ukjent program som svarer som en AI-tjeneste. Andre programmer kan bruke det.", "AI-server", null,
                           rad: "Finn ut hva programmet er. Slå det av hvis du ikke bruker det.");
             f.Detalj($"Nettverksport {l.Port} på {l.Adresse}, program: {(sti.Length > 0 ? sti : prosess)}");
+            f.Sterkt();   // svarte som en AI-tjeneste
             HuskMappe(sti, f);
             if (modeller.Count > 0) f.Detalj($"Modeller: {string.Join(", ", modeller.Take(10))}");
             if (modeller.Count > 0) f.Bruk = $"Har {modeller.Count} {(modeller.Count == 1 ? "modell" : "modeller")} lastet: {string.Join(", ", modeller.Take(3))}{(modeller.Count > 3 ? " …" : "")}.";
+            if (modeller.Count > 0) { f.Merk(Tilstand.KjorerNa); f.Sterkt(); }
             if (apen)
             {
                 f.Risiko = Risiko.Rod;
@@ -659,6 +662,7 @@ public sealed partial class Skanner
         try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
+        f.Sterkt();   // kjent igjen på innholdet i fila, ikke på navnet
         f.LeggTilModeller(1);
         f.SettVersjon(m.Versjon, "modellfila");
         // Hugging Face-lageret: mappa under snapshots er revisjonen (commit) modellen ble lastet ned fra

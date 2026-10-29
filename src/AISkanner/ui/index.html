@@ -602,7 +602,7 @@ function tegnListe() {
     r.className = "rad" + (f === valgt ? " valgt" : "");
     r.title = L("Trykk for detaljer", "Click for details");
     r.innerHTML = `<span class="prikk ${f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
-      <div class="l2" title="${esc(f.lokasjon || "")}">${esc([f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
+      <div class="l2" title="${esc(f.lokasjon || "")}">${esc([f.status && f.status !== L("Finnes", "Present") ? f.status : "", f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
       <div class="land${!(f.senderTil || []).length && erLokal(f) ? " lokalt" : ""}">${landListe(f)}</div><span class="pil">${CHEV}</span>`;
     r.onclick = () => valgt === f ? lukkArk() : apneArk(f);
     l.appendChild(r);
@@ -1091,7 +1091,8 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
       ? `<div class="stor">${f.senderTil.slice(0, 3).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")}</div>` + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
       : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "Nobody")}</div><div class="liten">${L("Kjører bare på PC-en", "Runs only on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
     d.innerHTML = `<button class="lukk hjorne" id="tilbake" title="${esc(L("Lukk (Esc)", "Close (Esc)"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button><div class="dTopp"><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>
-      <div class="dMeta"><span class="merke"><span class="prikk ${f.risiko}"></span>${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div></div>
+      <div class="dMeta"><span class="merke"><span class="prikk ${f.risiko}"></span>${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div>
+      <div class="dMeta"><span>${esc([(f.tilstander || []).join(", "), f.treffsikkerhet ? L(`treffsikkerhet ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "spor" : "uavhengige spor"})`, `confidence ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "trace" : "independent traces"})`) : "", f.godkjenning || ""].filter(Boolean).join(" · "))}</span></div></div>
       <div class="flyt">
         <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
         <div class="pil2">${PIL}</div>

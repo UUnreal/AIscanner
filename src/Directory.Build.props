@@ -1,6 +1,6 @@
 <Project>
   <!-- Samme versjon for programmet, kjernen og kommandolinjen (vises i rapporten og revisjonsloggen) -->
   <PropertyGroup>
-    <Version>2.26.0</Version>
+    <Version>2.27.0</Version>
   </PropertyGroup>
 </Project>

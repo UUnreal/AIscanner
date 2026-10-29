@@ -233,6 +233,7 @@ public sealed partial class Skanner
             f.Detalj($"Fil: {sti} · MCP-server «{s.Navn}» · {hva}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
         }
         f.Bruk = $"{servere.Count} MCP-server{(servere.Count == 1 ? "" : "e")} i {program}.";
+        f.Merk(Tilstand.SattOpp);
     }
 
     // Pakkenavnet (første argument som ikke er et flagg), aldri resten: kan inneholde stier eller tokens
@@ -384,6 +385,7 @@ public sealed partial class Skanner
                 f.Detalj($"Fil: {Path.Combine(ollama, "server.log")} · klient {ip}{(land != null ? $" ({land})" : "")} · {x.Antall} forespørsler · første {(x.Forst is { } fo ? Nar(fo, "tid i logglinje") : "ukjent")} · sist {(x.Sist is { } si ? Nar(si, "tid i logglinje") : "ukjent")}");
             }
             f.Bruk = $"{klienter.Count} andre adresse{(klienter.Count == 1 ? "" : "r")} i Ollama-loggen.";
+            f.Merk(Tilstand.BruktFor);
         }
 
         // LM Studio: formatet er ikke bekreftet. Teller IPv4-adresser som ikke er denne PC-en.
@@ -504,6 +506,7 @@ public sealed partial class Skanner
             if (rod) f.Advarsel("En agentøkt uten menneske har lest nøkler, hentet tokens, lastet ned og kjørt kode eller slettet mye.");
             f.Tidspunkt(okter.Min(o => o.Forst), okter.Max(o => o.Sist));
             f.Bruk = $"{okter.Count} økter, {utenMenneske} uten menneske etter første melding.";
+            f.Merk(Tilstand.BruktFor);
             for (int i = 0; i < Oktkategorier.Length; i++)
             {
                 var med = okter.Where(o => o.Treff[i] > 0).ToList();

@@ -157,7 +157,9 @@ public sealed partial class Skanner
                 "Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.",
                 hvorM, null, enkelt: "Mulig AI-nettsted",
                 rad: "Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.");
+            f.Svakt();
             f.Bruk = $"Besøkt i {hvorM}{(sp.Sist is { } t ? ", sist " + Tid(t) : "")}.";
+            f.Merk(Tilstand.BruktFor);
             f.Privat = true;
             f.Tidspunkt(sp.Forst, sp.Sist);
             foreach (var x in sp.Linjer()) f.Detalj(x);
@@ -179,6 +181,7 @@ public sealed partial class Skanner
             if (s.Lagret > 300L * 1024 * 1024)
                 f.Advarsel($"Nettstedet har lagret {Gb(s.Lagret)} i nettleseren. Det kan være en AI-modell som kjører i nettleseren.");
             f.Bruk = $"{hyppighet} i {hvor}{(s.Sist is { } t ? ", sist " + Tid(t) : "")}.";
+            f.Merk(Tilstand.BruktFor);
             foreach (var x in s.Linjer()) f.Detalj(x);
         }
     }

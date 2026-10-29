@@ -29,6 +29,25 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.27.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 175 av 175.
+
+### Lagt til
+- **Status per funn:** Kjører nå, Brukt før, Satt opp eller Finnes. Alle som gjelder, står i detaljene og rapporten;
+  den sterkeste står i lista. AI som bare finnes i Windows' historikk, står som «Brukt før», ikke «Finnes».
+- **Treffsikkerhet per funn:** Høy, Middels eller Lav, med antall uavhengige spor. Høy krever et spor på innholdet
+  eller oppførselen (modellhode, import i kode, svar som AI-tjeneste, trafikk, YARA) eller minst to uavhengige spor.
+- **Godkjenning per funn:** Godkjent av IT, Blokkert av IT eller Ikke vurdert.
+- **Blokkeringsliste fra IT:** `blokkert-ai.txt` ved siden av programmet, eller `blokkertAi` i `regler.json`. AI på
+  lista blir rød med «Blokkert av IT, men finnes på PC-en», også når den samtidig er godkjent. Samme sterke identitet
+  som godkjentlista.
+- JSON-rapporten har `status`, `tilstander`, `treffsikkerhet`, `spor` og `godkjenning`.
+
+### Endret
+- Flaggene fra kommandolinjen (åpen mot nettverket, offentlig lenke, agent uten spørsmål, kode fra modellen, gjemt
+  base64) gjør også godkjent AI rød.
+
 ## [2.26.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 167 av 167.

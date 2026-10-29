@@ -112,12 +112,14 @@ public sealed partial class Skanner
                     nar == null ? "Kjører nå" : "Kjørt før", detalj, enkelt: $"{t.Sprak}-skript med AI");
             }
             if (f != null && nokkel) f.Advarsel("Skriptet har en API-nøkkel skrevet rett i seg.");
+            if (f != null && (bruker.Count > 0 || verter.Count > 0)) f.Sterkt();
             if (f != null && f != ai) { if (t.Skript != null && Path.IsPathRooted(t.Skript)) HuskMappe(t.Skript, f); }
         }
         if (f == null) return null;
 
         if (nar == null) { f.Bruk ??= "Kjører nå."; f.Tidspunkt(null, DateTime.Now); if (pid > 0) _pidFunn[pid] = f; }
         else { f.Bruk ??= "Brukt før."; f.Tidspunkt(nar, nar); }
+        if (nar == null) f.Merk(Tilstand.KjorerNa); else f.Merk(Tilstand.BruktFor);
         if (t.Modellfil != null) f.Detalj($"Modellfil lastet: {t.Modellfil}{tid}");
         if (t.Flagg.Count > 0)
         {

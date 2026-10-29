@@ -280,6 +280,36 @@ public sealed partial class Skanner
         return (ok, alle);
     }
 
+    /// <summary>Status, treffsikkerhet og godkjenning per funn.</summary>
+    private static (int Ok, int Alle) StatusKontroll(Regelsett regler, StringBuilder sb)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Status: {hva}"); }
+        var s = new Skanner(regler);
+        var na = s.Vurder("python", null, 9201, "python -m vllm.entrypoints.openai.api_server", null, null);
+        var for_ = s.Vurder("python", null, 0, "python -m transformers.commands.chat", null, DateTime.Now.AddDays(-3), "hendelse 4688 i Windows");
+        Sjekk(na != null && na.Status == Tilstand.KjorerNa, "skript som kjører nå fikk ikke «Kjører nå»");
+        Sjekk(for_ != null && for_.Status == Tilstand.BruktFor && !for_.Tilstander.HasFlag(Tilstand.Finnes), "skript fra hendelsesloggen fikk ikke bare «Brukt før»");
+        var regel = regler.Produkter.First(p => p.Kategori.StartsWith("Skygge-AI", StringComparison.Ordinal));
+        Funn Lag() { var f = new Funn { Navn = regel.Navn, Kategori = regel.Kategori, Hvorfor = "x", Regel = regel, Risiko = Risiko.Gul }; f.LeggTilHvor("Installert program"); return f; }
+        var vanlig = Lag();
+        Sjekk(vanlig.Sikkerhet == Sikkerhet.Middels, "ett navnetreff på en kjent AI ble ikke middels treffsikkerhet");
+        var sterk = Lag(); sterk.Sterkt();
+        Sjekk(sterk.Sikkerhet == Sikkerhet.Hoy, "spor på innholdet ga ikke høy treffsikkerhet");
+        var svak = new Funn { Navn = "Mulig AI-nettsted: x.ai", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "x" }; svak.Svakt(); svak.LeggTilHvor("Chrome");
+        Sjekk(svak.Sikkerhet == Sikkerhet.Lav, "bare et navn uten regel ga ikke lav treffsikkerhet");
+        var godkjent = Lag();
+        Risikoregler.Bruk(new[] { godkjent }, new Regelsett { GodkjentAi = new() { regel.Navn } });
+        Sjekk(godkjent.Godkjenning == "Godkjent av IT" && godkjent.Risiko == Risiko.Gronn, "godkjent AI ble ikke «Godkjent av IT» og grønn");
+        var blokkert = Lag();
+        Risikoregler.Bruk(new[] { blokkert }, new Regelsett { GodkjentAi = new() { regel.Navn }, BlokkertAi = new() { regel.Navn } });
+        Sjekk(blokkert.Godkjenning == "Blokkert av IT" && blokkert.Risiko == Risiko.Rod, "AI på IT sin blokkeringsliste ble ikke rød og «Blokkert av IT», også når den også er godkjent");
+        var falsk = new Funn { Navn = regel.Navn, Kategori = "Skygge-AI", Hvorfor = "x", Risiko = Risiko.Gul };
+        Risikoregler.Bruk(new[] { falsk }, new Regelsett { BlokkertAi = new() { regel.Navn } });
+        Sjekk(falsk.Godkjenning == "Ikke vurdert", "navn uten sterk identitet (ikke fra reglene) ble regnet som blokkert");
+        return (ok, alle);
+    }
+
     /// <summary>Kontrollen av falske treff: det som ikke er AI, eller bare er AI bygget inn av en leverandør, skal ikke telles som AI-modeller.</summary>
     private static (int Ok, int Alle) FalskeTreffKontroll(Skanner s, StringBuilder sb, string rot)
     {
@@ -435,7 +465,10 @@ public sealed partial class Skanner
             var (tolkOk, tolkAlle) = TolkKontroll(regler, sb, rot);
             ok += tolkOk;
             sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, aldri argumentene, IT kan slå av)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle;
+            var (stOk, stAlle) = StatusKontroll(regler, sb);
+            ok += stOk;
+            sb.AppendLine($"{(stOk == stAlle ? "OK  " : "FEIL")}  Status, treffsikkerhet og godkjenning: {stOk} av {stAlle} riktige (kjører nå, brukt før, høy, middels, lav, godkjent, blokkert)");
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

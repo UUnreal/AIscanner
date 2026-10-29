@@ -25,6 +25,12 @@ public static class Risikoregler
         "Gjemt i en skjult datastrøm",
         "Fila er merket som skjult",
         "Kjører under et annet navn",
+        "Åpen mot nettverket",
+        "Deler en offentlig lenke",
+        "Agent som kjører kommandoer uten å spørre",
+        "Kjører kode som følger med modellen",
+        "Koden er gjemt som base64",
+        "Blokkert av IT",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>
@@ -47,10 +53,17 @@ public static class Risikoregler
             bool farlig = f.Navn.StartsWith("Farlig AI-modellfil", StringComparison.Ordinal)
                           || f.Advarsler.Any(a => a.StartsWith("Sender data til", StringComparison.Ordinal));
             OpprinnelseFraNavn(f, regler);
+            // IT sin blokkeringsliste (samme sterke identitet som godkjentlista), og AI som IT har slått av med en regel
+            bool blokkert = Godkjent(f, regler.BlokkertAi);
+            if (blokkert) f.Advarsel("Blokkert av IT, men finnes på PC-en.");
+            f.Godkjenning = blokkert || f.Bruk?.StartsWith("Blokkert av IT", StringComparison.Ordinal) == true
+                            || f.Advarsler.Concat(f.Merknader).Any(a => a.StartsWith("IT har blokkert", StringComparison.Ordinal))
+                ? "Blokkert av IT" : "Ikke vurdert";
 
-            if (!ukjent && !farlig && Godkjent(f, regler.GodkjentAi))
+            if (!ukjent && !farlig && !blokkert && Godkjent(f, regler.GodkjentAi))
             {
                 f.Type = "Godkjent av IT";
+                f.Godkjenning = "Godkjent av IT";
                 var rod = f.Advarsler.FirstOrDefault(a => RodeSignaler.Any(s => a.StartsWith(s, StringComparison.Ordinal)));
                 var gul = f.Advarsler.FirstOrDefault(a => GuleSignaler.Any(s => a.StartsWith(s, StringComparison.Ordinal)));
                 f.Risiko = rod != null ? Risiko.Rod : gul != null ? Risiko.Gul : Risiko.Gronn;
@@ -78,6 +91,7 @@ public static class Risikoregler
             // Data til et høyrisikoland er alltid rødt, uansett type
             if (farlig && f.Risiko != Risiko.Rod) f.Risiko = Risiko.Rod;
             if (farlig && f.Advarsler.FirstOrDefault(a => a.StartsWith("Sender data til")) is { } adv) f.RisikoGrunn = adv;
+            if (blokkert) { f.Risiko = Risiko.Rod; f.RisikoGrunn = "Blokkert av IT, men finnes på PC-en."; }
         }
     }
 

@@ -116,6 +116,8 @@ public sealed class Regelsett
     [JsonPropertyName("hoyrisikoLand")] public List<string> HoyrisikoLand { get; set; } = new();
     /// <summary>AI bedriften har godkjent: navn (som i rapporten) eller domene. Blir grønt. Kan også ligge i godkjent-ai.txt ved siden av programmet.</summary>
     [JsonPropertyName("godkjentAi")] public List<string> GodkjentAi { get; set; } = new();
+    /// <summary>AI bedriften har blokkert: navn eller domene, som godkjentAi. Finnes den likevel, blir den rød. Kan også ligge i blokkert-ai.txt.</summary>
+    [JsonPropertyName("blokkertAi")] public List<string> BlokkertAi { get; set; } = new();
     /// <summary>Selskap -> land (to bokstaver), for «Kommer fra».</summary>
     [JsonPropertyName("selskapsland")] public Dictionary<string, string> Selskapsland { get; set; } = new();
     /// <summary>Hvor godkjentlista kom fra, for rapporten.</summary>
@@ -161,25 +163,29 @@ public sealed class Regelsett
             r = JsonSerializer.Deserialize<Regelsett>(s, Valg) ?? new Regelsett();
         }
         r.LesGodkjentliste(Path.Combine(AppContext.BaseDirectory, "godkjent-ai.txt"));
+        r.LesListe(Path.Combine(AppContext.BaseDirectory, "blokkert-ai.txt"), r.BlokkertAi);
         return r;
     }
 
     /// <summary>
     /// IT sin liste over godkjent AI: én per linje, navn (som i rapporten) eller domene. Linjer som starter med # er kommentarer.
     /// </summary>
-    public void LesGodkjentliste(string sti)
+    public void LesGodkjentliste(string sti) { if (LesListe(sti, GodkjentAi)) GodkjentKilde = sti; }
+
+    /// <summary>Leser en liste med ett navn eller domene per linje inn i <paramref name="liste"/>. # er kommentar.</summary>
+    public bool LesListe(string sti, List<string> liste)
     {
-        if (!File.Exists(sti)) return;
+        if (!File.Exists(sti)) return false;
         try
         {
             foreach (var linje in File.ReadAllLines(sti))
             {
                 var t = linje.Trim();
                 if (t.Length == 0 || t.StartsWith("#")) continue;
-                if (!GodkjentAi.Contains(t, StringComparer.OrdinalIgnoreCase)) GodkjentAi.Add(t);
+                if (!liste.Contains(t, StringComparer.OrdinalIgnoreCase)) liste.Add(t);
             }
-            GodkjentKilde = sti;
+            return true;
         }
-        catch { }
+        catch { return false; }
     }
 }
