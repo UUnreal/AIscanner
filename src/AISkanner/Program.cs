@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace AISkanner.App;
@@ -22,9 +23,46 @@ internal static class Program
         catch { return Klokke.ElapsedMilliseconds; }
     }
 
+    /// <summary>
+    /// Ingen AISkanner.exe.config i mappa (med skjulte filendelser ser den ut som en ekstra AISkanner.exe). Den
+    /// trengtes bare for å si at en annen versjon av et bibliotek ved siden av programmet er greit. Det gjør vi her:
+    /// spør .NET etter en versjon som ikke ligger der, lastes den som ligger ved siden av programmet. Lastes med
+    /// Assembly.Load (vanlig lasting fra programmappa), ikke LoadFrom, som .NET nekter for filer fra en nedlastet zip.
+    /// </summary>
+    static Program() => AppDomain.CurrentDomain.AssemblyResolve += AnnenVersjon;
+
+    internal static readonly List<string> Omdirigert = new();
+    [ThreadStatic] private static bool _iGang;
+
+    private static Assembly? AnnenVersjon(object? _, ResolveEventArgs e)
+    {
+        if (_iGang) return null;
+        try
+        {
+            _iGang = true;
+            var spurt = new AssemblyName(e.Name);
+            if (string.IsNullOrEmpty(spurt.Name) || spurt.Name!.IndexOfAny(new[] { '\\', '/', ':' }) >= 0) return null;
+            var sti = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, spurt.Name + ".dll");
+            if (!File.Exists(sti)) return null;
+            var finnes = AssemblyName.GetAssemblyName(sti);
+            // Bare samme bibliotek fra samme utgiver (samme navn og nøkkel), og bare når versjonen er en annen
+            var (a, b) = (spurt.GetPublicKeyToken(), finnes.GetPublicKeyToken());
+            if (a != null && a.Length > 0 && (b == null || !a.SequenceEqual(b))) return null;
+            if (spurt.Version != null && spurt.Version == finnes.Version) return null;
+            var lastet = Assembly.Load(finnes);
+            lock (Omdirigert) Omdirigert.Add($"{spurt.Name} {spurt.Version} -> {finnes.Version}");
+            return lastet;
+        }
+        catch { return null; }
+        finally { _iGang = false; }
+    }
+
     [STAThread]
     private static void Main(string[] args)
     {
+        // Byggeløypa: laster bibliotekene og kjører kontrollen uten vindu, i mappa slik brukeren får den
+        if (args.Contains("--lastetest")) { Environment.Exit(Lastetest()); return; }
+
         // Programmet skal aldri forsvinne uten å si hvorfor. Feil vises i en melding som kan kopieres (Ctrl+C).
         AppDomain.CurrentDomain.UnhandledException += (_, e) => VisFeil(e.ExceptionObject as Exception);
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -64,6 +102,21 @@ internal static class Program
         MessageBox.Show(tekst + "\r\n" + (engelsk ? "Press Ctrl+C to copy." : "Trykk Ctrl+C for å kopiere."),
             engelsk ? "AI Scanner: alarm check" : "AI-skanner: kontroll av alarmene", MessageBoxButtons.OK,
             feil ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static int Lastetest()
+    {
+        try
+        {
+            var tekst = Skanner.Kontroll(Regelsett.Last());
+            var feil = tekst.Contains("FEIL");
+            Console.WriteLine(tekst.Split('\n').LastOrDefault(l => l.Trim().Length > 0)?.Trim());
+            lock (Omdirigert) foreach (var o in Omdirigert) Console.WriteLine("Annen versjon lastet: " + o);
+            Console.WriteLine(feil ? "LASTETEST FEIL" : "LASTETEST OK");
+            return feil ? 1 : 0;
+        }
+        catch (Exception e) { Console.WriteLine("LASTETEST FEIL\n" + e); return 2; }
     }
 
     private static void VisFeil(Exception? e)

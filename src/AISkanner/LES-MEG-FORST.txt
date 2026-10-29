@@ -2,10 +2,6 @@ AI-SKANNER
 
 Start programmet: dobbeltklikk AISkanner.exe (Type: Program / Application).
 
-Ikke åpne AISkanner.exe.config. Den er innstillinger for programmet og kan ikke kjøres.
-Windows skjuler ofte filendelser, så den kan se ut som en ekstra AISkanner.exe.
-Se på kolonnen «Type» i Filutforsker: programmet heter «Program», innstillingene heter «CONFIG-fil».
-
 Pakk ut hele mappa før du starter. Programmet virker ikke rett fra zip-fila.
 
 Virker alarmene? Dobbeltklikk Kontroller-alarmene.cmd. Den lager falske spor i en midlertidig mappe,
@@ -13,5 +9,5 @@ sjekker at hver alarm slår ut, sletter mappa og viser OK eller FEIL. Ingenting 
 
 Feil? Programmet viser en melding. Trykk Ctrl+C i meldingen for å kopiere teksten.
 
-English: double-click AISkanner.exe (Type: Application). AISkanner.exe.config is a settings file, not the program.
+English: double-click AISkanner.exe (Type: Application).
 Extract the whole zip first. Kontroller-alarmene.cmd checks that every alarm triggers (add --en for English).

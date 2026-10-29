@@ -26,6 +26,13 @@
     <!-- Ikke ta med dokumentasjonsfiler fra pakkene -->
     <AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!--
+      Ingen AISkanner.exe.config: med skjulte filendelser ser den ut som en ekstra AISkanner.exe.
+      Program.AnnenVersjon gjør jobben til bindingRedirect. Byggeløypa stopper hvis en .config dukker opp igjen.
+    -->
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +53,7 @@
   <!-- WPF-delen av WebView2 brukes ikke -->
   <Target Name="FjernUbrukt" AfterTargets="Publish">
     <Delete Files="$(PublishDir)Microsoft.Web.WebView2.Wpf.dll" />
+    <Delete Files="$(PublishDir)AISkanner.exe.config" />
   </Target>
 
   <ItemGroup>

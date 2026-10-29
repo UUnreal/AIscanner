@@ -41,12 +41,27 @@ jobs:
       - name: Bygg programmet
         run: dotnet publish src/AISkanner -c Release -o publish
 
-      # Brukeren skal bare se én programfil: AISkanner.exe (ved siden av ligger DLL-er og AISkanner.exe.config).
+      # Brukeren skal bare se én fil som heter AISkanner: AISkanner.exe. Ingen AISkanner.exe.config
+      # (med skjulte filendelser ser den ut som en ekstra AISkanner.exe). Stopper hvis den kommer tilbake.
       - name: Sjekk mappa
         shell: pwsh
         run: |
           if (@(Get-ChildItem publish -Filter *.exe -File).Count -ne 1) { Write-Error "Det skal være nøyaktig én .exe"; exit 1 }
+          $config = @(Get-ChildItem publish -Recurse -File -Filter *.config)
+          if ($config.Count -gt 0) { Write-Error "Ingen .config i mappa: $($config.Name -join ', ')"; exit 1 }
+          if (@(Get-ChildItem publish -File -Filter 'AISkanner*' | Where-Object { $_.Name -notin 'AISkanner.exe','AISkanner.Core.dll' }).Count -gt 0) { Write-Error "Bare AISkanner.exe og AISkanner.Core.dll kan hete AISkanner"; exit 1 }
           if (-not (Test-Path publish/LES-MEG-FORST.txt)) { Write-Error "Mangler LES-MEG-FORST.txt"; exit 1 }
+
+      # Programmet slik brukeren får det: filene merkes «fra Internett» som etter nedlasting av zip, så lastes
+      # bibliotekene og alle alarmene kjøres i AISkanner.exe selv (.NET Framework 4.8), uten vindu.
+      - name: Lastetest (nedlastet mappe, uten .config)
+        shell: pwsh
+        run: |
+          Copy-Item publish lastetest -Recurse
+          Get-ChildItem lastetest -Recurse -File | ForEach-Object { Set-Content -Path $_.FullName -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3" }
+          $p = Start-Process lastetest/AISkanner.exe -ArgumentList '--lastetest' -Wait -PassThru -NoNewWindow -RedirectStandardOutput lastetest.txt
+          Get-Content lastetest.txt
+          if ($p.ExitCode -ne 0 -or -not (Select-String -Path lastetest.txt -Pattern 'LASTETEST OK' -Quiet)) { Write-Error "AISkanner.exe startet ikke riktig (kode $($p.ExitCode))"; exit 1 }
 
       # Størrelsesgrense: programmet skal være lite, som 7-Zip. Bygget stopper hvis det blir for stort.
       - name: Sjekk størrelse (maks 10 MB)

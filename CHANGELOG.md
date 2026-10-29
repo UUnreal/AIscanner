@@ -29,6 +29,19 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.28.1] - 2026-10-29
+
+### Rettet
+- **`AISkanner.exe.config` er borte fra mappa, for andre gang, og nå med sperre.** 2.15.1 fjernet den ved å flytte
+  DLL-ene til en undermappe, som ikke startet (se 2.15.2), og fila kom tilbake. Nå ligger DLL-ene fortsatt ved siden
+  av programmet, men fila trengs ikke: `Program.AnnenVersjon` godtar en annen versjon av et av programmets egne
+  biblioteker i samme mappe (samme navn og nøkkel) og laster det med vanlig lasting (`Assembly.Load`), ikke
+  `LoadFrom`. Byggingen lager ikke fila lenger (`AutoGenerateBindingRedirects`, `GenerateSupportedRuntime` av).
+- Byggeløypa stopper hvis en `.config` eller en annen fil som heter `AISkanner*` dukker opp i mappa.
+- Ny lastetest i byggeløypa: mappa merkes «fra Internett» slik den blir etter nedlasting, og `AISkanner.exe
+  --lastetest` laster bibliotekene og kjører alle alarmene i selve programmet (.NET Framework 4.8), uten vindu.
+- `LES-MEG-FORST.txt` nevner ikke lenger `.config`-fila.
+
 ## [2.28.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 177 av 177.

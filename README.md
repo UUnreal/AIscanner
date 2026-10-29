@@ -6,7 +6,7 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.28.0 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.28.1 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
 - **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
