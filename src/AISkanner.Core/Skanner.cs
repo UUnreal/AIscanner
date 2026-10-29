@@ -481,6 +481,71 @@ public sealed partial class Skanner
         }
     }
 
+    /// <summary>
+    /// Fullt søk som administrator: registeret til brukere som ikke er logget inn (NTUSER.DAT), lest fra fila og tolket i
+    /// minnet. Oppstart, installerte programmer og navnene på AI-nøkler i miljøvariablene. Ingenting lastes inn i Windows.
+    /// </summary>
+    private void AndreBrukeresRegisterfiler()
+    {
+        using var liste = Tilgangslogg.Nokkel(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList");
+        if (liste == null) return;
+        var lastet = new HashSet<string>(Registry.Users.GetSubKeyNames(), StringComparer.OrdinalIgnoreCase);
+        foreach (var sid in liste.GetSubKeyNames())
+        {
+            if (!sid.StartsWith("S-1-5-21-", StringComparison.Ordinal) && !sid.StartsWith("S-1-12-1-", StringComparison.Ordinal)) continue;
+            if (lastet.Contains(sid)) continue;   // logget inn: lest fra registeret over
+            using var p = liste.OpenSubKey(sid);
+            if (p?.GetValue("ProfileImagePath") is not string profil) continue;
+            var fil = Path.Combine(Environment.ExpandEnvironmentVariables(profil), "NTUSER.DAT");
+            if (!File.Exists(fil)) { Tilgangslogg.Logg("Fil", fil, Utfall.IkkeFunnet); continue; }
+            byte[] bytes;
+            try
+            {
+                using var fs = Admintilgang.AapneLes(fil);
+                if (fs.Length > 256L * 1024 * 1024) { Tilgangslogg.Logg("Fil", fil, Utfall.HoppetOver, "større enn 256 MB"); continue; }
+                bytes = new byte[fs.Length];
+                int n = 0;
+                while (n < bytes.Length) { int r = fs.Read(bytes, n, bytes.Length - n); if (r <= 0) break; n += r; }
+            }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", fil, e); continue; }
+            var hive = Hive.Fra(bytes);
+            if (hive?.Rot is not { } rot) { Tilgangslogg.Logg("Fil", fil, Utfall.Feil, "ukjent format"); continue; }
+            var hvem = Path.GetFileName(profil.TrimEnd('\\'));
+            int treff = 0;
+            foreach (var sti in new[] { @"Software\Microsoft\Windows\CurrentVersion\Run", @"Software\Microsoft\Windows\CurrentVersion\RunOnce" })
+                if (hive.Finn(rot, sti) is { } k)
+                    foreach (var (verdi, kommando) in hive.Verdier(k))
+                    {
+                        var r = FinnRegel($"{verdi} {kommando}");
+                        if (r == null) continue;
+                        treff++;
+                        FraRegel(r, "Starter med Windows", $"Oppstart for {hvem} (ikke logget inn): {verdi}").Merknad("Starter når en annen bruker logger inn.");
+                    }
+            if (hive.Finn(rot, @"Software\Microsoft\Windows\CurrentVersion\Uninstall") is { } av)
+                foreach (var u in hive.Under(av))
+                {
+                    var v = hive.Verdier(u);
+                    v.TryGetValue("DisplayName", out var navn);
+                    v.TryGetValue("InstallLocation", out var mappe);
+                    var r = FinnRegel($"{navn} {mappe}");
+                    if (r == null) continue;
+                    treff++;
+                    var f = FraRegel(r, "Installert", $"Installert for {hvem} (ikke logget inn): {navn ?? u.Navn}");
+                    f.SettVersjon(v.TryGetValue("DisplayVersion", out var ver) ? ver : null, "listen over installerte programmer");
+                }
+            if (hive.Finn(rot, "Environment") is { } miljo)
+            {
+                var nokler = hive.Verdier(miljo).Keys.Where(n => NokkelNavn.IsMatch(n)).ToList();
+                if (nokler.Count > 0)
+                {
+                    treff++;
+                    NokkelFunn(nokler).Detalj($"Miljøvariabel for {hvem} (ikke logget inn): {string.Join(", ", nokler)} (verdien vises aldri)");
+                }
+            }
+            Tilgangslogg.Logg("Fil", fil, Utfall.Lest, $"registeret til {hvem}, som ikke er logget inn: oppstart, installerte programmer og navn på AI-nøkler");
+        }
+    }
+
     private static bool SammeSomProsessen(string sid)
     {
         try { return string.Equals(System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value, sid, StringComparison.OrdinalIgnoreCase); }
@@ -539,6 +604,7 @@ public sealed partial class Skanner
             {
                 OppgaveFiler();
                 AndreBrukeresOppstart();
+                if (Admintilgang.Aktiv) AndreBrukeresRegisterfiler();
             }
         }
 
@@ -681,6 +747,7 @@ public sealed partial class Skanner
                     Path.Combine(profil, "extensions", (Str(a, "id") ?? "") + ".xpi"), Str(a, "version"));
             }
         }
+        NettleserBroer();
     }
 
     /// <summary>Slår opp __MSG_navn__ i utvidelsens språkfil.</summary>
@@ -721,6 +788,8 @@ public sealed partial class Skanner
                 $"Utvidelse i {hvor}", $"{hvor}: {mappe}");
         }
         f.SettVersjon(versjon, "utvidelsens manifest");
+        if (TvungneUtvidelser().Contains(Path.GetFileName(mappe)))
+            f.Merknad("Lagt inn av IT-regel (ExtensionInstallForcelist). Brukeren kan ikke fjerne den.");
         if (alleSider)
         {
             f.Risiko = Risiko.Rod;

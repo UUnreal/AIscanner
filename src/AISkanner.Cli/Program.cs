@@ -49,6 +49,20 @@ if (args.Contains("--kontroll"))
     return k.Contains("FEIL") ? 1 : 0;
 }
 
+// Viser verdiene i én nøkkel i en registerfil (kopi av NTUSER.DAT, Amcache.hve …), for å prøve lesingen uten Windows
+int rg = Array.IndexOf(args, "--registerfil");
+if (rg >= 0 && rg + 2 < args.Length)
+{
+    var hive = Hive.Fra(File.ReadAllBytes(args[rg + 1]));
+    var k = hive?.Rot is { } rot ? hive.Finn(rot, args[rg + 2]) : null;
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+    if (k == null) { Console.WriteLine("Fant ikke nøkkelen"); return 1; }
+    Console.WriteLine($"{k.Navn} · endret {k.Endret:yyyy-MM-dd HH:mm}");
+    foreach (var u in hive!.Under(k)) Console.WriteLine($"  [{u.Navn}]");
+    foreach (var (n, v) in hive.Verdier(k)) Console.WriteLine($"  {n} = {v}");
+    return 0;
+}
+
 // Leser en kopi av Amcache.hve og viser AI-funnene i den (for å prøve lesingen uten Windows)
 int am = Array.IndexOf(args, "--amcache");
 if (am >= 0 && am + 1 < args.Length)

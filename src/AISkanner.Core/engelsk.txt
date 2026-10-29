@@ -1054,7 +1054,7 @@ AI-agent startes med farlige flagg|AI agent starts with dangerous flags
 AI-agent som starter av seg selv uten å spørre før den gjør noe.|AI agent that starts on its own without asking before it acts.
 En AI-agent startes av seg selv (oppstart, profil eller register) med flagg som slår av spørsmålene før den kjører kommandoer. Bare agent og flagg vises.|An AI agent is started automatically (startup, profile or registry) with flags that turn off the questions before it runs commands. Only agent and flag are shown.
 Agent-oppsett med .env i prosjekt|Agent setup with .env in project
-Gemini CLI leser .gemini\.env i prosjektmappa. Den kan endre hvor agenten sender data eller hvilke nøkler den bruker. Innholdet er ikke åpnet.|Gemini CLI reads .gemini\.env in the project folder. It can change where the agent sends data or which keys it uses. The content was not opened.
+Gemini CLI leser .gemini\.env i prosjektmappa. Den kan endre hvor agenten sender data eller hvilke nøkler den bruker. Verdiene i fila vises aldri.|Gemini CLI reads .gemini\.env in the project folder. It can change where the agent sends data or which keys it uses. The values in the file are never shown.
 innholdet åpnes ikke|the content is not opened
 En Python-pakke i en versjon som står på lista over kjente dårlige versjoner i regler.json.|A Python package in a version that is on the list of known bad versions in regler.json.
 En versjon fra lista over kjente dårlige versjoner er installert.|A version from the list of known bad versions is installed.
@@ -1415,3 +1415,41 @@ Kjører nå, startet av|Running now, started by
 ledd ned|levels down
 ~^Oppgaven (.+) sist kjørt (.+)$|The task $1 last ran $2
 Planlagt oppgave|Scheduled task
+verdiene vises aldri|the values are never shown
+.env: bare navnene på AI-nøkler, aldri verdiene|.env: only the names of AI keys, never the values
+.env større enn 256 kB|.env larger than 256 kB
+(verdien vises aldri)|(the value is never shown)
+Lastet i minnet nå:|Loaded in memory now:
+~^Har (\d+) (modell|modeller): (.+)$|Has $1 model(s): $3
+~^Kjører (.+) nå\. Har (\d+) (modell|modeller): (.+)$|Running $1 now. Has $2 model(s): $4
+~^Tilgangskart for (.+?): (.+)$|Access map for $1: $2
+ · tilgang:| · access:
+kjører kommandoer|runs commands
+styrer en nettleser|controls a browser
+henter fra nettet|fetches from the web
+kode og Git|code and Git
+databaser|databases
+e-post og chat|email and chat
+sky og drift|cloud and operations
+dokumenter og saker|documents and tickets
+betaling|payments
+minne for agenten|memory for the agent
+~^Oppstart for (.+) \(ikke logget inn\): (.+)$|Startup for $1 (not signed in): $2
+~^Installert for (.+) \(ikke logget inn\): (.+)$|Installed for $1 (not signed in): $2
+~^Miljøvariabel for (.+) \(ikke logget inn\): (.+) \(verdien vises aldri\)$|Environment variable for $1 (not signed in): $2 (the value is never shown)
+~^registeret til (.+), som ikke er logget inn: oppstart, installerte programmer og navn på AI-nøkler$|the registry of $1, who is not signed in: startup, installed programs and names of AI keys
+Verdier av API-nøkler, også i .env-filer (bare navnet, eller at noe ligner en nøkkel)|Values of API keys, also in .env files (only the name, or that something looks like a key)
+filer|files
+AI-biblioteker pakket inn i programmet|AI libraries packed into the program
+Programmet har med biblioteker for AI-agenter som kan handle på egen hånd.|The program includes libraries for AI agents that can act on their own.
+~^AI-biblioteker: (.+)$|AI libraries: $1
+~^app\.asar: (.+)$|app.asar: $1
+~^Ukjent AI-bro fra (.+)$|Unknown AI bridge from $1
+~^(.+): bro fra (.+)$|$1: bridge from $2
+~^Nettleserbro i (.+)$|Browser bridge in $1
+Et program på PC-en som nettleserutvidelser kan snakke med, og som har AI i navnet. Vi vet ikke hvem som lager det.|A program on the PC that browser extensions can talk to, with AI in its name. We do not know who makes it.
+En nettleserutvidelse kan starte dette programmet på PC-en og sende data begge veier.|A browser extension can start this program on the PC and send data both ways.
+~^Registernøkkel: (.+)$|Registry key: $1
+~^Manifest: (.+)$|Manifest: $1
+~^Utvidelser som kan bruke broen: (.+)$|Extensions that can use the bridge: $1
+Lagt inn av IT-regel (ExtensionInstallForcelist). Brukeren kan ikke fjerne den.|Installed by IT policy (ExtensionInstallForcelist). The user cannot remove it.

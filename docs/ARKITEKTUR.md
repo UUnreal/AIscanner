@@ -41,16 +41,16 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `Skanner.cs` | Søkeflyten: kjører alle sjekker samtidig, slår sammen funn, tar tiden. `LovligeFiler` er lesesperren. |
 | `Funn.cs` | Datamodellen: `Funn`, `Risiko`, `Mal` (forbindelse). |
 | `Regler.cs` | Leser `regler.json` (innebygd eller ved siden av exe) og `godkjent-ai.txt`. |
-| `Sanntid.cs` | Prosesser og AI-motorer, lokale AI-servere, AI-nøkler, filgjennomgang (modeller og AI-kode). |
+| `Sanntid.cs` | Prosesser og AI-motorer, lokale AI-servere (også Ollama-modeller lastet nå via `/api/ps`), AI-nøkler (navn på miljøvariabler og i `.env`-filer, aldri verdier), filgjennomgang (modeller og AI-kode). |
 | `Misbruk.cs` | Flere ukjente AI-spor (hooks, skjulte tegn, ferdigheter, autostart med farlige flagg, lenker, kjente filer). Filgjennomgangen samler kandidater; de vurderes etterpå. |
 | `Nettverkvisning.cs` | «Nettverk» (live): hvilke programmer som snakker med AI-tjenester nå, per sekund. Bare i minnet. |
 | `Prosesstre.cs` | Hvem som startet en prosess (Toolhelp), signatur, filinfo og starttid. Skannerens egne prosesser. |
 | `Lytting.cs` | Lyttevindu under søket og «Følg med» (datamengde live). Bare i minnet. |
 | `Kart.cs` | Kartet i Datagrunnlag: steder fra `Tilgangslogg` og diskgjennomgangen som et tre med antall, størrelse, utfall og funn. Bare i minnet. |
 | `Kontroll.cs` | Kontrollmodus (`--kontroll`): falske spor i en midlertidig mappe, sjekker at hver alarm slår ut, sletter mappa. |
-| `UkjenteSpor.cs` | Ukjente AI-spor: MCP-oppsett, «godkjenn alt», serverlogger, agentøkter (bare metadata), skript med AI-nøkkel, dårlige pakkeversjoner. Alle røde. |
+| `UkjenteSpor.cs` | Ukjente AI-spor: MCP-oppsett med tilgangskart (`McpTilganger`), «godkjenn alt», serverlogger, agentøkter (bare metadata), skript med AI-nøkkel, dårlige pakkeversjoner. Alle røde. |
 | `Kommandolinje.cs`, `Tolkere.cs` | Kommandolinjen til tolkere og AI-funn: skript, modul, pakke, modellfil og risikoflagg. Skriptfila sjekkes for AI-biblioteker. Argumentene vises aldri. |
-| `Historikk.cs`, `Hive.cs` | Windows-historikk som admin: Prefetch, BAM, Amcache (egen leser for registerfiler), TaskCache, hendelse 4688, Sysmon og DNS-loggen. |
+| `Historikk.cs`, `Hive.cs` | Windows-historikk som admin: Prefetch, BAM, Amcache (egen leser for registerfiler), TaskCache, hendelse 4688, Sysmon og DNS-loggen. Samme leser tar andre brukeres `NTUSER.DAT` (`Skanner.AndreBrukeresRegisterfiler`). |
 | `ModellFormat.cs` | Kjenner igjen modellformater på de første bytene, og leser GGUF- og safetensors-hodet. |
 | `ModellGjenkjenning.cs` | Modellfamilie fra arkitektur og ordforråd, modell-ID (SHA-256 eller fingeravtrykk), Ollama-navn. |
 | `Leverandor.cs` | AI lagt inn av leverandører i AppData, ProgramData, Program Files, WindowsApps og SystemApps. |

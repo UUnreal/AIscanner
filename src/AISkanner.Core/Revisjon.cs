@@ -25,13 +25,12 @@ public static class Revisjon
         "Minnet til andre programmer og lsass",
         "Windows Legitimasjonsbehandling og PowerShell-historikken",
         "E-post",
-        ".env-filer (bare om de finnes)",
     };
 
     /// <summary>Det søket leser i minnet for å kjenne igjen AI, men aldri viser, lagrer eller sender.</summary>
     public static readonly string[] LestAldriVist =
     {
-        "Verdier av API-nøkler (bare navnet, eller at noe ligner en nøkkel)",
+        "Verdier av API-nøkler, også i .env-filer (bare navnet, eller at noe ligner en nøkkel)",
         "Argumentene i kommandolinjer, også i hendelseslogger (bare skriptfila og regelen som slo til)",
         "Kode skrevet på kommandolinjen, også gjemt som base64",
         "De første bytene i filer (filhodet), bare for å kjenne igjen AI-modeller",

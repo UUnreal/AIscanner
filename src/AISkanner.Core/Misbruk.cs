@@ -22,6 +22,7 @@ public sealed partial class Skanner
     // ---------- Funnet av filgjennomgangen, behandlet etterpå ----------
     private readonly ConcurrentBag<string> _instruksjonsfiler = new();
     private readonly ConcurrentBag<string> _geminiEnv = new();
+    private readonly ConcurrentBag<string> _envFiler = new();
     private readonly ConcurrentBag<string> _oppgavefiler = new();
     private readonly ConcurrentBag<string> _kjorbareIOppsett = new();
     private readonly ConcurrentBag<string> _prosjektSkills = new();
@@ -38,7 +39,7 @@ public sealed partial class Skanner
 
     private void TomMisbruk()
     {
-        foreach (var b in new[] { _instruksjonsfiler, _geminiEnv, _oppgavefiler, _kjorbareIOppsett, _prosjektSkills, _pakketModell })
+        foreach (var b in new[] { _instruksjonsfiler, _geminiEnv, _envFiler, _oppgavefiler, _kjorbareIOppsett, _prosjektSkills, _pakketModell })
             while (b.TryTake(out _)) { }
         while (_lenker.TryTake(out _)) { }
         while (_pipTreff.TryTake(out _)) { }
@@ -62,6 +63,9 @@ public sealed partial class Skanner
         var forelder = fil.Directory?.Name ?? "";
         var ext = fil.Extension.ToLowerInvariant();
         // Raskt ut for vanlige filer: bare navn, mapper og endelser vi bryr oss om
+        // .env og .env.local osv.: bare navnene på AI-nøkler leses etterpå, aldri verdiene
+        if (navn.Equals(".env", StringComparison.OrdinalIgnoreCase) || (navn.StartsWith(".env.", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".example", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".sample", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".template", StringComparison.OrdinalIgnoreCase)))
+            _envFiler.Add(fil.FullName);
         if (!Instruksjonsnavn.Contains(navn) && ext is not (".mdc" or ".env" or ".json" or ".md" or ".pt" or ".pth" or ".bin" or ".ckpt") && forelder is not (".claude" or ".vscode")) return;
         var besteforelder = fil.Directory?.Parent?.Name ?? "";
         if (ErBrukerOppsett(fil.FullName)) return;   // sjekkes direkte av sporsjekken
@@ -119,10 +123,11 @@ public sealed partial class Skanner
         {
             var t = Endret(sti);
             var f = Spor($"Agent-oppsett med .env i prosjekt: {SporProsjekt(Path.GetDirectoryName(sti)!)}",
-                "Gemini CLI leser .gemini\\.env i prosjektmappa. Den kan endre hvor agenten sender data eller hvilke nøkler den bruker. Innholdet er ikke åpnet.", null);
+                "Gemini CLI leser .gemini\\.env i prosjektmappa. Den kan endre hvor agenten sender data eller hvilke nøkler den bruker. Verdiene i fila vises aldri.", null);
             f.Tidspunkt(t, t);
-            f.Detalj($"Fil: {sti}{(t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : "")} · innholdet åpnes ikke");
+            f.Detalj($"Fil: {sti}{(t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : "")} · verdiene vises aldri");
         }
+        EnvNokler(_envFiler.Distinct(StringComparer.OrdinalIgnoreCase).Take(2000));
         foreach (var sti in _oppgavefiler.Distinct(StringComparer.OrdinalIgnoreCase).Take(200)) OppgaverVedApning(sti);
         foreach (var g in _kjorbareIOppsett.Distinct(StringComparer.OrdinalIgnoreCase).GroupBy(x => Path.GetDirectoryName(x)!).Take(100))
             KjorbareIAgentmappe(g.Key, g.ToList());

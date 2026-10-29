@@ -141,6 +141,19 @@ public sealed partial class Skanner
                 s.Merk(meny.Contains("Edge") ? "Edge" : "Chrome", $"Nettapp: {lnk.FullName}", lnk.LastWriteTime, lnk.CreationTime);
             }
         }
+        // Edge (og Chrome med flere profiler) legger nettapper rett i Programs. Snarveien starter *_proxy.exe --app-id=…
+        var programs = Utvid(@"%APPDATA%\Microsoft\Windows\Start Menu\Programs");
+        if (Directory.Exists(programs))
+            foreach (var lnk in Plattform.Filer(programs, "*.lnk", 1))
+            {
+                if (lnk.Length > 64 * 1024 || lnk.FullName.IndexOf(" Apps" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                var tittel = Path.GetFileNameWithoutExtension(lnk.Name);
+                var n = _regler.AiNettsteder.FirstOrDefault(x => AppOrd(x).Any(o => tittel.Inneholder(o)));
+                if (n == null || NettappLeser(lnk.FullName) is not { } nettleser) continue;
+                var s = For(n);
+                s.App = true;
+                s.Merk(nettleser, $"Nettapp: {lnk.FullName}", lnk.LastWriteTime, lnk.CreationTime);
+            }
 
         var ukjente = new Dictionary<string, Brukspor>(StringComparer.OrdinalIgnoreCase);
         if (_historikk) Historikk(For, ukjente);
@@ -252,6 +265,23 @@ public sealed partial class Skanner
     }
 
     /// <summary>Ord som kjennetegner en nettapp: første del av domenet, f.eks. "chatgpt", "gemini", "deepseek".</summary>
+    /// <summary>Om en snarvei er en installert nettapp: den starter chrome_proxy.exe eller msedge_proxy.exe med --app-id.</summary>
+    internal static string? NettappLeser(string lnk)
+    {
+        try
+        {
+            using var fs = Admintilgang.AapneLes(lnk);
+            var b = new byte[Math.Min(fs.Length, 64 * 1024)];
+            int n = 0, r;
+            while (n < b.Length && (r = fs.Read(b, n, b.Length - n)) > 0) n += r;
+            var t = System.Text.Encoding.Unicode.GetString(b, 0, n) + System.Text.Encoding.ASCII.GetString(b, 0, n);
+            if (t.IndexOf("--app-id=", StringComparison.OrdinalIgnoreCase) < 0) return null;
+            return t.IndexOf("msedge_proxy", StringComparison.OrdinalIgnoreCase) >= 0 ? "Edge"
+                 : t.IndexOf("brave_proxy", StringComparison.OrdinalIgnoreCase) >= 0 ? "Brave" : "Chrome";
+        }
+        catch { return null; }
+    }
+
     private static IEnumerable<string> AppOrd(AiNettsted n) =>
         n.Domener.Select(d => d.Split('.').FirstOrDefault(del => del is not ("chat" or "www" or "console" or "platform")) ?? "")
                  .Where(o => o.Length >= 4).Distinct();

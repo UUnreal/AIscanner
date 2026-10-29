@@ -19,6 +19,8 @@ public sealed partial class Skanner
         new("MCP-servere: Claude Desktop", "MCP-servere (Claude Desktop)"),
         new("MCP-servere: Codex", "MCP-server med innebygd kode (Codex)"),
         new("MCP-servere: Windsurf", "MCP-servere (Windsurf)"),
+        new("MCP-servere: Zed", "MCP-servere (Zed, context_servers)"),
+        new("MCP-servere: Continue", "MCP-servere (Continue, liste med transport)"),
         new("MCP-servere i prosjekt", "MCP-oppsett i prosjektmappe"),
         new("Godkjenn alt: Claude Code", "«Godkjenn alt», MCP som starter selv og WebFetch"),
         new("Godkjenn alt: Codex", "«Godkjenn alt» i Codex"),
@@ -157,6 +159,25 @@ public sealed partial class Skanner
             Sjekk(!ff.Any(x => x.Profil.Contains("Thunderbird")), "Thunderbird (e-post) ble tatt med som nettleser");
             s.AndreNettleseresAi();
             Sjekk(s._funn.Values.Any(f => f.Navn == "Leo (AI-assistent i Brave)"), "Leo i Brave ble ikke funnet");
+            // Nettleserbro (Native Messaging): kjent AI, ukjent AI og et vanlig program
+            var bro = Path.Combine(rot, "nett", "bro");
+            Directory.CreateDirectory(bro);
+            void Bro(string fil, string json) => File.WriteAllText(Path.Combine(bro, fil), json);
+            Bro("claude.json", "{\"name\":\"com.anthropic.claude_browser_extension\",\"description\":\"Claude Browser Extension Native Host\",\"path\":\"claude.exe\",\"allowed_origins\":[\"chrome-extension://abc/\"]}");
+            Bro("ukjent.json", "{\"name\":\"com.kontroll.ai_agent\",\"description\":\"AI agent bridge\",\"path\":\"bro.exe\"}");
+            Bro("pdf.json", "{\"name\":\"com.kontroll.pdfskriver\",\"description\":\"PDF printer\",\"path\":\"pdf.exe\"}");
+            s.VurderBro("Chrome", "HKCU\\k", "com.anthropic.claude_browser_extension", Path.Combine(bro, "claude.json"));
+            s.VurderBro("Edge", "HKCU\\k", "com.kontroll.ai_agent", Path.Combine(bro, "ukjent.json"));
+            s.VurderBro("Chrome", "HKCU\\k", "com.kontroll.pdfskriver", Path.Combine(bro, "pdf.json"));
+            var broer = s._funn.Values.Where(f => f.Navn.Contains(": bro fra ") || f.Navn.StartsWith("Ukjent AI-bro", StringComparison.Ordinal)).ToList();
+            Sjekk(broer.Any(f => f.Navn.EndsWith(": bro fra Chrome", StringComparison.Ordinal) && f.Detaljer.Any(d => d.Contains(Path.Combine(bro, "claude.exe")))), "nettleserbroen til Claude ble ikke funnet med programsti");
+            Sjekk(broer.Any(f => f.Navn == "Ukjent AI-bro fra Edge" && f.Risiko == Risiko.Rod), "ukjent AI-bro ble ikke rød");
+            var lnk = Path.Combine(bro, "ChatGPT.lnk");
+            File.WriteAllBytes(lnk, new byte[] { 0x4C, 0, 0, 0 }.Concat(Encoding.Unicode.GetBytes(@"C:\Program Files (x86)\Microsoft\Edge\Application\msedge_proxy.exe --profile-directory=Default --app-id=cadlkienfkclaiaibeoongdcgmdikeeg")).ToArray());
+            var vanlig = Path.Combine(bro, "Notisblokk.lnk");
+            File.WriteAllBytes(vanlig, new byte[] { 0x4C, 0, 0, 0 }.Concat(Encoding.Unicode.GetBytes(@"C:\Windows\notepad.exe")).ToArray());
+            Sjekk(NettappLeser(lnk) == "Edge" && NettappLeser(vanlig) == null, "nettapp-snarvei fra Edge (msedge_proxy --app-id) ble ikke kjent igjen, eller vanlig snarvei ble tatt for nettapp");
+            Sjekk(broer.Count == 2, $"vanlig nettleserbro (PDF) ble tatt for AI ({broer.Count} broer)");
             Sjekk(s._funn.Values.Any(f => f.Navn == "AI-chatbot i sidefeltet i LibreWolf"), "AI-chatbot i sidefeltet (browser.ml.chat.provider) ble ikke funnet");
             Sjekk(s._funn.Values.Any(f => f.Navn == "Lokale AI-modeller i LibreWolf"), "ONNX-modell uten endelse i nettleserens lagring ble ikke funnet");
             Sjekk(s.FinnRegel(@"C:\Users\a\AppData\Local\Perplexity\Comet\Application\comet.exe")?.Navn == "Comet (AI-nettleser fra Perplexity)", "comet.exe ble ikke kjent igjen som Comet");
@@ -254,6 +275,23 @@ public sealed partial class Skanner
     {
         int ok = 0, alle = 0;
         void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Kommandolinje: {hva}"); }
+        // Electron: app.asar med AI-biblioteker i node_modules og package.json; og en uten
+        byte[] Asar(string moduler, string pakke)
+        {
+            var data = Encoding.UTF8.GetBytes(pakke);
+            var json = Encoding.UTF8.GetBytes($"{{\"files\":{{\"node_modules\":{{\"files\":{{{moduler}}}}},\"package.json\":{{\"size\":{data.Length},\"offset\":\"0\"}}}}}}");
+            int pad = (4 - json.Length % 4) % 4, pickle = 8 + json.Length + pad;
+            return BitConverter.GetBytes(4).Concat(BitConverter.GetBytes(pickle)).Concat(BitConverter.GetBytes(pickle - 4)).Concat(BitConverter.GetBytes(json.Length))
+                .Concat(json).Concat(new byte[pad]).Concat(data).ToArray();
+        }
+        Directory.CreateDirectory(Path.Combine(rot, "asar"));
+        var asarAi = Path.Combine(rot, "asar", "ai.asar");
+        File.WriteAllBytes(asarAi, Asar("\"lodash\":{\"files\":{}},\"@langchain\":{\"files\":{\"core\":{\"files\":{}}}}", "{\"name\":\"x\",\"dependencies\":{\"openai\":\"^4\",\"react\":\"^18\"}}"));
+        var asarVanlig = Path.Combine(rot, "asar", "vanlig.asar");
+        File.WriteAllBytes(asarVanlig, Asar("\"lodash\":{\"files\":{}},\"ai\":{\"files\":{}}", "{\"name\":\"y\",\"dependencies\":{\"react\":\"^18\"}}"));
+        var asar = AsarPakker(asarAi);
+        Sjekk(asar is { Agent: true } a1 && a1.Pakker.SetEquals(new[] { "@langchain/core", "openai" }), $"app.asar: AI-bibliotekene ble ikke funnet ({(asar == null ? "ingen" : string.Join(", ", asar.Value.Pakker))})");
+        Sjekk(AsarPakker(asarVanlig) == null, "app.asar uten AI (bare «ai» og vanlige pakker) ble tatt for AI");
         var del = Kommandolinje.Del("a \"b c\" d\\\"e f\\\\\"g h\"");
         Sjekk(del.SequenceEqual(new[] { "a", "b c", "d\"e", "f\\g h" }), $"deling av kommandolinjen ga {string.Join(" | ", del)}");
         var app = Path.Combine(rot, "tolk", "app.py");
@@ -284,6 +322,15 @@ public sealed partial class Skanner
         File.WriteAllText(vbs, "Set h = CreateObject(\"MSXML2.ServerXMLHTTP\")\nh.open \"POST\", \"https://api.openai.com/v1/chat/completions\", False\n");
         var f6 = s.OppsettKommando($"\"{vbs}\"", "Oppstart (slått av)", "Oppstart: Skjult");
         Sjekk(f6 != null && f6.Navn == "Skript med AI som starter av seg selv: skjult.vbs" && !f6.Tilstander.HasFlag(Tilstand.SattOpp), "VBScript med AI i en oppstart som er slått av ble feil");
+        var env = Path.Combine(rot, "tolk", ".env");
+        File.WriteAllText(env, "OPENAI_API_KEY=sk-proj-hemmelig123hemmelig123\nANTHROPIC_API_KEY=\n# GEMINI_API_KEY=x\nexport HF_TOKEN=\"hf_hemmelig123\"\n");
+        s.EnvNokler(new[] { env });
+        var nk = s.FunnHittil().FirstOrDefault(f => f.Navn == "AI-nøkler lagret på PC-en");
+        Sjekk(nk != null && nk.Detaljer.Any(d => d.Contains("OPENAI_API_KEY") && d.Contains("HF_TOKEN") && !d.Contains("ANTHROPIC") && !d.Contains("GEMINI"))
+              && !nk.Detaljer.Concat(new[] { nk.Bruk ?? "" }).Any(d => d.Contains("hemmelig123")), ".env: navnene på nøkler med verdi ble ikke funnet, eller en verdi ble vist");
+        var mcp = McpTilgang(new McpServer("fs", "npx", "-y @modelcontextprotocol/server-filesystem C:\\Users", null));
+        var mcp2 = McpTilgang(new McpServer("desktop-commander", "npx", "-y @wonderwhy-er/desktop-commander", null));
+        Sjekk(mcp.SequenceEqual(new[] { "filer" }) && mcp2.Contains("kjører kommandoer"), $"MCP-tilgangskart ga {string.Join("/", mcp)} og {string.Join("/", mcp2)}");
         var av = new Regelsett { LesKommandolinjer = false };
         Sjekk(!Kommandolinje.Tillatt(av, out _), "IT kunne ikke slå av lesing av kommandolinjer");
         return (ok, alle);
@@ -473,7 +520,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(ipOk == ipAlle ? "OK  " : "FEIL")}  AI-trafikk uten navn i DNS-bufferen: {ipOk} av {ipAlle} riktige (nettleser med DoH kjent igjen på IP, andre programmer ikke)");
             var (tolkOk, tolkAlle) = TolkKontroll(regler, sb, rot);
             ok += tolkOk;
-            sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, skript i oppstart, aldri argumentene, IT kan slå av)");
+            sb.AppendLine($"{(tolkOk == tolkAlle ? "OK  " : "FEIL")}  Kommandolinjer: {tolkOk} av {tolkAlle} riktige (skript med AI, -m vllm åpen mot nettet, gjemt PowerShell, npx-pakke, modellfil, skript i oppstart, .env-nøkler, MCP-tilgang, aldri argumentene, IT kan slå av)");
             var (stOk, stAlle) = StatusKontroll(regler, sb);
             ok += stOk;
             sb.AppendLine($"{(stOk == stAlle ? "OK  " : "FEIL")}  Status, treffsikkerhet og godkjenning: {stOk} av {stAlle} riktige (kjører nå, brukt før, høy, middels, lav, godkjent, blokkert)");
@@ -504,6 +551,8 @@ public sealed partial class Skanner
         Skriv(Path.Combine(app, "Claude", "claude_desktop_config.json"), "{\"mcpServers\":{\"fjern\":{\"url\":\"https://mcp.kontroll-ukjent.example/sse\"}}}");
         Skriv(Path.Combine(home, ".codex", "config.toml"), "approval_policy = \"never\"\n[mcp_servers.skall]\ncommand = \"powershell\"\nargs = [\"-enc\", \"QQBBAAKONTROLL\"]\n");
         Skriv(Path.Combine(home, ".codeium", "windsurf", "mcp_config.json"), "{\"mcpServers\":{\"kode\":{\"command\":\"node\",\"args\":[\"-e\",\"slett-alt-kontroll\"]}}}");
+        Skriv(Path.Combine(app, "Zed", "settings.json"), "// Zed\n{\"context_servers\":{\"zk\":{\"command\":{\"path\":\"node\",\"args\":[\"-e\",\"slett-alt-kontroll\"]}}},}");
+        Skriv(Path.Combine(home, ".continue", "config.json"), "{\"experimental\":{\"modelContextProtocolServers\":[{\"transport\":{\"type\":\"stdio\",\"command\":\"node\",\"args\":[\"-e\",\"slett-alt-kontroll\"]}}]}}");
         Skriv(Path.Combine(home, ".claude", "settings.json"),
             "{\"permissions\":{\"defaultMode\":\"bypassPermissions\",\"allow\":[\"WebFetch\"]},\"enableAllProjectMcpServers\":true," +
             "\"hooks\":{\"SessionStart\":[{\"hooks\":[{\"type\":\"command\",\"command\":\"node oppsett.mjs sk-proj-KONTROLLABCDEFGHIJKLMNOP\"}]}]}}");

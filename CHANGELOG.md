@@ -29,6 +29,40 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.29.0] - 2026-10-29
+
+Ikke testet på Windows utover lastetesten i byggeløypa.
+
+### Lagt til
+- **Andre brukeres register (admin).** `NTUSER.DAT` for profiler som ikke er logget inn leses rett fra disken og
+  tolkes i minnet: `Run`/`RunOnce`, `Uninstall` og navn på miljøvariabler for AI-nøkler. Aldri verdiene.
+- **Tilgangskart for MCP-servere.** Hver server får «tilgang: …» (filer, skall, nettleser, nett, database, e-post,
+  sky, kode-repo m.fl.), tolket fra navn og kommando, og hvert program får en samlet linje.
+- **Flere MCP-oppsett:** Visual Studio (`%USERPROFILE%\.mcp.json`), Zed (`context_servers`) og Continue
+  (`.continue\config.json`, også lister med `transport`). `config.json` åpnes bare i `.continue`-mappa.
+- **`.env`-filer:** navnene på AI-nøkler som har en verdi, samlet i funnet «AI-nøkler lagret på PC-en». Verdiene
+  sjekkes bare for om de er tomme og kastes. `.example`, `.sample` og `.template` hoppes over.
+- **Ollama: modeller lastet i minnet nå** (`/api/ps`) står i detaljen, og funnet merkes «kjører nå».
+- **22 nye AI-programmer med kilde:** AnythingLLM, Open WebUI, LocalAI, Text generation web UI, Msty, KoboldCpp,
+  LibreChat, LobeChat, Cherry Studio, Chatbox, Pinokio, Fooocus, InvokeAI, SillyTavern, Tabby, OpenHands, Kilo Code,
+  Amazon Q Developer, Tabnine, Supermaven, Zed og JetBrains AI (Junie).
+- **Nettleserbroer (Native Messaging):** programmer på PC-en som nettleserutvidelser kan starte og snakke med, i
+  Chrome, Edge, Brave, Chromium og Firefox (HKCU og HKLM). Kjent AI får regelens navn; ukjent med AI i navnet blir
+  «Ukjent AI-bro» (rødt). Viser programsti, manifest og hvilke utvidelser som kan bruke broen.
+- **Utvidelser tvunget inn av IT** (`ExtensionInstallForcelist` for Chrome, Edge, Brave) merkes på AI-utvidelsen.
+- **Nettapper fra Edge** som ligger rett i Start-menyen (snarvei til `msedge_proxy.exe --app-id`), ikke bare i
+  «Chrome Apps»/«Edge Apps».
+- **Electron-apper (`app.asar`):** innholdslista og `package.json` leses (ikke koden). AI-biblioteker som `openai`,
+  `@anthropic-ai/sdk`, `langchain` og `@modelcontextprotocol/sdk` står på programmets funn; agentbiblioteker gir en
+  advarsel.
+- Kontrollen har alarmer for `.env`, MCP-tilgang, Zed, Continue, nettleserbroer, nettapp-snarveier og `app.asar`.
+- `AISkanner.Cli --registerfil <fil> <nøkkelsti>` viser verdiene i en offline registerfil (for utviklere).
+
+### Endret
+- «Har N modeller lastet» het feil for `/api/tags` (installerte modeller). Nå «Har N modeller», og «lastet» brukes
+  bare om det `/api/ps` svarer.
+- Datagrunnlaget: `.env` står under «Lest, aldri vist» (verdiene), ikke «Aldri åpnet».
+
 ## [2.28.1] - 2026-10-29
 
 ### Rettet

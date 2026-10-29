@@ -177,12 +177,19 @@ public sealed partial class Skanner
         // Helt asynkront: ingen tråd står og venter på et svar. (2.19 ventet med .GetResult() i 16 tråder samtidig, mens de
         // andre sjekkene også brukte trådpoolen. På .NET Framework kan det sulte ut trådpoolen så søket stopper opp.)
         var svar = new List<string>?[lyttere.Count];
+        var lastet = new List<string>?[lyttere.Count];
         using (var ko = new SemaphoreSlim(16))
         {
             async Task Ett(int i)
             {
                 await ko.WaitAsync().ConfigureAwait(false);
-                try { svar[i] = await SporAsync(klient, lyttere[i].Port).ConfigureAwait(false); } finally { ko.Release(); }
+                try
+                {
+                    svar[i] = await SporAsync(klient, lyttere[i].Port).ConfigureAwait(false);
+                    // Ollama: modellene som er lastet i minnet akkurat nå
+                    if (svar[i] != null) lastet[i] = await LastetNaAsync(klient, lyttere[i].Port).ConfigureAwait(false);
+                }
+                finally { ko.Release(); }
             }
             Task.WhenAll(Enumerable.Range(0, lyttere.Count).Select(Ett)).GetAwaiter().GetResult();
         }
@@ -202,7 +209,8 @@ public sealed partial class Skanner
             f.Sterkt();   // svarte som en AI-tjeneste
             HuskMappe(sti, f);
             if (modeller.Count > 0) f.Detalj($"Modeller: {string.Join(", ", modeller.Take(10))}");
-            if (modeller.Count > 0) f.Bruk = $"Har {modeller.Count} {(modeller.Count == 1 ? "modell" : "modeller")} lastet: {string.Join(", ", modeller.Take(3))}{(modeller.Count > 3 ? " …" : "")}.";
+            if (modeller.Count > 0) f.Bruk = $"Har {modeller.Count} {(modeller.Count == 1 ? "modell" : "modeller")}: {string.Join(", ", modeller.Take(3))}{(modeller.Count > 3 ? " …" : "")}.";
+            if (lastet[i] is { Count: > 0 } ilast) { f.Detalj($"Lastet i minnet nå: {string.Join(", ", ilast)}"); f.Bruk = $"Kjører {string.Join(", ", ilast.Take(2))} nå. " + (f.Bruk ?? ""); }
             if (modeller.Count > 0) { f.Merk(Tilstand.KjorerNa); f.Sterkt(); }
             if (apen)
             {
@@ -214,6 +222,23 @@ public sealed partial class Skanner
 
     /// <summary>Ett lesende GET-kall mot vanlige AI-adresser. Returnerer modellnavn, eller null hvis det ikke er AI.</summary>
     internal static List<string>? Spor(HttpClient klient, int port) => SporAsync(klient, port).GetAwaiter().GetResult();
+
+    /// <summary>Ollama /api/ps: modellene som ligger i minnet nå. Null når serveren ikke har denne adressen.</summary>
+    internal static async Task<List<string>?> LastetNaAsync(HttpClient klient, int port)
+    {
+        try
+        {
+            using var svar = await klient.GetAsync($"http://127.0.0.1:{port}/api/ps").ConfigureAwait(false);
+            Tilgangslogg.Logg("Port", $"127.0.0.1:{port}/api/ps", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
+            if (!svar.IsSuccessStatusCode) return null;
+            var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (tekst.Length > 1_000_000) return null;
+            using var doc = JsonDocument.Parse(tekst);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object || !doc.RootElement.TryGetProperty("models", out var m) || m.ValueKind != JsonValueKind.Array) return null;
+            return m.EnumerateArray().Select(x => Str(x, "name") ?? Str(x, "model")).OfType<string>().ToList();
+        }
+        catch { return null; }
+    }
 
     internal static async Task<List<string>?> SporAsync(HttpClient klient, int port)
     {
@@ -250,6 +275,57 @@ public sealed partial class Skanner
     }
 
     // ---------- AI-nøkler (bare navnet på variabelen, aldri verdien) ----------
+    private static readonly Regex EnvLinje = new(@"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// .env-filer: navnene på AI-nøkler som har en verdi. Verdien sjekkes bare for om den er tom, og kastes med en gang.
+    /// </summary>
+    private void EnvNokler(IEnumerable<string> filer)
+    {
+        var treff = new List<(string Fil, string Navn)>();
+        foreach (var fil in filer)
+        {
+            try
+            {
+                var fi = new FileInfo(fil);
+                if (fi.Length > 256 * 1024) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver, sted: fil, detalj: ".env større enn 256 kB"); continue; }
+                using var fs = Admintilgang.AapneLes(fil);
+                using var r = new StreamReader(fs);
+                string? linje;
+                while ((linje = r.ReadLine()) != null)
+                {
+                    var m = EnvLinje.Match(linje);
+                    if (!m.Success || !NokkelNavn.IsMatch(m.Groups[1].Value)) continue;
+                    var verdi = m.Groups[2].Value.Trim().Trim('"', '\'');
+                    bool har = verdi.Length > 0 && !verdi.StartsWith("#") && !verdi.StartsWith("${") && !verdi.StartsWith("<");
+                    verdi = "";
+                    if (har) treff.Add((fil, m.Groups[1].Value));
+                }
+                Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil, detalj: ".env: bare navnene på AI-nøkler, aldri verdiene");
+            }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", fil, e); }
+        }
+        if (treff.Count == 0) return;
+        var f = NokkelFunn(treff.Select(t => t.Navn));
+        foreach (var g in treff.GroupBy(t => t.Fil))
+            f.Detalj($"Fil: {g.Key} · {string.Join(", ", g.Select(t => t.Navn).Distinct())} (verdien vises aldri)");
+    }
+
+    private readonly SortedSet<string> _nokkelNavn = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Ett funn for alle AI-nøkler. «Bruk» telles fra alle kildene (miljøvariabler, .env, innlogging).</summary>
+    private Funn NokkelFunn(IEnumerable<string> navn)
+    {
+        var f = LeggTil("AI-nøkler lagret på PC-en", "Skygge-AI", Risiko.Gul,
+            "Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.", null, null);
+        lock (_nokkelNavn)
+        {
+            foreach (var n in navn) _nokkelNavn.Add(n);
+            f.Bruk = $"{_nokkelNavn.Count} {(_nokkelNavn.Count == 1 ? "nøkkel" : "nøkler")}: {string.Join(", ", _nokkelNavn.Take(4))}{(_nokkelNavn.Count > 4 ? " …" : "")}.";
+        }
+        return f;
+    }
+
     private void Nokler()
     {
         var navn = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -269,9 +345,7 @@ public sealed partial class Skanner
         var hfToken = Utvid(@"%USERPROFILE%\.cache\huggingface\token");
         if (File.Exists(hfToken)) navn.Add("Hugging Face-innlogging");
         if (navn.Count == 0) return;
-        var f = LeggTil("AI-nøkler lagret på PC-en", "Skygge-AI", Risiko.Gul,
-            "Programmer på PC-en kan bruke AI-tjenester med disse nøklene, på eierens regning og med eierens data.", null, null);
-        f.Bruk = $"{navn.Count} {(navn.Count == 1 ? "nøkkel" : "nøkler")}: {string.Join(", ", navn.Take(4))}{(navn.Count > 4 ? " …" : "")}.";
+        var f = NokkelFunn(navn);
         foreach (var n in navn)
             f.Detalj(n == "Hugging Face-innlogging" ? $"Fil: {hfToken} (innholdet er ikke lest)" : $"Miljøvariabel: {n} (verdien er ikke lest)");
     }

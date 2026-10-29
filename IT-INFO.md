@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.28.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.29.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -23,7 +23,7 @@ står i [SECURITY.md](SECURITY.md).
 | Side | Bygget inn i programmet. Laster ingenting fra nett, kan ikke navigere bort, ingen utviklerverktøy. |
 | Utpakking | Ingen. Programmet er ikke komprimert og pakker ingenting ut til `%TEMP%`. |
 | Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt når brukeren velger å søke som administrator. |
-| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. DLL-ene ligger ved siden av programmet. Det finnes ingen `AISkanner.exe.config` (fra 2.29): programmet godtar selv nyere versjoner av sine egne biblioteker i samme mappe, med samme navn og nøkkel, og lastetesten i byggeløypa kjører programmet fra en mappe merket «fra Internett». Stopper programmet med en feil, vises den i en melding som kan kopieres med Ctrl+C. |
+| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. DLL-ene ligger ved siden av programmet. Det finnes ingen `AISkanner.exe.config` (fra 2.28.1): programmet godtar selv nyere versjoner av sine egne biblioteker i samme mappe, med samme navn og nøkkel, og lastetesten i byggeløypa kjører programmet fra en mappe merket «fra Internett». Stopper programmet med en feil, vises den i en melding som kan kopieres med Ctrl+C. |
 
 ## Hva den leser
 
@@ -47,7 +47,8 @@ Alt er bare lesing. Ingenting endres.
 
 - Lyttende TCP-porter med eierprosess (`GetExtendedTcpTable`).
 - For porter på localhost eller `0.0.0.0` som eies av vanlige brukerprosesser, sendes maks tre lesende `GET` til
-  `127.0.0.1`: `/api/tags`, `/v1/models` og `/sdapi/v1/sd-models`. Tidsgrense 800 ms, maks 4 MB svar,
+  `127.0.0.1`: `/api/tags`, `/v1/models` og `/sdapi/v1/sd-models`. Svarer Ollama, spørres også `/api/ps` (hvilke
+  modeller som er lastet i minnet nå). Tidsgrense 800 ms, maks 4 MB svar,
   ingen omdirigering og ingen proxy. Maks 80 porter. Portene spørres samtidig, 16 om gangen. Svarer en port ikke innen
   800 ms, prøves ikke de to andre adressene på den porten (det står i Datagrunnlag).
 
@@ -125,12 +126,16 @@ med en strømleser som hopper over alt annet. Bytene nulles ut etterpå.
 - Verdiene til `OLLAMA_HOST` og `OLLAMA_ORIGINS`, som sier om Ollama er åpen mot nettverket.
 - Navn (aldri verdier) på miljøvariabler for AI-nøkler, for eksempel `OPENAI_API_KEY`.
 - Om mappen for Windows Recall finnes. Innholdet leses ikke.
+- Som admin: andre brukeres `NTUSER.DAT` (profiler fra `ProfileList` som ikke er logget inn), lest rett fra disken
+  og tolket i minnet. Bare `Run`/`RunOnce`, `Uninstall` og navn (aldri verdier) på miljøvariabler for AI-nøkler.
 - SAM, SECURITY og lagret legitimasjon røres aldri.
 
 ### Nøkler
 
 Bare *at* en nøkkel finnes: navn på miljøvariabler, og om `%USERPROFILE%\.cache\huggingface\token` finnes.
-Fila åpnes ikke, og verdien leses aldri.
+Fila åpnes ikke, og verdien leses aldri. `.env`-filer (og `.env.local` osv., ikke `.example`, `.sample`,
+`.template`) som filgjennomgangen finner, leses linje for linje: bare navnet på AI-nøkler som har en verdi. Verdien
+sjekkes bare for om den er tom, og kastes med en gang. Alle nøkkelnavn samles i ett funn.
 
 ### Nettverk
 
@@ -158,7 +163,7 @@ fil»), fordi endringstider kan forfalskes.
 
 | Hva | Filer | Hva som leses |
 |---|---|---|
-| MCP-servere | `%APPDATA%\Claude\claude_desktop_config.json` (også Store-utgaven under `%LOCALAPPDATA%\Packages\*Claude*`), Windsurf `.codeium\windsurf\mcp_config.json`, LM Studio `.lmstudio\mcp.json`, Cline og Roo Code i `globalStorage`, VS Code Insiders, `%USERPROFILE%\.claude.json`, `.cursor\mcp.json`, `%APPDATA%\Code\User\mcp.json`, `.gemini\settings.json`, `.codex\config.toml`, og `.mcp.json`, `.vscode\mcp.json`, `.cursor\mcp.json` i prosjektmapper | Navn, kommando, første argument og vert. Aldri `env`. Kode etter `-enc`/`-c` og alt som ligner en nøkkel vises som «[skjult]». |
+| MCP-servere | `%APPDATA%\Claude\claude_desktop_config.json` (også Store-utgaven under `%LOCALAPPDATA%\Packages\*Claude*`), Windsurf `.codeium\windsurf\mcp_config.json`, LM Studio `.lmstudio\mcp.json`, Cline og Roo Code i `globalStorage`, VS Code Insiders, `%USERPROFILE%\.claude.json`, `.cursor\mcp.json`, `%APPDATA%\Code\User\mcp.json`, `.gemini\settings.json`, `.codex\config.toml`, Visual Studio `%USERPROFILE%\.mcp.json`, Zed `%APPDATA%\Zed\settings.json` (`context_servers`), Continue `.continue\config.json`, og `.mcp.json`, `.vscode\mcp.json`, `.cursor\mcp.json` i prosjektmapper | Navn, kommando, første argument og vert. Aldri `env`. Kode etter `-enc`/`-c` og alt som ligner en nøkkel vises som «[skjult]». Tilgangskart: hva hver server kan nå (filer, skall, nettleser, nett, database, e-post, sky …), tolket fra navn og kommando. |
 | «Godkjenn alt» | `.claude\settings*.json`, `.codex\config.toml`, VS Code og Cursor `settings.json` | Bare `permissions.defaultMode`, `permissions.allow`, `approval_policy`, `sandbox_mode`, `chat.tools.autoApprove` |
 | Lokale AI-servere | `%LOCALAPPDATA%\Ollama\server*.log`, `%USERPROFILE%\.lmstudio\server-logs` | Klientadresse, tid og endepunkt per linje. Ikke forespørslene. |
 | Agentøkter | `.claude\projects\*.jsonl`, `.codex\sessions\rollout-*.jsonl`, `.gemini\tmp`, VS Code `chatSessions` | Tidsstempler, antall meldinger fra mennesket og treff per kategori. Teksten beholdes aldri. Maks 500 filer per program og 20 sekunder totalt. Av med `--uten-agentlogger`. |
@@ -179,11 +184,15 @@ fil»), fordi endringstider kan forfalskes.
 | MCP som starter selv, uttak | `.claude\settings*.json` | `enableAllProjectMcpServers`, `enabledMcpjsonServers`, `WebFetch` i `permissions.allow` |
 | Lenker inn i agentoppsett | Symlinker og junctions i prosjektmapper | Bare målet (FSCTL_GET_REPARSE_POINT). Lenken følges aldri. |
 | Skjulte tegn | `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `.cursor\rules\*.mdc`, `.github\copilot-instructions.md` (maks 1 MB) | Antall usynlige tegn. Teksten beholdes aldri. |
-| Agent-.env | `.gemini\.env` i prosjektmapper | Bare om fila finnes. Åpnes aldri. |
+| Agent-.env | `.gemini\.env` i prosjektmapper | Om fila finnes, og (som alle `.env`-filer) navnene på AI-nøkler som har en verdi. Verdiene leses aldri ut. |
 | Ferdigheter og tillegg | `.claude\skills`, `.claude\plugins`, `.codex\skills`, `.openclaw`, `.clawdbot` og `.claude\skills` i prosjekter (maks 100 filer per ferdighet) | Om teksten har nedlasting og kjøring, lange base64-blokker, passord-zip eller uttakstjenester |
 | Hugging Face og Ollama | `.cache\huggingface\modules\transformers_modules`, `.py` i `hub\models--*\snapshots`, `.ollama\models\manifests` | Mappenavn og tid; om modellkoden importerer nettverks- eller kommandobiblioteker; registernavn |
 | Autostart med farlige flagg | HKCU `Run`/`RunOnce`, Oppstart-mappa, PowerShell-profiler, `.bashrc` | Bare agent og flagg. Ikke resten av kommandoen. |
 | Lokale klienter | TCP-tabellen: forbindelser til 127.0.0.1:11434 og :1234 | Program og port |
+| Nettleserbroer | `NativeMessagingHosts` for Chrome, Edge, Brave, Chromium og Firefox (HKCU og HKLM) og manifestet nøkkelen peker på | `name`, `description`, `path`, `allowed_origins`. Programmet startes aldri. |
+| Tvungne utvidelser | `SOFTWARE\Policies\{Google\Chrome,Microsoft\Edge,BraveSoftware\Brave}\ExtensionInstallForcelist` | Bare utvidelses-ID-ene |
+| Nettapper | `.lnk` i Start-menyen (maks 64 KB) | Om snarveien starter `*_proxy.exe --app-id`, og navnet |
+| Electron-apper | `resources\app.asar` i leverandørmappene | Innholdslista øverst i fila og `package.json`: navn på AI-biblioteker. Koden leses ikke. |
 | Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
 | Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |
 | npx-cachen | `%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\*mcp*` (maks 200 filer, 20 s) | Antall skjulte tegn og `<IMPORTANT>`-blokker |

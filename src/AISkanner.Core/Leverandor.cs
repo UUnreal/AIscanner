@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -56,6 +57,55 @@ public sealed partial class Skanner
         public readonly List<(string Sti, long Lengde, string Format, DateTime Opprettet, DateTime Endret)> Filer = new();
         public readonly SortedSet<string> Motorer = new();
         public readonly List<string> MotorFiler = new();
+        public readonly SortedSet<string> AiPakker = new(StringComparer.OrdinalIgnoreCase);
+        public readonly List<string> AsarFiler = new();
+    }
+
+    /// <summary>
+    /// Electron-apper pakker koden i resources\app.asar. Bare innholdslista (JSON øverst i fila) og package.json leses:
+    /// navnene på node_modules og avhengighetene. Koden leses ikke.
+    /// </summary>
+    internal static (SortedSet<string> Pakker, bool Agent)? AsarPakker(string sti)
+    {
+        try
+        {
+            using var fs = Admintilgang.AapneLes(sti);
+            var hode = new byte[16];
+            if (fs.Read(hode, 0, 16) != 16 || BitConverter.ToUInt32(hode, 0) != 4) return null;
+            uint pickle = BitConverter.ToUInt32(hode, 4), lengde = BitConverter.ToUInt32(hode, 12);
+            if (lengde == 0 || lengde > 32 * 1024 * 1024 || lengde > pickle) return null;
+            var json = new byte[lengde];
+            int n = 0, r;
+            while (n < json.Length && (r = fs.Read(json, n, json.Length - n)) > 0) n += r;
+            using var doc = JsonDocument.Parse(new ReadOnlyMemory<byte>(json, 0, n));
+            var navn = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (doc.RootElement.TryGetProperty("files", out var filer))
+            {
+                if (filer.TryGetProperty("node_modules", out var nm) && nm.TryGetProperty("files", out var moduler))
+                    foreach (var m in moduler.EnumerateObject())
+                        if (m.Name.StartsWith("@") && m.Value.TryGetProperty("files", out var under))
+                            foreach (var u in under.EnumerateObject()) navn.Add($"{m.Name}/{u.Name}");
+                        else navn.Add(m.Name);
+                // package.json: avhengighetene, også de som er pakket ut ved siden av (app.asar.unpacked)
+                if (filer.TryGetProperty("package.json", out var pj) && pj.TryGetProperty("size", out var st) && st.TryGetInt32(out var størrelse)
+                    && størrelse is > 0 and < 1024 * 1024 && pj.TryGetProperty("offset", out var off) && long.TryParse(off.GetString(), out var forskyvning))
+                {
+                    fs.Position = 8 + pickle + forskyvning;
+                    var b = new byte[størrelse];
+                    n = 0;
+                    while (n < b.Length && (r = fs.Read(b, n, b.Length - n)) > 0) n += r;
+                    using var pdoc = JsonDocument.Parse(new ReadOnlyMemory<byte>(b, 0, n), new JsonDocumentOptions { AllowTrailingCommas = true });
+                    foreach (var felt in new[] { "dependencies", "optionalDependencies" })
+                        if (pdoc.RootElement.TryGetProperty(felt, out var avh) && avh.ValueKind == JsonValueKind.Object)
+                            foreach (var a in avh.EnumerateObject()) navn.Add(a.Name);
+                }
+            }
+            var pakker = new SortedSet<string>(navn.Where(NodeAi.ContainsKey), StringComparer.OrdinalIgnoreCase);
+            Tilgangslogg.Tell("Fil", Utfall.Lest, sted: sti, detalj: "app.asar: bare innholdslista og package.json");
+            if (pakker.Count == 0 || pakker.All(p => p is "ai" or "agents")) return null;
+            return (pakker, pakker.Any(p => NodeAi[p]));
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
     /// <summary>Hvor leverandørene legger programmene sine. Brukes også så andre sjekker ikke melder det samme to ganger.</summary>
@@ -127,7 +177,7 @@ public sealed partial class Skanner
         {
             var app = new AppAi { Rot = j.AppRot, Beskyttet = j.Beskyttet };
             LeverandorGaa(j.Mappe, Fullt ? 64 : j.Dybde, app, ff, hopp, frist);
-            if (app.Filer.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) lock (apper) apper[app.Rot] = app;
+            if (app.Filer.Count > 0 || app.AiPakker.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) lock (apper) apper[app.Rot] = app;
         });
 
         // Programmer som kjører nå
@@ -184,6 +234,11 @@ public sealed partial class Skanner
     private void LeverandorFil(FileInfo fil, FileSystemInfo[] naboer, AppAi app, FilFunn ff)
     {
         var ext = fil.Extension;
+        if (fil.Name.Equals("app.asar", StringComparison.OrdinalIgnoreCase))
+        {
+            if (AsarPakker(fil.FullName) is { } asar) lock (app) { foreach (var p in asar.Pakker) app.AiPakker.Add(p); app.AsarFiler.Add(fil.FullName); }
+            return;
+        }
         if (ext.Equals(".dll", StringComparison.OrdinalIgnoreCase))
         {
             foreach (var (m, motor) in Motorer)
@@ -287,7 +342,8 @@ public sealed partial class Skanner
         var firma = utgiver == null ? null : Firma(utgiver);
         var navn = regel?.Navn ?? frø?.Navn
                    ?? (firma != null && !UtenVersjon(produkt).Inneholder(firma) ? $"{UtenVersjon(produkt)} ({firma})" : UtenVersjon(produkt));
-        var hva = frø?.Hva ?? (app.Filer.Count > 0 ? "AI-modeller som kjører lokalt i programmet" : "AI-motor som kan kjøre AI-modeller lokalt");
+        var hva = frø?.Hva ?? (app.Filer.Count > 0 ? "AI-modeller som kjører lokalt i programmet"
+            : app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer) ? "AI-motor som kan kjøre AI-modeller lokalt" : "AI-biblioteker pakket inn i programmet");
         var hvorfor = kjent
             ? $"{Forkort(utgiver!)} har lagt AI inn i programmet: {hva}. Kom med programmet eller en oppdatering, uten at noen ble spurt."
             : "Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.";
@@ -313,6 +369,7 @@ public sealed partial class Skanner
         if (f.Innebygde > 0) deler.Add($"{f.Innebygde} {(f.Innebygde == 1 ? "innebygd modellfil" : "innebygde modellfiler")}{(kopier == 1 ? $" ({Rapport.Storrelse(storrelse)})" : "")}");
         if (kopier > 1) deler.Add($"{kopier} mapper");
         if (app.Motorer.Count > 0) deler.Add($"AI-motor: {string.Join(", ", app.Motorer)}");
+        if (app.AiPakker.Count > 0) deler.Add($"AI-biblioteker: {string.Join(", ", app.AiPakker.Take(4))}{(app.AiPakker.Count > 4 ? " …" : "")}");
         if (lagtInn != null) deler.Add($"lagt inn {Tid(lagtInn)}");
         f.Bruk = string.Join(", ", deler) + (iGang ? ". Kjører nå." : ".");
         if (iGang) f.Merk(Tilstand.KjorerNa);
@@ -323,6 +380,8 @@ public sealed partial class Skanner
             f.Detalj($"Fil: {x.Sti} · {x.Format} · {Rapport.Storrelse(x.Lengde)} · lagt inn {Tid(x.Opprettet)}{(x.Endret.Date != x.Opprettet.Date ? $" · oppdatert {Tid(x.Endret)}" : "")}");
         if (app.Filer.Count > 40) f.Detalj($"Og {app.Filer.Count - 40} modellfiler til i {rot}");
         foreach (var m in app.MotorFiler.Take(8)) f.Detalj($"AI-motor: {m}");
+        foreach (var a in app.AsarFiler.Take(4)) f.Detalj($"app.asar: {a} ({string.Join(", ", app.AiPakker)})");
+        if (app.AiPakker.Any(p => NodeAi.TryGetValue(p, out var ag) && ag)) f.Advarsel("Programmet har med biblioteker for AI-agenter som kan handle på egen hånd.");
         if (frø != null && !frø.Bekreftet) f.Merknad("Navnet kommer fra en liste over kjente mapper som ikke er bekreftet på alle PC-er. Selve funnet er gjort på innholdet.");
         if (!bekreftet && utgiver != null) f.Advarsel($"Programmet sier at det er fra {Forkort(utgiver)}, men det er ikke bekreftet med en gyldig signatur.");
         foreach (var k in kjorer.Where(k => k.StartsWith(rot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))) HuskMappe(k, f);

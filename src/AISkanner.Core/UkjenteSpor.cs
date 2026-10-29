@@ -102,6 +102,9 @@ public sealed partial class Skanner
         LesMcpFil(Utvid(@"%APPDATA%\Code - Insiders\User\mcp.json"), "VS Code Insiders", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.codeium\windsurf\mcp_config.json"), "Windsurf", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.lmstudio\mcp.json"), "LM Studio", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.mcp.json"), "Visual Studio", prosjekt: false);
+        LesMcpFil(Utvid(@"%APPDATA%\Zed\settings.json"), "Zed", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.continue\config.json"), "Continue", prosjekt: false, tillatt: ContinueFil);
         // Utvidelser i VS Code og Cursor med egne MCP-lister (Cline, Roo Code)
         foreach (var editor in new[] { "Code", "Code - Insiders", "Cursor", "Windsurf" })
         {
@@ -115,15 +118,21 @@ public sealed partial class Skanner
         if (LesToml(codex) is { } toml) VurderMcp(codex, "Codex", McpFraToml(toml), prosjekt: false);
     }
 
-    private void LesMcpFil(string sti, string program, bool prosjekt)
+    // Continue kaller oppsettet bare config.json, så det navnet åpnes bare i .continue-mappa
+    private static readonly ISet<string> ContinueFil = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "config.json" };
+
+    private void LesMcpFil(string sti, string program, bool prosjekt, ISet<string>? tillatt = null)
     {
-        using var doc = LesJson(sti, Sporfiler);
+        using var doc = LesJson(sti, tillatt ?? Sporfiler);
         if (doc == null || doc.RootElement.ValueKind != JsonValueKind.Object) return;
         var r = doc.RootElement;
         var servere = new List<McpServer>();
-        // Claude, Cursor, Gemini, .mcp.json: "mcpServers"; VS Code: "servers"
-        foreach (var nokkel in new[] { "mcpServers", "servers" })
+        // Claude, Cursor, Gemini, .mcp.json: "mcpServers"; VS Code: "servers"; Zed: "context_servers"
+        foreach (var nokkel in new[] { "mcpServers", "servers", "context_servers" })
             if (r.TryGetProperty(nokkel, out var s)) servere.AddRange(McpFraJson(s));
+        // Continue (eldre oppsett): "experimental": { "modelContextProtocolServers": [ { "transport": {...} } ] }
+        if (r.TryGetProperty("experimental", out var eks) && eks.ValueKind == JsonValueKind.Object
+            && eks.TryGetProperty("modelContextProtocolServers", out var cs)) servere.AddRange(McpFraJson(cs));
         // .claude.json: også per prosjekt ("projects": { "C:\\sti": { "mcpServers": {...} } })
         if (r.TryGetProperty("projects", out var pr) && pr.ValueKind == JsonValueKind.Object)
             foreach (var p in pr.EnumerateObject())
@@ -134,16 +143,25 @@ public sealed partial class Skanner
 
     private static IEnumerable<McpServer> McpFraJson(JsonElement s)
     {
-        if (s.ValueKind != JsonValueKind.Object) yield break;
-        foreach (var p in s.EnumerateObject())
+        // Objekt med navn som nøkler, eller liste med "name" (Continue)
+        IEnumerable<(string Navn, JsonElement Verdi)> servere = s.ValueKind switch
         {
-            if (p.Value.ValueKind != JsonValueKind.Object) continue;
-            string? Tekst(string n) => p.Value.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+            JsonValueKind.Object => s.EnumerateObject().Select(p => (p.Name, p.Value)),
+            JsonValueKind.Array => s.EnumerateArray().Select((v, i) => (v.ValueKind == JsonValueKind.Object && v.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString()! : $"server {i + 1}", v)),
+            _ => Enumerable.Empty<(string, JsonElement)>(),
+        };
+        foreach (var (navn, rå) in servere)
+        {
+            if (rå.ValueKind != JsonValueKind.Object) continue;
+            // Continue legger kommandoen i "transport", Zed kan ha "command": { "path", "args" }
+            var v = rå.TryGetProperty("transport", out var t) && t.ValueKind == JsonValueKind.Object ? t : rå;
+            if (v.TryGetProperty("command", out var c) && c.ValueKind == JsonValueKind.Object) v = c;
+            string? Tekst(string n) => v.TryGetProperty(n, out var x) && x.ValueKind == JsonValueKind.String ? x.GetString() : null;
             // Bare kommando og argumenter. "env" (der nøklene ligger) leses aldri.
-            var args = p.Value.TryGetProperty("args", out var a) && a.ValueKind == JsonValueKind.Array
+            var args = v.TryGetProperty("args", out var a) && a.ValueKind == JsonValueKind.Array
                 ? string.Join(" ", a.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()).Take(12))
                 : null;
-            yield return new McpServer(p.Name, Tekst("command"), args, Tekst("url") ?? Tekst("serverUrl") ?? Tekst("httpUrl"));
+            yield return new McpServer(navn, Tekst("command") ?? Tekst("path"), args, Tekst("url") ?? Tekst("serverUrl") ?? Tekst("httpUrl"));
         }
     }
 
@@ -201,6 +219,28 @@ public sealed partial class Skanner
         return Path.GetFileName(mappe);
     }
 
+    /// <summary>Hva en MCP-server gir agenten tilgang til, kjent igjen på navn, pakke og adresse. Bare kategorier, ikke innhold.</summary>
+    private static readonly (Regex Monster, string Tilgang)[] McpTilganger =
+    {
+        (new(@"filesystem|\bfiles?\b|\bfs\b|everything", RegexOptions.IgnoreCase), "filer"),
+        (new(@"shell|terminal|command|commander|\bexec|powershell|\bcmd\b|bash|ssh", RegexOptions.IgnoreCase), "kjører kommandoer"),
+        (new(@"puppeteer|playwright|browser|chrome|selenium", RegexOptions.IgnoreCase), "styrer en nettleser"),
+        (new(@"fetch|\bhttp|\bweb\b|search|tavily|\bexa\b|firecrawl|scrap", RegexOptions.IgnoreCase), "henter fra nettet"),
+        (new(@"github|gitlab|bitbucket|\bgit\b", RegexOptions.IgnoreCase), "kode og Git"),
+        (new(@"postgres|mysql|sqlite|mongo|redis|supabase|database|\bsql|snowflake|bigquery", RegexOptions.IgnoreCase), "databaser"),
+        (new(@"gmail|outlook|slack|teams|discord|\bmail|e-?post|telegram|whatsapp", RegexOptions.IgnoreCase), "e-post og chat"),
+        (new(@"\baws\b|azure|\bgcp\b|cloudflare|vercel|kubernetes|kubectl|docker|terraform", RegexOptions.IgnoreCase), "sky og drift"),
+        (new(@"notion|confluence|jira|linear|asana|gdrive|google-?drive|sharepoint|onedrive|atlassian", RegexOptions.IgnoreCase), "dokumenter og saker"),
+        (new(@"stripe|paypal|payment|betaling", RegexOptions.IgnoreCase), "betaling"),
+        (new(@"memory|knowledge", RegexOptions.IgnoreCase), "minne for agenten"),
+    };
+
+    internal static List<string> McpTilgang(McpServer s)
+    {
+        var tekst = $"{s.Navn} {Path.GetFileName(s.Kommando ?? "")} {FørsteArgument(s.Argument)} {s.Url}";
+        return McpTilganger.Where(t => t.Monster.IsMatch(tekst)).Select(t => t.Tilgang).Distinct().ToList();
+    }
+
     private void VurderMcp(string sti, string program, List<McpServer> servere, bool prosjekt)
     {
         // MCP-servere IT har godkjent (navn eller vert på godkjentlista) er ikke ukjente
@@ -212,6 +252,7 @@ public sealed partial class Skanner
         var f = Spor(navn, "AI-agenten har fått verktøy (MCP-servere) som kan lese filer, kjøre kommandoer eller koble seg til tjenester.", null);
         f.Tidspunkt(endret, endret);
         if (prosjekt) f.Advarsel("MCP-oppsett i en prosjektmappe: kan følge med kode fra andre og starte når prosjektet åpnes.");
+        var kart = new Dictionary<string, int>();
         foreach (var s in servere.GroupBy(x => x.Navn).Select(g => g.First()))
         {
             var grunner = new List<string>();
@@ -230,8 +271,11 @@ public sealed partial class Skanner
             if (prosjekt) grunner.Add("ligger i en prosjektmappe");
             if (grunner.Count > 0) f.Advarsel($"MCP-server «{s.Navn}» {grunner[0]}.");
             var hva = s.Url != null ? $"fjern: {vert ?? s.Url}" : Kutt($"{Path.GetFileName(s.Kommando ?? "")} {FørsteArgument(s.Argument)}".Trim(), 90);
-            f.Detalj($"Fil: {sti} · MCP-server «{s.Navn}» · {hva}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
+            var tilgang = McpTilgang(s);
+            foreach (var t in tilgang) kart[t] = kart.TryGetValue(t, out var n) ? n + 1 : 1;
+            f.Detalj($"Fil: {sti} · MCP-server «{s.Navn}» · {hva}{(tilgang.Count > 0 ? $" · tilgang: {string.Join(", ", tilgang)}" : "")}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
         }
+        if (kart.Count > 0) f.ErstattDetalj($"Tilgangskart for {program}:", $"Tilgangskart for {program}: {string.Join(", ", kart.OrderByDescending(x => x.Value).Select(x => $"{x.Key} ({x.Value})"))}");
         f.Bruk = $"{servere.Count} MCP-server{(servere.Count == 1 ? "" : "e")} i {program}.";
         f.Merk(Tilstand.SattOpp);
     }
