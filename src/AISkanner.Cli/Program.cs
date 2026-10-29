@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll | --nettverk] [--en]
+//   AISkanner.Cli [--fullt] [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll | --nettverk] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -50,7 +50,7 @@ if (args.Contains("--kontroll"))
 }
 
 var status = new Progress<string>(t => Console.Error.WriteLine(t));
-var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
+var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), Fullt = args.Contains("--fullt"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status, prosent: args.Contains("--prosent") ? new Progress<int>(p => Console.Error.WriteLine($"  {p} %")) : null);

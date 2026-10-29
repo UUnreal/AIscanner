@@ -123,7 +123,7 @@ public sealed partial class Skanner
         Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) }, j =>
         {
             var app = new AppAi { Rot = j.AppRot, Beskyttet = j.Beskyttet };
-            LeverandorGaa(j.Mappe, j.Dybde, app, ff, hopp, frist);
+            LeverandorGaa(j.Mappe, Fullt ? 64 : j.Dybde, app, ff, hopp, frist);
             if (app.Filer.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) lock (apper) apper[app.Rot] = app;
         });
 
@@ -151,10 +151,11 @@ public sealed partial class Skanner
     {
         if (hopp.Contains(mappe)) return;
         if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "dybdegrensen for leverandørmapper er nådd"); return; }
-        if (frist.Elapsed > TimeSpan.FromSeconds(40))
+        if (frist.Elapsed > Frist(40))
         {
-            Tilgangslogg.EnGang("appdata-40", "Mappe", mappe, Utfall.Tidsgrense, "40 sekunder brukt i AppData; resten ble ikke gått gjennom");
-            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense, detalj: "40 sekunder brukt i AppData");
+            var brukt = Fullt ? "30 minutter" : "40 sekunder";
+            Tilgangslogg.EnGang("appdata-40", "Mappe", mappe, Utfall.Tidsgrense, $"{brukt} brukt i AppData; resten ble ikke gått gjennom");
+            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense, detalj: $"{brukt} brukt i AppData");
             return;
         }
         var navn = Path.GetFileName(mappe);
@@ -164,6 +165,7 @@ public sealed partial class Skanner
         FileSystemInfo[] innhold;
         try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
         Tilgangslogg.TellMappe(mappe, Utfall.Lest, innhold.LongCount(e => e is FileInfo));
+        Interlocked.Increment(ref _mapperLest);
         foreach (var e in innhold)
         {
             FileAttributes a;
@@ -194,6 +196,8 @@ public sealed partial class Skanner
                  && naboer.Any(n => n.Name.Equals(Path.GetFileNameWithoutExtension(fil.Name) + ".xml", StringComparison.OrdinalIgnoreCase))
                  && ErOpenVino(Path.Combine(fil.DirectoryName!, Path.GetFileNameWithoutExtension(fil.Name) + ".xml")))
             format = "OpenVINO";
+        else if (lengde >= 20 * 1024 * 1024 && Fullt)
+            format = ModellFormat.Gjenkjenn(fil.FullName)?.Format;
         else if (lengde >= 20 * 1024 * 1024 && ext.ToLowerInvariant() is not (".zip" or ".7z" or ".rar" or ".cab" or ".iso" or ".mp4" or ".mkv" or ".mov"
                      or ".exe" or ".msi" or ".msix" or ".appx" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png" or ".pak" or ".dat" or ".db" or ".log" or ".edb" or ".etl"))
             format = ModellFormat.Gjenkjenn(fil.FullName)?.Format;

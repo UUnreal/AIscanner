@@ -1205,3 +1205,20 @@ lenke til en annen mappe, følges ikke|link to another folder, not followed
 ~^Fant ikke profilmappa til (.+)\. Søket gjelder (.+)\.$|Could not find the profile folder of $1. The scan covers $2.
 ~^Fant ikke kontoen til (.+)\. Søket gjelder (.+)\.$|Could not find the account of $1. The scan covers $2.
 ~^Kunne ikke finne den innloggede brukeren \((.+)\)\. Søket gjelder (.+)\.$|Could not find the signed-in user ($1). The scan covers $2.
+
+# ---------- 2.21: fullt søk av PC ----------
+30 minutter brukt på disken; resten av mappene ble ikke gått gjennom|30 minutes spent on the disk; the remaining folders were not searched
+30 minutter brukt i AppData; resten ble ikke gått gjennom|30 minutes spent in AppData; the rest was not searched
+30 minutter brukt på disken|30 minutes spent on the disk
+30 minutter brukt i AppData|30 minutes spent in AppData
+versjonskontroll (git), ikke AI|version control (git), not AI
+gås gjennom av sjekken for leverandør-AI|searched by the vendor AI check
+systemmappe uten brukerdata|system folder without user data
+Startes av en planlagt oppgave i Windows.|Started by a scheduled task in Windows.
+Starter når en annen bruker logger inn.|Starts when another user signs in.
+oppgavefilene krever administrator|the task files require administrator
+~^(\d+) oppgavefiler: bare programstien \(Command\), aldri argumentene$|$1 task files: only the program path (Command), never the arguments
+~^Planlagt oppgave: (.+) · starter (.+)$|Scheduled task: $1 · starts $2
+~^Oppstart for annen bruker \((.+)\): (.+)$|Startup for another user ($1): $2
+~^Installert for annen bruker \((.+)\): (.+)$|Installed for another user ($1): $2
+Planlagt oppgave|Scheduled task

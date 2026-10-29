@@ -54,6 +54,7 @@ public sealed partial class Skanner
     {
         _funn.Clear();
         _status = status;
+        Interlocked.Exchange(ref _mapperLest, 0);
         Startet = DateTime.Now;
         Logg = new Tilgangslogg();
         Tilgangslogg.Aktiv = Logg;
@@ -172,6 +173,20 @@ public sealed partial class Skanner
 
     /// <summary>Resultatet vises før nettverkslyttingen er ferdig; lyttingen fortsetter og fullføres med FullforLyttingAsync.</summary>
     public bool LyttIBakgrunnen { get; set; }
+
+    /// <summary>
+    /// Fullt søk av PC: alle brukerprofiler, hele C:\ (unntatt Windows), alle faste og flyttbare disker, uten dybdegrense
+    /// og uten tidsgrense på disken, og filhodet til alle store filer uansett endelse. Samme regler som hurtigsøket.
+    /// Som vanlig bruker hoppes mapper uten tilgang over; Datagrunnlag viser hvilke.
+    /// </summary>
+    public bool Fullt { get; set; }
+
+    /// <summary>Mapper gått gjennom så langt i dette søket (fremdrift for fullt søk).</summary>
+    public long MapperLest => Interlocked.Read(ref _mapperLest);
+    private long _mapperLest;
+
+    private int Dybde(int vanlig) => Fullt ? 64 : vanlig;
+    private TimeSpan Frist(int sekunder) => Fullt ? TimeSpan.FromMinutes(30) : TimeSpan.FromSeconds(sekunder);
     /// <summary>Sant mens lyttevinduet fortsatt går etter at resultatet er vist.</summary>
     public bool LytterNa { get; private set; }
     private (Lyttevindu Lytting, Datamaling? Maling, double Minst)? _bakgrunn;
@@ -334,6 +349,66 @@ public sealed partial class Skanner
     }
 
     // ---------- 3. Tjenester, oppstart og planlagte oppgaver ----------
+    /// <summary>
+    /// Fullt søk: programmet hver planlagt oppgave starter (System32\Tasks, krever som regel admin).
+    /// Bare &lt;Command&gt; (exe-stien) brukes; argumentene leses aldri ut av fila.
+    /// </summary>
+    private void OppgaveFiler()
+    {
+        var rot = Utvid(@"%SystemRoot%\System32\Tasks");
+        if (!Directory.Exists(rot)) return;
+        int lest = 0;
+        foreach (var fil in Plattform.Filer(rot, "*", 8).Select(f => f.FullName).Where(f => !f.Contains("\\Microsoft\\Windows\\")))
+        {
+            string tekst;
+            try { tekst = File.ReadAllText(fil); lest++; }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", fil, e); continue; }
+            foreach (Match m in Regex.Matches(tekst, @"<Command>([^<]{1,400})</Command>"))
+            {
+                var exe = Environment.ExpandEnvironmentVariables(WebUtility.HtmlDecode(m.Groups[1].Value).Trim().Trim('"'));
+                var oppgave = fil.Substring(rot.Length).TrimStart('\\');
+                var r = FinnRegel($"{oppgave} {exe}");
+                if (r != null) FraRegel(r, "Planlagt oppgave", $"Planlagt oppgave: {oppgave} · starter {exe}").Merknad("Startes av en planlagt oppgave i Windows.");
+            }
+        }
+        Tilgangslogg.Logg("Mappe", rot, lest > 0 ? Utfall.Lest : Utfall.Nektet, lest > 0 ? $"{lest} oppgavefiler: bare programstien (Command), aldri argumentene" : "oppgavefilene krever administrator");
+    }
+
+    /// <summary>Fullt søk: Run/RunOnce og avinstallering for andre brukere som er logget inn (registeret deres er lastet).</summary>
+    private void AndreBrukeresOppstart()
+    {
+        foreach (var sid in Registry.Users.GetSubKeyNames())
+        {
+            if (!sid.StartsWith("S-1-5-21-", StringComparison.Ordinal) && !sid.StartsWith("S-1-12-1-", StringComparison.Ordinal)) continue;
+            if (sid.EndsWith("_Classes", StringComparison.OrdinalIgnoreCase) || Bruker.Hkcu.Name.EndsWith(sid, StringComparison.OrdinalIgnoreCase)) continue;
+            using var bruker = Registry.Users.OpenSubKey(sid);
+            if (bruker == null || (Bruker.Hkcu == Registry.CurrentUser && SammeSomProsessen(sid))) continue;
+            foreach (var sti in new[] { @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" })
+            {
+                using var k = Tilgangslogg.Nokkel(bruker, sti);
+                foreach (var verdi in k?.GetValueNames() ?? Array.Empty<string>())
+                {
+                    var r = FinnRegel($"{verdi} {k!.GetValue(verdi)}");
+                    if (r != null) FraRegel(r, "Starter med Windows", $"Oppstart for annen bruker ({sid}): {verdi}").Merknad("Starter når en annen bruker logger inn.");
+                }
+            }
+            using var avinst = Tilgangslogg.Nokkel(bruker, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+            foreach (var under in avinst?.GetSubKeyNames() ?? Array.Empty<string>())
+            {
+                using var u = avinst!.OpenSubKey(under);
+                var navn = u?.GetValue("DisplayName") as string;
+                var r = FinnRegel($"{navn} {u?.GetValue("InstallLocation")}");
+                if (r != null) FraRegel(r, "Installert", $"Installert for annen bruker ({sid}): {navn ?? under}");
+            }
+        }
+    }
+
+    private static bool SammeSomProsessen(string sid)
+    {
+        try { return string.Equals(System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value, sid, StringComparison.OrdinalIgnoreCase); }
+        catch { return false; }
+    }
+
     private void Oppstart()
     {
         if (Plattform.ErWindows)
@@ -372,8 +447,13 @@ public sealed partial class Skanner
             }
 
             // Planlagte oppgaver: bare navnene fra registeret (oppgavefilene krever ofte admin)
-            using var tre = Tilgangslogg.Nokkel(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree");
-            if (tre != null) Oppgaver(tre, "");
+            using (var tre = Tilgangslogg.Nokkel(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree"))
+                if (tre != null) Oppgaver(tre, "");
+            if (Fullt)
+            {
+                OppgaveFiler();
+                AndreBrukeresOppstart();
+            }
         }
 
         foreach (var mappe in new[] { @"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup", @"%ProgramData%\Microsoft\Windows\Start Menu\Programs\StartUp" })

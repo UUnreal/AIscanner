@@ -116,6 +116,31 @@ public sealed partial class Skanner
     };
     private static readonly string[] IkkeAiTjenester = { "lf3-cdn-tos.bytescm.com", "portal.office.com" };
 
+    /// <summary>Fullt søk: en GGUF-modell omdøpt til .mp4, og en i en punktum-mappe, skal bare finnes med Fullt.</summary>
+    private static (int Ok, int Alle) FulltKontroll(Regelsett regler, StringBuilder sb, string rot)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Fullt søk: {hva}"); }
+        var mappe = Path.Combine(rot, "fullt");
+        var skjult = Path.Combine(mappe, ".privat");
+        Directory.CreateDirectory(skjult);
+        var hode = new byte[64];
+        Encoding.ASCII.GetBytes("GGUF").CopyTo(hode, 0);
+        BitConverter.GetBytes(1u).CopyTo(hode, 4);
+        File.WriteAllBytes(Path.Combine(mappe, "ferie.mp4"), hode);
+        File.WriteAllBytes(Path.Combine(skjult, "vekter.dat"), hode);
+        int Modeller(bool fullt)
+        {
+            var s = new Skanner(regler) { Fullt = fullt };
+            var ff = new FilFunn();
+            s.Gaa(mappe, 4, ff, new HashSet<string>(), 0, Stopwatch.StartNew());
+            return ff.Modeller.Count;
+        }
+        Sjekk(Modeller(false) == 0, "hurtigsøket åpner .mp4-filer og punktum-mapper (skal hoppe over dem)");
+        Sjekk(Modeller(true) == 2, "fullt søk fant ikke modellen omdøpt til .mp4 og modellen i punktum-mappa");
+        return (ok, alle);
+    }
+
     /// <summary>Kontrollen av falske treff: det som ikke er AI, eller bare er AI bygget inn av en leverandør, skal ikke telles som AI-modeller.</summary>
     private static (int Ok, int Alle) FalskeTreffKontroll(Skanner s, StringBuilder sb, string rot)
     {
@@ -259,7 +284,10 @@ public sealed partial class Skanner
             var (falskOk, falskAlle) = FalskeTreffKontroll(s, sb, rot);
             ok += falskOk;
             sb.AppendLine($"{(falskOk == falskAlle ? "OK  " : "FEIL")}  Falske treff: {falskOk} av {falskAlle} riktige (presentasjonssider, Microsoft 365-startsiden, skytjenester, DirectML, innebygde modeller i tellingen)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle;
+            var (fulltOk, fulltAlle) = FulltKontroll(regler, sb, rot);
+            ok += fulltOk;
+            sb.AppendLine($"{(fulltOk == fulltAlle ? "OK  " : "FEIL")}  Fullt søk: {fulltOk} av {fulltAlle} riktige (modell omdøpt til .mp4 finnes bare i fullt søk, punktum-mapper gås gjennom)");
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

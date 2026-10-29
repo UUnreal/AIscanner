@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.20.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.21.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -51,6 +51,12 @@ Alt er bare lesing. Ingenting endres.
 ### Filer på disken
 
 - **Brukerprofilen og andre faste disker** (ikke Windows, Program Files, ProgramData eller AppData). Stopper etter 45 sekunder.
+- **Fullt søk av PC** (valg på startskjermen, CLI `--fullt`): i tillegg alle brukerprofiler i `C:\Users`, alt i roten av
+  C:\ (unntatt Windows, papirkurv og systemmapper), alle faste og flyttbare disker (USB, SD), uten dybdegrense og med
+  30 minutters tidsgrense. Filhodet sjekkes på alle filer over 20 MB uansett endelse. Programstien (`<Command>`) i
+  `System32\Tasks` leses; argumentene brukes aldri. Run/RunOnce og avinstallering leses for andre innloggede brukere
+  (`HKEY_USERS\<SID>`). Nettverksdisker tas aldri med. Uten admin hoppes mapper uten tilgang over og vises i Datagrunnlag.
+- **Flyttede modellmapper:** `OLLAMA_MODELS`, `HF_HOME`, `HF_HUB_CACHE` og `TRANSFORMERS_CACHE` følges i begge søk.
   - Filer over 20 MB: de første 64 bytene, for å kjenne igjen modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras).
   - GGUF og safetensors: også metadata-hodet (navn, arkitektur, antall parametre). Selve modellvektene leses ikke.
   - Modell-ID: fra filnavnet når Ollama eller Hugging Face har lagret fila under SHA-256. Ellers et fingeravtrykk av

@@ -26,6 +26,7 @@ public sealed class Hovedvindu : Form
     private bool _engelsk = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("nb" or "nn" or "no");
     // Revisjonslogg: av til brukeren velger Ja på startskjermen. Da skrives én ny fil per søk, aldri over en gammel.
     private bool _revisjon;
+    private bool _fullt;
     private string? _revisjonSti;
     private bool _vist;
     private double _sekunder;
@@ -40,6 +41,7 @@ public sealed class Hovedvindu : Form
         _args = args;
         // Valgene følger med når programmet startes på nytt som administrator
         _revisjon = args.Contains("--revisjon");
+        _fullt = args.Contains("--fullt");
         if (args.Contains("--en")) _engelsk = true;
         else if (args.Contains("--no")) _engelsk = false;
         Text = "AI-skanner";
@@ -96,7 +98,7 @@ public sealed class Hovedvindu : Form
             Program.OppstartMs ??= Program.FraStart();
             // Vis vinduet når siden har fått tegne første bilde
             _ = Task.Delay(80).ContinueWith(_ => { try { BeginInvoke(new Action(Vis)); } catch { } });
-            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon, oppstartMs = Program.OppstartMs });
+            Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon, fullt = _fullt, oppstartMs = Program.OppstartMs });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
 
@@ -172,6 +174,7 @@ public sealed class Hovedvindu : Form
         var m = doc.RootElement;
         var type = m.TryGetProperty("type", out var t) ? t.GetString() : null;
         if (type is "sok" or "admin" && m.TryGetProperty("revisjon", out var rv)) _revisjon = rv.ValueKind == JsonValueKind.True;
+        if (type is "sok" or "admin" && m.TryGetProperty("fullt", out var fu)) _fullt = fu.ValueKind == JsonValueKind.True;
         if (type == "sok" && !_soker)
         {
             // Historikk og sikkerhetshull er alltid med. Bare IT kan slå dem av med --uten-historikk / --uten-nvd.
@@ -216,12 +219,18 @@ public sealed class Hovedvindu : Form
         try
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
-            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args), LyttIBakgrunnen = true };
+            _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args), LyttIBakgrunnen = true, Fullt = _fullt };
             // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
             // Progress<int> sender tilbake til UI-tråden; søkesirkelen viser 0–100 % fra faktisk fremdrift
             var prosent = new Progress<int>(p => Send(new { type = "prosent", p }));
+            // Fullt søk tar minutter: siden får vite hvor mange mapper som er gått gjennom og hvor lang tid som er brukt
+            var aktiv = _skanner;
+            using var fremdrift = new System.Windows.Forms.Timer { Interval = 1000 };
+            fremdrift.Tick += (_, _) => Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt });
+            fremdrift.Start();
             _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
+            fremdrift.Stop();
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
             _vist = true;
@@ -301,11 +310,12 @@ public sealed class Hovedvindu : Form
             info = new
             {
                 sekunder = _sekunder,
-                dataMalt = _skanner.DataMalt,
+                dataMalt = _skanner!.DataMalt,
                 maleSekunder = _skanner.MaleSekunder,
                 sendtTekst = T(Rapport.Storrelse(sendt)),
                 nvd = _nvdStatus,
                 admin = Nettverk.ErAdmin(),
+                fullt = _skanner.Fullt,
                 bruker = Bruker.Navn,
                 kjortAv = Bruker.KjortAv,
                 brukerFeil = Bruker.Feil == null ? null : T(Bruker.Feil),
@@ -379,7 +389,7 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_engelsk ? " --en" : " --no"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_fullt ? " --fullt" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",

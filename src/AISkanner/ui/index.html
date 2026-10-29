@@ -61,6 +61,14 @@
   .sokKnapp small { display: block; font-size: 13px; font-weight: 500; opacity: .9; margin-top: 4px; }
   .sokKnapp:hover { transform: scale(1.04); }
   .sokKnapp:active, .ring2:active { transform: scale(.97); }
+  /* Hurtigsøk eller fullt søk av PC: to like store valg, det valgte er hvitt og tydelig */
+  .omfang { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; background: var(--fyll); border-radius: 16px; padding: 3px; max-width: 520px; width: 100%; margin-top: 14px; }
+  .omfang button { border: 0; background: none; color: var(--dempet); border-radius: 13px; padding: 9px 14px; cursor: pointer; text-align: left; font: inherit; font-size: 12.5px; line-height: 1.35; }
+  .omfang button b { display: block; color: var(--tekst); font-size: 15px; font-weight: 650; margin-bottom: 1px; }
+  .omfang button:hover { background: var(--fyll); }
+  .omfang button.paa { background: var(--kort); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .omfang button.paa b { color: var(--bla); }
+  .fremdrift { color: var(--dempet); font-size: 14px; font-variant-numeric: tabular-nums; min-height: 20px; }
   .modus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; text-align: left; margin-bottom: 14px; }
   .modus div { background: var(--kort); border-radius: 14px; padding: 10px 14px; box-shadow: var(--skygge); font-size: 13px; color: var(--dempet); line-height: 1.4; }
   .modus b { display: block; color: var(--tekst); font-size: 14px; margin-bottom: 2px; }
@@ -81,8 +89,16 @@
   @media (max-height: 820px) {
     #start { gap: 6px; }
     .storTittel { font-size: 30px; }
-    .valg { width: 230px; height: 230px; margin: 14px 0 12px; }
-    .inkludert { margin-top: 12px; }
+    .valg { width: 210px; height: 210px; margin: 10px 0 8px; }
+    .sokKnapp { width: 116px; height: 116px; margin: -58px 0 0 -58px; font-size: 23px; }
+    .sokKnapp small { font-size: 12px; margin-top: 2px; }
+    .ring2 .rtekst { top: 17px; font-size: 13.5px; }
+    .ring2 .rliten { bottom: 20px; font-size: 11.5px; }
+    .inkludert { margin-top: 8px; }
+    .omfang { margin-top: 8px; }
+    .omfang button { padding: 7px 12px; }
+    .modus { margin-bottom: 8px; }
+    .revisjon { margin-bottom: 8px; }
   }
   .bryter { display: inline-flex; background: var(--fyll); border-radius: 9px; padding: 2px; flex: none; }
   .bryter button { border: 0; background: none; color: var(--dempet); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 7px; cursor: pointer; }
@@ -366,6 +382,10 @@
 <section id="start" class="side aktiv">
   <div class="storTittel" data-en="Is there AI on this PC?">Er det AI på denne PC-en?</div>
   <div class="undertittel" data-en="Find AI programs, AI in the browser and AI that sends data in secret.">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
+  <div class="omfang" id="omfang" role="group" aria-label="Hvor mye som søkes / How much to scan">
+    <button data-o="hurtig" class="paa" data-en="&lt;b&gt;Quick scan&lt;/b&gt;Seconds · your profile and the known AI places"><b>Hurtigsøk</b>Sekunder · din profil og de kjente AI-stedene</button>
+    <button data-o="fullt" data-en="&lt;b&gt;Full scan of PC&lt;/b&gt;Minutes · all users, all disks and USB, no depth limit"><b>Fullt søk av PC</b>Minutter · alle brukere, alle disker og USB, uten dybdegrense</button>
+  </div>
   <div class="valg" id="valg">
     <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst" id="ringTekst">SØK SOM ADMIN</span><span class="rliten" data-en="Requires approval">Krever godkjenning</span></button>
     <button class="sokKnapp" id="sok" title="Søk som vanlig bruker: mindre data">Søk<small>som bruker</small></button>
@@ -391,6 +411,7 @@
 <section id="soker" class="side">
   <div class="ringBoks"><svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" id="ringBue" cx="50" cy="50" r="44"/></svg><div class="prosent" id="ringProsent" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</div></div>
   <div class="storTittel" style="font-size:26px" data-en="Scanning for AI…">Søker etter AI…</div>
+  <div class="fremdrift" id="fremdrift"></div>
 </section>
 
 <section id="resultat" class="side">
@@ -501,6 +522,7 @@ function tegnBunn() {
   const deler = [];
   if (oppstartMs != null) deler.push(`${L("Oppstart", "Startup")} ${(oppstartMs / 1000).toFixed(1).replace(".", L(",", "."))} s`);
   if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push(info.fullt ? L("Fullt søk av PC", "Full scan of PC") : L("Hurtigsøk", "Quick scan"));
   deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
   // Godkjent med en annen konto (IT): søket gjelder brukeren som er logget inn, ikke IT-kontoen
   if (info.kjortAv) deler.push(L(`Søkt i profilen til ${info.bruker} (godkjent av ${info.kjortAv})`, `Scanned the profile of ${info.bruker} (approved by ${info.kjortAv})`));
@@ -1096,6 +1118,10 @@ function motta(m) {
   else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "prosessinfo") { nettProsess[m.pid] = m; if (nettApen) tegnNett(); }
   else if (m.type === "prosent") settProsent(m.p);
+  else if (m.type === "fremdrift" && m.fullt) {
+    const min = Math.floor(m.sekunder / 60), sek = m.sekunder % 60;
+    $("fremdrift").textContent = `${L("Fullt søk", "Full scan")} · ${tall(m.mapper)} ${L("mapper", "folders")} · ${min ? `${min} min ` : ""}${sek} s`;
+  }
   else if (m.type === "lytter") { lytterIgjen = m.igjen; if (info && info.lytter) tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
   else if (m.type === "feil") { vis("start"); $("feil").textContent = m.tekst; }
@@ -1105,13 +1131,14 @@ function motta(m) {
     if (m.sprak) { språk = m.sprak; settSpråk(språk, true); }
     if (erAdmin) sisteValg = "admin";
     if (m.revisjon != null) revisjon = !!m.revisjon;
+    if (m.fullt != null) fullt = !!m.fullt;
     if (m.oppstartMs != null) oppstartMs = m.oppstartMs;
     tegnModus();
   }
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
 
-let erAdmin = false, sisteValg = "sok", revisjon = false, oppstartMs = null, lytterIgjen = 0;
+let erAdmin = false, sisteValg = "sok", revisjon = false, oppstartMs = null, lytterIgjen = 0, fullt = false;
 function tegnModus() {
   $("valg").classList.toggle("erAdmin", erAdmin);
   $("ringTekst").textContent = erAdmin ? L("ADMIN ER PÅ", "ADMIN IS ON") : L("SØK SOM ADMIN", "SCAN AS ADMIN");
@@ -1119,6 +1146,7 @@ function tegnModus() {
   $("sok").title = L("Søk som vanlig bruker: mindre data", "Scan as a normal user: less data");
   $("sokAdmin").title = L("Søk som administrator: mer data", "Scan as administrator: more data");
   document.querySelectorAll("#revisjon button").forEach(b => b.classList.toggle("valgt", (b.dataset.r === "ja") === revisjon));
+  document.querySelectorAll("#omfang button").forEach(b => { const paa = (b.dataset.o === "fullt") === fullt; b.classList.toggle("paa", paa); b.setAttribute("aria-pressed", paa); });
   $("revTekst").textContent = revisjon
     ? L("Lagres i Dokumenter\\AI-skanner", "Saved in Documents\\AI-skanner")
     : L("Ingenting lagres", "Nothing is saved");
@@ -1127,6 +1155,7 @@ function tegnModus() {
     : L("Nei: ingenting lagres på PC-en.", "No: nothing is saved on the PC.");
 }
 document.querySelectorAll("#revisjon button").forEach(b => b.onclick = () => { revisjon = b.dataset.r === "ja"; tegnModus(); });
+document.querySelectorAll("#omfang button").forEach(b => b.onclick = () => { fullt = b.dataset.o === "fullt"; tegnModus(); });
 
 // Bytter all tekst med en gang, også et resultat som vises. Programmet sender funnene på nytt på riktig språk (uten nytt søk).
 function settSpråk(l, fraProgram) {
@@ -1153,9 +1182,9 @@ function settProsent(p) {
   $("ringProsent").textContent = p + " %";
   $("ringProsent").setAttribute("aria-valuenow", p);
 }
-function start() { $("feil").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon }); }
+function start() { $("feil").textContent = ""; $("fremdrift").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon, fullt }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
-$("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon }); } };
+$("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon, fullt }); } };
 $("igjen").onclick = start;
 settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });

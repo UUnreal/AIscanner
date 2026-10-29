@@ -29,6 +29,28 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.21.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 140 av 140.
+
+### Lagt til
+- **Fullt søk av PC.** Nytt valg på startskjermen over søkeknappen: «Hurtigsøk» (sekunder, din profil og de kjente
+  AI-stedene) eller «Fullt søk av PC» (minutter). Fullt søk bruker de samme reglene, men går gjennom:
+  - alle brukerprofiler i `C:\Users`, også AppData og mapper som starter med punktum (unntatt `.git`, `.svn`, `.hg`);
+  - alt i roten av C:\ (unntatt Windows, papirkurv og systemmapper; Program Files og ProgramData har egen sjekk);
+  - alle faste og flyttbare disker (USB, SD-kort), uten dybdegrense. Nettverksdisker tas ikke med;
+  - filhodet til alle filer over 20 MB uansett endelse, så en modell omdøpt til .mp4, .zip eller .png blir funnet;
+  - programstien i planlagte oppgaver (`System32\Tasks`, bare `<Command>`, aldri argumentene; krever som regel admin);
+  - Run/RunOnce og installerte programmer for andre brukere som er logget inn.
+  Tidsgrensen på disken er 30 minutter i stedet for 45 sekunder. Mens søket går, viser skjermen antall mapper og tid
+  brukt. Bunnlinjen sier «Fullt søk av PC» eller «Hurtigsøk». Som vanlig bruker hoppes mapper uten tilgang over, og
+  Datagrunnlag viser hvilke. Valget følger med når programmet startes på nytt som admin (`--fullt`). CLI: `--fullt`.
+- Begge søkene følger modellmapper flyttet med `OLLAMA_MODELS`, `HF_HOME`, `HF_HUB_CACHE` og `TRANSFORMERS_CACHE`.
+- `--kontroll` har en ny linje for fullt søk: en modell omdøpt til .mp4 og en i en punktum-mappe finnes bare med fullt søk.
+
+### Rettet
+- Siste nullable-advarsel i CI (`Hovedvindu.cs`).
+
 ## [2.20.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 138 av 138.

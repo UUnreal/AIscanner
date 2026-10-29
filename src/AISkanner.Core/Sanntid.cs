@@ -276,8 +276,14 @@ public sealed partial class Skanner
             // AppData gås gjennom av LeverandorAi, som også finner hvem som har lagt AI-en der
             Utvid(@"%LOCALAPPDATA%"), Utvid(@"%APPDATA%"), Utvid(@"%USERPROFILE%\AppData\LocalLow"),
         };
-        var rotter = new List<(string Sti, int Dybde)> { (Utvid("%USERPROFILE%"), 10) };
-        if (Plattform.ErWindows)
+        var rotter = new List<(string Sti, int Dybde)> { (Utvid("%USERPROFILE%"), Dybde(10)) };
+        // Modellmapper flyttet med miljøvariabler (vanlig når C: blir full) følges, også utenfor profilen
+        foreach (var v in new[] { "OLLAMA_MODELS", "HF_HOME", "HF_HUB_CACHE", "TRANSFORMERS_CACHE" })
+            if (Environment.GetEnvironmentVariable(v) is { Length: > 0 } mv && Directory.Exists(mv)
+                && !rotter.Any(r => mv.StartsWith(r.Sti.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+                rotter.Add((mv, Dybde(10)));
+        if (Plattform.ErWindows && Fullt) rotter.AddRange(FulltRotter());
+        else if (Plattform.ErWindows)
         {
             foreach (var d in DriveInfo.GetDrives())
             {
@@ -343,16 +349,18 @@ public sealed partial class Skanner
     {
         if (hopp.Contains(mappe)) return;
         if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "dybdegrensen for gjennomgangen er nådd"); return; }
-        if (frist.Elapsed > TimeSpan.FromSeconds(45))
+        if (frist.Elapsed > Frist(45))
         {
-            Tilgangslogg.EnGang("disk-45", "Mappe", mappe, Utfall.Tidsgrense, "45 sekunder brukt på disken; resten av mappene ble ikke gått gjennom");
-            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense, detalj: "45 sekunder brukt på disken");
+            var brukt = Fullt ? "30 minutter" : "45 sekunder";
+            Tilgangslogg.EnGang("disk-45", "Mappe", mappe, Utfall.Tidsgrense, $"{brukt} brukt på disken; resten av mappene ble ikke gått gjennom");
+            Tilgangslogg.TellMappe(mappe, Utfall.Tidsgrense, detalj: $"{brukt} brukt på disken");
             return;
         }
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
-        if (navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
+        if (Fullt && navn is ".git" or ".svn" or ".hg") { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "versjonskontroll (git), ikke AI"); return; }
+        if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
         if (navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
@@ -360,6 +368,7 @@ public sealed partial class Skanner
         long filer = 0, bytes = 0, sky = 0;
         try
         {
+            Interlocked.Increment(ref _mapperLest);
             foreach (var e in innhold)
             {
                 FileAttributes a;
@@ -378,6 +387,46 @@ public sealed partial class Skanner
             if (sky > 0) Tilgangslogg.BareKart("Mappe", mappe, Utfall.HoppetOver, $"{sky} skyfiler (OneDrive) som ikke er lastet ned, åpnes aldri");
         }
         catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
+    }
+
+    /// <summary>
+    /// Fullt søk: alle andre brukerprofiler, alt i roten av C:\ (unntatt Windows, Program Files, ProgramData og papirkurv,
+    /// som har egne sjekker eller ikke har AI), og alle faste og flyttbare disker. Nettverksdisker tas ikke med.
+    /// </summary>
+    private List<(string Sti, int Dybde)> FulltRotter()
+    {
+        var liste = new List<(string, int)>();
+        var hjem = Utvid("%USERPROFILE%");
+        var brukere = Path.GetDirectoryName(hjem.TrimEnd('\\'));
+        if (brukere != null)
+            foreach (var p in Mapper(brukere))
+            {
+                if (p.Equals(hjem, StringComparison.OrdinalIgnoreCase) || Lenke(p)) continue;
+                liste.Add((p, 64));
+            }
+        foreach (var d in DriveInfo.GetDrives())
+        {
+            try
+            {
+                if (d.DriveType is not (DriveType.Fixed or DriveType.Removable) || !d.IsReady) continue;
+                var rot = d.RootDirectory.FullName;
+                if (!rot.StartsWith(Path.GetPathRoot(Utvid("%SystemRoot%")) ?? "C:\\", StringComparison.OrdinalIgnoreCase)) { liste.Add((rot, 64)); continue; }
+                foreach (var m in Mapper(rot))
+                {
+                    var n = Path.GetFileName(m);
+                    if (brukere != null && m.Equals(brukere, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (n is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData" or "Recovery" or "$WinREAgent" or "Config.Msi")
+                    {
+                        Tilgangslogg.Logg("Mappe", m, Utfall.HoppetOver, n is "Program Files" or "Program Files (x86)" or "ProgramData" ? "gås gjennom av sjekken for leverandør-AI" : "systemmappe uten brukerdata");
+                        continue;
+                    }
+                    if (Lenke(m)) continue;
+                    liste.Add((m, 64));
+                }
+            }
+            catch { }
+        }
+        return liste;
     }
 
     /// <summary>
@@ -434,7 +483,8 @@ public sealed partial class Skanner
         try { lengde = fil.Length; } catch { return; }
         bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
         if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff); return; }
-        if (ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
+        // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
+        if (!Fullt && ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
         var modell = ModellFormat.Gjenkjenn(fil.FullName);
         if (modell != null) lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell));
     }
