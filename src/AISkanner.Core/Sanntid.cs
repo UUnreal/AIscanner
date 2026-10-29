@@ -307,19 +307,8 @@ public sealed partial class Skanner
 
         // Modeller
         var modeller = ff.Modeller.OrderByDescending(m => m.Lengde).ToList();
-        foreach (var (sti, lengde, m) in modeller.Take(15)) LeggTilModell(sti, lengde, m);
-        if (modeller.Count > 15)
-        {
-            var resten = modeller.Skip(15).ToList();
-            var f = LeggTil($"Flere AI-modeller ({resten.Count})", "Lokal AI", Risiko.Rod, "Flere AI-modeller ligger lagret på PC-en.", "Disk", null);
-            f.Bruk = $"Til sammen {Gb(resten.Sum(x => x.Lengde))}.";
-            f.LeggTilModeller(resten.Count);
-            foreach (var r in resten)
-            {
-                var id = ModellGjenkjenning.Finn(r.Modell, r.Sti, _regler, Kildenavn(r.Sti));
-                f.Detalj($"Fil: {r.Sti} · {r.Modell.Format} · {Gb(r.Lengde)}{(id.FamilieTekst != null ? " · " + id.FamilieTekst : "")} · ID {id.Sha256?.Substring(0, 16) ?? id.Fingeravtrykk}");
-            }
-        }
+        // Hver modell er én rad, så tallet øverst er like mange som radene (ingen samlerad «Flere AI-modeller»)
+        foreach (var (sti, lengde, m) in modeller) LeggTilModell(sti, lengde, m);
 
         // AI-motorer i programmer som ikke kjører nå
         foreach (var (mappe, motorer) in ff.Motorer)

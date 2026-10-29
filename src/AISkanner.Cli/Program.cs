@@ -196,7 +196,7 @@ static class Selvtest
         // Revisjonsloggen: siste linje er SHA-256 av alt over
         Sjekk("revisjon: SHA-256 stemmer", Revisjon.Sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", true);
         // Revisjonsloggen skal aldri ta med nettleserdata: domener, besøk og tider fra private funn
-        var privat = new Funn { Navn = "Mulige AI-nettsteder (1)", Kategori = "Nettleser-AI (nettsted)", Risiko = Risiko.Rod, Hvorfor = "x", Privat = true };
+        var privat = new Funn { Navn = "Mulig AI-nettsted: hemmelig-kunde.ai", Kategori = "Nettleser-AI (nettsted)", Risiko = Risiko.Rod, Hvorfor = "x", Privat = true };
         privat.Merknad("hemmelig-kunde.ai besøkt 12 ganger");
         privat.Detalj("Chrome · Default · hemmelig-kunde.ai · 12 besøk · sist 26. okt. 2026");
         var revisjonstekst = Revisjon.Tekst(new[] { privat }, new Skanner(new Regelsett()), "bruker", false);

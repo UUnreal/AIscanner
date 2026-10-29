@@ -162,6 +162,15 @@ public sealed partial class Skanner
         Sjekk(t.Modeller == 2, $"AI-modeller i overskriften skulle vært bare språkmodellen og modellfila, men ble {t.Modeller}");
         Sjekk(t.Innebygd == 3, $"programmer med innebygd AI skulle vært tre, men ble {t.Innebygd}");
         Sjekk(t.Apper == 0, "innebygd AI fra leverandør telles som AI-app eller agent");
+        // Alle slags rader, også IT-regler, ukjente og mulige nettsteder: summene skal være like antall rader
+        var itRegel = new Funn { Navn = "AI-regler fra IT", Kategori = "Regler", Hvorfor = "", Type = "IT-regel", Risiko = Risiko.Gronn };
+        var mulig = new Funn { Navn = "Mulig AI-nettsted: kontroll.ai", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "", Type = "Ukjent AI-nettsted", Risiko = Risiko.Rod };
+        var ukjentApp = new Funn { Navn = "Kontroll: ukjent", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Ukjent AI", Risiko = Risiko.Rod };
+        var alleRader = new[] { lev, smaa, nano, gguf, motor, itRegel, mulig, ukjentApp };
+        var ta = Oversikt.Telling(alleRader);
+        Sjekk(ta.Totalt == alleRader.Length && ta.Hoy + ta.Middels + ta.Lav + ta.Ukjent == alleRader.Length && ta.Ukjent == 2,
+            $"tallene stemmer ikke med radene (rader {alleRader.Length}, overskrift {ta.Totalt}, risiko {ta.Hoy + ta.Middels + ta.Lav + ta.Ukjent}, ukjent {ta.Ukjent})");
+        Sjekk(Rapport.Merke(mulig) == "🔴 UKJENT" && Rapport.Merke(nano) != "🔴 UKJENT", "rapporten merker ikke ukjente funn som UKJENT");
         Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("5 lokale AI-funn på PC: 2 lokale AI-modeller", StringComparison.Ordinal),
             "overskriften er ikke summen av alle AI-funn med lokale AI-modeller først");
 
@@ -242,10 +251,15 @@ public sealed partial class Skanner
             var (kinaOk, kinaAlle) = KinaKontroll(s, regler, sb);
             ok += kinaOk;
             sb.AppendLine($"{(kinaOk == kinaAlle ? "OK  " : "FEIL")}  Kinesisk AI: {kinaOk} av {kinaAlle} regler riktige (nettsteder, API-er, programmer, modellfamilier og navn som ikke skal treffe)");
+            // Tallene øverst: hvert funn i nøyaktig én art og én risikogruppe, og begge summerer til antall rader
+            var tf = Oversikt.Telling(funn);
+            bool stemmer = tf.Totalt == funn.Count && tf.Hoy + tf.Middels + tf.Lav + tf.Ukjent == funn.Count;
+            if (stemmer) ok++;
+            sb.AppendLine($"{(stemmer ? "OK  " : "FEIL")}  Tallene stemmer: overskrift, arter og Høy/Middels/Lav/Ukjent er like mange som radene{(stemmer ? "" : $" (rader {funn.Count}, overskrift {tf.Totalt}, risiko {tf.Hoy + tf.Middels + tf.Lav + tf.Ukjent})")}");
             var (falskOk, falskAlle) = FalskeTreffKontroll(s, sb, rot);
             ok += falskOk;
             sb.AppendLine($"{(falskOk == falskAlle ? "OK  " : "FEIL")}  Falske treff: {falskOk} av {falskAlle} riktige (presentasjonssider, Microsoft 365-startsiden, skytjenester, DirectML, innebygde modeller i tellingen)");
-            int alle = Kontrollspor.Length + 2 + kinaAlle + falskAlle;
+            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch/BAM (admin), Run-nøkkelen og ekte nettverkstabeller.");

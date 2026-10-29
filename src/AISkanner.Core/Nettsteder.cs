@@ -145,21 +145,20 @@ public sealed partial class Skanner
         var ukjente = new Dictionary<string, Brukspor>(StringComparer.OrdinalIgnoreCase);
         if (_historikk) Historikk(For, ukjente);
 
-        // Nettsteder som bare ser ut som AI (.ai-adresse eller "gpt" i navnet). Det er en gjetning, så de samles i ett funn.
+        // Nettsteder som bare ser ut som AI (.ai-adresse eller "gpt" i navnet). Det er en gjetning, så de står som «Mulig
+        // AI-nettsted» og telles som ukjent. Ett nettsted er én rad, så tallene øverst er like mange som radene.
         var mulige = ukjente.Where(u => u.Value.Besok >= 2).OrderByDescending(u => u.Value.Besok).Take(40).ToList();
-        if (mulige.Count > 0)
+        foreach (var (vert, sp) in mulige)
         {
-            var f = LeggTil($"Mulige AI-nettsteder ({mulige.Count})", "Nettleser-AI (nettsted)", Risiko.Gul,
+            var hvorM = string.Join(", ", sp.Nettlesere);
+            var f = LeggTil($"Mulig AI-nettsted: {vert}", "Nettleser-AI (nettsted)", Risiko.Gul,
                 "Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.",
-                string.Join(", ", mulige.SelectMany(m => m.Value.Nettlesere).Distinct()), null, enkelt: "Mulige AI-nettsteder",
-                rad: "Se over lista. Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.");
-            f.Bruk = $"{string.Join(", ", mulige.Take(4).Select(m => m.Key))}{(mulige.Count > 4 ? $" og {mulige.Count - 4} til" : "")}.";
+                hvorM, null, enkelt: "Mulig AI-nettsted",
+                rad: "Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.");
+            f.Bruk = $"Besøkt i {hvorM}{(sp.Sist is { } t ? ", sist " + Tid(t) : "")}.";
             f.Privat = true;
-            foreach (var (vert, sp) in mulige)
-            {
-                f.Tidspunkt(sp.Forst, sp.Sist);
-                foreach (var x in sp.Linjer()) f.Detalj(x);
-            }
+            f.Tidspunkt(sp.Forst, sp.Sist);
+            foreach (var x in sp.Linjer()) f.Detalj(x);
         }
 
         foreach (var (n, s) in spor)

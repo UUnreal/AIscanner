@@ -42,11 +42,13 @@ Høy risiko|High risk
 Middels risiko|Medium risk
 Lav risiko|Low risk
 🔴 HØY|🔴 HIGH
+🔴 UKJENT|🔴 UNKNOWN
 🟡 MIDDELS|🟡 MEDIUM
 🟢 LAV|🟢 LOW
 🔴 høy risiko:|🔴 high risk:
 🟡 middels:|🟡 medium:
 🟢 lav:|🟢 low:
+🔴 ukjent:|🔴 unknown:
 Lokal AI (kjører på PC-en)|Local AI (runs on the PC)
 Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)|Hidden on the PC (apps, agents and background programs)
 Nettleser|Browser
@@ -95,6 +97,7 @@ AI-modeller funnet|AI models found
 lokale AI-modeller|local AI models
 lokal AI-modell|local AI model
 1 lokalt AI-funn på PC|1 local AI finding on PC
+sett med AI-regler fra IT|set of AI rules from IT
 lokale AI-funn på PC|local AI findings on PC
 1 AI-funn|1 AI finding
 AI-funn|AI findings
@@ -418,6 +421,9 @@ AI-flagg slått på i nettleseren|AI flags turned on in the browser
 AI-modellfiler i nettleserdataene som ikke hører til nettleserens kjente funksjoner. Kan komme fra en utvidelse eller et nettsted.|AI model files in the browser data that do not belong to the browser's known features. May come from an extension or a website.
 funksjoner|features
 Mulige AI-nettsteder|Possible AI websites
+Mulig AI-nettsted|Possible AI website
+Besøkt i|Visited in
+Ikke lim inn noe viktig på sider du ikke vet hvem som står bak.|Do not paste anything important into sites when you do not know who is behind them.
 Adressen ser ut som AI (.ai eller «gpt» i navnet), men tjenesten er ikke på listen over kjente AI-tjenester. Kan være AI, kan være noe annet.|The address looks like AI (.ai or «gpt» in the name), but the service is not on the list of known AI services. Could be AI, could be something else.
 Brukes av og til|Used now and then
 Brukes mye|Used a lot

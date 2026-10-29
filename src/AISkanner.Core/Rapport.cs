@@ -24,9 +24,9 @@ public static class Rapport
         Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Environment.UserName}");
         L($"Søket kjørt: {(skanner?.Startet ?? DateTime.Now):dd.MM.yyyy HH:mm:ss}   Rapport laget: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
-        int Ant(Risiko r) => liste.Count(f => f.Risiko == r);
+        var tell = Oversikt.Telling(liste);
         L($"Funnet: {Oversikt.TellingTekst(liste)}");
-        L($"Funn i lista: {liste.Count}   (🔴 høy risiko: {Ant(Risiko.Rod)}, 🟡 middels: {Ant(Risiko.Gul)}, 🟢 lav: {Ant(Risiko.Gronn)})");
+        L($"Funn i lista: {liste.Count}   (🔴 høy risiko: {tell.Hoy}, 🟡 middels: {tell.Middels}, 🟢 lav: {tell.Lav}, 🔴 ukjent: {tell.Ukjent})");
         if (skanner != null)
             L(skanner.DataMalt ? $"Datamengde: målt av Windows i {skanner.MaleSekunder:0} sekunder under søket."
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");
@@ -57,7 +57,7 @@ public static class Rapport
             Ra(engelsk ? $"{"Risk",-12}{"AI model",-38}{"Location",-26}Key point" : $"{"Risiko",-12}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
             L(new string('-', 99));
             foreach (var f in liste.OrderBy(f => f.Risiko))
-                Ra($"{T(Merke(f.Risiko)),-12}{Klipp(T(Oversikt.Navn(f)), 36),-38}{Klipp(T(Oversikt.Lokasjon(f)), 24),-26}{T(Oversikt.Punkt(f))}");
+                Ra($"{T(Merke(f)),-12}{Klipp(T(Oversikt.Navn(f)), 36),-38}{Klipp(T(Oversikt.Lokasjon(f)), 24),-26}{T(Oversikt.Punkt(f))}");
         }
         foreach (var (gruppe, tittel) in Grupper)
         {
@@ -69,7 +69,7 @@ public static class Rapport
         foreach (var f in del)
         {
             L();
-            L($"[{Merke(f.Risiko)}] {f.Navn}");
+            L($"[{Merke(f)}] {f.Navn}");
             L($"  {f.Kort}");
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
@@ -103,6 +103,8 @@ public static class Rapport
     private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";
 
     internal static string Merke(Risiko r) => r switch { Risiko.Rod => "🔴 HØY", Risiko.Gul => "🟡 MIDDELS", _ => "🟢 LAV" };
+    /// <summary>Som på skjermen: ukjent AI står som UKJENT (alltid rød), resten etter risiko.</summary>
+    internal static string Merke(Funn f) => Oversikt.Risikogruppe(f) == "ukjent" ? "🔴 UKJENT" : Merke(f.Risiko);
 
     public static string MalTekst(Mal m)
     {
@@ -129,9 +131,11 @@ public static class Rapport
         pc = Environment.MachineName,
         aiRegler = skanner?.AiRegler ?? new List<string>(),
         tid = DateTimeOffset.Now,
+        telling = Oversikt.Telling(liste),
         funn = liste.Select(f => new
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
+            risikogruppe = Oversikt.Risikogruppe(f), art = Oversikt.Art(f),
             navn = f.Navn, gruppe = f.Gruppe, kort = f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
             // Nettleserfunn er med, som i tekstrapporten: AI-domene, nettleser og profil, antall besøk, første og siste gang.
             // Aldri hele adresser eller sidetitler: de leses aldri inn i minnet som funn.

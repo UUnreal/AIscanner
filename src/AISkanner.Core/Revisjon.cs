@@ -156,7 +156,8 @@ public static class Revisjon
         L();
         L($"FUNN ({funn.Count})");
         foreach (var f in funn.OrderBy(f => f.Risiko))
-            Ra($"{T(Rapport.Merke(f.Risiko)),-12}{T(f.Navn)} | {T(f.Type)} | {T(Oversikt.Lokasjon(f))}");
+            // Et mulig AI-nettsted heter det samme som domenet. Domener fra nettleseren skal aldri i revisjonsloggen.
+            Ra($"{T(Rapport.Merke(f)),-12}{T(f.Privat && f.Navn.StartsWith("Mulig AI-nettsted", StringComparison.Ordinal) ? "Mulig AI-nettsted" : f.Navn)} | {T(f.Type)} | {T(Oversikt.Lokasjon(f))}");
 
         L();
         L($"ALT SØKET PRØVDE Å LESE ({s.Logg.Oppforinger.Count}{(s.Logg.Avkortet ? $" av flere, lista stopper på {Tilgangslogg.MaksOppforinger}" : "")}; mapper som ble gått gjennom uten feil er bare talt)");

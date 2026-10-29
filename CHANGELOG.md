@@ -29,6 +29,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.19.12] - 2026-10-29
+
+Venter på test på Windows.
+
+### Rettet
+- **Tallene stemmer.** Overskriften, linja under og risikolinja teller de samme radene. Hver rad i tabellen er ett
+  funn, og hvert funn står i nøyaktig én art og én risikogruppe (`Oversikt.Art`, `Oversikt.Risikogruppe`). Før kunne
+  overskriften bli større enn Høy + Middels + Lav: samleradene «Mulige AI-nettsteder (N)» og «Flere AI-modeller (N)»
+  ble telt som N i overskriften, men som én rad i risikolinja.
+- **Ukjent er en egen gruppe** ved siden av Høy, Middels og Lav: ukjent AI, ukjente AI-spor og mulige AI-nettsteder.
+  Ukjent er fortsatt alltid rød (samme farge, stripete i baren) og står som «Ukjent» i risikokolonnen. Rapporten viser
+  «🔴 UKJENT» på slike rader og et eget tall for ukjent i toppen. JSON-rapporten har `telling`, `risikogruppe` og `art`.
+- Hvert mulige AI-nettsted er sin egen rad («Mulig AI-nettsted: …»), og hver lokal AI-modell er sin egen rad. Det er
+  ingen samlerader lenger. Revisjonsloggen skriver bare «Mulig AI-nettsted», aldri domenet.
+- AI-regler fra IT står i linja under overskriften som «sett med AI-regler fra IT», siden raden vises i tabellen.
+- Ny linje i `--kontroll`: tallene skal stemme med radene, både i kontrollsporene og i et sett med alle slags rader.
+
 ## [2.19.11] - 2026-10-28
 
 Venter på test på Windows.

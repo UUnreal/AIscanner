@@ -89,7 +89,7 @@ public static class Risikoregler
         // "Lokal AI-server (...)" er navnet på et ukjent program som svarer som en AI-tjeneste (gjenkjente servere får sitt eget navn).
         // (k == "AI-server" slo aldri til: "AI-server" settes som lokasjon, ikke kategori.)
         if (f.Navn.StartsWith("Farlig AI-modellfil") || f.Navn.StartsWith("Ukjent") || f.Navn.StartsWith("Lokal AI-server", StringComparison.Ordinal)) return "Ukjent AI";
-        if (f.Navn.StartsWith("Mulige AI-nettsteder")) return "Ukjent AI-nettsted";
+        if (f.Navn.StartsWith("Mulig AI-nettsted", StringComparison.Ordinal)) return "Ukjent AI-nettsted";
         if (d.Any(x => x.StartsWith("Utgiver: ukjent"))) return "Ukjent AI";
         if (d.Any(x => x.StartsWith("Utgiver:") && x.Contains("ikke bekreftet"))) return "Ukjent AI";
         if (k.StartsWith("Lokal AI (modell)") && d.Any(x => x.StartsWith("Familie ukjent"))) return "Ukjent AI";
@@ -117,7 +117,7 @@ public static class Risikoregler
         // eller et gjenkjent nettsted. Et visningsnavn som kommer fra et filnavn, mappenavn eller en utvidelses
         // egen manifest.json kan en angriper styre – da kunne en ukjent utvidelse som kaller seg «<godkjent navn>»
         // blitt grønn. Slike navn godtas ikke her; de forblir røde (ukjent/skygge-AI).
-        bool nettsted = f.Kategori.Contains("(nettsted)") && !f.Navn.StartsWith("Mulige AI-nettsteder", StringComparison.Ordinal);
+        bool nettsted = f.Kategori.Contains("(nettsted)") && !f.Navn.StartsWith("Mulig AI-nettsted", StringComparison.Ordinal);
         bool trygtNavn = f.Regel != null || nettsted;
         var navn = Oversikt.Navn(f);
         foreach (var g in liste)

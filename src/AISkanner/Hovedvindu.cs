@@ -283,12 +283,13 @@ public sealed class Hovedvindu : Form
                 revisjonFeil = _revisjon && _revisjonSti == null && !_skanner.LytterNa,
                 lytter = _skanner.LytterNa,
                 lytteSekunder = _skanner.LytteSekunder,
-                telling = Oversikt.Telling(_resultat) is var t ? new { modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, innebygd = t.Innebygd, modellNavn = Oversikt.ModellNavn(_resultat).Select(n => T(n)).ToList(), spor = _resultat.Count(f => f.Gruppe == "spor") } : null,
+                telling = Oversikt.Telling(_resultat) is var t ? new { totalt = t.Totalt, modeller = t.Modeller, nettsteder = t.Nettsteder, utvidelser = t.Utvidelser, apper = t.Apper, innebygd = t.Innebygd, spor = t.Spor, itregler = t.ItRegler, hoy = t.Hoy, middels = t.Middels, lav = t.Lav, ukjent = t.Ukjent, modellNavn = Oversikt.ModellNavn(_resultat).Select(n => T(n)).ToList() } : null,
             },
             funn = _resultat.Select((f, id) => new
             {
                 id,
-                risiko = f.Risiko.ToString().ToLowerInvariant(),
+                // «ukjent», «rod», «gul» eller «gronn»: samme gruppe som opptellingen øverst
+                risiko = Oversikt.Risikogruppe(f),
                 gruppe = f.Gruppe,
                 forst = f.Forst != null && f.Sist != null && f.Forst.Value.Date != f.Sist.Value.Date ? T(Skanner.Tid(f.Forst)) : null,
                 sist = f.Sist == null ? null : (DateTime.Now - f.Sist.Value).TotalMinutes < 2 ? T("nå") : T(Skanner.Tid(f.Sist)),

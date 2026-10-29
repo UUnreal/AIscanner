@@ -233,10 +233,10 @@
   .bar { display: flex; gap: 2px; height: 7px; border-radius: 4px; overflow: hidden; margin: 10px 0 6px; max-width: 460px; }
   .bar:empty { display: none; }
   .bar span { display: block; }
-  .bar .rod { background: var(--rod); } .bar .gul { background: var(--gul); } .bar .gronn { background: var(--gronn); }
+  .bar .rod { background: var(--rod); } .bar .ukjent { background: repeating-linear-gradient(135deg, var(--rod) 0 4px, var(--rod-myk) 4px 7px); } .bar .gul { background: var(--gul); } .bar .gronn { background: var(--gronn); }
   .fordeling { display: flex; gap: 18px; color: var(--dempet); font-size: 13.5px; }
   .fordeling b { font-size: 18px; font-weight: 700; margin-right: 4px; }
-  .fordeling .rod b { color: var(--rod-tekst); } .fordeling .gul b { color: var(--gul-tekst); } .fordeling .gronn b { color: var(--gronn-tekst); }
+  .fordeling .rod b, .fordeling .ukjent b { color: var(--rod-tekst); } .fordeling .gul b { color: var(--gul-tekst); } .fordeling .gronn b { color: var(--gronn-tekst); }
 
   /* Tabellen: AI, risiko, type, hvor den ligger, hvor den sender data. Detaljer ved trykk. */
   .panel { background: var(--kort); border-radius: 18px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
@@ -253,7 +253,7 @@
   .rad .pil { color: var(--dempet); font-size: 18px; text-align: right; opacity: .6; }
   .pille { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 3px 11px 3px 9px; border-radius: 20px; white-space: nowrap; }
   .pille::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-  .pille.rod { background: var(--rod-myk); color: var(--rod-tekst); } .pille.rod::before { background: var(--rod); }
+  .pille.rod, .pille.ukjent { background: var(--rod-myk); color: var(--rod-tekst); } .pille.rod::before, .pille.ukjent::before { background: var(--rod); }
   .pille.gul { background: var(--gul-myk); color: var(--gul-tekst); } .pille.gul::before { background: var(--gul); }
   .pille.gronn { background: var(--gronn-myk); color: var(--gronn-tekst); } .pille.gronn::before { background: var(--gronn); }
   .flyt { display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; flex: none; margin-top: 12px; }
@@ -268,7 +268,7 @@
   .ark { position: absolute; inset: 0; background: var(--kort); display: none; flex-direction: column; z-index: 2; }
   .ark.apen { display: flex; }
   .merke { flex: none; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .rod .prikk { background: var(--rod); }   .rod .merke { background: var(--rod-myk); color: var(--rod-tekst); }
+  .rod .prikk, .ukjent .prikk { background: var(--rod); }   .rod .merke, .ukjent .merke { background: var(--rod-myk); color: var(--rod-tekst); }
   .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: var(--gul-tekst); }
   .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: var(--gronn-tekst); }
   .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 38px; color: var(--dempet); font-size: 13.5px; }
@@ -431,7 +431,8 @@ function vis(id) {
 // Språk: følger Windows til brukeren trykker på et flagg. Valget lagres ikke.
 let språk = /^(nb|nn|no)\b/i.test(navigator.language || "") ? "no" : "en";
 const L = (no, en) => språk === "en" ? en : no;
-const merke = r => ({ rod: L("Høy", "High"), gul: L("Middels", "Medium"), gronn: L("Lav", "Low") }[r]);
+const merke = r => ({ rod: L("Høy", "High"), gul: L("Middels", "Medium"), gronn: L("Lav", "Low"), ukjent: L("Ukjent", "Unknown") }[r]);
+const RISIKOGRUPPER = ["rod", "ukjent", "gul", "gronn"];
 const STI = /[A-Za-z]:\\[^:*?"<>|()]+[^:*?"<>|()\s]/;
 const NETT = `<svg class="nett" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 20V10M7 20v-5M17 20V4"/></svg>`;
 
@@ -460,13 +461,14 @@ function kart(f) {
 const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Ukjent AI-spor", "Unknown AI trace")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
-// Overskriften er alle AI-funn på PC-en (alt er funnet lokalt: filer, nettleserdata, programmer). Linja under viser hva de er: lokale AI-modeller (kan kjøres for seg selv på PC-en),
-// nettsteder, utvidelser, apper, programmer med innebygd AI og ukjente spor. Summen av linja er tallet i overskriften.
+// Overskriften er alle funn på PC-en (alt er funnet lokalt: filer, nettleserdata, programmer). Én rad i tabellen er
+// ett funn. Linja under viser hva de er, og risikolinja (Høy, Middels, Lav, Ukjent) teller de samme radene.
+// Begge summerer til tallet i overskriften. Tallene kommer fra Oversikt.Telling, så skjerm og rapport er like.
 function visTelling(antall, t) {
-  const deler = [[t.modeller, L("lokal AI-modell", "local AI model"), L("lokale AI-modeller", "local AI models")], [t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")]]
+  const deler = [[t.modeller, L("lokal AI-modell", "local AI model"), L("lokale AI-modeller", "local AI models")], [t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")], [t.itregler, L("sett med AI-regler fra IT", "set of AI rules from IT"), L("sett med AI-regler fra IT", "sets of AI rules from IT")]]
     .filter(x => x[0] > 0);
-  const sum = deler.reduce((a, x) => a + x[0], 0) || antall;
-  $("hodeTittel").textContent = antall === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 lokalt AI-funn på PC", "1 local AI finding on PC") : L(`${sum} lokale AI-funn på PC`, `${sum} local AI findings on PC`);
+  const sum = t.totalt ?? antall;
+  $("hodeTittel").textContent = sum === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 lokalt AI-funn på PC", "1 local AI finding on PC") : L(`${sum} lokale AI-funn på PC`, `${sum} local AI findings on PC`);
   // Står det bare én eller to lokale AI-modeller, vises navnet, så det er klart hva de er
   const navn = (t.modellNavn || []).length && t.modellNavn.length <= 2 ? ` (${t.modellNavn.join(", ")})` : "";
   $("andreFunn").textContent = deler.map((x, i) => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}${i === 0 && t.modeller > 0 ? navn : ""}`).join(" · ");
@@ -474,12 +476,12 @@ function visTelling(antall, t) {
 
 // Én tabell: høy risiko først. Hver rad: AI-modell (med det viktigste på høyst tre ord), risiko og hvor den ligger.
 function visResultat(funn, inf) {
-  const RISIKO = { rod: 0, gul: 1, gronn: 2 };
+  const RISIKO = { rod: 0, ukjent: 0, gul: 1, gronn: 2 };
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO[a[0].risiko] - RISIKO[b[0].risiko] || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null;
   const ant = r => alle.filter(f => f.risiko === r).length;
-  visTelling(funn.length, info.telling || { modeller: alle.filter(f => /modell|model/i.test(f.type || "")).length, nettsteder: 0, utvidelser: 0, apper: 0, innebygd: 0, spor: 0 });
-  $("bar").innerHTML = funn.length ? ["rod", "gul", "gronn"].filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
+  visTelling(funn.length, info.telling || { totalt: funn.length });
+  $("bar").innerHTML = funn.length ? RISIKOGRUPPER.filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
   tegnFordeling();
   tegnBunn();
   vis("resultat");
@@ -489,8 +491,9 @@ function visResultat(funn, inf) {
 
 function tegnFordeling() {
   const funn = alle, ant = r => alle.filter(f => f.risiko === r).length;
+  // Høy, Middels, Lav og Ukjent: hvert funn står i nøyaktig én, så de summerer til overskriften. Ukjent vises bare når det finnes.
   $("fordeling").innerHTML = funn.length
-    ? `<span class="rod"><b>${ant("rod")}</b>${L("Høy risiko", "High risk")}</span><span class="gul"><b>${ant("gul")}</b>${merke("gul")}</span><span class="gronn"><b>${ant("gronn")}</b>${merke("gronn")}</span>`
+    ? `<span class="rod"><b>${ant("rod")}</b>${L("Høy risiko", "High risk")}</span><span class="gul"><b>${ant("gul")}</b>${merke("gul")}</span><span class="gronn"><b>${ant("gronn")}</b>${merke("gronn")}</span>${ant("ukjent") ? `<span class="ukjent"><b>${ant("ukjent")}</b>${merke("ukjent")}</span>` : ""}`
     : L("Ingen spor etter AI", "No traces of AI");
 }
 
@@ -930,7 +933,7 @@ function tegnKartInfo() {
   v.onclick = e => { if (e.target === v) { kartInfo = null; tegnKartInfo(); } };
   v.querySelectorAll("li[data-id]").forEach(li => li.onclick = () => { const f = alle.find(x => x.id === +li.dataset.id); if (f) { kartInfo = null; apneArk(f); } });
 }
-const RISIKO_REKKE = { rod: 0, gul: 1, gronn: 2 };
+const RISIKO_REKKE = { rod: 0, ukjent: 0, gul: 1, gronn: 2 };
 const sjekkLinje = s => `<li class="sjekkRad" data-sjekk="${esc(s.navn)}" title="${esc(L("Vis alt denne sjekken leste", "Show everything this check read"))}"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span>`
   + [["lest", s.lest], ["ikkefunnet", s.ikke], ["hoppetover", s.hoppet], ["mangler", s.mangler]].map(([u, n]) => `<span${n ? ` data-su="${u}"` : ""} class="${u === "mangler" && n ? "rodt" : ""}">${tall(n)}</span>`).join("") + `</li>`;
 // Mushjul blar sider i lista

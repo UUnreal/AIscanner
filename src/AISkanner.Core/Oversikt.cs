@@ -63,56 +63,74 @@ public static class Oversikt
         };
     }
 
-    /// <summary>
-    /// Hva som er funnet, telt opp: AI-modeller, AI-nettsteder, nettleserutvidelser, AI-apper/agenter uten egne modeller,
-    /// og programmer med AI som leverandøren har bygget inn. AI-modeller er bare modeller som kan kjøres for seg selv
-    /// (modellfiler på disk, farlige modellfiler, språkmodellen i nettleseren og ukjente modellfiler). Små modeller inne i
-    /// Office, Teams, Bilder, drivere og nettleserfunksjoner telles ikke som AI-modeller, men som ett program hver.
-    /// </summary>
-    public static (int Modeller, int Nettsteder, int Utvidelser, int Apper, int Innebygd) Telling(IEnumerable<Funn> funn)
+    /// <summary>Opptellingen av funnene. Hver rad i lista er ett funn, og hvert funn står i nøyaktig én art og én risikogruppe.</summary>
+    public sealed record Opptelling(int Modeller, int Nettsteder, int Utvidelser, int Apper, int Innebygd, int Spor, int ItRegler,
+                                    int Hoy, int Middels, int Lav, int Ukjent)
     {
-        int modeller = 0, nettsteder = 0, utvidelser = 0, apper = 0, innebygd = 0;
-        foreach (var f in funn)
-        {
-            if (f.Type == "IT-regel" || f.Gruppe == "spor") continue;
-            if (f.Modeller > 0) { modeller += f.Modeller; continue; }
-            if (f.Type is "AI-nettsted" or "Ukjent AI-nettsted" || f.Kategori.Contains("(nettsted)"))
-                nettsteder += Regex.Match(f.Navn, @"\((\d+)\)$") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 1;
-            else if (f.Type == "Nettleserutvidelse") utvidelser++;
-            else if (f.Innebygde > 0 || f.Kategori.StartsWith("Innebygd AI fra leverandør", StringComparison.Ordinal)) innebygd++;
-            else apper++;
-        }
-        return (modeller, nettsteder, utvidelser, apper, innebygd);
+        /// <summary>Alle funn. Er lik summen av artene og lik summen av risikogruppene.</summary>
+        public int Totalt => Modeller + Nettsteder + Utvidelser + Apper + Innebygd + Spor + ItRegler;
+    }
+
+    /// <summary>
+    /// Hva slags funn dette er. Én rad er ett funn: «lokal AI-modell» er en modell som kan kjøres for seg selv (modellfil
+    /// på disk, farlig modellfil, språkmodellen i nettleseren, ukjente modellfiler). Små modeller inne i Office, Teams,
+    /// Bilder, drivere og nettleserfunksjoner er «program med innebygd AI».
+    /// </summary>
+    public static string Art(Funn f)
+    {
+        if (f.Type == "IT-regel") return "itregel";
+        if (f.Gruppe == "spor") return "spor";
+        if (f.Modeller > 0) return "modell";
+        if (f.Type is "AI-nettsted" or "Ukjent AI-nettsted" || f.Kategori.Contains("(nettsted)")) return "nettsted";
+        if (f.Type == "Nettleserutvidelse") return "utvidelse";
+        if (f.Innebygde > 0 || f.Kategori.StartsWith("Innebygd AI fra leverandør", StringComparison.Ordinal)) return "innebygd";
+        return "app";
+    }
+
+    /// <summary>
+    /// Risikogruppen funnet vises i: «ukjent» når vi ikke vet hva det er (Ukjent AI, Ukjent AI-spor, Ukjent AI-nettsted),
+    /// ellers høy, middels eller lav. Ukjent er alltid rød risiko, men telles for seg, så Høy, Middels, Lav og Ukjent
+    /// til sammen er alle funn.
+    /// </summary>
+    public static string Risikogruppe(Funn f) =>
+        f.Type.StartsWith("Ukjent", StringComparison.Ordinal) ? "ukjent" : f.Risiko switch { Risiko.Rod => "rod", Risiko.Gul => "gul", _ => "gronn" };
+
+    public static Opptelling Telling(IEnumerable<Funn> funn)
+    {
+        var liste = funn.ToList();
+        int Art_(string a) => liste.Count(f => Art(f) == a);
+        int Gr(string g) => liste.Count(f => Risikogruppe(f) == g);
+        return new Opptelling(Art_("modell"), Art_("nettsted"), Art_("utvidelse"), Art_("app"), Art_("innebygd"), Art_("spor"), Art_("itregel"),
+                              Gr("rod"), Gr("gul"), Gr("gronn"), Gr("ukjent"));
     }
 
     /// <summary>Navnene på de lokale AI-modellene, så det står hva de er når det bare er én eller to.</summary>
-    public static List<string> ModellNavn(IEnumerable<Funn> funn) =>
-        funn.Where(f => f.Modeller > 0 && f.Type != "IT-regel" && f.Gruppe != "spor").Select(Navn).Distinct().ToList();
+    public static List<string> ModellNavn(IEnumerable<Funn> funn) => funn.Where(f => Art(f) == "modell").Select(Navn).Distinct().ToList();
 
-    /// <summary>Tellingen som tekst, som på skjermen: alle AI-funn, og hva de er.</summary>
+    /// <summary>Tellingen som tekst, som på skjermen: alle funn, og hva de er. Summen av delene er tallet først.</summary>
     public static string TellingTekst(IEnumerable<Funn> funn)
     {
-        var (m, n, u, a, i) = Telling(funn);
-        int s = funn.Count(f => f.Gruppe == "spor");
+        var t = Telling(funn);
         var deler = new List<string>();
         var navn = ModellNavn(funn);
         var hvilke = navn.Count is > 0 and <= 2 ? $" ({string.Join(", ", navn)})" : "";
-        if (m > 0) deler.Add((m == 1 ? "1 lokal AI-modell" : $"{m} lokale AI-modeller") + hvilke);
-        if (n > 0) deler.Add(n == 1 ? "1 AI-nettsted" : $"{n} AI-nettsteder");
-        if (u > 0) deler.Add(u == 1 ? "1 nettleserutvidelse" : $"{u} nettleserutvidelser");
-        if (a > 0) deler.Add(a == 1 ? "1 AI-app eller agent" : $"{a} AI-apper og agenter");
-        if (i > 0) deler.Add(i == 1 ? "1 program med innebygd AI" : $"{i} programmer med innebygd AI");
-        if (s > 0) deler.Add(s == 1 ? "1 ukjent AI-spor" : $"{s} ukjente AI-spor");
-        int sum = m + n + u + a + i + s;
-        if (sum == 0) return "Ingen AI";
-        var hode = sum == 1 ? "1 lokalt AI-funn på PC" : $"{sum} lokale AI-funn på PC";
+        void Del(int n, string en, string flere, string tillegg = "") { if (n > 0) deler.Add((n == 1 ? "1 " + en : $"{n} {flere}") + tillegg); }
+        Del(t.Modeller, "lokal AI-modell", "lokale AI-modeller", hvilke);
+        Del(t.Nettsteder, "AI-nettsted", "AI-nettsteder");
+        Del(t.Utvidelser, "nettleserutvidelse", "nettleserutvidelser");
+        Del(t.Apper, "AI-app eller agent", "AI-apper og agenter");
+        Del(t.Innebygd, "program med innebygd AI", "programmer med innebygd AI");
+        Del(t.Spor, "ukjent AI-spor", "ukjente AI-spor");
+        Del(t.ItRegler, "sett med AI-regler fra IT", "sett med AI-regler fra IT");
+        if (t.Totalt == 0) return "Ingen AI";
+        var hode = t.Totalt == 1 ? "1 lokalt AI-funn på PC" : $"{t.Totalt} lokale AI-funn på PC";
         return deler.Count == 1 ? hode : $"{hode}: " + string.Join(", ", deler.Take(deler.Count - 1)) + " og " + deler.Last();
     }
 
     /// <summary>Navnet uten forklarende forstavelse: "AI-modell: Llama" blir "Llama".</summary>
     public static string Navn(Funn f)
     {
-        foreach (var fs in new[] { "AI-modell: ", "Farlig AI-modellfil: ", "Python-prosjekt med AI: " })
+        foreach (var fs in new[] { "AI-modell: ", "Farlig AI-modellfil: ", "Python-prosjekt med AI: ", "Mulig AI-nettsted: " })
             if (f.Navn.StartsWith(fs, StringComparison.Ordinal)) return f.Navn.Substring(fs.Length);
         return Regex.Replace(f.Navn, @" \([A-Za-z ]+-utvidelse\)$", "");
     }
