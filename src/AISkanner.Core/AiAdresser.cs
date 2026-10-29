@@ -18,7 +18,15 @@ internal static class AiAdresser
     {
         var kart = new Dictionary<IPAddress, List<string>>();
         var liste = verter.Select(v => v.Trim('.').ToLowerInvariant()).Where(v => v.Contains('.')).Distinct().ToList();
-        var oppslag = liste.Select(v => (Vert: v, Svar: Dns.GetHostAddressesAsync(v))).ToList();
+        // Egne DNS-spørringer rett til DNS-serveren, ikke via Windows: da havner navnene ikke i Windows' DNS-buffer, som
+        // skanneren leser som bevis på at PC-en har brukt tjenesten. (Før 2.30.0 forurenset oppslagene bufferen.)
+        var servere = EgenDns.Servere();
+        if (servere.Count == 0)
+        {
+            Tilgangslogg.Logg("Nettverk", "DNS-oppslag av kjente AI-adresser", Utfall.HoppetOver, "fant ingen DNS-server; slår ikke opp via Windows for ikke å fylle DNS-bufferen");
+            return kart;
+        }
+        var oppslag = liste.Select(v => (Vert: v, Svar: EgenDns.SlaOppAsync(v, servere, frist))).ToList();
         try { Task.WaitAll(oppslag.Select(o => (Task)o.Svar).ToArray(), frist); } catch { }
         int svarte = 0;
         foreach (var (vert, svar) in oppslag)

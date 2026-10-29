@@ -78,6 +78,11 @@ public static class Rapport
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
+            // Hvert land med grunnlaget: sett i en forbindelse under søket, eller bare landet til leverandøren
+            foreach (var k in Risikoregler.SenderTil(f))
+                L(f.Trafikk.Any(m => m.Land == k || m.EierLand == k)
+                    ? $"  Land: {IpLand.Navn(k)} · sett i forbindelse under søket (se under)"
+                    : $"  Land: {IpLand.Navn(k)} · land fra leverandør, ingen tilkobling sett under søket");
             if (f.Trafikk.Count > 0)
             {
                 L("  Sender til nå:");
@@ -118,6 +123,9 @@ public static class Rapport
         if (m.EierLand != null && m.EierLand != m.Land) deler.Add($"selskap i {IpLand.Navn(m.EierLand)}");
         deler.Add(m.Antall == 1 ? "1 forbindelse" : $"{m.Antall} forbindelser");
         if (m.Ut != null) deler.Add($"sendt {Storrelse(m.Ut.Value)}, mottatt {Storrelse(m.Inn ?? 0)}");
+        if (m.Ip.Count > 0) deler.Add($"IP {string.Join(", ", m.Ip.Select(x => x.Ip))}");
+        if (m.KildeIp.Count > 0) deler.Add($"fra {string.Join(", ", m.KildeIp)}");
+        if (m.Prosesser.Count > 0) deler.Add($"program {string.Join(", ", m.Prosesser.Select(p => $"{p.Fil} (PID {p.Pid})"))}");
         return string.Join(" · ", deler);
     }
 

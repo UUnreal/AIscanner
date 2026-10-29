@@ -86,6 +86,8 @@ public sealed partial class Skanner
         _regler.AiTjenester.FirstOrDefault(t => t.Treffer(vert)) ?? FinnNettsted(vert);
 
     private Task<Dictionary<IPAddress, List<string>>>? _aiIp;
+    /// <summary>Windows' DNS-buffer var fylt av en eldre AI-skanners egne oppslag, og ble ikke brukt som bevis.</summary>
+    public bool DnsBufferForurenset { get; private set; }
     private HashSet<string>? _nettleserVerter;
 
     private void Trafikk(NettBilde nb)
@@ -176,6 +178,10 @@ public sealed partial class Skanner
             m.Antall++;
             var ip = t.Fjern.ToString();
             if (m.Ip.Count < 8 && !m.Ip.Any(x => x.Ip == ip)) m.Ip.Add(new IpSted(ip, land, cdn));
+            var kilde = t.Lokal.ToString();
+            if (m.KildeIp.Count < 4 && !m.KildeIp.Contains(kilde)) m.KildeIp.Add(kilde);
+            var fil = p.Sti ?? p.Navn;
+            if (m.Prosesser.Count < 4 && !m.Prosesser.Any(x => x.Pid == t.Pid)) m.Prosesser.Add(new Prosessfil(t.Pid, fil));
             if (nb.Tider.TryGetValue(t.Nokkel, out var tt))
             {
                 if (m.Forst == null || tt.Forst < m.Forst) m.Forst = tt.Forst;
@@ -212,6 +218,19 @@ public sealed partial class Skanner
 
         // Navn Windows nylig har slått opp. Viser AI som er brukt selv om forbindelsen er lukket, også i privat nettlesing.
         var nylig = new Dictionary<AiNettsted, SortedSet<string>>();
+        // Vern mot falske spor: AI-skanner før 2.30.0 slo selv opp alle kjente AI-adresser via Windows, og de ligger
+        // i bufferen til de går ut (opptil timer). Står de fleste navnene på lista i bufferen samtidig, er det
+        // skannerens egne oppslag, ikke bruk. Da brukes ikke bufferen som bevis i dette søket.
+        var kjente = new HashSet<string>(_regler.AiTjenester.Concat(_regler.AiNettsteder).SelectMany(t => t.Domener).Select(d => d.Trim('.').ToLowerInvariant()));
+        int iBuffer = nb.DnsNavn.Count(n => kjente.Contains(n.Trim('.').ToLowerInvariant()));
+        if (kjente.Count > 0 && iBuffer >= Math.Max(30, kjente.Count / 2))
+        {
+            DnsBufferForurenset = true;
+            lock (Blindsoner) Blindsoner.Add("Windows' DNS-buffer ble ikke brukt: den er full av oppslag fra en eldre AI-skanner. Kjør «ipconfig /flushdns» som administrator og søk igjen.");
+            Tilgangslogg.Logg("Nettverk", "Windows' DNS-buffer", Utfall.HoppetOver,
+                $"brukes ikke som bevis: {iBuffer} av {kjente.Count} kjente AI-navn står i bufferen samtidig, som etter oppslag fra en eldre AI-skanner. Kjør «ipconfig /flushdns» og søk igjen.");
+            return;
+        }
         foreach (var n in nb.DnsNavn)
         {
             if (sett.Contains(n) || Tjeneste(n) is not { } tj) continue;

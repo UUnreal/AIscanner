@@ -29,6 +29,26 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.31.0] - 2026-10-29
+
+Ikke testet på Windows utover lastetesten i byggeløypa.
+
+### Rettet
+- **Falske funn fra DNS-bufferen.** Skanneren slo selv opp adressene til alle kjente AI-tjenester (for å kjenne
+  igjen nettleserens egne oppslag), og oppslagene havnet i Windows' DNS-buffer. Den samme bufferen ble så lest som
+  «Windows har nylig slått opp», så AI-tjenester PC-en aldri hadde brukt, også i Kina, ble meldt som brukt. Nå går
+  skannerens egne oppslag rett til DNS-serveren (`EgenDns`, UDP) og havner ikke i bufferen. Står de fleste kjente
+  AI-navnene i bufferen samtidig (rester etter en eldre versjon), brukes ikke bufferen som bevis i det søket, og
+  rapporten sier det. Kjør `ipconfig /flushdns` etter oppdatering.
+
+### Lagt til
+- **Sortering** i funnlista: Risiko, Land, A–Å og Type AI. Hvert funn står i én gruppe, og gruppene summerer til lista.
+- **Grunnlag for hvert land:** «sett i forbindelse under søket» eller «land fra leverandør, ingen tilkobling sett».
+  For forbindelser som ble sett: kilde-IP (lokal adresse), mål-IP, program (full sti og PID) og mappe. Vises i lista
+  (sortert etter land), i detaljen og i rapporten.
+- **Brannmurloggen** (`pfirewall.log`, hvis slått på, siste 16 MB): forbindelser til adressene AI-tjenester har nå,
+  med tid, PID når loggen har den, og QUIC/HTTP3 (UDP 443) for seg. Middels sikkert, fordi skyadresser deles.
+
 ## [2.30.0] - 2026-10-29
 
 Ikke testet på Windows utover lastetesten i byggeløypa.

@@ -1462,3 +1462,7 @@ Ukjent AI-tillegg i Office. Det kan lese dokumentene og e-posten du har åpne. V
 lastes når Office starter|loads when Office starts
 lastes ikke nå|does not load now
 nettbasert tillegg|web add-in
+Windows' DNS-buffer ble ikke brukt: den er full av oppslag fra en eldre AI-skanner. Kjør «ipconfig /flushdns» som administrator og søk igjen.|The Windows DNS cache was not used: it is full of lookups from an older AI Scanner. Run «ipconfig /flushdns» as administrator and scan again.
+Ingen tilkobling sett under søket|No connection seen during the scan
+~^Land: (.+) · sett i forbindelse under søket \(se under\)$|Country: $1 · seen in a connection during the scan (see below)
+~^Land: (.+) · land fra leverandør, ingen tilkobling sett under søket$|Country: $1 · country from vendor, no connection seen during the scan

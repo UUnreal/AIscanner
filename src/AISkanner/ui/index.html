@@ -141,6 +141,12 @@
   .fordeling button:hover { background: var(--flate2, rgba(127,127,127,.12)); }
   .fordeling button.valgt { background: var(--flate2, rgba(127,127,127,.18)); box-shadow: inset 0 0 0 1px var(--kant, rgba(127,127,127,.35)); }
   .fordeling button.av { opacity: .45; }
+  .sorter { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--tekst2, var(--tekst)); font-size: 13px; height: 20px; margin-block: -4px; }
+  .sorter select { font: inherit; color: var(--tekst); background: var(--flate2, rgba(127,127,127,.12)); border: 0; border-radius: 999px; padding: 2px 26px 2px 12px; line-height: 20px; cursor: pointer;
+    appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 14px) 52%, calc(100% - 10px) 52%; background-size: 4px 4px; background-repeat: no-repeat; }
+  .sorter select:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
+  .gruppe.fare { color: var(--rod); }
   .fordeling button:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
   .prikk { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--svak); }
   .prikk.rod { background: var(--rod); } .prikk.gul { background: var(--gul); } .prikk.gronn { background: var(--gronn); }
@@ -443,7 +449,8 @@
         <button class="knapp tonal" id="igjen"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M12.5 1.8v2.8H9.7"/></svg><span data-en="Scan again">Søk igjen</span></button>
         <button class="knapp primar" id="lagre"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8.5M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span data-en="Save report">Lagre rapport</span></button>
       </div></div>
-    <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
+    <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div>
+      <label class="sorter"><span data-en="Sort">Sorter</span><select id="sorter" aria-label="Sorter / Sort"><option value="risiko" data-en="Risk">Risiko</option><option value="land" data-en="Country">Land</option><option value="navn" data-en="A–Z">A–Å</option><option value="type" data-en="AI type">Type AI</option></select></label></div>
     <div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
   </div>
   <div class="hoved" id="hoved">
@@ -482,6 +489,39 @@ let alle = [], info = {}, side = 0, valgt = null;
 // Risikofilter fra toppmenyen (Høy, Middels, Lav, Ukjent). null = alle.
 let risikoValg = null;
 const synlige = () => risikoValg ? alle.filter(f => f.risiko === risikoValg) : alle;
+// Sortering: risiko (standard), land, A–Å eller type AI. Hvert funn står i nøyaktig én gruppe, så gruppene summerer til lista.
+let sortering = "risiko";
+const RISIKO_NR = r => Math.max(0, RISIKOGRUPPER.indexOf(r));
+// Landet dataene går til. Et farlig land går foran, så funnet står der det betyr mest.
+function hovedland(f) {
+  const l = (f.senderTil || []).filter(x => x.kode);
+  if (l.length) return l.find(x => x.farlig) || l[0];
+  const t = (f.trafikk || []).filter(m => m.landKode && m.landKode !== "LAN" && m.landKode !== "CDN").map(m => ({ kode: m.landKode, land: m.land, farlig: m.farlig }));
+  return t.find(x => x.farlig) || t[0] || null;
+}
+function gruppe(f) {
+  if (sortering === "land") {
+    const l = hovedland(f);
+    if (l) return { n: "1" + l.land, tekst: l.land, fare: l.farlig };
+    return erLokal(f) ? { n: "2", tekst: L("Ingen land · lokalt", "No country · local") } : { n: "3", tekst: L("Ingen tilkobling sett", "No connection seen") };
+  }
+  if (sortering === "navn") { const c = (f.kortnavn || f.navn || "#").trim().charAt(0).toLocaleUpperCase("nb"); return { n: /\p{L}/u.test(c) ? c : "#", tekst: /\p{L}/u.test(c) ? c : "#" }; }
+  if (sortering === "type") { const t = f.type || GRUPPER[gruppeNr(f)][1](); return { n: t, tekst: t }; }
+  return { n: String(RISIKO_NR(f.risiko)), tekst: merke(f.risiko), prikk: f.risiko };
+}
+const navnAv = f => (f.kortnavn || f.navn || "");
+function rekke() {
+  const l = synlige();
+  if (sortering === "risiko") return l;
+  return l.map(f => [f, gruppe(f)]).sort((a, b) => a[1].n.localeCompare(b[1].n, "nb") || (sortering === "navn" ? 0 : RISIKO_NR(a[0].risiko) - RISIKO_NR(b[0].risiko)) || navnAv(a[0]).localeCompare(navnAv(b[0]), "nb")).map(x => x[0]);
+}
+// Kilde-IP, program og mappe for forbindelsene funnet hadde under søket. Uten forbindelse står det rett ut.
+function kildeTekst(f) {
+  const m = (f.trafikk || []).find(x => (x.kilde || []).length || (x.prosesser || []).length);
+  if (!m) return (f.senderTil || []).length ? L("Land fra leverandør, ingen tilkobling sett under søket", "Country from vendor, no connection seen during the scan") : L("Ingen tilkobling sett under søket", "No connection seen during the scan");
+  const p = (m.prosesser || [])[0], fil = p ? p.fil : "", i = Math.max(fil.lastIndexOf("\\"), fil.lastIndexOf("/"));
+  return [m.kilde && m.kilde.length ? L("Fra ", "From ") + m.kilde.join(", ") : "", p ? (i >= 0 ? fil.slice(i + 1) : fil) + ` (PID ${p.pid})` : "", i > 0 ? fil.slice(0, i) : ""].filter(Boolean).join(" · ");
+}
 
 // IP-adressene til et mål, hver med land. Er det ingen IP-er, brukes målets eget land.
 const ipListe = m => (m.ip && m.ip.length ? m.ip : [m.adresse]).map(x => typeof x === "string" ? { ip: x, kode: m.landKode, land: m.land, cdn: m.landKode === "CDN" ? m.cdn : null, farlig: m.farlig } : x);
@@ -544,6 +584,9 @@ function tegnFordeling() {
     risikoValg = risikoValg === r ? null : r;
     side = 0; lukkArk(); tegnFordeling(); tegnListe();
   });
+  const so = $("sorter");
+  so.value = sortering;
+  so.onchange = () => { sortering = so.value; side = 0; lukkArk(); tegnListe(); };
 }
 
 function tegnBunn() {
@@ -586,11 +629,11 @@ let sideDeling = [];
 function delSider() {
   const h = ($("liste").clientHeight || 400) - 12, sider = [];
   let side = [], brukt = 0, forrige = null;
-  for (const f of synlige()) {
-    const ny = f.risiko !== forrige || !side.length, trengs = RAD_H + (ny ? GRUPPE_H : 0);
+  for (const f of rekke()) {
+    const g = gruppe(f).n, ny = g !== forrige || !side.length, trengs = RAD_H + (ny ? GRUPPE_H : 0);
     if (side.length && brukt + trengs > h) { sider.push(side); side = []; brukt = 0; }
-    brukt += RAD_H + (f.risiko !== forrige || !side.length ? GRUPPE_H : 0);
-    side.push(f); forrige = f.risiko;
+    brukt += RAD_H + (g !== forrige || !side.length ? GRUPPE_H : 0);
+    side.push(f); forrige = g;
   }
   if (side.length) sider.push(side);
   return sideDeling = sider;
@@ -604,19 +647,21 @@ function tegnListe() {
   const sider = delSider();
   side = Math.max(0, Math.min(side, sider.length - 1));
   let forrige = null;
+  const vis = synlige();
   sider[side].forEach(f => {
-    if (f.risiko !== forrige) {
+    const gr = gruppe(f);
+    if (gr.n !== forrige) {
       const g = document.createElement("div");
-      g.className = "gruppe";
-      g.innerHTML = `<span class="prikk ${f.risiko}"></span>${merke(f.risiko)} · ${alle.filter(x => x.risiko === f.risiko).length}`;
+      g.className = "gruppe" + (gr.fare ? " fare" : "");
+      g.innerHTML = `${gr.prikk ? `<span class="prikk ${gr.prikk}"></span>` : ""}${esc(gr.tekst)} · ${vis.filter(x => gruppe(x).n === gr.n).length}`;
       l.appendChild(g);
-      forrige = f.risiko;
+      forrige = gr.n;
     }
     const r = document.createElement("div");
     r.className = "rad" + (f === valgt ? " valgt" : "");
     r.title = L("Trykk for detaljer", "Click for details");
     r.innerHTML = `<span class="prikk ${f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
-      <div class="l2" title="${esc(f.lokasjon || "")}">${esc([f.status && f.status !== L("Finnes", "Present") ? f.status : "", f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
+      <div class="l2" title="${esc(sortering === "land" ? kildeTekst(f) : f.lokasjon || "")}">${esc(sortering === "land" ? [f.lokasjon, kildeTekst(f)].filter(Boolean).join(" · ") : [f.status && f.status !== L("Finnes", "Present") ? f.status : "", f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
       <div class="land${!(f.senderTil || []).length && erLokal(f) ? " lokalt" : ""}">${landListe(f)}</div><span class="pil">${CHEV}</span>`;
     r.onclick = () => valgt === f ? lukkArk() : apneArk(f);
     l.appendChild(r);
@@ -1083,7 +1128,9 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     const vis = l.slice(0, 4).map(x => `<span class="${x.farlig ? "farlig" : ""}">${esc(x.ip)}${ulike ? ` · ${esc(sted(x))}` : ""}</span>`).join("");
     return `<span class="ip">${vis}${l.length > 4 ? `<span>+ ${l.length - 4} ${L("til", "more")}</span>` : ""}</span>`;
   };
-  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${ipLinje(m)}</span>` +
+  const kildeLinje = m => (m.kilde || []).length || (m.prosesser || []).length
+    ? `<span class="ip"><span>${esc([(m.kilde || []).length ? L("Fra ", "From ") + m.kilde.join(", ") : "", ...(m.prosesser || []).map(p => `${p.fil} (PID ${p.pid})`)].filter(Boolean).join(" · "))}</span></span>` : "";
+  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${ipLinje(m)}${kildeLinje(m)}</span>` +
     `<span class="land ${m.farlig ? "farlig" : ""} ${m.landKode === "CDN" ? "skjult" : ""}">${m.landKode === "CDN" ? `${L("Tjenesten skjuler IP-en", "The service hides the IP")}<small>${L("bak", "behind")} ${esc(m.cdn || "CDN")}</small>` : esc(m.land || L("ukjent land", "unknown country"))}</span>` +
     `<span class="data">${esc(m.data || (info.dataMalt ? L("ikke målt", "not measured") : m.antall + (m.antall === 1 ? L(" forbindelse", " connection") : L(" forbindelser", " connections"))))}</span></li>`;
   const bredde = d.clientWidth - 110;
@@ -1149,7 +1196,7 @@ document.addEventListener("keydown", e => {
   if (!$("resultat").classList.contains("aktiv")) return;
   if (e.key === "Escape" && (nettApen || dataApen) && !$("skVindu")?.offsetParent) { lukkArk(); return; }
   if (valgt) {
-    const liste = synlige(), i = liste.indexOf(valgt);
+    const liste = rekke(), i = liste.indexOf(valgt);
     if (e.key === "Escape") lukkArk();
     else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       const ny = liste[Math.min(liste.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];

@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.30.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.31.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -141,7 +141,9 @@ sjekkes bare for om den er tom, og kastes med en gang. Alle nøkkelnavn samles i
 
 - Etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`, IPv4 og IPv6).
 - Vertsnavn fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme
-  kilde som `ipconfig /displaydns`). Det gjøres ingen nye DNS-oppslag og ingen omvendte oppslag.
+  kilde som `ipconfig /displaydns`). Ingen omvendte oppslag. Skannerens egne oppslag (se under) går utenom Windows og
+  havner ikke i bufferen. Står de fleste kjente AI-navnene i bufferen samtidig (rester etter en eldre versjon), brukes
+  bufferen ikke som bevis i det søket.
 - Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
 - Kartet i resultatet er innebygd (Natural Earth, fri bruk, via world-atlas, ISC). Det viser land, ikke by, og henter
   ingenting fra nettet. IP-adressene vises i vinduet, men lagres ikke.
@@ -194,6 +196,7 @@ fil»), fordi endringstider kan forfalskes.
 | Nettapper | `.lnk` i Start-menyen (maks 64 KB) | Om snarveien starter `*_proxy.exe --app-id`, og navnet |
 | Office-tillegg | `SOFTWARE\Microsoft\Office\<app>\Addins` (HKCU, HKLM, WOW6432Node), `%LOCALAPPDATA%\Microsoft\Office\16.0\Wef` (maks 500 filer, 512 KB) | `FriendlyName`, `Description`, `LoadBehavior`; i manifestene bare `DisplayName` og `Description`. Dokumenter røres aldri. |
 | Vektordatabaser | Filnavn i filgjennomgangen: `chroma.sqlite3`, `*.faiss`, `*.lance`, Qdrant `collections\*\collection.json`, LlamaIndex `docstore.json`, `*.usearch` | Bare sti, størrelse og endringstid. Innholdet leses aldri. |
+| Brannmurlogg (admin) | `pfirewall.log` (standard sti og `LogFilePath` fra brannmurregler), siste 16 MB | Bare linjer til adressene kjente AI-tjenester har nå: tid, protokoll, port, PID |
 | Electron-apper | `resources\app.asar` i leverandørmappene | Innholdslista øverst i fila og `package.json`: navn på AI-biblioteker. Koden leses ikke. |
 | Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
 | Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |
@@ -272,7 +275,7 @@ modellfiler som beskrevet over.
 | Til | Hva | Når |
 |---|---|---|
 | `127.0.0.1` | Maks tre `GET` per lyttende port | Under søket |
-| Vanlig DNS (PC-ens egen DNS-server) | Navnene på de kjente AI-tjenestene fra `regler.json` (for eksempel `chatgpt.com`, `api.openai.com`), slått opp én gang per søk | Under søket, bare på Windows |
+| Vanlig DNS (PC-ens egen DNS-server) | Navnene på de kjente AI-tjenestene fra `regler.json` (for eksempel `chatgpt.com`, `api.openai.com`), slått opp én gang per søk, sendt rett til DNS-serveren (UDP 53) utenom Windows' DNS-klient, så de ikke havner i DNS-bufferen | Under søket, bare på Windows |
 | `services.nvd.nist.gov` (HTTPS) | Bare produktordet fra `regler.json` for kjente produkter som ble funnet, for eksempel `ollama` | Etter at resultatet vises. Av med `--uten-nvd`. |
 
 PC-navn, brukernavn, stier og funn sendes aldri. DNS-oppslagene er de samme som når en nettside åpnes, og inneholder

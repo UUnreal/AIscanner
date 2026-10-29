@@ -274,6 +274,18 @@ public sealed partial class Skanner
         nb2.Tilkoblinger.Add(new Tilkobling(7002, IPAddress.Parse("192.168.1.10"), 52001, ip, 443));
         s2.Trafikk(nb2);
         Sjekk(s2._funn.Count == 0, "et vanlig program med samme IP som ChatGPT ble regnet som AI (IP-en kan deles på CDN-et)");
+        Sjekk(treff != null && treff.Trafikk.Any(m => m.KildeIp.Contains("192.168.1.10") && m.Prosesser.Any(p => p.Pid == 7001 && p.Fil == @"C:\Prog\chrome.exe")),
+            "kilde-IP og programfil ble ikke tatt vare på for forbindelsen");
+        // DNS-bufferen fylt av en eldre skanners egne oppslag: brukes ikke som bevis
+        var s3 = new Skanner(regler);
+        var nb3 = new NettBilde { Lyttere = new() };
+        nb3.DnsNavn.AddRange(regler.AiTjenester.Concat(regler.AiNettsteder).SelectMany(t => t.Domener));
+        s3.Trafikk(nb3);
+        Sjekk(s3.DnsBufferForurenset && s3._funn.Count == 0, "DNS-buffer fylt av skannerens egne oppslag ble brukt som bevis");
+        var s4 = new Skanner(regler);
+        var nb4 = new NettBilde { Lyttere = new(), DnsNavn = { "chat.deepseek.com" } };
+        s4.Trafikk(nb4);
+        Sjekk(!s4.DnsBufferForurenset && s4._funn.Values.Any(f => f.Navn == "DeepSeek"), "ett ekte DNS-oppslag (chat.deepseek.com) ble ikke funnet");
         return (ok, alle);
     }
 
@@ -299,6 +311,13 @@ public sealed partial class Skanner
         Sjekk(V("chroma_db/chroma.sqlite3") == "Chroma" && V("rag/index.faiss") == "FAISS" && V("data/bok.lance/data/1.lance") == "LanceDB" && V("qd/collections/dok/collection.json") == "Qdrant",
             "vektordatabase (Chroma, FAISS, LanceDB eller Qdrant) ble ikke kjent igjen");
         Sjekk(V("vanlig/notat.sqlite3") == null, "vanlig SQLite-fil ble tatt for vektordatabase");
+        // Egen DNS (utenom Windows' buffer): spørring og svar med CNAME foran A-posten
+        var q = EgenDns.Sporring("chat.deepseek.com", 1, 0x1234);
+        var svar = q.Take(2).Concat(new byte[] { 0x81, 0x80, 0, 1, 0, 2, 0, 0, 0, 0 }).Concat(q.Skip(12))
+            .Concat(new byte[] { 0xC0, 0x0C, 0, 5, 0, 1, 0, 0, 0, 60, 0, 2, 0xC0, 0x0C })
+            .Concat(new byte[] { 0xC0, 0x0C, 0, 1, 0, 1, 0, 0, 0, 60, 0, 4, 1, 2, 3, 4 }).ToArray();
+        var ip = EgenDns.Tolk(svar, 0x1234);
+        Sjekk(ip != null && ip.Count == 1 && ip[0].ToString() == "1.2.3.4" && EgenDns.Tolk(svar, 0x9999) == null, "egen DNS-klient tolket ikke svaret riktig, eller godtok svar på en annen spørring");
         Directory.CreateDirectory(Path.Combine(rot, "asar"));
         var asarAi = Path.Combine(rot, "asar", "ai.asar");
         File.WriteAllBytes(asarAi, Asar("\"lodash\":{\"files\":{}},\"@langchain\":{\"files\":{\"core\":{\"files\":{}}}}", "{\"name\":\"x\",\"dependencies\":{\"openai\":\"^4\",\"react\":\"^18\"}}"));

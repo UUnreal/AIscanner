@@ -183,7 +183,14 @@ public sealed class Mal
     public DateTime? Sist { get; set; }
     /// <summary>IP-adressene forbindelsene gikk til (høyst 8), hver med sitt land.</summary>
     public List<IpSted> Ip { get; } = new();
+    /// <summary>Lokale IP-adresser forbindelsene gikk fra (høyst 4).</summary>
+    public List<string> KildeIp { get; } = new();
+    /// <summary>Programfilene (full sti) som hadde forbindelsene, med PID (høyst 4).</summary>
+    public List<Prosessfil> Prosesser { get; } = new();
 }
 
 /// <summary>En IP-adresse og landet den er registrert i. Cdn er satt når adressen bare er en kantserver.</summary>
 public sealed record IpSted(string Ip, string? Land, string? Cdn);
+
+/// <summary>Et program (PID og full sti) som hadde en forbindelse.</summary>
+public sealed record Prosessfil(int Pid, string Fil);
