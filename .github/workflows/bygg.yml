@@ -32,6 +32,15 @@ jobs:
           # Ellers arver steget exit-koden 1/2 fra skanningen og feiler
           exit 0
 
+      # Ingen vinduer i bakgrunnen: programmet starter bare to andre prosesser, begge etter et klikk
+      # (seg selv som administrator, og Utforsker for «Vis i mappe»). Nye Process.Start stopper bygget.
+      - name: Sjekk at ingen prosesser åpner vinduer
+        shell: pwsh
+        run: |
+          $treff = @(Get-ChildItem src -Recurse -Filter *.cs | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } | Select-String -Pattern 'Process\.Start\(|CreateProcess|ShellExecute\(' )
+          $treff | ForEach-Object { "::notice title=Prosesser::$($_.Path):$($_.LineNumber)" }
+          if ($treff.Count -ne 2) { "::error title=Prosesser::Forventet 2 steder som starter prosesser, fant $($treff.Count)"; exit 1 }
+
       - name: Selvtest (godkjentlista kan ikke lures)
         run: dotnet run --project src/AISkanner.Cli -c Release --no-build -- --selvtest
 

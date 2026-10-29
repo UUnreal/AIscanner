@@ -23,6 +23,7 @@ public sealed partial class Skanner
     private readonly ConcurrentBag<string> _instruksjonsfiler = new();
     private readonly ConcurrentBag<string> _geminiEnv = new();
     private readonly ConcurrentBag<string> _envFiler = new();
+    private readonly ConcurrentBag<(string Sti, string Type)> _vektorDb = new();
     private readonly ConcurrentBag<string> _oppgavefiler = new();
     private readonly ConcurrentBag<string> _kjorbareIOppsett = new();
     private readonly ConcurrentBag<string> _prosjektSkills = new();
@@ -56,6 +57,51 @@ public sealed partial class Skanner
         return false;
     }
 
+    /// <summary>
+    /// Vektordatabaser: der AI-verktøy (RAG, «chat med dokumentene dine») legger tekstbiter fra dokumenter som tall.
+    /// Kjennes på filnavn og plassering. Innholdet leses aldri.
+    /// </summary>
+    internal static string? VektorDb(FileInfo fil)
+    {
+        var n = fil.Name;
+        var forelder = fil.Directory?.Name ?? "";
+        if (n.Equals("chroma.sqlite3", StringComparison.OrdinalIgnoreCase)) return "Chroma";
+        if (fil.Extension.Equals(".faiss", StringComparison.OrdinalIgnoreCase)) return "FAISS";
+        if (fil.Extension.Equals(".lance", StringComparison.OrdinalIgnoreCase) && fil.DirectoryName?.IndexOf(".lance", StringComparison.OrdinalIgnoreCase) >= 0) return "LanceDB";
+        if (n.Equals("collection.json", StringComparison.OrdinalIgnoreCase) && fil.Directory?.Parent?.Name == "collections") return "Qdrant";
+        if (n.Equals("docstore.json", StringComparison.OrdinalIgnoreCase) && fil.Directory?.GetFiles("vector_store.json").Length > 0) return "LlamaIndex";
+        if (n.Equals("index.pkl", StringComparison.OrdinalIgnoreCase) && fil.Directory?.GetFiles("index.faiss").Length > 0) return null;   // telles på index.faiss
+        if (n.EndsWith(".usearch", StringComparison.OrdinalIgnoreCase)) return "USearch";
+        if (forelder.Equals("lancedb", StringComparison.OrdinalIgnoreCase) || forelder.Equals("chroma_db", StringComparison.OrdinalIgnoreCase) || forelder.Equals("vectorstore", StringComparison.OrdinalIgnoreCase))
+            return forelder.Equals("lancedb", StringComparison.OrdinalIgnoreCase) ? "LanceDB" : forelder.Equals("chroma_db", StringComparison.OrdinalIgnoreCase) ? "Chroma" : null;
+        return null;
+    }
+
+    private void Vektordatabaser(List<(string Sti, string Type)> liste)
+    {
+        if (liste.Count == 0) return;
+        // Én database er én mappe; LanceDB har mange filer per tabell
+        var databaser = liste.GroupBy(x => (Mappe: x.Type == "LanceDB" ? LanceRot(x.Sti) : Path.GetDirectoryName(x.Sti)!, x.Type)).Take(200).ToList();
+        var f = LeggTil("Vektordatabaser for AI", "Skygge-AI (utvikling)", Risiko.Gul,
+            "Lagrer biter av dokumenter som AI-en kan søke i («chat med dokumentene»). Teksten fra dokumentene kan ligge der.",
+            "Filer på disken", null, enkelt: "AI-database med dokumentbiter");
+        foreach (var d in databaser)
+        {
+            long storrelse = 0; DateTime? endret = null;
+            foreach (var (sti, _) in d) try { var fi = new FileInfo(sti); storrelse += fi.Length; if (endret == null || fi.LastWriteTime > endret) endret = fi.LastWriteTime; } catch { }
+            f.Detalj($"{d.Key.Type}: {d.Key.Mappe} · {Rapport.Storrelse(storrelse)}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
+        }
+        f.Bruk = $"{string.Join(", ", databaser.Select(d => d.Key.Type).Distinct())}.";
+        f.Merk(Tilstand.Finnes);
+        f.Sterkt();
+    }
+
+    private static string LanceRot(string sti)
+    {
+        var i = sti.IndexOf(".lance", StringComparison.OrdinalIgnoreCase);
+        return i > 0 ? Path.GetDirectoryName(sti.Substring(0, i + 6)) ?? sti : Path.GetDirectoryName(sti)!;
+    }
+
     /// <summary>Kalles fra filgjennomgangen for hver fil. Bare navn og plassering sjekkes her; innholdet leses etterpå.</summary>
     private void SjekkAgentfil(FileInfo fil)
     {
@@ -66,6 +112,7 @@ public sealed partial class Skanner
         // .env og .env.local osv.: bare navnene på AI-nøkler leses etterpå, aldri verdiene
         if (navn.Equals(".env", StringComparison.OrdinalIgnoreCase) || (navn.StartsWith(".env.", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".example", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".sample", StringComparison.OrdinalIgnoreCase) && !navn.EndsWith(".template", StringComparison.OrdinalIgnoreCase)))
             _envFiler.Add(fil.FullName);
+        if (VektorDb(fil) is { } vdb) _vektorDb.Add((fil.FullName, vdb));
         if (!Instruksjonsnavn.Contains(navn) && ext is not (".mdc" or ".env" or ".json" or ".md" or ".pt" or ".pth" or ".bin" or ".ckpt") && forelder is not (".claude" or ".vscode")) return;
         var besteforelder = fil.Directory?.Parent?.Name ?? "";
         if (ErBrukerOppsett(fil.FullName)) return;   // sjekkes direkte av sporsjekken
@@ -128,6 +175,7 @@ public sealed partial class Skanner
             f.Detalj($"Fil: {sti}{(t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : "")} · verdiene vises aldri");
         }
         EnvNokler(_envFiler.Distinct(StringComparer.OrdinalIgnoreCase).Take(2000));
+        Vektordatabaser(_vektorDb.ToList());
         foreach (var sti in _oppgavefiler.Distinct(StringComparer.OrdinalIgnoreCase).Take(200)) OppgaverVedApning(sti);
         foreach (var g in _kjorbareIOppsett.Distinct(StringComparer.OrdinalIgnoreCase).GroupBy(x => Path.GetDirectoryName(x)!).Take(100))
             KjorbareIAgentmappe(g.Key, g.ToList());

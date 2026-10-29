@@ -1453,3 +1453,12 @@ En nettleserutvidelse kan starte dette programmet på PC-en og sende data begge 
 ~^Manifest: (.+)$|Manifest: $1
 ~^Utvidelser som kan bruke broen: (.+)$|Extensions that can use the bridge: $1
 Lagt inn av IT-regel (ExtensionInstallForcelist). Brukeren kan ikke fjerne den.|Installed by IT policy (ExtensionInstallForcelist). The user cannot remove it.
+Vektordatabaser for AI|Vector databases for AI
+Lagrer biter av dokumenter som AI-en kan søke i («chat med dokumentene»). Teksten fra dokumentene kan ligge der.|Stores pieces of documents that the AI can search («chat with your documents»). Text from the documents may be stored there.
+AI-database med dokumentbiter|AI database with document pieces
+Ukjent AI-tillegg i Office. Det kan lese dokumentene og e-posten du har åpne. Vi vet ikke hvem som lager det.|Unknown AI add-in in Office. It can read the documents and email you have open. We do not know who makes it.
+~^(.+) \(tillegg i (.+)\)$|$1 (add-in in $2)
+~^Office-tillegg i (.+)$|Office add-in in $1
+lastes når Office starter|loads when Office starts
+lastes ikke nå|does not load now
+nettbasert tillegg|web add-in

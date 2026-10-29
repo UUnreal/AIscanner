@@ -95,7 +95,7 @@ if (args.Contains("--nettverk"))
     return 0;
 }
 if (args.Contains("--revisjon")) { Console.WriteLine(Revisjon.Tekst(funn, skanner, Nettverk.ErAdmin() ? "administrator" : "bruker", args.Contains("--en"))); return 0; }
-Console.WriteLine(args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
+Console.WriteLine(args.Contains("--csv") ? Rapport.Csv(funn, args.Contains("--en")) : args.Contains("--txt") ? Rapport.Tekst(funn, skanner, args.Contains("--en")) : args.Contains("--en") ? Engelsk.Json(Rapport.Json(funn, skanner)) : Rapport.Json(funn, skanner));
 return funn.Any(f => f.Risiko == Risiko.Rod) ? 2 : funn.Count > 0 ? 1 : 0;
 
 /// <summary>Intern test: falskt nettverksbilde fra en JSON-fil, så trafikklogikken kan testes uten Windows.</summary>

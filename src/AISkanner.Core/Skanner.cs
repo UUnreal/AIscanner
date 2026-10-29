@@ -72,7 +72,7 @@ public sealed partial class Skanner
             ("Ser etter AI-nettsteder du har brukt...", Nettsteder),
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
-            ("Sjekker registeret...", Register),
+            ("Sjekker registeret...", () => { Register(); OfficeTillegg(); }),
             ("Leter etter AI som leverandører har lagt inn...", LeverandorAi),
             ("Ser etter ukjente AI-spor...", UkjenteSporSjekk),
             ("Ser i Windows' historikk etter AI som er brukt før...", WindowsHistorikk),

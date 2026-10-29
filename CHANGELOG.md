@@ -29,6 +29,25 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.30.0] - 2026-10-29
+
+Ikke testet på Windows utover lastetesten i byggeløypa.
+
+### Lagt til
+- **Office-tillegg med AI:** COM-tillegg i Word, Excel, Outlook, PowerPoint, OneNote, Project og Visio (HKCU og HKLM,
+  også 32-bit) og nettbaserte tillegg i `%LOCALAPPDATA%\Microsoft\Office\16.0\Wef`. Kjent AI får regelens navn;
+  ukjent med AI-ord i navnet blir rødt «Ukjent AI-spor». Viser om tillegget lastes når Office starter.
+- **Vektordatabaser** (Chroma, FAISS, LanceDB, Qdrant, LlamaIndex, USearch) som filgjennomgangen finner: mappe,
+  størrelse og sist endret. Innholdet leses aldri.
+- **Regneark (CSV)** ved lagring: én rad per funn med samme kolonner som tabellen, semikolon og UTF-8 for Excel.
+  Celler som starter med `=`, `+`, `-` eller `@` får en `'` foran. Også `AISkanner.Cli --csv`.
+
+### Rettet
+- **Ingen vindu i bakgrunnen når søket starter som administrator.** Før lukket det gamle vinduet seg straks, og det
+  nye kom ofte bak andre vinduer. Nå åpnes det nye vinduet på samme plass og i samme størrelse, legger seg foran,
+  og det gamle lukkes først når det nye vises. Sier brukeren nei til administrator, blir det gamle stående.
+- Byggeløypa stopper hvis koden starter andre prosesser enn de to brukeren klikker for (administrator og «Vis i mappe»).
+
 ## [2.29.0] - 2026-10-29
 
 Ikke testet på Windows utover lastetesten i byggeløypa.

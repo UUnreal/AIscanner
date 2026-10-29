@@ -49,6 +49,19 @@ public sealed class Hovedvindu : Form
         ClientSize = new Size(980, 760);
         MinimumSize = new Size(560, 600);
         StartPosition = FormStartPosition.CenterScreen;
+        // Startet på nytt som administrator: samme plass og størrelse som vinduet før, så det ser ut som ett vindu
+        var vi = Array.IndexOf(args, "--vindu");
+        if (vi >= 0 && vi + 1 < args.Length && args[vi + 1].Split(',') is { Length: 5 } d
+            && d.Take(4).All(x => int.TryParse(x, out _)))
+        {
+            var r = new Rectangle(int.Parse(d[0]), int.Parse(d[1]), int.Parse(d[2]), int.Parse(d[3]));
+            if (Screen.AllScreens.Any(sk => sk.WorkingArea.IntersectsWith(r)))
+            {
+                StartPosition = FormStartPosition.Manual;
+                Bounds = r;
+                if (d[4] == "max") WindowState = FormWindowState.Maximized;
+            }
+        }
         // Samme bakgrunn som siden (lys eller mørk etter Windows), så vinduet aldri skifter farge når det åpnes
         BackColor = _mork ? Color.FromArgb(17, 17, 19) : Color.FromArgb(242, 242, 245);
         _web.DefaultBackgroundColor = BackColor;
@@ -131,6 +144,12 @@ public sealed class Hovedvindu : Form
 
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool AllowSetForegroundWindow(int prosess);
+
     private void Vis()
     {
         if (IsDisposed) return;
@@ -139,6 +158,11 @@ public sealed class Hovedvindu : Form
             _skjult = false;
             int av = 0;
             try { DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref av, sizeof(int)); } catch { }
+            // Foran, ikke bak andre vinduer, og det gamle vinduet (før administrator) lukkes først nå
+            try { Activate(); SetForegroundWindow(Handle); } catch { }
+            var ki = Array.IndexOf(_args, "--klar");
+            if (ki >= 0 && ki + 1 < _args.Length && System.Text.RegularExpressions.Regex.IsMatch(_args[ki + 1], @"^AISkanner-klar-\d+$"))
+                try { using var e = EventWaitHandle.OpenExisting(_args[ki + 1]); e.Set(); } catch { }
         }
         // Innholdet tones inn først når vinduet er synlig
         try { Send(new { type = "vist" }); } catch { }
@@ -420,12 +444,20 @@ public sealed class Hovedvindu : Form
         if (Nettverk.ErAdmin() || _soker) return;
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_fullt ? " --fullt" : "") + (_engelsk ? " --en" : " --no"))
+            // Det nye vinduet legger seg på samme plass og sier fra når det vises. Først da lukkes dette, så brukeren aldri
+            // ser to vinduer eller et tomt øyeblikk.
+            var klarNavn = $"AISkanner-klar-{System.Diagnostics.Process.GetCurrentProcess().Id}";
+            var klar = new EventWaitHandle(false, EventResetMode.ManualReset, klarNavn);
+            var b = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+            var vindu = $" --vindu {b.X},{b.Y},{b.Width},{b.Height},{(WindowState == FormWindowState.Maximized ? "max" : "normal")} --klar {klarNavn}";
+            try { AllowSetForegroundWindow(-1); } catch { }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + vindu + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_fullt ? " --fullt" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",
             });
-            Close();
+            // Venter i bakgrunnen, så vinduet ikke henger. Kommer det nye vinduet aldri (feil ved oppstart), blir dette stående.
+            ThreadPool.RegisterWaitForSingleObject(klar, (_, tidenGikk) => { if (!tidenGikk) try { BeginInvoke(new Action(Close)); } catch { } klar.Dispose(); }, null, TimeSpan.FromSeconds(60), true);
         }
         catch (System.ComponentModel.Win32Exception)
         {
@@ -585,14 +617,14 @@ public sealed class Hovedvindu : Form
     {
         using var dlg = new SaveFileDialog
         {
-            Filter = _engelsk ? "Report (*.txt)|*.txt|Data for IT (*.json)|*.json" : "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json",
+            Filter = _engelsk ? "Report (*.txt)|*.txt|Data for IT (*.json)|*.json|Spreadsheet (*.csv)|*.csv" : "Rapport (*.txt)|*.txt|Data for IT (*.json)|*.json|Regneark (*.csv)|*.csv",
             // Tidsstempel med sekunder, så hver rapport får et eget navn
             FileName = $"{(_engelsk ? "AI-report" : "AI-rapport")}_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
             OverwritePrompt = false,
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        var innhold = dlg.FilterIndex == 2 ? (_engelsk ? Engelsk.Json(Rapport.Json(_resultat, _skanner)) : Rapport.Json(_resultat, _skanner)) : Rapport.Tekst(_resultat, _skanner, _engelsk);
+        var innhold = dlg.FilterIndex == 3 ? Rapport.Csv(_resultat, _engelsk) : dlg.FilterIndex == 2 ? (_engelsk ? Engelsk.Json(Rapport.Json(_resultat, _skanner)) : Rapport.Json(_resultat, _skanner)) : Rapport.Tekst(_resultat, _skanner, _engelsk);
         // Skriver aldri over en rapport som finnes: legg til (2), (3) ...
         var sti = dlg.FileName;
         for (int n = 2; File.Exists(sti); n++)

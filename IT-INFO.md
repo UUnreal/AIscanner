@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.29.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.30.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -192,6 +192,8 @@ fil»), fordi endringstider kan forfalskes.
 | Nettleserbroer | `NativeMessagingHosts` for Chrome, Edge, Brave, Chromium og Firefox (HKCU og HKLM) og manifestet nøkkelen peker på | `name`, `description`, `path`, `allowed_origins`. Programmet startes aldri. |
 | Tvungne utvidelser | `SOFTWARE\Policies\{Google\Chrome,Microsoft\Edge,BraveSoftware\Brave}\ExtensionInstallForcelist` | Bare utvidelses-ID-ene |
 | Nettapper | `.lnk` i Start-menyen (maks 64 KB) | Om snarveien starter `*_proxy.exe --app-id`, og navnet |
+| Office-tillegg | `SOFTWARE\Microsoft\Office\<app>\Addins` (HKCU, HKLM, WOW6432Node), `%LOCALAPPDATA%\Microsoft\Office\16.0\Wef` (maks 500 filer, 512 KB) | `FriendlyName`, `Description`, `LoadBehavior`; i manifestene bare `DisplayName` og `Description`. Dokumenter røres aldri. |
+| Vektordatabaser | Filnavn i filgjennomgangen: `chroma.sqlite3`, `*.faiss`, `*.lance`, Qdrant `collections\*\collection.json`, LlamaIndex `docstore.json`, `*.usearch` | Bare sti, størrelse og endringstid. Innholdet leses aldri. |
 | Electron-apper | `resources\app.asar` i leverandørmappene | Innholdslista øverst i fila og `package.json`: navn på AI-biblioteker. Koden leses ikke. |
 | Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
 | Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |

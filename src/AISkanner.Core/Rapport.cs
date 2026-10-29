@@ -153,4 +153,32 @@ public static class Rapport
             trafikk = f.Trafikk,
         }),
     }, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+
+    /// <summary>
+    /// Én rad per funn for regneark (Excel åpner semikolon og UTF-8 med BOM). Samme felt som tabellen i vinduet.
+    /// Celler som starter med = + - @ får en ' foran, så Excel aldri tolker dem som formler.
+    /// </summary>
+    public static string Csv(IReadOnlyList<Funn> liste, bool engelsk = false)
+    {
+        string T(string s) => engelsk ? Engelsk.Til(s) : s;
+        string C(string? v)
+        {
+            v = (v ?? "").Replace("\r", " ").Replace("\n", " ");
+            if (v.Length > 0 && "=+-@\t".IndexOf(v[0]) >= 0) v = "'" + v;
+            return v.IndexOfAny(new[] { ';', '"' }) >= 0 ? "\"" + v.Replace("\"", "\"\"") + "\"" : v;
+        }
+        var sb = new StringBuilder();
+        var kolonner = engelsk
+            ? new[] { "Risk", "AI", "Status", "Confidence", "Type", "Located here", "Sends data to", "Comes from", "Version", "First seen", "Last seen", "PC" }
+            : new[] { "Risiko", "AI", "Status", "Treffsikkerhet", "Type", "Ligger her", "Sender data til", "Kommer fra", "Versjon", "Først sett", "Sist sett", "PC" };
+        sb.AppendLine(string.Join(";", kolonner.Select(C)));
+        foreach (var f in liste)
+            sb.AppendLine(string.Join(";", new[]
+            {
+                T(Oversikt.Risikogruppe(f) switch { "rod" => "Høy", "gul" => "Middels", "gronn" => "Lav", _ => "Ukjent" }), T(f.Navn), T(Oversikt.Status(f)), T(Oversikt.Treffsikkerhet(f)), T(f.Type), T(Oversikt.Lokasjon(f)),
+                string.Join(", ", Risikoregler.SenderTil(f)), f.Opprinnelse, f.Versjon,
+                f.Forst?.ToString("yyyy-MM-dd HH:mm"), f.Sist?.ToString("yyyy-MM-dd HH:mm"), Environment.MachineName,
+            }.Select(C)));
+        return sb.ToString();
+    }
 }
