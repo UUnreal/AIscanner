@@ -23,13 +23,15 @@ public static class ModellFormat
         public string? Type { get; init; }
         /// <summary>Programmet som laget filen (ONNX).</summary>
         public string? Produsent { get; init; }
+        /// <summary>Versjonen modellen selv oppgir (GGUF general.version), når den står i fila.</summary>
+        public string? Versjon { get; init; }
     }
 
     public static Modell? Gjenkjenn(string sti)
     {
         try
         {
-            using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.SequentialScan);
+            using var fs = Admintilgang.AapneLes(sti, 4096, FileOptions.SequentialScan);
             Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "filhode (format)");
             var hode = new byte[64];
             int n = fs.Read(hode, 0, hode.Length);
@@ -74,7 +76,7 @@ public static class ModellFormat
     // ---------- GGUF ----------
     private static Modell Gguf(FileStream fs)
     {
-        string? navn = null, arkitektur = null, storrelse = null, basenavn = null, base0 = null, baseOrg = null, org = null;
+        string? navn = null, arkitektur = null, storrelse = null, basenavn = null, base0 = null, baseOrg = null, org = null, modellVersjon = null;
         int? vokab = null, lag = null, bredde = null;
         var tall = new Dictionary<string, long>();
         try
@@ -99,6 +101,7 @@ public static class ModellFormat
                         case "general.size_label": storrelse = verdi; break;
                         case "general.basename": basenavn = verdi; break;
                         case "general.organization": org = verdi; break;
+                        case "general.version": modellVersjon = verdi; break;
                         case "general.base_model.0.name": base0 = verdi; break;
                         case "general.base_model.0.organization": baseOrg = verdi; break;
                     }
@@ -125,7 +128,7 @@ public static class ModellFormat
                  : arkitektur is "clip" ? "bildeforståelse (CLIP)" : arkitektur is "whisper" ? "talemodell" : "språkmodell";
         return new Modell("GGUF", visning, arkitektur, null, false)
         {
-            Vokab = vokab, Lag = lag, Bredde = bredde, Organisasjon = org, Type = slag,
+            Vokab = vokab, Lag = lag, Bredde = bredde, Organisasjon = org, Type = slag, Versjon = modellVersjon,
             BaseModell = base0 == null ? null : baseOrg != null ? $"{baseOrg}/{base0}" : base0,
         };
     }
@@ -216,7 +219,7 @@ public static class ModellFormat
     {
         try
         {
-            using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var fs = Admintilgang.AapneLes(sti);
             if (fs.ReadByte() != 0x08) return false;
             var p = Onnx(fs).Produsent;
             return p != null && System.Text.RegularExpressions.Regex.IsMatch(p, @"^[A-Za-z][\w.\- ]{1,60}$");

@@ -61,7 +61,7 @@ public sealed class YaraRegler
     {
         try
         {
-            using var fs = new FileStream(fil, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 16);
+            using var fs = Admintilgang.AapneLes(fil, 1 << 16);
             long lengde = fs.Length;
             var a = new byte[(int)Math.Min(lengde, hode)];
             fs.LesAlt(a);

@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.22.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.23.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -31,8 +31,11 @@ Alt er bare lesing. Ingenting endres.
 
 ### Prosesser og programmer
 
-- Prosessliste og filsti, med `PROCESS_QUERY_LIMITED_INFORMATION` og `QueryFullProcessImageName`.
-  **Minnet til andre prosesser leses aldri.** `lsass`, `csrss`, `winlogon` og Defender-prosesser åpnes ikke.
+- Prosessliste og filsti, med `PROCESS_QUERY_LIMITED_INFORMATION` og `QueryFullProcessImageName`. Nekter Windows å
+  åpne prosessen, hentes stien fra Windows' prosessliste (`NtQuerySystemInformation`, `SystemProcessIdInformation`)
+  uten å åpne den. **Minnet til andre prosesser leses aldri.** `lsass`, `csrss`, `winlogon` og Defender-prosesser åpnes ikke.
+- Versjonsfeltene i programfila (`FileVersionInfo`): produktversjon, og `OriginalFilename`/`InternalName` for å se om
+  et AI-program kjører under et annet navn.
 - Filnavn i mappa til programmer som kjører, for å finne AI-motorer (`onnxruntime`, `ggml`/`llama`, `torch`,
   `openvino`, `DirectML` m.fl.). `DirectML` alene regnes ikke som AI, fordi det følger med mange programmer som
   aldri kjører en AI-modell.
@@ -318,6 +321,15 @@ samme som Ressursovervåking) for forbindelsene som er åpne når søket starter
 
 Tallene er byte faktisk sendt og mottatt i måleperioden (typisk 10–30 sekunder, minst 5), ikke anslag.
 Forbindelser som åpnes underveis, måles ikke. QUIC og UDP vises ikke.
+
+**Lesing for sikkerhetskopi.** Som administrator slår skanneren på `SeBackupPrivilege` i sin egen prosess (rettigheten
+finnes allerede i administratorens token, men er av). Mapper som er låst for alle, kan da listes, og filer som nekter
+vanlig lesing, åpnes med `FILE_FLAG_BACKUP_SEMANTICS` bare for lesing. Ingen rettigheter, eiere eller filer endres.
+Lista over det som aldri leses (under), gjelder fortsatt. Datagrunnlaget viser at retten var på, og hvilke filer som
+ble lest slik. `SeDebugPrivilege` brukes ikke.
+
+**Skjulte datastrømmer.** Fullt søk lister navngitte datastrømmer i hver fil (`FindFirstStreamW`) og sjekker filhodet
+i strømmer på minst 50 MB.
 
 Ikke testet på Windows ennå.
 

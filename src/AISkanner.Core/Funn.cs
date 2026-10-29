@@ -74,6 +74,19 @@ public sealed class Funn
     public int Innebygde => _innebygde;
     public void LeggTilInnebygde(int n) => Interlocked.Add(ref _innebygde, n);
 
+    /// <summary>Versjonen slik den står på PC-en (programfila, avinstalleringslista, modellfila, utvidelsens manifest). Bare ekte verdier.</summary>
+    public string? Versjon { get; private set; }
+    /// <summary>Hvor versjonen ble lest, f.eks. «programfila».</summary>
+    public string? VersjonKilde { get; private set; }
+
+    /// <summary>Setter versjonen første gang en ekte verdi finnes. Tomme og meningsløse verdier (0.0.0.0) ignoreres.</summary>
+    public void SettVersjon(string? versjon, string kilde)
+    {
+        versjon = versjon?.Trim();
+        if (string.IsNullOrEmpty(versjon) || versjon!.Length > 40 || System.Text.RegularExpressions.Regex.IsMatch(versjon, @"^[0.\s,]*$")) return;
+        lock (this) if (Versjon == null) { Versjon = versjon; VersjonKilde = kilde; }
+    }
+
     public void LeggTilHvor(string s) { lock (this) if (!Hvor.Contains(s)) Hvor.Add(s); }
     public void Advarsel(string s) { lock (this) if (!Advarsler.Contains(s)) Advarsler.Add(s); }
 

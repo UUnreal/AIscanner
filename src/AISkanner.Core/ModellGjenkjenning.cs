@@ -117,7 +117,7 @@ internal static class ModellGjenkjenning
     {
         try
         {
-            using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 16);
+            using var fs = Admintilgang.AapneLes(sti, 1 << 16);
             Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "fingeravtrykk (2 MB)");
             using var sha = SHA256.Create();
             const int Blokk = 1 << 20;

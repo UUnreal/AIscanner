@@ -69,6 +69,7 @@ public sealed partial class Skanner
             var andre = new List<string>();
             var ukjente = new List<string>();
             long sprakStorrelse = 0;
+            string? sprakVersjon = null;
             DateTime? forst = null, sist = null;
             void Tider(DateTime? f, DateTime? s)
             {
@@ -97,6 +98,9 @@ public sealed partial class Skanner
                 var linje = $"Mappe: {d} · {info.Hva} · {Rapport.Storrelse(storrelse)} · lastet ned {Tid(opprettet)}{(endret.Date != opprettet.Date ? $" · oppdatert {Tid(endret)}" : "")}";
                 if (info.Sprak)
                 {
+                    // Nettleseren legger modellen i en mappe som heter det samme som versjonen (f.eks. 2025.8.8.1141)
+                    sprakVersjon ??= Mapper(d).Select(x => Path.GetFileName(x) ?? "").Where(n => Regex.IsMatch(n, @"^\d+(\.\d+)+$"))
+                        .OrderByDescending(n => n, Comparer<string>.Create((x, y) => new Version(Kort(x)).CompareTo(new Version(Kort(y))))).FirstOrDefault();
                     sprakStorrelse += storrelse;
                     Tider(opprettet, endret);
                     sprak.Add(linje);
@@ -128,6 +132,7 @@ public sealed partial class Skanner
                 f.Tidspunkt(forst, sist);
                 foreach (var l in sprak) f.Detalj(l);
                 f.LeggTilModeller(1);   // én språkmodell, selv om den består av flere filer
+                f.SettVersjon(sprakVersjon, "modellmappa i nettleseren");
                 hoved = f;
                 if (blokkert) f.Advarsel("IT har blokkert modellen, men den ligger fortsatt på disk.");
                 else if (policy == null) f.Merknad("Ingen regel fra IT. Nettleseren bestemmer selv om AI-modellen lastes ned.");
@@ -179,4 +184,7 @@ public sealed partial class Skanner
             }
         }
     }
+
+    // Version tåler høyst fire ledd
+    private static string Kort(string v) => string.Join(".", v.Split('.').Take(4).Select(x => x.Length > 9 ? x.Substring(0, 9) : x));
 }

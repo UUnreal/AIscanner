@@ -29,6 +29,40 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.23.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 155 av 155.
+
+### Lagt til
+- **Versjon på funnene.** Lest fra det som står på PC-en: programfila (`ProductVersion`), lista over installerte
+  programmer (`DisplayVersion`), Microsoft Store-pakken, utvidelsens `manifest.json`, GGUF-feltet `general.version`,
+  revisjonen i Hugging Face-lageret og versjonsmappa til nettleserens egen modell. Vises ved navnet i lista, i
+  detaljene og i rapporten med hvor den er lest fra. Står ingen versjon på PC-en, vises ingen.
+- **AI som gjemmer seg.** Et AI-program som kjører under et annet navn enn det produsenten ga programfila
+  (`OriginalFilename`/`InternalName`), blir funnet og merket rødt. Modellfiler som er merket skjult, har endelsen til en
+  film, et bilde eller et dokument, eller ligger i en skjult datastrøm (ADS, bare i fullt søk, strømmer på minst 50 MB),
+  merkes rødt med forklaring. IT-godkjenning overstyrer ikke disse merkene.
+- **Som administrator: lesing for sikkerhetskopi.** `SeBackupPrivilege`, som administratoren allerede har, slås på for
+  søket. Mapper og filer som er låst for alle andre, kan da listes og filhodet leses. Bare lesing; ingen rettigheter
+  eller filer endres. Står i datagrunnlaget.
+- **Prosesser Windows nekter å åpne** får programstien fra Windows' prosessliste (`SystemProcessIdInformation`) uten at
+  prosessen åpnes.
+- **OneDrive-filer** som bare ligger i skyen, sjekkes på navn og størrelse uten å lastes ned. En modellfil der blir
+  «AI-modell i OneDrive».
+
+### Endret
+- **Oppstart uten blink.** Vinduet har samme bakgrunn som siden (lys eller mørk etter Windows), mørk tittellinje i mørk
+  modus, vises først når startskjermen er tegnet med riktig språk og valg, og innholdet toner mykt inn.
+- Fullt søk hopper ikke lenger over buffer-, logg- og spillmapper hos leverandører. Antivirusets egne mapper røres
+  fortsatt ikke. Lokale porter får 3 sekunder til å svare i fullt søk (0,8 i hurtigsøk).
+- Datagrunnlag: «finnes ikke» heter nå «sjekket, ingenting der». Det er steder som er sjekket og er tomme, ikke hull.
+- Hovedsiden til selskaper som står på lista (for eksempel mistral.ai og x.ai) vises ikke lenger som «ukjent
+  AI-nettsted». Bruken telles på tjenestene deres (Le Chat, API-konsollen).
+
+### Rettet
+- Datagrunnlag: med én sjekk valgt viste filterknappene tall for hele søket, så en knapp kunne vise et tall mens lista var tom.
+  Tallene gjelder nå den valgte sjekken.
+
 ## [2.22.0] - 2026-10-29
 
 Ikke testet på Windows ennå. `--kontroll` gir 152 av 152.

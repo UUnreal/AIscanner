@@ -196,6 +196,24 @@ public sealed partial class Skanner
         }
         Sjekk(Modeller(false) == 0, "hurtigsøket åpner .mp4-filer og punktum-mapper (skal hoppe over dem)");
         Sjekk(Modeller(true) == 2, "fullt søk fant ikke modellen omdøpt til .mp4 og modellen i punktum-mappa");
+
+        // Forkledd modell blir rød med advarsel, og versjonen modellfila oppgir blir vist
+        var gguf = new List<byte>();
+        void U32(uint v) => gguf.AddRange(BitConverter.GetBytes(v));
+        void U64(ulong v) => gguf.AddRange(BitConverter.GetBytes(v));
+        void Str(string t) { var b = Encoding.UTF8.GetBytes(t); U64((ulong)b.Length); gguf.AddRange(b); }
+        gguf.AddRange(Encoding.ASCII.GetBytes("GGUF")); U32(3); U64(0); U64(2);
+        Str("general.name"); U32(8); Str("Testmodell");
+        Str("general.version"); U32(8); Str("2.5");
+        var forkledd = Path.Combine(mappe, "film.mp4");
+        File.WriteAllBytes(forkledd, gguf.ToArray());
+        var sk = new Skanner(regler) { Fullt = true };
+        var m = ModellFormat.Gjenkjenn(forkledd);
+        Sjekk(m?.Versjon == "2.5", "versjonen i GGUF-fila (general.version) ble ikke lest");
+        if (m != null) sk.LeggTilModell(forkledd, 64, m);
+        var funn = sk._funn.Values.FirstOrDefault(f => f.Navn.Contains("Testmodell"));
+        Sjekk(funn != null && funn.Risiko == Risiko.Rod && funn.Advarsler.Any(a => a.StartsWith("Forkledd")), "modell med endelsen .mp4 ble ikke merket som forkledd og rød");
+        Sjekk(funn?.Versjon == "2.5", "modellfunnet viser ikke versjonen fra fila");
         return (ok, alle);
     }
 
@@ -344,7 +362,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(falskOk == falskAlle ? "OK  " : "FEIL")}  Falske treff: {falskOk} av {falskAlle} riktige (presentasjonssider, Microsoft 365-startsiden, skytjenester, DirectML, innebygde modeller i tellingen)");
             var (fulltOk, fulltAlle) = FulltKontroll(regler, sb, rot);
             ok += fulltOk;
-            sb.AppendLine($"{(fulltOk == fulltAlle ? "OK  " : "FEIL")}  Fullt søk: {fulltOk} av {fulltAlle} riktige (modell omdøpt til .mp4 finnes bare i fullt søk, punktum-mapper gås gjennom)");
+            sb.AppendLine($"{(fulltOk == fulltAlle ? "OK  " : "FEIL")}  Fullt søk: {fulltOk} av {fulltAlle} riktige (modell omdøpt til .mp4 finnes bare i fullt søk og merkes forkledd, punktum-mapper gås gjennom, versjon fra modellfila)");
             var (nettOk, nettAlle) = NettleserKontroll(regler, sb, rot);
             ok += nettOk;
             sb.AppendLine($"{(nettOk == nettAlle ? "OK  " : "FEIL")}  Nettlesere og nye regler: {nettOk} av {nettAlle} riktige (Comet, LibreWolf, Brave Leo, Firefox-chatbot og -modeller, Thunderbird ikke, AI-agenter og møteopptakere)");

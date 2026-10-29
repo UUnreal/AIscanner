@@ -31,6 +31,9 @@ public sealed partial class Skanner
         "Adobe", "Common Files", "Packages", "Lenovo", "Dell", "HP", "Hewlett-Packard", "ASUS", "Qualcomm", "Apps", "Logitech", "Apple",
     };
 
+    // Antivirusets egne mapper røres aldri, heller ikke i fullt søk
+    private static bool AntivirusMappe(string navn) => navn.StartsWith("Windows Defender", StringComparison.OrdinalIgnoreCase);
+
     private static readonly HashSet<string> LeverandorHopp = new(StringComparer.OrdinalIgnoreCase)
     {
         "Temp", "INetCache", "INetCookies", "Cache", "Code Cache", "GPUCache", "CacheStorage", "Service Worker", "IndexedDB", "Crashpad",
@@ -113,7 +116,7 @@ public sealed partial class Skanner
             {
                 if (hopp.Contains(d) || rotter.Any(r => r.Sti.Equals(d, StringComparison.OrdinalIgnoreCase))) continue;
                 var navn = Path.GetFileName(d);
-                if (LeverandorHopp.Contains(navn)) continue;
+                if (LeverandorHopp.Contains(navn) && (!Fullt || AntivirusMappe(navn))) continue;
                 // Samlemapper (Microsoft, Programs, Packages osv.): hver undermappe er et eget program
                 if (!pakker && Samlemapper.Contains(navn))
                     foreach (var u in Mapper(d)) jobber.Add((u, u, dybde - 2, beskyttet));
@@ -159,7 +162,7 @@ public sealed partial class Skanner
             return;
         }
         var navn = Path.GetFileName(mappe);
-        if (LeverandorHopp.Contains(navn)) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappenavn som hoppes over av regel (buffer, logger, oppdateringer)"); return; }
+        if (LeverandorHopp.Contains(navn) && (!Fullt || AntivirusMappe(navn))) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: AntivirusMappe(navn) ? "antivirusets egne filer, røres ikke" : "mappenavn som hoppes over av regel (buffer, logger, oppdateringer)"); return; }
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;

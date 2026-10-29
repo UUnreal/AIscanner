@@ -21,6 +21,10 @@ public static class Risikoregler
     {
         "Er åpen mot nettverket",
         "Minst én av tjenestene hører hjemme i et land",
+        "Forkledd:",
+        "Gjemt i en skjult datastrøm",
+        "Fila er merket som skjult",
+        "Kjører under et annet navn",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>

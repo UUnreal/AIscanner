@@ -84,7 +84,7 @@ internal sealed class Kontekst
         if (_fil == null || Filstorrelse > MaksEkstraLesing) return null;
         try
         {
-            using var s = new FileStream(_fil, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var s = Admintilgang.AapneLes(_fil);
             var d = new byte[s.Length];
             s.LesAlt(d);
             return _hele = d;

@@ -126,7 +126,7 @@ public sealed partial class Skanner
         byte[]? bytes = null;
         try
         {
-            using (var s = new FileStream(localState, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var s = Admintilgang.AapneLes(localState))
             {
                 Tilgangslogg.Logg("Fil", localState, Utfall.Lest, "bare lista over eksperimentflagg (LesNettleserflagg på)");
                 if (s.Length > 32 * 1024 * 1024) return null;

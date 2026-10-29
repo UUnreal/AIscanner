@@ -1261,3 +1261,35 @@ Behandler lyden fra mikrofonen. Møtenotater sendes til AI-tjenesten.|Processes 
 På jobb: bare med avtale.|At work: only with an agreement.
 Utvidelse som tar opp eller skriver ned møter og sender lyd og tekst til AI-tjenesten.|Extension that records or transcribes meetings and sends audio and text to the AI service.
 Tar opp eller skriver ned møtene dine og sender dem til AI-tjenesten.|Records or transcribes your meetings and sends them to the AI service.
+sjekket, ingenting der|checked, nothing there
+administratorens lesing for sikkerhetskopi er på: låste mapper og filer kan leses, ingenting endres|the administrator's backup read right is on: locked folders and files can be read, nothing is changed
+Windows ga ikke retten til lesing for sikkerhetskopi; låste mapper blir stående som nektet|Windows did not grant the backup read right; locked folders stay denied
+lest med administratorens lesing for sikkerhetskopi (fila var låst for vanlig lesing)|read with the administrator's backup read right (the file was locked for normal reading)
+programstien fra Windows' prosessliste (prosessen nektet åpning og ble ikke åpnet)|program path from the Windows process list (the process refused opening and was not opened)
+antivirusets egne filer, røres ikke|the antivirus's own files, not touched
+~^(\d+) skyfiler \(OneDrive\): navn og størrelse sjekket, innholdet ligger i skyen og lastes aldri ned$|$1 cloud files (OneDrive): name and size checked, the content is in the cloud and is never downloaded
+~^svarte ikke på HTTP innen ([\d,.]+) s \(ikke en web-tjeneste\); de andre adressene på porten ble ikke prøvd$|did not answer HTTP within $1 s (not a web service); the other addresses on the port were not tried
+~^AI-modell i OneDrive: (.+)$|AI model in OneDrive: $1
+AI-modell som ligger i OneDrive og lastes ned til PC-en når den åpnes.|AI model stored in OneDrive that is downloaded to the PC when opened.
+~^(.+), bare i OneDrive \(ikke lastet ned\)\.$|$1, only in OneDrive (not downloaded).
+~^Fil: (.+) · bare i skyen, innholdet er ikke lest$|File: $1 · cloud only, content not read
+programfila|the program file
+listen over installerte programmer|the list of installed programs
+Microsoft Store-pakken|the Microsoft Store package
+utvidelsens manifest|the extension's manifest
+modellfila|the model file
+Hugging Face-lageret|the Hugging Face cache
+modellmappa i nettleseren|the model folder in the browser
+~^  Versjon: (.+) · lest fra programfila$|  Version: $1 · read from the program file
+~^  Versjon: (.+) · lest fra listen over installerte programmer$|  Version: $1 · read from the list of installed programs
+~^  Versjon: (.+) · lest fra Microsoft Store-pakken$|  Version: $1 · read from the Microsoft Store package
+~^  Versjon: (.+) · lest fra utvidelsens manifest$|  Version: $1 · read from the extension's manifest
+~^  Versjon: (.+) · lest fra modellfila$|  Version: $1 · read from the model file
+~^  Versjon: (.+) · lest fra Hugging Face-lageret$|  Version: $1 · read from the Hugging Face cache
+~^  Versjon: (.+) · lest fra modellmappa i nettleseren$|  Version: $1 · read from the model folder in the browser
+~^revisjon ([0-9a-f]{7})$|revision $1
+~^Kjører under et annet navn: (.+) heter (.+) i programfila\.$|Running under another name: $1 is called $2 in the program file.
+~^Omdøpt: (.+) · navnet i programfila er (.+)$|Renamed: $1 · the name in the program file is $2
+~^Gjemt i en skjult datastrøm i (.+)\. Utforsker viser den ikke\.$|Hidden in an alternate data stream in $1. Explorer does not show it.
+Fila er merket som skjult, så Utforsker viser den ikke.|The file is marked hidden, so Explorer does not show it.
+~^Forkledd: AI-modell \((.+)\) med endelsen (.+)\.$|Disguised: AI model ($1) with the extension $2.

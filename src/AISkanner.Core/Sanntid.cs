@@ -112,11 +112,13 @@ public sealed partial class Skanner
     private void LeggTilMotorFunn(string exe, SortedSet<string> motorer, bool kjorer)
     {
         string produkt = Path.GetFileNameWithoutExtension(exe), utgiver = "";
+        string? versjon = null;
         try
         {
             var vi = FileVersionInfo.GetVersionInfo(exe);
             if (!string.IsNullOrWhiteSpace(vi.ProductName)) produkt = vi.ProductName.Trim();
             utgiver = vi.CompanyName ?? "";
+            versjon = vi.ProductVersion ?? vi.FileVersion;
         }
         catch { }
         // Kjente produkter får navnet fra regelfila
@@ -130,6 +132,7 @@ public sealed partial class Skanner
             ? $"Innebygd AI fra {utgiver.Trim()}. Kjører lokalt i programmet."
             : "Ukjent program med egen AI-motor. Det kan kjøre AI-modeller på PC-en uten at noen vet hva det gjør.";
         var f = regel != null ? FraRegel(regel, "AI-motor", null!) : LeggTil(navn, "Lokal AI", risiko, hvorfor, "AI-motor", null);
+        f.SettVersjon(versjon, "programfila");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         f.Detalj($"Program: {exe} (AI-motor: {string.Join(", ", motorer)})");
         if (kjorer) HuskMappe(exe, f);
@@ -151,7 +154,7 @@ public sealed partial class Skanner
         if (lyttere.Count == 0) return;
 
         // MaxResponseContentBufferSize: et ondsinnet lokalt program kan ikke svare med et svar på flere GB og spise opp minnet.
-        using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(800), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
+        using var klient = new HttpClient(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMilliseconds(Fullt ? 3000 : 800), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
         // Alle portene spørres samtidig (16 om gangen). Før tok det 0,8 s per port som ikke svarte, én etter én.
         // Helt asynkront: ingen tråd står og venter på et svar. (2.19 ventet med .GetResult() i 16 tråder samtidig, mens de
         // andre sjekkene også brukte trådpoolen. På .NET Framework kan det sulte ut trådpoolen så søket stopper opp.)
@@ -218,7 +221,7 @@ public sealed partial class Skanner
             }
             catch (Exception e)
             {
-                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? "svarte ikke innen 0,8 s; de andre adressene på porten ble ikke prøvd" : "svarte ikke som en AI-tjeneste");
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", e is TaskCanceledException ? Utfall.Tidsgrense : Utfall.IkkeFunnet, e is TaskCanceledException ? $"svarte ikke på HTTP innen {klient.Timeout.TotalSeconds:0.#} s (ikke en web-tjeneste); de andre adressene på porten ble ikke prøvd" : "svarte ikke som en AI-tjeneste");
                 // Et program som ikke svarer på HTTP innen 0,8 s, svarer heller ikke på neste adresse. Spar 1,6 s per port.
                 if (e is TaskCanceledException) break;
             }
@@ -262,7 +265,12 @@ public sealed partial class Skanner
         public readonly Dictionary<string, (SortedSet<string> Pakker, bool Agent, string Sprak)> Miljoer = new(StringComparer.OrdinalIgnoreCase);
         /// <summary>Filer der en farlig YARA-regel slo til.</summary>
         public readonly List<(string Sti, long Lengde, List<YaraRegler.Regel> Treff)> Farlige = new();
+        /// <summary>Modellfiler som bare ligger i skyen (OneDrive), funnet på navn og størrelse. Innholdet lastes aldri ned.</summary>
+        public readonly List<(string Sti, long Lengde)> SkyModeller = new();
     }
+
+    private static readonly HashSet<string> SkyModellEndelser = new(StringComparer.OrdinalIgnoreCase)
+        { ".gguf", ".safetensors", ".onnx", ".tflite", ".ckpt", ".pt", ".pth", ".llamafile", ".mlmodel", ".h5", ".keras" };
 
     private const FileAttributes Skyfil = (FileAttributes)0x00400000 | (FileAttributes)0x00040000 | FileAttributes.Offline;
 
@@ -323,6 +331,14 @@ public sealed partial class Skanner
         var modeller = ff.Modeller.OrderByDescending(m => m.Lengde).ToList();
         // Hver modell er én rad, så tallet øverst er like mange som radene (ingen samlerad «Flere AI-modeller»)
         foreach (var (sti, lengde, m) in modeller) LeggTilModell(sti, lengde, m);
+        foreach (var (sti, lengde) in ff.SkyModeller.OrderByDescending(x => x.Lengde))
+        {
+            var f = LeggTil($"AI-modell i OneDrive: {Kutt(Modellnavn(sti), 50)}", "Lokal AI (modell)", Risiko.Gul,
+                "AI-modell som ligger i OneDrive og lastes ned til PC-en når den åpnes.", Path.GetExtension(sti).TrimStart('.').ToUpperInvariant(),
+                $"Fil: {sti} · {Gb(lengde)} · bare i skyen, innholdet er ikke lest", rad: "Slett den hvis du ikke bruker den.");
+            f.LeggTilModeller(1);
+            f.Bruk = $"{Gb(lengde)}, bare i OneDrive (ikke lastet ned).";
+        }
 
         // AI-motorer i programmer som ikke kjører nå
         foreach (var (mappe, motorer) in ff.Motorer)
@@ -373,7 +389,15 @@ public sealed partial class Skanner
             {
                 FileAttributes a;
                 try { a = e.Attributes; } catch { continue; }
-                if ((a & Skyfil) != 0) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver); sky++; continue; }   // aldri last ned skyfiler (OneDrive)
+                if ((a & Skyfil) != 0)
+                {
+                    // Skyfiler (OneDrive) lastes aldri ned. Navn og størrelse ligger på PC-en og sjekkes.
+                    Tilgangslogg.Tell("Fil", Utfall.Lest);
+                    sky++;
+                    if (e is FileInfo sf && SkyModellEndelser.Contains(sf.Extension))
+                        try { if (sf.Length >= 50L * 1024 * 1024) lock (ff) ff.SkyModeller.Add((sf.FullName, sf.Length)); } catch { }
+                    continue;
+                }
                 if ((a & FileAttributes.ReparsePoint) != 0) { SjekkLenke(e); continue; }
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
                 else if (e is FileInfo fil)
@@ -381,10 +405,11 @@ public sealed partial class Skanner
                     filer++;
                     try { bytes += fil.Length; } catch { }
                     SjekkFil(fil, mappe, ff, minLengde);
+                    if (Fullt) SjekkStrommer(fil, ff);
                 }
             }
             Tilgangslogg.TellMappe(mappe, Utfall.Lest, filer, bytes);
-            if (sky > 0) Tilgangslogg.BareKart("Mappe", mappe, Utfall.HoppetOver, $"{sky} skyfiler (OneDrive) som ikke er lastet ned, åpnes aldri");
+            if (sky > 0) Tilgangslogg.BareKart("Mappe", mappe, Utfall.Lest, $"{sky} skyfiler (OneDrive): navn og størrelse sjekket, innholdet ligger i skyen og lastes aldri ned");
         }
         catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
     }
@@ -460,6 +485,29 @@ public sealed partial class Skanner
             SjekkFil(fil, mappe, ff, minLengde);
         }
     }
+
+    /// <summary>
+    /// Fullt søk: en AI-modell kan gjemmes i en skjult datastrøm (ADS) i en helt vanlig fil. Strømmer på minst 50 MB
+    /// får filhodet sjekket. Vanlige små strømmer (Zone.Identifier fra nettleseren) hoppes over på størrelse.
+    /// </summary>
+    private void SjekkStrommer(FileInfo fil, FilFunn ff)
+    {
+        List<(string Navn, long Lengde)> strommer;
+        try { strommer = Admintilgang.Strommer(fil.FullName); } catch { return; }
+        foreach (var (navn, lengde) in strommer)
+        {
+            if (lengde < 50L * 1024 * 1024) continue;
+            var sti = $"{fil.FullName}:{navn}";
+            var modell = ModellFormat.Gjenkjenn(sti);
+            if (modell != null) lock (ff) ff.Modeller.Add((sti, lengde, modell));
+        }
+    }
+
+    private static readonly HashSet<string> Forkledning = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mp4", ".mkv", ".mov", ".avi", ".mp3", ".wav", ".jpg", ".jpeg", ".png", ".gif", ".zip", ".7z", ".rar", ".iso",
+        ".exe", ".msi", ".dll", ".txt", ".log", ".pdf", ".docx", ".xlsx", ".pptx", ".vhdx", ".pst", ".ost",
+    };
 
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
     {
@@ -558,6 +606,10 @@ public sealed partial class Skanner
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}",
                         rad: m.KanKjoreKode ? "Slett den hvis du ikke vet hvor den kommer fra." : "Slett den hvis du ikke bruker den.");
         f.LeggTilModeller(1);
+        f.SettVersjon(m.Versjon, "modellfila");
+        // Hugging Face-lageret: mappa under snapshots er revisjonen (commit) modellen ble lastet ned fra
+        var rev = Regex.Match(sti, @"[\\/]snapshots[\\/]([0-9a-f]{40})[\\/]", RegexOptions.IgnoreCase);
+        if (rev.Success) f.SettVersjon("revisjon " + rev.Groups[1].Value.Substring(0, 7), "Hugging Face-lageret");
 
         f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
         var info = new List<string>();
@@ -581,6 +633,31 @@ public sealed partial class Skanner
         if (id.Sha256 != null) f.Detalj($"Modell-ID (SHA-256, lik på alle PC-er): {id.Sha256}");
         else if (id.Fingeravtrykk != null) f.Detalj($"Modell-ID (fingeravtrykk, likt på alle PC-er): {id.Fingeravtrykk}");
         if (m.KanKjoreKode && farligPlass) f.Advarsel("Kan kjøre skjult kode, og ligger i en nedlastingsmappe.");
+        // Gjemt: skjult datastrøm, skjult fil, eller en modell med endelsen til en film, et bilde eller et dokument
+        int kolon = sti.IndexOf(':', 2);
+        if (kolon > 0)
+        {
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"Gjemt i en skjult datastrøm i {Path.GetFileName(sti.Substring(0, kolon))}. Utforsker viser den ikke.");
+        }
+        else
+        {
+            try
+            {
+                if ((File.GetAttributes(sti) & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+                {
+                    f.Risiko = Risiko.Rod;
+                    f.Advarsel("Fila er merket som skjult, så Utforsker viser den ikke.");
+                }
+            }
+            catch { }
+            var endelse = Path.GetExtension(sti);
+            if (Forkledning.Contains(endelse))
+            {
+                f.Risiko = Risiko.Rod;
+                f.Advarsel($"Forkledd: AI-modell ({m.Format}) med endelsen {endelse.ToLowerInvariant()}.");
+            }
+        }
         YaraPaModell(sti, f);
         if (id.NavneFamilie?.Land == "CN" || id.Familie?.Land == "CN") f.Merknad($"Laget av {(id.NavneFamilie?.Land == "CN" ? id.NavneFamilie : id.Familie)!.Utgiver} i Kina. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
     }

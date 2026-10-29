@@ -78,7 +78,7 @@ public static class Revisjon
     public static string UtfallTekst(Utfall u) => u switch
     {
         Utfall.Lest => "lest",
-        Utfall.IkkeFunnet => "finnes ikke",
+        Utfall.IkkeFunnet => "sjekket, ingenting der",
         Utfall.Nektet => "nektet tilgang",
         Utfall.Laast => "låst",
         Utfall.Blokkert => "stoppet av antivirus",

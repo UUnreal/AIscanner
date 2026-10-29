@@ -147,7 +147,9 @@ public sealed partial class Skanner
 
         // Nettsteder som bare ser ut som AI (.ai-adresse eller "gpt" i navnet). Det er en gjetning, så de står som «Mulig
         // AI-nettsted» og telles som ukjent. Ett nettsted er én rad, så tallene øverst er like mange som radene.
-        var mulige = ukjente.Where(u => u.Value.Besok >= 2).OrderByDescending(u => u.Value.Besok).Take(40).ToList();
+        // Selskaper som står på lista (mistral.ai, x.ai …): hovedsiden deres er kjent, ikke ukjent AI. Bruken telles på tjenestene.
+        var kjenteDomener = new HashSet<string>(_regler.AiNettsteder.SelectMany(n => n.Domener).Select(GrunnDomene), StringComparer.OrdinalIgnoreCase);
+        var mulige = ukjente.Where(u => u.Value.Besok >= 2 && !kjenteDomener.Contains(GrunnDomene(u.Key))).OrderByDescending(u => u.Value.Besok).Take(40).ToList();
         foreach (var (vert, sp) in mulige)
         {
             var hvorM = string.Join(", ", sp.Nettlesere);
@@ -287,5 +289,12 @@ public sealed partial class Skanner
             if (e.ValueKind != JsonValueKind.Object || !e.TryGetProperty(d, out e)) return null;
         }
         return e;
+    }
+
+    /// <summary>chat.mistral.ai → mistral.ai. To siste ledd holder for .ai, .com og lignende.</summary>
+    internal static string GrunnDomene(string vert)
+    {
+        var deler = vert.Trim('.').Split('.');
+        return deler.Length <= 2 ? vert.Trim('.') : $"{deler[deler.Length - 2]}.{deler[deler.Length - 1]}";
     }
 }

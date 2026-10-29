@@ -24,7 +24,7 @@ public sealed partial class Skanner
         try
         {
             var hode = new byte[8];
-            using (var s = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var s = Admintilgang.AapneLes(fil.FullName))
             {
                 Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
                 if (s.Read(hode, 0, 8) < 8) return;

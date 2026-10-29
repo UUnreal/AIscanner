@@ -418,7 +418,7 @@ public sealed partial class Skanner
             var info = new FileInfo(sti);
             if (!info.Exists) { Tilgangslogg.Logg("Fil", sti, Utfall.IkkeFunnet); return; }
             if (info.Length > maksMB * 1024L * 1024) { Tilgangslogg.Logg("Fil", sti, Utfall.HoppetOver, $"større enn {maksMB} MB"); return; }
-            using var fs = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var fs = Admintilgang.AapneLes(sti);
             using var r = new StreamReader(fs, Encoding.UTF8);
             Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "bare tider, antall og adresser; innhold lagres ikke");
             string? l;
@@ -552,7 +552,7 @@ public sealed partial class Skanner
                 string tekst;
                 try
                 {
-                    using var fs = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    using var fs = Admintilgang.AapneLes(fil.FullName);
                     using var r = new StreamReader(fs);
                     tekst = r.ReadToEnd();
                     Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);

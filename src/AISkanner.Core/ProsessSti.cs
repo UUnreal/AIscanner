@@ -38,6 +38,12 @@ public static class ProsessSti
         if (h == IntPtr.Zero)
         {
             var kode = Marshal.GetLastWin32Error();
+            // Stien fra Windows' egen prosessliste, uten å åpne prosessen
+            if (Admintilgang.ProsessBilde(p.Id) is { } bilde)
+            {
+                Tilgangslogg.Tell("Prosess", Utfall.Lest, sted: $"{p.ProcessName} ({p.Id})", detalj: "programstien fra Windows' prosessliste (prosessen nektet åpning og ble ikke åpnet)");
+                return bilde;
+            }
             Tilgangslogg.Tell("Prosess", kode == 5 ? Utfall.Nektet : Utfall.Feil, sted: $"{p.ProcessName} ({p.Id})", detalj: kode == 5 ? "Windows nektet (kjører som administrator eller beskyttet)" : $"Windows-feil {kode}");
             return null;
         }

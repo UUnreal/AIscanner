@@ -29,6 +29,7 @@ public sealed class Hovedvindu : Form
     private bool _fullt;
     private string? _revisjonSti;
     private bool _vist;
+    private readonly bool _mork = MorkModus();
     private double _sekunder;
     private string _nvdStatus = "av";
     private readonly string[] _args;
@@ -48,7 +49,8 @@ public sealed class Hovedvindu : Form
         ClientSize = new Size(980, 760);
         MinimumSize = new Size(560, 600);
         StartPosition = FormStartPosition.CenterScreen;
-        BackColor = Color.FromArgb(242, 242, 247);
+        // Samme bakgrunn som siden (lys eller mørk etter Windows), så vinduet aldri skifter farge når det åpnes
+        BackColor = _mork ? Color.FromArgb(17, 17, 19) : Color.FromArgb(242, 242, 245);
         _web.DefaultBackgroundColor = BackColor;
         Controls.Add(_web);
         Load += async (_, _) => await StartAsync();
@@ -78,6 +80,8 @@ public sealed class Hovedvindu : Form
         }
 
         var w = _web.CoreWebView2;
+        // Siden følger samme tema som vinduet, også om WebView2 ville valgt noe annet
+        try { w.Profile.PreferredColorScheme = _mork ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Light; } catch { }
         w.Settings.AreDevToolsEnabled = false;
         w.Settings.AreDefaultContextMenusEnabled = false;
         w.Settings.AreDefaultScriptDialogsEnabled = false;
@@ -96,8 +100,6 @@ public sealed class Hovedvindu : Form
         {
             // Fra Windows startet prosessen (også lasting av .NET) til vinduet er klart
             Program.OppstartMs ??= Program.FraStart();
-            // Vis vinduet når siden har fått tegne første bilde
-            _ = Task.Delay(80).ContinueWith(_ => { try { BeginInvoke(new Action(Vis)); } catch { } });
             Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon, fullt = _fullt, oppstartMs = Program.OppstartMs });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
@@ -121,16 +123,36 @@ public sealed class Hovedvindu : Form
         base.OnHandleCreated(e);
         int paa = 1;
         try { _skjult = DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref paa, sizeof(int)) == 0; } catch { }
+        // Mørk tittellinje når Windows er i mørk modus (Windows 10 20H1 og nyere)
+        if (_mork) try { DwmSetWindowAttribute(Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref paa, sizeof(int)); } catch { }
         // Sikkerhetsnett: vises uansett etter 3 s, så vinduet aldri blir borte
         if (_skjult) _ = Task.Delay(3000).ContinueWith(_ => { try { BeginInvoke(new Action(Vis)); } catch { } });
     }
 
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
     private void Vis()
     {
-        if (!_skjult || IsDisposed) return;
-        _skjult = false;
-        int av = 0;
-        try { DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref av, sizeof(int)); } catch { }
+        if (IsDisposed) return;
+        if (_skjult)
+        {
+            _skjult = false;
+            int av = 0;
+            try { DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref av, sizeof(int)); } catch { }
+        }
+        // Innholdet tones inn først når vinduet er synlig
+        try { Send(new { type = "vist" }); } catch { }
+    }
+
+    /// <summary>Windows-innstillingen «Velg appmodus: Mørk» for brukeren som er logget inn.</summary>
+    private static bool MorkModus()
+    {
+        try
+        {
+            using var k = Bruker.Hkcu.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return k?.GetValue("AppsUseLightTheme") is int v && v == 0;
+        }
+        catch { return false; }
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
@@ -173,6 +195,8 @@ public sealed class Hovedvindu : Form
         using var doc = JsonDocument.Parse(json);
         var m = doc.RootElement;
         var type = m.TryGetProperty("type", out var t) ? t.GetString() : null;
+        // Siden har tegnet ferdig startskjermen (riktig språk og admin-valg): vis vinduet, så toner innholdet inn
+        if (type == "klar") { Vis(); return; }
         if (type is "sok" or "admin" && m.TryGetProperty("revisjon", out var rv)) _revisjon = rv.ValueKind == JsonValueKind.True;
         if (type is "sok" or "admin" && m.TryGetProperty("fullt", out var fu)) _fullt = fu.ValueKind == JsonValueKind.True;
         if (type == "sok" && !_soker)
@@ -336,6 +360,8 @@ public sealed class Hovedvindu : Form
                 naa = f.Sist != null && (DateTime.Now - f.Sist.Value).TotalMinutes < 2,
                 navn = T(f.Navn),
                 kortnavn = T(Oversikt.Navn(f)),
+                versjon = T(f.Versjon),
+                versjonKilde = T(f.VersjonKilde),
                 punkt = T(Oversikt.Punkt(f)),
                 lokasjon = T(Oversikt.Lokasjon(f)),
                 type = T(f.Type),

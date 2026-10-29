@@ -73,6 +73,7 @@ public static class Rapport
             L();
             L($"[{Merke(f)}] {f.Navn}");
             L($"  {f.Kort}");
+            if (f.Versjon != null) L($"  Versjon: {f.Versjon} · lest fra {f.VersjonKilde}");
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
@@ -138,7 +139,7 @@ public static class Rapport
         {
             risiko = f.Risiko.ToString().ToLowerInvariant(),
             risikogruppe = Oversikt.Risikogruppe(f), art = Oversikt.Art(f),
-            navn = f.Navn, gruppe = f.Gruppe, kort = f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
+            navn = f.Navn, gruppe = f.Gruppe, kort = f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, versjon = f.Versjon, versjonKilde = f.VersjonKilde, senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
             // Nettleserfunn er med, som i tekstrapporten: AI-domene, nettleser og profil, antall besøk, første og siste gang.
             // Aldri hele adresser eller sidetitler: de leses aldri inn i minnet som funn.
             forst = f.Forst, sist = f.Sist,

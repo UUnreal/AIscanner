@@ -58,6 +58,8 @@ public sealed partial class Skanner
         Startet = DateTime.Now;
         Logg = new Tilgangslogg();
         Tilgangslogg.Aktiv = Logg;
+        // Som administrator: låste mapper og filer leses med lesing for sikkerhetskopi (bare lesing)
+        Admintilgang.SlaPa();
         var stegliste = new (string Tekst, Action Gjor)[]
         {
             ("Ser etter AI som kjører nå...", () => { Prosesser(); MotorerIProsesser(); }),
@@ -309,9 +311,26 @@ public sealed partial class Skanner
             {
                 var sti = ProsessSti.Hent(p);
                 var r = FinnRegel($"{p.ProcessName} {sti}");
+                FileVersionInfo? vi = null;
+                if (sti != null && Plattform.ErWindows) try { vi = FileVersionInfo.GetVersionInfo(sti); } catch { }
+                // Omdøpt AI-program: fila heter noe annet enn navnet produsenten ga den (OriginalFilename/InternalName)
+                string? egentlig = null;
+                if (r == null && vi != null)
+                    foreach (var opp in new[] { vi.OriginalFilename, vi.InternalName })
+                    {
+                        if (string.IsNullOrWhiteSpace(opp) || Path.GetFileNameWithoutExtension(opp).Equals(Path.GetFileNameWithoutExtension(sti), StringComparison.OrdinalIgnoreCase)) continue;
+                        if ((r = FinnRegel(opp)) != null) { egentlig = opp!.Trim(); break; }
+                    }
                 if (r == null) continue;
                 var f = FraRegel(r, "Kjører nå", $"Program som kjører: {sti ?? p.ProcessName} (PID {p.Id})");
                 f.Bruk = "Kjører nå.";
+                f.SettVersjon(vi?.ProductVersion ?? vi?.FileVersion, "programfila");
+                if (egentlig != null)
+                {
+                    f.Risiko = Risiko.Rod;
+                    f.Advarsel($"Kjører under et annet navn: {Path.GetFileName(sti)} heter {egentlig} i programfila.");
+                    f.Detalj($"Omdøpt: {sti} · navnet i programfila er {egentlig}");
+                }
                 HuskMappe(sti, f);
             }
         }
@@ -336,7 +355,7 @@ public sealed partial class Skanner
                 using var app = k.OpenSubKey(under);
                 var navn = app?.GetValue("DisplayName") as string;
                 var r = FinnRegel(navn);
-                if (r != null) FraRegel(r, "Installert program", $"Program: {navn}");
+                if (r != null) FraRegel(r, "Installert program", $"Program: {navn}").SettVersjon(app?.GetValue("DisplayVersion") as string, "listen over installerte programmer");
             }
         }
         // Microsoft Store-apper for innlogget bruker
@@ -344,7 +363,8 @@ public sealed partial class Skanner
         foreach (var pakke in pakker?.GetSubKeyNames() ?? Array.Empty<string>())
         {
             var r = FinnRegel(pakke.Replace('_', ' '));
-            if (r != null) FraRegel(r, "Installert app (Microsoft Store)", $"App: {pakke.Split('_')[0]}");
+            // Pakkenavnet er Navn_Versjon_Arkitektur__Utgiver
+            if (r != null) FraRegel(r, "Installert app (Microsoft Store)", $"App: {pakke.Split('_')[0]}").SettVersjon(pakke.Split('_').ElementAtOrDefault(1), "Microsoft Store-pakken");
         }
     }
 
@@ -577,7 +597,7 @@ public sealed partial class Skanner
                     var tilg = Liste(m, "permissions").Concat(Liste(m, "host_permissions"))
                         .Concat(Liste(m, "content_scripts").SelectMany(cs => Liste(cs, "matches")))
                         .Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!);
-                    VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg, idMappe);
+                    VurderUtvidelse($"{nettleser} ({Path.GetFileName(profil)})", navn, besk, tilg, idMappe, Str(m, "version"));
                 }
             }
         }
@@ -592,7 +612,7 @@ public sealed partial class Skanner
                 a.TryGetProperty("defaultLocale", out var dl);
                 var tilg = a.TryGetProperty("userPermissions", out var up) ? Liste(up, "origins").Select(e => e.GetString() ?? "") : Enumerable.Empty<string>();
                 VurderUtvidelse($"{ffNavn} ({Path.GetFileName(profil)})", Str(dl, "name"), Str(dl, "description"), tilg,
-                    Path.Combine(profil, "extensions", (Str(a, "id") ?? "") + ".xpi"));
+                    Path.Combine(profil, "extensions", (Str(a, "id") ?? "") + ".xpi"), Str(a, "version"));
             }
         }
     }
@@ -614,7 +634,7 @@ public sealed partial class Skanner
         return tekst;
     }
 
-    private void VurderUtvidelse(string hvor, string? navn, string? beskrivelse, IEnumerable<string> tilganger, string mappe)
+    private void VurderUtvidelse(string hvor, string? navn, string? beskrivelse, IEnumerable<string> tilganger, string mappe, string? versjon = null)
     {
         if (string.IsNullOrWhiteSpace(navn)) return;
         bool alleSider = tilganger.Any(t => t == "<all_urls>" || Regex.IsMatch(t, @"^(\*|https?)://\*/\*$"));
@@ -634,6 +654,7 @@ public sealed partial class Skanner
                 "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
                 $"Utvidelse i {hvor}", $"{hvor}: {mappe}", rad: "Fjern den hvis du ikke vet hva den gjør.");
         }
+        f.SettVersjon(versjon, "utvidelsens manifest");
         if (alleSider)
         {
             f.Risiko = Risiko.Rod;

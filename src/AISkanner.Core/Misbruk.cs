@@ -83,7 +83,7 @@ public sealed partial class Skanner
         try
         {
             if (fil.Length < 1024) return false;
-            using var fs = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var fs = Admintilgang.AapneLes(fil.FullName);
             var b = new byte[6];
             return fs.Read(b, 0, 6) == 6 && b[0] == 0x37 && b[1] == 0x7A && b[2] == 0xBC && b[3] == 0xAF && b[4] == 0x27 && b[5] == 0x1C;
         }
@@ -346,7 +346,7 @@ public sealed partial class Skanner
             string tekst;
             try
             {
-                using var fs = new FileStream(fil.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var fs = Admintilgang.AapneLes(fil.FullName);
                 using var r = new StreamReader(fs);
                 tekst = r.ReadToEnd();
                 Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);

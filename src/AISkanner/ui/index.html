@@ -27,6 +27,12 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
+  html { background: var(--bg); }
+  /* Oppstart: innholdet er usynlig til vinduet er vist, så toner det mykt inn */
+  html:not(.vist) body { opacity: 0; }
+  html.vist body { animation: inn .38s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes inn { from { opacity: 0; transform: translateY(6px) scale(.992); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { html.vist body { animation: none; } }
   body {
     background: var(--bg); color: var(--tekst);
     font-family: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
@@ -262,6 +268,7 @@
   .rad { height: 50px; flex: none; cursor: pointer; border-bottom: 1px solid var(--linje); }
   .rad:hover { background: var(--fyll); }
   .rad .ai { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .ai .ver { font-weight: 400; font-size: 12.5px; color: var(--dempet); margin-left: 7px; font-variant-numeric: tabular-nums; }
   .rad .type, .rad .lok { color: var(--dempet); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rad .land { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rad .land .ingen { color: var(--dempet); }
@@ -560,7 +567,7 @@ function tegnListe() {
     const r = document.createElement("div");
     r.className = "tr rad";
     r.title = L("Trykk for detaljer", "Click for details");
-    r.innerHTML = `<div class="ai" title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</div>
+    r.innerHTML = `<div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
       <div><span class="pille ${f.risiko}">${merke(f.risiko)}</span></div>
       <div class="type">${esc(f.type || GRUPPER[gruppeNr(f)][1]())}</div>
       <div class="lok" title="${esc(f.lokasjon || "")}">${esc(f.lokasjon || "")}</div>
@@ -775,7 +782,7 @@ function tegnData() {
     kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"${x.n ? ` data-u="${x.u}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
       + `<div class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</div>`
       + `<h3 class="medSider" style="margin-bottom:2px"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
-      + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Fantes ikke", "Not found")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
+      + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Ingenting der", "Nothing there")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
       + `<div class="dl" id="dl"><ul id="dlu">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
     rader = g.sjekker; linje = sjekkLinje;
   } else if (fane === "kart") {
@@ -788,11 +795,14 @@ function tegnData() {
     kropp = sideListe(L("Det søket ikke fikk lest, og hvorfor", "What the scan could not read, and why"), ikke, postLinje);
     rader = ikke; linje = postLinje;
   } else if (fane === "alt") {
-    const typer = g.totalt.filter(x => x.n);
+    const sjekkRad = sjekkFilter ? g.sjekker.find(x => x.navn === sjekkFilter) : null;
+    // Med én sjekk valgt gjelder tallene på knappene bare den sjekken, så tall og liste alltid stemmer
+    const fraSjekk = u => !sjekkRad ? 0 : u === "lest" ? sjekkRad.lest : u === "ikkefunnet" ? sjekkRad.ikke : u === "hoppetover" ? sjekkRad.hoppet : 0;
+    const typer = !sjekkFilter ? g.totalt.filter(x => x.n)
+      : g.totalt.map(x => ({ ...x, n: Math.max(fraSjekk(x.u) || 0, allePoster(g).filter(p => p.s === sjekkFilter && p.u === x.u).reduce((a, p) => a + (p.n || 1), 0)) })).filter(x => x.n || x.u === filter);
     const liste = filtrert(g);
     // Hvor mange tallet i Oversikt sier, mot hvor mange som har en sti i lista
     const totalt = !filter ? null : filter === "mangler" ? g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0) : (g.totalt.find(x => x.u === filter) || {}).n;
-    const sjekkRad = sjekkFilter ? g.sjekker.find(x => x.navn === sjekkFilter) : null;
     const antall = !sjekkRad ? totalt : !filter ? null : filter === "lest" ? sjekkRad.lest : filter === "ikkefunnet" ? sjekkRad.ikke : filter === "hoppetover" ? sjekkRad.hoppet : filter === "mangler" ? sjekkRad.mangler : null;
     const steder = liste.reduce((a, p) => a + (p.n || 1), 0);
     const tittel = antall != null && antall > steder
@@ -1035,7 +1045,7 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     const sendt = (f.senderTil || []).length
       ? f.senderTil.slice(0, 3).map(l => `<div class="stor ${l.farlig ? "fare" : ""}">${esc(l.land)}</div>`).join("") + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
       : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "None")}</div><div class="liten">${L("Kjører lokalt på PC-en", "Runs locally on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
-    d.innerHTML = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2><span class="pille ${f.risiko}">${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span class="dtype">${esc(f.type || "")}</span></div>
+    d.innerHTML = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>${f.versjon ? `<span class="dtype" title="${esc(L("Lest fra " + (f.versjonKilde || ""), "Read from " + (f.versjonKilde || "")))}">${L("Versjon", "Version")} ${esc(f.versjon)}</span>` : ""}<span class="pille ${f.risiko}">${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span class="dtype">${esc(f.type || "")}</span></div>
       <div class="flyt">
         <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
         <div class="pil2">→</div>
@@ -1134,9 +1144,21 @@ function motta(m) {
     if (m.fullt != null) fullt = !!m.fullt;
     if (m.oppstartMs != null) oppstartMs = m.oppstartMs;
     tegnModus();
+    klar();
   }
+  else if (m.type === "vist") document.documentElement.classList.add("vist");
 }
 if (vert) vert.addEventListener("message", e => motta(e.data));
+// Startskjermen er tegnet med riktig språk og valg: be programmet vise vinduet (to bilder senere, så alt er malt)
+let erKlar = false;
+function klar() {
+  if (erKlar) return; erKlar = true;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (vert) send({ type: "klar" });
+    setTimeout(() => document.documentElement.classList.add("vist"), vert ? 400 : 0);
+  }));
+}
+setTimeout(klar, vert ? 1500 : 0);
 
 let erAdmin = false, sisteValg = "sok", revisjon = false, oppstartMs = null, lytterIgjen = 0, fullt = false;
 function tegnModus() {
