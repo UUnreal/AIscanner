@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.19.12. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.20.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -291,6 +291,14 @@ Startskjermen har to valg: knappen i midten søker som bruker, og ringen rundt s
 administrator, eller trykker «Mål datamengde» etter et søk, startes programmet på nytt med vanlig UAC-spørsmål
 (`runas`, argument `--sok`). Sier brukeren nei, skjer ingenting annet enn en melding. Resultatet og rapporten viser
 «Søkt som bruker» eller «Søkt som admin». Som administrator ser skanneren også filstien til programmer som kjører som administrator.
+
+**Hvilken bruker søket gjelder.** Godkjennes UAC med en annen konto (f.eks. IT-kontoen), kjører programmet som den
+kontoen. Søket gjelder likevel brukeren som er logget inn på skjermen: programmet spør Windows hvem som eier økta
+(`WTSQuerySessionInformation`), finner SID-en og leser stier fra `HKEY_USERS\<SID>\Volatile Environment` og
+`ProfileList`. Profil, AppData, nettlesere og HKCU-sjekker gjelder da `HKEY_USERS\<SID>`. Navn på AI-nøkler telles bare
+fra brukerens register, ikke fra IT-kontoens miljø. Bunnlinjen, rapporten og revisjonsloggen viser «Kjørt av» med
+IT-kontoen. Kjøres CLI-en som SYSTEM (Intune), brukes den som er logget inn på skjermen; er ingen logget inn, gjelder søket
+kontoen som kjører.
 Som administrator slår skanneren på Windows' egne TCP-tellere (`SetPerTcpConnectionEStats`, `TcpConnectionEstatsData`,
 samme som Ressursovervåking) for forbindelsene som er åpne når søket starter. Den leser dem når søket er ferdig
 (`GetPerTcpConnectionEStats`) og slår dem av igjen.

@@ -33,7 +33,7 @@ public static class ProsessSti
     public static string? Hent(Process p)
     {
         if (!Plattform.ErWindows) return null;
-        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver, sted: $"{p.ProcessName} ({p.Id})", detalj: p.Id <= 4 ? "systemprosess" : "sikkerhetsprosess som ikke røres (regel)"); return null; }
+        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver, sted: $"{p.ProcessName} ({p.Id})", detalj: p.Id <= 4 ? "systemprosess i Windows (ikke AI)" : "beskyttet Windows-prosess etter navn (ikke AI), røres ikke"); return null; }
         var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
         if (h == IntPtr.Zero)
         {

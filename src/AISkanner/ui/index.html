@@ -502,6 +502,9 @@ function tegnBunn() {
   if (oppstartMs != null) deler.push(`${L("Oppstart", "Startup")} ${(oppstartMs / 1000).toFixed(1).replace(".", L(",", "."))} s`);
   if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
   deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
+  // Godkjent med en annen konto (IT): søket gjelder brukeren som er logget inn, ikke IT-kontoen
+  if (info.kjortAv) deler.push(L(`Søkt i profilen til ${info.bruker} (godkjent av ${info.kjortAv})`, `Scanned the profile of ${info.bruker} (approved by ${info.kjortAv})`));
+  if (info.brukerFeil) deler.push(info.brukerFeil);
   if (!info.revisjon) deler.push(L("Ingenting lagret", "Nothing stored"));
   deler.push(L("Rød = ukjent AI eller skygge-AI", "Red = unknown AI or shadow AI"));
   deler.push(info.nvd === "ferdig" ? L("Sikkerhetshull sjekket", "Vulnerabilities checked") : info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
@@ -1000,10 +1003,12 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
   };
   const tider = [f.forst ? `${L("Først", "First")} ${f.forst}` : "", f.sist ? (f.naa || f.sist === "nå" ? L("Aktiv nå", "Active now") : `${L("Sist", "Last")} ${f.sist}`) : ""].filter(Boolean);
   let kompakt = false;
+  // Siden brukeren ba om. tegn() prøver flere sidestørrelser på første side; den skal ikke nullstille valget.
+  const onsketSide = stedSide;
   const apiKompakt = () => `<div class="apiKompakt">${api.map(t => { const li = apiLinje(t); return li.replace(/^<li class="api ([^"]*)"[^>]*><span>/, '<span class="api $1">').replace(/<\/span><\/li>$/, "</span>"); }).join("")}</div>`;
-  const tegn = per => {
+  const tegn = (per, onsket = 0) => {
     const sider = Math.max(1, Math.ceil(steder.length / per));
-    stedSide = Math.min(stedSide, sider - 1);
+    stedSide = Math.min(onsket, sider - 1);
     const vis = steder.slice(stedSide * per, stedSide * per + per);
     const sendt = (f.senderTil || []).length
       ? f.senderTil.slice(0, 3).map(l => `<div class="stor ${l.farlig ? "fare" : ""}">${esc(l.land)}</div>`).join("") + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
@@ -1030,6 +1035,8 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
   while (!tegn(per) && per > 1) per--;
   // Fortsatt for høyt: AI-funksjonene på én tett blokk i stedet for en liste
   if (api.length && !tegn(per)) { kompakt = true; per = Math.max(1, steder.length); while (!tegn(per) && per > 1) per--; }
+  // Sidestørrelsen er funnet med første side, så «1 av N» står stille når man blar. Så tegnes siden brukeren ba om.
+  if (onsketSide > 0) tegn(per, onsketSide);
   const ml = $("malListe");
   while (ml && d.scrollHeight > d.clientHeight + 1 && ml.children.length > 1) ml.lastElementChild.remove();
   const fs = $("stedForrige"), ns = $("stedNeste");

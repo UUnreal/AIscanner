@@ -17,7 +17,7 @@ public sealed partial class Skanner
     {
         if (!Plattform.ErWindows) return;
         Policyer();
-        foreach (var rot in new[] { Registry.CurrentUser, Registry.LocalMachine })
+        foreach (var rot in new[] { Bruker.Hkcu, Registry.LocalMachine })
         {
             Protokoller(rot);
             Filtilknytninger(rot);
@@ -30,7 +30,7 @@ public sealed partial class Skanner
 
     private static object? Verdi(string sti, string navn)
     {
-        foreach (var rot in new[] { Registry.LocalMachine, Registry.CurrentUser })
+        foreach (var rot in new[] { Registry.LocalMachine, Bruker.Hkcu })
         {
             try
             {

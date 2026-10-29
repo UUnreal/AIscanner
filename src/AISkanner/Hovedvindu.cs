@@ -66,6 +66,7 @@ public sealed class Hovedvindu : Form
         }
         catch (WebView2RuntimeNotFoundException)
         {
+            Vis();
             MessageBox.Show(this,
                 "Denne PC-en mangler Microsoft Edge WebView2, som AI-skanneren trenger for å vise vinduet.\n\n" +
                 "Last den ned gratis fra Microsoft: https://developer.microsoft.com/microsoft-edge/webview2/",
@@ -93,6 +94,8 @@ public sealed class Hovedvindu : Form
         {
             // Fra Windows startet prosessen (også lasting av .NET) til vinduet er klart
             Program.OppstartMs ??= Program.FraStart();
+            // Vis vinduet når siden har fått tegne første bilde
+            _ = Task.Delay(80).ContinueWith(_ => { try { BeginInvoke(new Action(Vis)); } catch { } });
             Send(new { type = "modus", admin = Nettverk.ErAdmin(), sprak = _engelsk ? "en" : "no", revisjon = _revisjon, oppstartMs = Program.OppstartMs });
             if (_args.Contains("--sok")) Send(new { type = "start" });
         };
@@ -103,6 +106,30 @@ public sealed class Hovedvindu : Form
     }
 
     private static readonly string Rot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner");
+
+    // Vinduet holdes usynlig (DWM-skjult) til siden er tegnet. Ellers ser man først et tomt vindu og så innholdet,
+    // som ser ut som to vinduer. Skjult vindu tegnes likevel, så WebView2 starter som før.
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int verdi, int storrelse);
+    private const int DWMWA_CLOAK = 13;
+    private bool _skjult;
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        int paa = 1;
+        try { _skjult = DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref paa, sizeof(int)) == 0; } catch { }
+        // Sikkerhetsnett: vises uansett etter 3 s, så vinduet aldri blir borte
+        if (_skjult) _ = Task.Delay(3000).ContinueWith(_ => { try { BeginInvoke(new Action(Vis)); } catch { } });
+    }
+
+    private void Vis()
+    {
+        if (!_skjult || IsDisposed) return;
+        _skjult = false;
+        int av = 0;
+        try { DwmSetWindowAttribute(Handle, DWMWA_CLOAK, ref av, sizeof(int)); } catch { }
+    }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
@@ -279,6 +306,9 @@ public sealed class Hovedvindu : Form
                 sendtTekst = T(Rapport.Storrelse(sendt)),
                 nvd = _nvdStatus,
                 admin = Nettverk.ErAdmin(),
+                bruker = Bruker.Navn,
+                kjortAv = Bruker.KjortAv,
+                brukerFeil = Bruker.Feil == null ? null : T(Bruker.Feil),
                 revisjon = _revisjonSti,
                 revisjonFeil = _revisjon && _revisjonSti == null && !_skanner.LytterNa,
                 lytter = _skanner.LytterNa,

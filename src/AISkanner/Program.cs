@@ -40,6 +40,9 @@ internal static class Program
         // programmet med et regex som aldri blir ferdig. Alle regex får en øvre tidsgrense.
         try { AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(2)); } catch { }
 
+        // Søket gjelder brukeren som er logget inn, også når IT godkjente admin med sin egen konto
+        Bruker.Velg();
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         if (args.Contains("--kontroll")) { try { VisKontroll(args.Contains("--en")); } catch (Exception e) { VisFeil(e); } return; }

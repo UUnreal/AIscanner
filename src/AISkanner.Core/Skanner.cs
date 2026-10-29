@@ -234,7 +234,7 @@ public sealed partial class Skanner
             ? _regler.Produkter.Where(p => p.Kategori == "Nettleser-AI" && !p.KunUtvidelse)
                 .Concat(_regler.Produkter.Where(p => p.KunUtvidelse))
             : _regler.Produkter.Where(p => !p.KunUtvidelse);
-        return kandidater.FirstOrDefault(p => p.Treff.Any(o => Treffer(tekst, o)));
+        return kandidater.FirstOrDefault(p => p.Treff.Any(o => Treffer(tekst!, o)));
     }
 
     private Funn LeggTil(string navn, string kategori, Risiko risiko, string hvorfor, string? hvor, string? detalj,
@@ -310,7 +310,7 @@ public sealed partial class Skanner
         {
             (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
             (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
-            (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
         };
         foreach (var (rot, sti) in steder)
         {
@@ -325,7 +325,7 @@ public sealed partial class Skanner
             }
         }
         // Microsoft Store-apper for innlogget bruker
-        using var pakker = Tilgangslogg.Nokkel(Registry.CurrentUser, @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
+        using var pakker = Tilgangslogg.Nokkel(Bruker.Hkcu, @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
         foreach (var pakke in pakker?.GetSubKeyNames() ?? Array.Empty<string>())
         {
             var r = FinnRegel(pakke.Replace('_', ' '));
@@ -355,10 +355,10 @@ public sealed partial class Skanner
 
             var run = new (RegistryKey Rot, string Sti)[]
             {
-                (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
+                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
                 (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
                 (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
-                (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
+                (Bruker.Hkcu, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
                 (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"),
             };
             foreach (var (rot, sti) in run)
@@ -539,7 +539,7 @@ public sealed partial class Skanner
         if (string.IsNullOrWhiteSpace(navn)) return;
         bool alleSider = tilganger.Any(t => t == "<all_urls>" || Regex.IsMatch(t, @"^(\*|https?)://\*/\*$"));
         var nettleser = hvor.Split(' ')[0];
-        var visning = $"{Kutt(navn, 40)} ({nettleser}-utvidelse)";
+        var visning = $"{Kutt(navn!, 40)} ({nettleser}-utvidelse)";
         Funn f;
         var r = FinnRegel(navn, utvidelse: true);
         var tekst0 = $" {navn} {beskrivelse} ".ToLowerInvariant();
@@ -574,7 +574,7 @@ public sealed partial class Skanner
     private static (int Verdi, string Hvor)? LesPolicy(string nokkel, string verdi)
     {
         if (!Plattform.ErWindows) return null;
-        foreach (var (rot, navn) in new[] { (Registry.LocalMachine, "HKLM"), (Registry.CurrentUser, "HKCU") })
+        foreach (var (rot, navn) in new[] { (Registry.LocalMachine, "HKLM"), (Bruker.Hkcu, "HKCU") })
         {
             using var k = Tilgangslogg.Nokkel(rot, nokkel);
             if (k?.GetValue(verdi) is int v) return (v, navn);

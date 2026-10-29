@@ -13,9 +13,9 @@ jobs:
   bygg:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'   # SDK-en bygger både .NET Framework 4.8-programmet og testene
 
@@ -60,7 +60,7 @@ jobs:
         shell: pwsh
         run: Get-ChildItem publish -Recurse -File | Get-FileHash -Algorithm SHA256 | Format-Table Hash, Path -AutoSize | Out-String -Width 400 | Tee-Object publish/SHA256.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         id: last-opp
         with:
           name: AISkanner-usignert

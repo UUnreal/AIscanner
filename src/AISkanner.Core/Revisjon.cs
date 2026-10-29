@@ -110,7 +110,9 @@ public static class Revisjon
 
         L("AI-SKANNER REVISJONSLOGG");
         L($"Versjon: {versjon}");
-        Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Environment.UserDomainName}\\{Environment.UserName}");
+        Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Bruker.Navn}");
+        if (Bruker.KjortAv != null) L($"Kjørt av: {Bruker.KjortAv} (søket gjelder brukeren som er logget inn)");
+        if (Bruker.Feil != null) L(Bruker.Feil);
         L($"Søkt som: {modus}");
         L($"Språk: {(engelsk ? "engelsk" : "norsk")}");
         L($"Start: {s.Startet:yyyy-MM-dd HH:mm:ss}   Slutt: {s.Ferdig ?? DateTime.Now:yyyy-MM-dd HH:mm:ss}");

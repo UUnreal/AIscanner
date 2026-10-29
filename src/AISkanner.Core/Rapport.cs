@@ -21,7 +21,9 @@ public static class Rapport
         string T(string s) => engelsk ? Engelsk.Til(s)! : s;
         string strek = new('-', 60);
         L("AI-SKANNER RAPPORT");
-        Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Environment.UserName}");
+        Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Bruker.Navn}");
+        if (Bruker.KjortAv != null) L($"Kjørt av: {Bruker.KjortAv} (søket gjelder brukeren som er logget inn)");
+        if (Bruker.Feil != null) L(Bruker.Feil);
         L($"Søket kjørt: {(skanner?.Startet ?? DateTime.Now):dd.MM.yyyy HH:mm:ss}   Rapport laget: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         var tell = Oversikt.Telling(liste);

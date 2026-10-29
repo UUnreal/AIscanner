@@ -603,7 +603,7 @@ internal sealed class Strengsok
                 bool ok = true;
                 for (int i = 1; i < deltreff.Count && ok; i++)
                 {
-                    var (_, min, maks) = s.Kjede[i];
+                    var (_, min, maks) = s.Kjede![i];
                     ok = false;
                     foreach (var (q, lq) in deltreff[i]!)
                     {

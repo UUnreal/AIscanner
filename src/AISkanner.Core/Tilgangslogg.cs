@@ -155,6 +155,7 @@ public sealed class Tilgangslogg
         "HKEY_CURRENT_USER" => "HKCU",
         "HKEY_CLASSES_ROOT" => "HKCR",
         "HKEY_USERS" => "HKU",
+        var n when n.StartsWith(@"HKEY_USERS\", StringComparison.Ordinal) => "HKU" + n.Substring(10),
         _ => rot.Name,
     };
 }

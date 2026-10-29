@@ -29,6 +29,28 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.20.0] - 2026-10-29
+
+Ikke testet på Windows ennå. `--kontroll` gir 138 av 138.
+
+### Rettet
+- **«Søk som admin» med IT-konto søkte i feil profil.** Når admin ble godkjent med en annen konto, søkte programmet i
+  IT-kontoens profil, register og nettlesere. Nå finner det brukeren som er logget inn på skjermen (Windows-økta), og
+  søker i den brukerens profil og register (`HKEY_USERS\<SID>`). Stiene kommer fra registeret til brukeren
+  (Volatile Environment, ProfileList). AI-nøkler telles bare fra brukerens register, aldri fra IT-kontoens miljø.
+  Bunnlinjen, rapporten og revisjonsloggen sier hvem søket gjaldt, og hvem som godkjente. Kjøres CLI-en som SYSTEM
+  (Intune), gjelder søket den som er logget inn på skjermen. Ny fil: `Bruker.cs`.
+- **«1 av N»-pilen under LIGGER HER virket ikke.** Første forsøk på å få plass til alt nullstilte siden. Nå holder
+  «1 av N» seg stille når man blar, og venstre/høyre-pil på tastaturet virker også.
+- **To vinduer ved oppstart.** Vinduet holdes skjult (DWM) til siden er tegnet, så man ser bare ett vindu. Vises uansett
+  etter 3 sekunder.
+- **Datagrunnlag:** Windows sine kompatibilitetslenker i profilen (Mine dokumenter, Cookies, Maler, Recent, Programdata,
+  Lokale innstillinger, AndrMask …) sto som «nektet tilgang». Nå står de som «kompatibilitetslenke, innholdet søkt i
+  <ekte sti>», og teller ikke som ikke dekket. Lenker i roten av profilen følges ikke lenger (som i resten av søket).
+  Beskyttede prosesser (csrss, dwm, fontdrvhost, LsaIso …) står som «beskyttet Windows-prosess etter navn (ikke AI)».
+- **CI:** `actions/checkout@v5`, `actions/setup-dotnet@v5` og `actions/upload-artifact@v6` (Node 24). Nullable-advarslene
+  i `Yara/Kontekst.cs`, `Yara/Strenger.cs` og `Skanner.cs` er rettet; bygget har ingen kodeadvarsler.
+
 ## [2.19.12] - 2026-10-29
 
 Venter på test på Windows.

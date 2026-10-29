@@ -453,7 +453,7 @@ public sealed partial class Skanner
         {
             foreach (var n in new[] { @"Software\Microsoft\Windows\CurrentVersion\Run", @"Software\Microsoft\Windows\CurrentVersion\RunOnce" })
             {
-                using var k = Tilgangslogg.Nokkel(Registry.CurrentUser, n);
+                using var k = Tilgangslogg.Nokkel(Bruker.Hkcu, n);
                 if (k == null) continue;
                 foreach (var v in k.GetValueNames())
                     if (k.GetValue(v) is string s) Sjekk(s, $"Register: HKCU\\{n} · {v}", null);
@@ -462,7 +462,7 @@ public sealed partial class Skanner
         var filer = new List<string>();
         filer.AddRange(Plattform.Filer(Utvid(@"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"), "*", 0)
             .Where(x => x.Extension.ToLowerInvariant() is ".bat" or ".cmd" or ".ps1" or ".vbs").Select(x => x.FullName));
-        var dok = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var dok = Bruker.Dokumenter();
         if (!string.IsNullOrEmpty(dok))
             foreach (var m in new[] { "WindowsPowerShell", "PowerShell" })
                 filer.AddRange(Plattform.Filer(Path.Combine(dok, m), "*profile.ps1", 0).Select(x => x.FullName));

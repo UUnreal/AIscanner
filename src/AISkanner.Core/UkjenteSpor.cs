@@ -692,7 +692,7 @@ public sealed partial class Skanner
     private void Wsl()
     {
         if (!Plattform.ErWindows) return;
-        using var k = Tilgangslogg.Nokkel(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Lxss");
+        using var k = Tilgangslogg.Nokkel(Bruker.Hkcu, @"Software\Microsoft\Windows\CurrentVersion\Lxss");
         if (k == null || k.GetSubKeyNames().Length == 0) return;
         Tilgangslogg.Logg("Mappe", "WSL (Linux i Windows)", Utfall.HoppetOver, "blindsone: filene i WSL leses ikke");
         lock (Blindsoner) Blindsoner.Add($"WSL (Linux i Windows) er installert ({k.GetSubKeyNames().Length}). AI og spor inne i WSL er ikke sjekket.");

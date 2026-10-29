@@ -61,7 +61,8 @@ internal sealed class Kontekst
             if (fra >= b.Start && fra + lengde <= b.Start + b.Data.Length)
                 return new ArraySegment<byte>(b.Data, (int)(fra - b.Start), (int)lengde);
         var hele = Hele();
-        return hele == null ? null : new ArraySegment<byte>(hele, (int)fra, (int)lengde);
+        if (hele == null) return null;
+        return new ArraySegment<byte>(hele, (int)fra, (int)lengde);
     }
 
     /// <summary>Antall av hver byteverdi i et område. Deles av math.entropy, mean, count, percentage og mode.</summary>

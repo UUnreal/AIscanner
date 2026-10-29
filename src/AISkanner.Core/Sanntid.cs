@@ -51,6 +51,8 @@ public sealed partial class Skanner
         ["@modelcontextprotocol/sdk"] = true, ["@openai/agents"] = true, ["@anthropic-ai/claude-agent-sdk"] = true,
     };
 
+    internal static bool ErNokkelNavn(string navn) => NokkelNavn.IsMatch(navn);
+
     private static readonly Regex NokkelNavn = new(
         @"^(OPENAI|ANTHROPIC|CLAUDE|GEMINI|GOOGLE_GENAI|MISTRAL|GROQ|DEEPSEEK|COHERE|PERPLEXITY|XAI|OPENROUTER|TOGETHER|FIREWORKS|AZURE_OPENAI|LANGCHAIN|LANGSMITH|ELEVENLABS|REPLICATE|STABILITY)_(API_)?(KEY|TOKEN)$|^(HF_TOKEN|HUGGINGFACE_HUB_TOKEN|HUGGING_FACE_HUB_TOKEN|HF_API_TOKEN)$",
         RegexOptions.IgnoreCase);
@@ -228,12 +230,14 @@ public sealed partial class Skanner
     private void Nokler()
     {
         var navn = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
-            if (e.Key is string k && NokkelNavn.IsMatch(k)) navn.Add(k);
+        // Når en annen konto (IT) kjører programmet, er prosessens miljø IT-kontoens. Da telles bare brukerens register.
+        if (!Bruker.Annen)
+            foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
+                if (e.Key is string k && NokkelNavn.IsMatch(k)) navn.Add(k);
         if (Plattform.ErWindows)
         {
             // Bare navnene på variablene i registeret, aldri verdiene
-            using (var env = Tilgangslogg.Nokkel(Microsoft.Win32.Registry.CurrentUser, "Environment"))
+            using (var env = Tilgangslogg.Nokkel(Bruker.Hkcu, "Environment"))
                 foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
             using (var env = Tilgangslogg.Nokkel(Microsoft.Win32.Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
                 foreach (var k in env?.GetValueNames() ?? Array.Empty<string>()) if (NokkelNavn.IsMatch(k)) navn.Add(k);
@@ -296,7 +300,11 @@ public sealed partial class Skanner
         foreach (var (rot, dybde) in rotter)
         {
             GaaFiler(rot, ff, minLengde);
-            foreach (var d in Mapper(rot)) jobber.Add((d, dybde - 1));
+            foreach (var d in Mapper(rot))
+            {
+                if (Lenke(d)) continue;
+                jobber.Add((d, dybde - 1));
+            }
         }
         Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) },
             j => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist));
@@ -370,6 +378,25 @@ public sealed partial class Skanner
             if (sky > 0) Tilgangslogg.BareKart("Mappe", mappe, Utfall.HoppetOver, $"{sky} skyfiler (OneDrive) som ikke er lastet ned, åpnes aldri");
         }
         catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
+    }
+
+    /// <summary>
+    /// Lenker følges aldri. Windows har kompatibilitetslenker i profilen (Mine dokumenter, Cookies, Maler, Recent,
+    /// Programdata, Lokale innstillinger, AndrMask …) som peker på ekte mapper og nekter listing for alle, også admin.
+    /// De logges som lenke med målet, ikke som «nektet tilgang».
+    /// </summary>
+    private bool Lenke(string mappe)
+    {
+        try { if ((File.GetAttributes(mappe) & FileAttributes.ReparsePoint) == 0) return false; }
+        catch { return false; }
+        var mal = Reparse.Mal(mappe);
+        var hjem = Utvid("%USERPROFILE%");
+        Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver,
+            mal == null ? "lenke til en annen mappe, følges ikke"
+            : mal.StartsWith(hjem.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase) ? $"kompatibilitetslenke, innholdet søkt i {mal}"
+            : $"lenke til {mal}, følges ikke");
+        SjekkLenke(new DirectoryInfo(mappe));
+        return true;
     }
 
     /// <summary>Bare filene i selve mappa (brukes for rotmappene, der undermappene gås gjennom parallelt).</summary>

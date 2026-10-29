@@ -33,6 +33,9 @@ if (args.Length == 1 && args[0] == "--oversett")
 if (args.Length == 1 && args[0] == "--selvtest")
     return Selvtest.Kjor();
 
+// Søket gjelder brukeren som er logget inn (også når en annen konto, eller SYSTEM via Intune, kjører programmet)
+Bruker.Velg();
+
 bool nvd = args.Contains("--nvd");
 bool historikk = !args.Contains("--uten-historikk");
 int i = Array.IndexOf(args, "--regler");

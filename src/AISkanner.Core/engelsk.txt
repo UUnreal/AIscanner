@@ -1193,3 +1193,15 @@ Nett: ukjent program mot AI-tjeneste|Network: unknown program to AI service
 Nett: ukjent program bruker lokal Ollama|Network: unknown program uses local Ollama
 Nett: kjent domene i DNS-bufferen|Network: known domain in the DNS cache
 Ingen nøkler, kommandoer eller øktinnhold i rapporten|No keys, commands or session content in the report
+
+# ---------- 2.20: riktig bruker ved admin, lenker og beskyttede prosesser ----------
+systemprosess i Windows (ikke AI)|Windows system process (not AI)
+beskyttet Windows-prosess etter navn (ikke AI), røres ikke|protected Windows process by name (not AI), not touched
+~^kompatibilitetslenke, innholdet søkt i (.+)$|compatibility link, contents scanned in $1
+~^lenke til (.+), følges ikke$|link to $1, not followed
+lenke til en annen mappe, følges ikke|link to another folder, not followed
+~^Kjørt av: (.+) \(søket gjelder brukeren som er logget inn\)$|Run by: $1 (the scan covers the signed-in user)
+~^Fant ikke registeret til (.+) \(HKEY_USERS\\(.+)\)\. Søket gjelder (.+)\.$|Could not find the registry of $1 (HKEY_USERS\$2). The scan covers $3.
+~^Fant ikke profilmappa til (.+)\. Søket gjelder (.+)\.$|Could not find the profile folder of $1. The scan covers $2.
+~^Fant ikke kontoen til (.+)\. Søket gjelder (.+)\.$|Could not find the account of $1. The scan covers $2.
+~^Kunne ikke finne den innloggede brukeren \((.+)\)\. Søket gjelder (.+)\.$|Could not find the signed-in user ($1). The scan covers $2.
