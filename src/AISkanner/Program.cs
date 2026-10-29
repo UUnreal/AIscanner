@@ -36,7 +36,7 @@ internal static class Program
 
     private static Assembly? AnnenVersjon(object? _, ResolveEventArgs e)
     {
-        if (_iGang) return null;
+        if (_iGang) { lock (Omdirigert) Omdirigert.Add($"(inni) {e.Name}"); return null; }
         try
         {
             _iGang = true;
@@ -49,11 +49,12 @@ internal static class Program
             var (a, b) = (spurt.GetPublicKeyToken(), finnes.GetPublicKeyToken());
             if (a != null && a.Length > 0 && (b == null || !a.SequenceEqual(b))) return null;
             if (spurt.Version != null && spurt.Version == finnes.Version) return null;
-            var lastet = Assembly.Load(finnes);
+            // Bare navnet som tekst: et AssemblyName fra fila har også CodeBase, og da kan .NET laste som LoadFrom
+            var lastet = Assembly.Load(finnes.FullName);
             lock (Omdirigert) Omdirigert.Add($"{spurt.Name} {spurt.Version} -> {finnes.Version}");
             return lastet;
         }
-        catch { return null; }
+        catch (Exception x) { lock (Omdirigert) Omdirigert.Add($"{e.Name}: {x.GetType().Name}: {x.Message}"); return null; }
         finally { _iGang = false; }
     }
 
@@ -130,11 +131,11 @@ internal static class Program
             try { Console.WriteLine("WebView2: " + Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()); }
             catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException) { Console.WriteLine("WebView2: lasteren virker, Edge WebView2 Runtime er ikke installert"); }
 
-            lock (Omdirigert) foreach (var o in Omdirigert) Console.WriteLine("Annen versjon lastet: " + o);
             Console.WriteLine(feil ? "LASTETEST FEIL" : "LASTETEST OK");
             return feil ? 1 : 0;
         }
         catch (Exception e) { Console.WriteLine("LASTETEST FEIL\n" + e); return 2; }
+        finally { lock (Omdirigert) foreach (var o in Omdirigert) Console.WriteLine("Annen versjon: " + o); }
     }
 
     private static void VisFeil(Exception? e)
