@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.23.1. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.24.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -247,8 +247,8 @@ PC-navn, brukernavn, stier og funn sendes aldri. Det gjøres ingen DNS-oppslag o
 | Hva | Hvor | Hvor lenge |
 |---|---|---|
 | WebView2-data | `%LOCALAPPDATA%\AISkanner\Vindu-<pid>` | Slettes når programmet lukkes. Rester etter avbrutte kjøringer slettes ved neste start. |
-| Rapport | Der brukeren velger, som `AI-rapport_<PC>_<dato>_<tid>.txt`. Skriver aldri over en fil som finnes. | Bare når brukeren trykker «Last ned rapport» |
-| Revisjonslogg | `Dokumenter\AI-skanner\AI-revisjon_<PC>_<dato>_<tid>.txt`. Ny fil per søk, aldri over en gammel. | Bare når brukeren har valgt Ja på startskjermen. Blir liggende til noen sletter den. |
+| Rapport | Der brukeren velger, som `AI-rapport_<PC>_<dato>_<tid>.txt`. Skriver aldri over en fil som finnes. | Bare når brukeren trykker «Lagre rapport» |
+| Revisjonslogg | `Dokumenter\AI-skanner\AI-revisjon_<PC>_<dato>_<tid>.txt`. Ny fil per søk, aldri over en gammel. | Bare når brukeren har valgt Ja under «Hva søkes?» på startskjermen. Blir liggende til noen sletter den. |
 
 Programmet har ingen cache, ingen hasher fra før og ingen historikk over søk. Nettleserdata lagres aldri av seg selv.
 Rapporten brukeren selv laster ned (tekst og JSON), viser hvor AI brukes i nettleseren: AI-domene, nettleser og

@@ -6,21 +6,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI-skanner</title>
 <style>
-  /* Fargene er dempet for lange økter: ingen ren hvit på ren svart, signalfargene (trafikklyset) er avmettet, og all
-     tekst har minst 4,5:1 kontrast (WCAG AA) mot kort og bakgrunn. --x-tekst brukes til tekst, --x til prikker og
-     søyler, --x-myk til flater bak tekst. --bla-knapp er bakgrunn bak hvit tekst. */
+  /* Designsystem 2.24: Apples ro med Windows 11 sin rytme.
+     Fem skriftstørrelser (Fluent-rampen 12/14/20/28/40), to vekter (400/600), tre hjørner (8/14/rund).
+     Blått bare på det som kan trykkes. Risikofarge bare på prikker, linja og ord som må varsle.
+     Ukjent er en rød ring, så den skilles fra Høy uten å lese farge. All tekst minst 4,5:1 (WCAG AA). */
   :root {
-    --bg: #f2f2f5; --kort: #ffffff; --tekst: #1d1d1f; --dempet: #5f5f66; --linje: rgba(60,60,67,.12); --fyll: rgba(120,120,128,.08);
-    --bla: #0062c4; --bla-knapp: #0062c4; --rod: #d65a50; --gul: #d9a032; --gronn: #4aa56a;
-    --rod-myk: #fbefee; --gul-myk: #fbf4e6; --gronn-myk: #ecf6ef; --bla-myk: #e8f0fb;
+    --bg: #f3f3f5; --kort: #ffffff; --flate: #f5f5f8; --tekst: #1b1b1f; --dempet: #5e5e68; --svak: #74747e; --linje: rgba(20,20,40,.08); --fyll: rgba(120,120,135,.10);
+    --bla: #0a5fc0; --bla-knapp: #0a5fc0; --bla-myk: rgba(10,95,192,.09);
+    --rod: #d14b41; --gul: #c98a17; --gronn: #2f9a5a;
+    --rod-myk: #fbefee; --gul-myk: #fbf4e6; --gronn-myk: #ecf6ef;
     --rod-tekst: #b3261e; --gul-tekst: #875400; --gronn-tekst: #1b7339;
-    --skygge: 0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.05);
+    --skygge: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+    --r1: 8px; --r2: 14px; --r3: 999px;
+    --t12: 12px/16px var(--tekstFont); --t14: 14px/20px var(--tekstFont); --t20: 600 20px/28px var(--tekstFont); --t28: 600 28px/36px var(--visFont); --t40: 600 40px/52px var(--visFont);
+    --tekstFont: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", -apple-system, "SF Pro Text", system-ui, sans-serif;
+    --visFont: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", -apple-system, "SF Pro Display", system-ui, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #111113; --kort: #1c1c1f; --tekst: #e6e6eb; --dempet: #9d9da4; --linje: rgba(84,84,88,.40); --fyll: rgba(120,120,128,.14);
-      --bla: #5aa2f0; --bla-knapp: #2f6fc0; --rod: #d9665c; --gul: #cf9f45; --gronn: #5aab74;
-      --rod-myk: rgba(217,102,92,.16); --gul-myk: rgba(207,159,69,.16); --gronn-myk: rgba(90,171,116,.16); --bla-myk: rgba(90,162,240,.16);
+      --bg: #161618; --kort: #202024; --flate: #28282d; --tekst: #ececf0; --dempet: #a3a3ad; --svak: #8e8e98; --linje: rgba(255,255,255,.07); --fyll: rgba(160,160,175,.12);
+      --bla: #5aa2f0; --bla-knapp: #2f78d0; --bla-myk: rgba(90,162,240,.14);
+      --rod: #e0675d; --gul: #d6a24a; --gronn: #5fb37c;
+      --rod-myk: rgba(224,103,93,.16); --gul-myk: rgba(214,162,74,.16); --gronn-myk: rgba(95,179,124,.16);
       --rod-tekst: #f0958b; --gul-tekst: #e3b660; --gronn-tekst: #83c99a;
       --skygge: none;
     }
@@ -28,137 +35,295 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
   html { background: var(--bg); }
-  /* Oppstart: innholdet er usynlig til vinduet er vist, så toner det mykt inn */
+  /* Oppstart: innholdet er usynlig til vinduet er vist, så stiger det mykt inn */
   html:not(.vist) body { opacity: 0; }
   html.vist body { animation: inn .38s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes inn { from { opacity: 0; transform: translateY(6px) scale(.992); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { html.vist body { animation: none; } }
+  @keyframes inn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { html.vist body, .side.aktiv, .side.aktiv * { animation: none !important; } }
   body {
-    background: var(--bg); color: var(--tekst);
-    font-family: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
-    font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; user-select: none;
+    background: var(--bg); color: var(--tekst); font: var(--t14);
+    -webkit-font-smoothing: antialiased; user-select: none;
   }
-  button { font: inherit; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--bla); outline-offset: 2px; }
+  svg.ik { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .side { display: none; height: 100%; }
-  .side.aktiv { display: flex; flex-direction: column; animation: inn .35s ease; }
-  @keyframes inn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .side.aktiv { display: flex; flex-direction: column; animation: inn .35s cubic-bezier(.2,.8,.2,1); }
 
-  /* ---------- Start ---------- */
-  #start { align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 8px; }
-  .storTittel { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
-  .undertittel { font-size: 17px; color: var(--dempet); max-width: 440px; }
-  /* To søk i én knapp: den lille runde i midten = som bruker, ringen rundt = som admin */
-  .valg { position: relative; width: 260px; height: 260px; margin: 22px 0 16px; flex: none; }
-  .ring2 {
-    position: absolute; inset: 0; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
-    background: radial-gradient(circle, transparent 0 46%, rgba(0,98,196,.10) 46.5% 100%);
-    box-shadow: inset 0 0 0 2px rgba(0,98,196,.35); color: var(--bla); font: inherit; transition: background .15s;
-  }
-  .ring2:hover { background: radial-gradient(circle, transparent 0 46%, rgba(0,98,196,.18) 46.5% 100%); }
-  .ring2 .rtekst { position: absolute; left: 0; right: 0; top: 20px; font-size: 15px; font-weight: 700; letter-spacing: .02em; }
-  .ring2 .rliten { position: absolute; left: 0; right: 0; bottom: 26px; font-size: 12px; font-weight: 500; opacity: .85; }
+  /* ---------- Start: ett spørsmål, én knapp ---------- */
+  #start { align-items: center; justify-content: center; text-align: center; padding: 24px 24px 64px; gap: 24px; position: relative; }
+  .storTittel { font: var(--t40); font-family: var(--visFont); letter-spacing: -.02em; text-wrap: balance; }
+  /* Sirkelen i midten = søk som bruker, ringen rundt = søk som admin */
+  .valg { position: relative; width: 264px; height: 264px; flex: none; }
+  .ring2 { position: absolute; inset: 0; border-radius: 50%; border: 0; cursor: pointer; padding: 0; background: var(--bla-myk); box-shadow: inset 0 0 0 1px rgba(10,95,192,.22); color: var(--bla); transition: background .15s; }
+  .ring2:hover { background: rgba(10,95,192,.15); }
+  .ring2 .rtekst { position: absolute; left: 0; right: 0; top: 18px; display: flex; align-items: center; justify-content: center; gap: 5px; font: 600 var(--t12); }
   .sokKnapp {
-    position: absolute; left: 50%; top: 50%; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%; border: 0; cursor: pointer;
-    background: linear-gradient(160deg, #3a86d6, var(--bla-knapp) 55%, #0a4f9c); color: #fff;
-    font-size: 26px; font-weight: 600; letter-spacing: -.01em; line-height: 1.1;
-    box-shadow: 0 10px 28px rgba(0,98,196,.25), inset 0 1px 0 rgba(255,255,255,.2);
-    transition: transform .15s ease; z-index: 1;
+    position: absolute; left: 50%; top: 50%; width: 164px; height: 164px; margin: -82px 0 0 -82px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--bla-knapp); color: #fff; font: var(--t28); font-family: var(--visFont);
+    box-shadow: 0 10px 30px rgba(10,95,192,.28); transition: transform .15s ease; z-index: 1;
   }
-  .sokKnapp small { display: block; font-size: 13px; font-weight: 500; opacity: .9; margin-top: 4px; }
-  .sokKnapp:hover { transform: scale(1.04); }
+  .sokKnapp:hover { transform: scale(1.03); }
   .sokKnapp:active, .ring2:active { transform: scale(.97); }
-  /* Hurtigsøk eller fullt søk av PC: to like store valg, det valgte er hvitt og tydelig */
-  .omfang { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; background: var(--fyll); border-radius: 16px; padding: 3px; max-width: 520px; width: 100%; margin-top: 14px; }
-  .omfang button { border: 0; background: none; color: var(--dempet); border-radius: 13px; padding: 9px 14px; cursor: pointer; text-align: left; font: inherit; font-size: 12.5px; line-height: 1.35; }
-  .omfang button b { display: block; color: var(--tekst); font-size: 15px; font-weight: 650; margin-bottom: 1px; }
-  .omfang button:hover { background: var(--fyll); }
-  .omfang button.paa { background: var(--kort); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-  .omfang button.paa b { color: var(--bla); }
-  .fremdrift { color: var(--dempet); font-size: 14px; font-variant-numeric: tabular-nums; min-height: 20px; }
-  .modus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; text-align: left; margin-bottom: 14px; }
-  .modus div { background: var(--kort); border-radius: 14px; padding: 10px 14px; box-shadow: var(--skygge); font-size: 13px; color: var(--dempet); line-height: 1.4; }
-  .modus b { display: block; color: var(--tekst); font-size: 14px; margin-bottom: 2px; }
-  .modus .adm b { color: var(--bla); }
-  .erAdmin .ring2 .rliten { display: none; }
-  @keyframes puls { 0% { transform: scale(.92); opacity: .35; } 100% { transform: scale(1.18); opacity: 0; } }
-  .tillit { display: flex; gap: 18px; color: var(--dempet); font-size: 13px; flex-wrap: wrap; justify-content: center; }
+  .hint { color: var(--dempet); max-width: 460px; }
+  /* Hurtigsøk eller fullt søk av PC */
+  .omfang { display: inline-flex; background: var(--fyll); border-radius: var(--r1); padding: 2px; gap: 2px; }
+  .omfang button { border: 0; background: none; color: var(--dempet); border-radius: 6px; padding: 6px 16px; cursor: pointer; font-weight: 600; }
+  .omfang button small { font: var(--t12); color: var(--svak); margin-left: 6px; }
+  .omfang button:hover { color: var(--tekst); }
+  .omfang button.paa { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
+  .tillit { position: absolute; left: 0; right: 0; bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; color: var(--dempet); font: var(--t12); padding: 0 24px; }
   .tillit span { display: inline-flex; align-items: center; gap: 6px; }
-  .tillit svg { width: 15px; height: 15px; }
-  .inkludert { margin-top: 22px; max-width: 470px; color: var(--dempet); font-size: 13px; line-height: 1.45; }
-  .feil { color: var(--rod-tekst); font-size: 14px; min-height: 20px; }
   .tillit i { font-style: normal; }
-  .revisjon { display: inline-flex; align-items: center; gap: 10px; background: var(--kort); border-radius: 980px; padding: 4px 4px 4px 16px; box-shadow: var(--skygge); margin-bottom: 14px; font-size: 13.5px; max-width: 100%; }
-  .revisjon b { font-weight: 600; white-space: nowrap; }
-  .revisjon small { color: var(--dempet); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .revisjon .bryter { border-radius: 980px; }
-  .revisjon .bryter button { border-radius: 980px; padding: 4px 14px; }
-  @media (max-height: 820px) {
-    #start { gap: 6px; }
-    .storTittel { font-size: 30px; }
-    .valg { width: 210px; height: 210px; margin: 10px 0 8px; }
-    .sokKnapp { width: 116px; height: 116px; margin: -58px 0 0 -58px; font-size: 23px; }
-    .sokKnapp small { font-size: 12px; margin-top: 2px; }
-    .ring2 .rtekst { top: 17px; font-size: 13.5px; }
-    .ring2 .rliten { bottom: 20px; font-size: 11.5px; }
-    .inkludert { margin-top: 8px; }
-    .omfang { margin-top: 8px; }
-    .omfang button { padding: 7px 12px; }
-    .modus { margin-bottom: 8px; }
-    .revisjon { margin-bottom: 8px; }
-  }
-  .bryter { display: inline-flex; background: var(--fyll); border-radius: 9px; padding: 2px; flex: none; }
-  .bryter button { border: 0; background: none; color: var(--dempet); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 7px; cursor: pointer; }
-  .bryter button.valgt { background: var(--kort); color: var(--tekst); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .tillit button { border: 0; background: none; color: var(--bla); font-weight: 600; cursor: pointer; }
+  .feil { color: var(--rod-tekst); min-height: 20px; }
+  .feil:empty { display: none; }
+  /* «Hva søkes?»: alt som ikke trengs for å trykke Søk, samlet på ett ark */
+  .om { position: fixed; inset: 0; background: rgba(0,0,0,.28); display: none; align-items: center; justify-content: center; z-index: 10; padding: 24px; }
+  .om.apen { display: flex; }
+  .omKort { background: var(--kort); border-radius: var(--r2); box-shadow: 0 12px 40px rgba(0,0,0,.25); width: min(560px, 100%); padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+  .omKort header { display: flex; justify-content: space-between; align-items: center; }
+  .omKort h2 { font: var(--t20); }
+  .omKort p { color: var(--dempet); }
+  .omKort b { color: var(--tekst); font-weight: 600; }
+  .omRad { display: flex; justify-content: space-between; align-items: center; gap: 16px; background: var(--flate); border-radius: var(--r1); padding: 10px 14px; }
+  .omRad small { display: block; font: var(--t12); color: var(--dempet); }
+  .lukk { border: 0; background: var(--fyll); color: var(--dempet); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: inline-grid; place-items: center; flex: none; }
+  .lukk:hover { color: var(--tekst); }
+  .bryter { display: inline-flex; background: var(--fyll); border-radius: var(--r1); padding: 2px; flex: none; }
+  .bryter button { border: 0; background: none; color: var(--dempet); font-weight: 600; padding: 4px 14px; border-radius: 6px; cursor: pointer; }
+  .bryter button.valgt { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
   .bryter button.valgt[data-r="ja"] { color: var(--bla); }
-  /* Utviklermodus: datagrunnlaget */
-  .faner { display: flex; gap: 6px; flex: none; margin: 10px 0 2px; flex-wrap: wrap; }
-  .faner button, .filter button { border: 0; background: var(--fyll); color: var(--tekst); font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
-  .faner button.valgt, .filter button.valgt { background: var(--bla-knapp); color: #fff; }
-  .faner button .ant { opacity: .7; margin-left: 4px; }
-  .filter { display: flex; gap: 5px; flex-wrap: wrap; flex: none; margin-bottom: 6px; }
-  .filter button { font-size: 12px; padding: 3px 10px; }
-  .ufliser { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; flex: none; }
-  .uflis { background: var(--fyll); border-radius: 12px; padding: 7px 11px; min-width: 0; }
-  .uflis.har { cursor: pointer; } .uflis.har:hover { box-shadow: inset 0 0 0 2px var(--bla); }
-  .sjekkRad[data-sjekk] { cursor: pointer; } .sjekkRad[data-sjekk]:hover { background: var(--bla-myk) !important; }
-  .sjekkRad span[data-su] { cursor: pointer; border-radius: 6px; } .sjekkRad span[data-su]:hover { text-decoration: underline; color: var(--bla); }
-  .detalj li.post[data-k] { cursor: pointer; } .detalj li.post[data-k]:hover { background: var(--bla-myk); }
+  @media (max-height: 700px) {
+    #start { gap: 16px; }
+    .valg { width: 220px; height: 220px; }
+    .sokKnapp { width: 136px; height: 136px; margin: -68px 0 0 -68px; }
+  }
+
+  /* Språkvalg: øverst til høyre, alltid samme sted */
+  .sprak { position: fixed; top: 16px; right: 16px; display: inline-flex; background: var(--fyll); border-radius: var(--r3); padding: 2px; gap: 2px; z-index: 5; }
+  .sprak button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--dempet); border-radius: var(--r3); padding: 4px 10px 4px 8px; font: 600 var(--t12); cursor: pointer; }
+  .sprak button svg { width: 18px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex: none; }
+  .sprak button.valgt { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
+
+  /* ---------- Søker ---------- */
+  #soker { align-items: center; justify-content: center; text-align: center; gap: 24px; }
+  /* Søkesirkelen fylles fra 0 til 100 % etter hvor langt søket faktisk har kommet */
+  .ringBoks { position: relative; width: 164px; height: 164px; }
+  .ring { width: 164px; height: 164px; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 5; stroke-linecap: round; }
+  .ring .spor { stroke: var(--linje); }
+  .ring .bue { stroke: var(--bla); stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .35s ease; }
+  .ringBoks .prosent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: var(--t28); font-family: var(--visFont); font-variant-numeric: tabular-nums; }
+  .sokTittel { font: var(--t20); }
+  .fremdrift { color: var(--dempet); font-variant-numeric: tabular-nums; min-height: 20px; }
+
+  /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
+  #resultat { padding: 24px 32px 14px; gap: 16px; max-width: 1280px; width: 100%; margin: 0 auto; }
+  .topp { display: flex; flex-direction: column; gap: 14px; flex: none; }
+  .toppRad { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-right: 136px; }
+  .topp h1 { font: var(--t28); font-family: var(--visFont); letter-spacing: -.015em; min-width: 0; }
+  .knapper { display: flex; gap: 8px; align-items: center; flex: none; }
+  .knapp { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: var(--r1); padding: 6px 14px; font-weight: 600; cursor: pointer; flex: none; }
+  .knapp.primar { background: var(--bla-knapp); color: #fff; }
+  .knapp.tonal { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge), inset 0 0 0 1px var(--linje); }
+  .knapp:hover { filter: brightness(1.06); }
+  .risikoRad { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .bar { display: flex; gap: 2px; height: 6px; width: 280px; max-width: 100%; }
+  .bar:empty { display: none; }
+  .bar span { display: block; border-radius: 3px; }
+  .bar .rod { background: var(--rod); } .bar .gul { background: var(--gul); } .bar .gronn { background: var(--gronn); }
+  .bar .ukjent { background: repeating-linear-gradient(135deg, var(--rod) 0 3px, transparent 3px 5px); box-shadow: inset 0 0 0 1px var(--rod); }
+  .fordeling { display: flex; gap: 14px; color: var(--tekst); }
+  .fordeling span { display: inline-flex; align-items: center; gap: 6px; }
+  .fordeling b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .prikk { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--svak); }
+  .prikk.rod { background: var(--rod); } .prikk.gul { background: var(--gul); } .prikk.gronn { background: var(--gronn); }
+  .prikk.ukjent { background: transparent; box-shadow: inset 0 0 0 2px var(--rod); }
+  /* Funn, Nettverk og Datagrunnlag: tre likeverdige visninger */
+  .segment { display: inline-flex; background: var(--fyll); border-radius: var(--r1); padding: 2px; gap: 2px; align-self: flex-start; }
+  .segment button { border: 0; background: none; color: var(--dempet); border-radius: 6px; padding: 5px 16px; font-weight: 600; cursor: pointer; }
+  .segment button:hover { color: var(--tekst); }
+  .segment button.paa { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
+
+  /* Lista og arket ved siden av hverandre. Detalj: lista smal til venstre. Nettverk og Datagrunnlag: arket alene. */
+  .hoved { flex: 1; min-height: 0; display: flex; gap: 16px; }
+  .panel { background: var(--kort); border-radius: var(--r2); box-shadow: var(--skygge); min-height: 0; min-width: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  #listePanel { flex: 1; }
+  .hoved.delt #listePanel { flex: 0 0 360px; }
+  .hoved.full #listePanel { display: none; }
+  .ark { display: none; flex: 1; }
+  .hoved.delt .ark, .hoved.full .ark { display: flex; }
+  .liste { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 6px 0; }
+  .gruppe { flex: none; height: 30px; display: flex; align-items: center; gap: 8px; padding: 8px 20px 0; font: 600 var(--t12); color: var(--dempet); }
+  .rad { flex: none; height: 48px; display: flex; align-items: center; gap: 14px; padding: 0 20px; position: relative; cursor: pointer; }
+  .rad + .rad::before { content: ""; position: absolute; top: 0; left: 42px; right: 0; height: 1px; background: var(--linje); }
+  .rad:hover { background: var(--fyll); }
+  .rad.valgt { background: var(--bla-myk); }
+  .rad.valgt + .rad::before, .rad:hover + .rad::before { display: none; }
+  .rad .navn { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .rad .ai { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .ai .ver { font-weight: 400; font: var(--t12); color: var(--dempet); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .rad .l2 { font: var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .land { flex: none; max-width: 40%; display: inline-flex; align-items: center; gap: 6px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rad .land .fare { color: var(--rod-tekst); font-weight: 600; }
+  .rad .land.lokalt { color: var(--gronn-tekst); }
+  .rad .pil { color: var(--svak); display: inline-flex; }
+  .hoved.delt .rad .pil { display: none; }
+  .hoved.delt .rad .land { max-width: 45%; }
+  .fare { color: var(--rod-tekst); font-weight: 600; }
+  .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 40px; color: var(--dempet); border-top: 1px solid var(--linje); }
+  .sider:empty { display: none; }
+  .sider button, .sidevalg button { border: 0; background: var(--fyll); color: var(--bla); width: 28px; height: 24px; border-radius: var(--r1); cursor: pointer; display: inline-grid; place-items: center; }
+  .sider button:disabled, .sidevalg button:disabled { color: var(--svak); opacity: .5; cursor: default; }
+  .bunn { flex: none; display: flex; justify-content: space-between; gap: 12px; color: var(--svak); font: var(--t12); }
+  .bunn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bunn button { border: 0; background: none; color: var(--bla); font-weight: 600; cursor: pointer; padding: 0; }
+  .tom { margin: auto; text-align: center; color: var(--dempet); padding: 24px; }
+
+  /* ---------- Arket: detalj, nettverk og datagrunnlag ---------- */
+  .detalj { padding: 24px 28px 18px; gap: 6px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .detalj .lukk.hjorne { position: absolute; top: 16px; right: 16px; z-index: 1; }
+  .dTopp { display: flex; flex-direction: column; gap: 4px; flex: none; padding-right: 40px; }
+  .detalj h2 { font: var(--t28); font-family: var(--visFont); letter-spacing: -.015em; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dMeta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--dempet); }
+  .merke { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--r3); background: var(--flate); color: var(--tekst); font: 600 var(--t12); flex: none; }
+  .navnRad { display: flex; align-items: baseline; gap: 12px; flex: none; padding-right: 40px; }
+  .navnRad .dtype { color: var(--dempet); font: var(--t12); }
+  .detalj p { color: var(--dempet); flex: none; }
+  .detalj h3 { font: 600 var(--t12); margin: 14px 0 6px; color: var(--dempet); flex: none; }
+  .detalj ul { list-style: none; display: flex; flex-direction: column; flex: none; background: var(--flate); border-radius: var(--r2); }
+  .detalj li { display: flex; align-items: center; gap: 12px; padding: 9px 16px; min-width: 0; position: relative; }
+  .detalj li + li::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--linje); }
+  .detalj li.mer { color: var(--dempet); }
+  .sted > div { flex: 1; min-width: 0; }
+  .sted .l1 { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; min-width: 0; }
+  .sted .l1 b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
+  .sted .l1 small { color: var(--dempet); font: var(--t12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+  .sted .l2 { font: var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+  /* Kommer fra → sender til: én flyt på én flate */
+  .flyt { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; flex: none; margin-top: 14px; background: var(--flate); border-radius: var(--r2); padding: 14px 20px; }
+  .flyt .pil2 { color: var(--dempet); display: inline-flex; }
+  .flis2 { min-width: 0; display: flex; flex-direction: column; }
+  .flis2 small { font: 600 var(--t12); color: var(--dempet); }
+  .flis2 .stor { font: var(--t20); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flis2 .liten { color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flis2 .lokalt { color: var(--gronn-tekst); }
+  .grunn { flex: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ident span { flex: 1; min-width: 0; user-select: text; overflow-wrap: anywhere; }
+  .ident span b { font-weight: 600; }
+  .ident.vis2 { justify-content: space-between; }
+  .ident .apne { border: 0; background: none; color: var(--bla); font-weight: 600; cursor: pointer; flex: none; }
+  .folg { margin-top: 10px; flex: none; }
+  .folg label { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+  .folg input { width: 16px; height: 16px; accent-color: var(--bla); margin: 0; }
+  .folgGraf { margin-top: 6px; background: var(--flate); border-radius: var(--r1); padding: 8px 10px 6px; }
+  .folgGraf svg { display: block; width: 100%; height: 64px; }
+  .folgGraf .ut { stroke: var(--rod); } .folgGraf .inn { stroke: var(--bla); } .folgGraf .n { stroke: var(--dempet); }
+  .folgGraf polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+  .folgTekst { display: flex; flex-wrap: wrap; gap: 4px 14px; font: var(--t12); color: var(--dempet); margin-top: 4px; }
+  .folgTekst b { font-weight: 600; } .folgTekst .ut b { color: var(--rod-tekst); } .folgTekst .inn b { color: var(--bla); }
+  .medSider { display: flex; align-items: center; justify-content: space-between; }
+  .sidevalg { display: inline-flex; align-items: center; gap: 8px; font-weight: 400; }
+  .detalj ul.apiListe { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 0; }
+  .detalj ul.apiListe li::before { display: none; }
+  .detalj li.api { padding: 6px 16px; }
+  .apiKompakt { display: flex; flex-wrap: wrap; gap: 2px 14px; background: var(--flate); border-radius: var(--r2); padding: 8px 16px; flex: none; }
+  .apiKompakt .api { display: inline-flex; font: var(--t12); color: var(--dempet); }
+  .apiKompakt .api b { font-weight: 600; color: var(--tekst); margin-right: 4px; }
+  .api span { flex: 1; min-width: 0; color: var(--dempet); overflow-wrap: anywhere; }
+  .api span b { font-weight: 600; color: var(--tekst); }
+  .api::after { content: ""; order: -1; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--svak); }
+  .api.paa::after { background: var(--gul); } .api.manuelt::after { background: var(--rod); } .api.av::after { background: var(--gronn); }
+  .vis { border: 0; background: none; color: var(--bla); font-weight: 600; cursor: pointer; flex: none; }
+  .kartRad { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; flex: none; align-items: start; }
+  .kartRad ul { align-content: start; }
+  .kart { position: relative; background: var(--flate); border-radius: var(--r2); padding: 6px; }
+  .kart svg { display: block; width: 100%; height: auto; max-height: 190px; }
+  .kart path { fill: var(--fyll); stroke: var(--kort); stroke-width: .6; }
+  .kart path.mal { fill: var(--bla); opacity: .55; } .kart path.fare { fill: var(--rod); opacity: .6; }
+  .kart .nal circle { fill: var(--bla); stroke: #fff; stroke-width: 2; } .kart .nal.fare circle { fill: var(--rod); }
+  .kart .nal text { fill: #fff; font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .kart .cdn { position: absolute; left: 12px; bottom: 8px; font: var(--t12); color: var(--dempet); }
+  .kartInfo { color: var(--dempet); padding: 8px 4px; }
+  .mal .ip span { display: block; } .mal .ip .farlig { color: var(--rod-tekst); }
+  .mal .land.skjult { color: var(--gul-tekst); font-weight: 600; text-align: right; } .mal .land.skjult small { display: block; font-weight: 400; color: var(--dempet); }
+  .mal .ip { display: block; font: var(--t12); color: var(--dempet); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .mal .vert small { color: var(--dempet); font-weight: 400; font: var(--t12); }
+  .mal .land { flex: none; color: var(--dempet); }
+  .mal .land.farlig { color: var(--rod-tekst); font-weight: 600; }
+  .mal .data { flex: none; font: var(--t12); color: var(--dempet); font-variant-numeric: tabular-nums; text-align: right; min-width: 92px; }
+  .detalj.trang .kart svg { max-height: 110px; }
+  .detalj.trang h3 { margin-top: 10px; }
+  .detalj.trang .flyt { padding: 10px 16px; margin-top: 10px; }
+  .kilde { margin-top: auto; padding-top: 8px; color: var(--svak); font: var(--t12); flex: none; }
+
+  /* Datagrunnlag */
+  .faner { display: flex; gap: 20px; flex: none; border-bottom: 1px solid var(--linje); margin-bottom: 14px; flex-wrap: wrap; padding-right: 40px; }
+  .faner button { border: 0; background: none; color: var(--dempet); padding: 0 0 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .faner button:hover { color: var(--tekst); }
+  .faner button.valgt { color: var(--tekst); box-shadow: inset 0 -2px 0 var(--bla); }
+  .faner button .ant, .filter button .ant { font-weight: 400; color: var(--svak); margin-left: 4px; font: var(--t12); }
+  .filter { display: flex; gap: 6px; flex-wrap: wrap; flex: none; margin-bottom: 8px; }
+  .filter button { border: 0; background: var(--fyll); color: var(--tekst); font: var(--t12); padding: 4px 10px; border-radius: var(--r3); cursor: pointer; white-space: nowrap; }
+  .filter button.valgt { background: var(--bla-knapp); color: #fff; }
+  .filter button.valgt .ant { color: #fff; opacity: .8; }
   .filter .sjekkValg { background: var(--bla-myk); color: var(--bla); }
-  .uflis b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
-  .uflis small { display: block; font-size: 12px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .uflis.mangler.har b { color: var(--rod-tekst); }
-  .uflis.u-blokkert.har { background: var(--rod-myk); }
-  .avLinje { display: flex; gap: 8px; align-items: center; background: var(--fyll); border-radius: 10px; padding: 7px 10px; font-size: 13px; flex: none; margin-top: 6px; }
+  .dSum { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex: none; }
+  .dSum .t20 { font: var(--t20); font-variant-numeric: tabular-nums; }
+  .avLinje { display: inline-flex; gap: 8px; align-items: center; color: var(--dempet); flex: none; }
   .avLinje.ok::before, .avLinje.ikke::before { content: ""; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--gronn); }
   .avLinje.ikke::before { background: var(--gul); }
+  .avLinje.boks { display: flex; background: var(--flate); border-radius: var(--r1); padding: 8px 12px; margin-top: 8px; }
+  .stabel { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; flex: none; margin: 12px 0 10px; background: var(--fyll); }
+  .stabel i { display: block; min-width: 4px; }
+  .s-lest { background: var(--bla); } .s-ikkefunnet { background: #9aa3b5; } .s-hoppetover { background: var(--fyll); box-shadow: inset 0 0 0 1px rgba(127,127,140,.35); } .s-mangler { background: var(--rod); }
+  .ufliser { display: flex; gap: 28px; flex-wrap: wrap; flex: none; margin-bottom: 6px; }
+  .uflis { display: flex; flex-direction: column; min-width: 0; border-radius: var(--r1); padding: 2px 4px; margin: -2px -4px; }
+  .uflis.har { cursor: pointer; } .uflis.har:hover { background: var(--bla-myk); }
+  .uflis b { font: var(--t20); font-variant-numeric: tabular-nums; }
+  .uflis small { display: inline-flex; align-items: center; gap: 6px; font: var(--t12); color: var(--dempet); white-space: nowrap; }
+  .uflis small i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
+  .uflis.mangler.har b { color: var(--rod-tekst); }
   .dl { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .dl ul { display: grid; gap: 4px; }
-  .detalj li.post { padding: 5px 10px; gap: 10px; }
-  .post .ut { flex: none; width: 128px; font-size: 12px; font-weight: 600; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .detalj .dl ul { background: none; border-radius: 0; }
+  .detalj .dl li + li::before { left: 0; }
+  .detalj li.post { padding: 7px 4px; gap: 12px; }
+  .detalj li.post[data-k] { cursor: pointer; } .detalj li.post[data-k]:hover { background: var(--bla-myk); }
+  .post .ut { flex: none; width: 128px; font: 600 var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .post .ut::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--gronn); vertical-align: 1px; }
-  .post .ut.u-ikkefunnet::before, .post .ut.u-hoppetover::before { background: var(--dempet); opacity: .5; }
+  .post .ut.u-ikkefunnet::before, .post .ut.u-hoppetover::before { background: var(--svak); opacity: .6; }
   .post .ut.u-nektet::before, .post .ut.u-laast::before, .post .ut.u-tidsgrense::before, .post .ut.u-feil::before { background: var(--gul); }
   .post .ut.u-blokkert::before { background: var(--rod); }
   .post .ut.u-blokkert { color: var(--rod-tekst); }
-  .post time { flex: none; color: var(--dempet); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-  .sjekkRad { display: grid !important; grid-template-columns: minmax(0, 1fr) 58px 70px 92px 96px 96px; gap: 8px; font-size: 13px; padding: 5px 10px !important; }
+  .post time { flex: none; color: var(--dempet); font: var(--t12); font-variant-numeric: tabular-nums; }
+  .detalj .sjekkTabell { background: none; border-radius: 0; }
+  .sjekkRad { display: grid !important; grid-template-columns: minmax(0, 1fr) 58px 76px 104px 96px 90px; gap: 8px; padding: 7px 4px !important; }
   .sjekkRad span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; font-variant-numeric: tabular-nums; }
   .sjekkRad span:first-child { text-align: left; }
-  .sjekkRad.hode { background: none !important; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0 !important; padding-bottom: 0 !important; }
+  .sjekkRad .null { color: var(--svak); }
+  .sjekkRad.hode { color: var(--dempet); font: 600 var(--t12); padding-top: 0 !important; }
+  .sjekkRad.hode::before { display: none; }
   .sjekkRad .rodt { color: var(--rod-tekst); font-weight: 600; }
-  .detalj ul.kildeGrid { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
-  .kilde .sha { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11px; color: var(--dempet); user-select: text; overflow-wrap: anywhere; }
-  .ingenAi { display: flex; gap: 10px; align-items: center; background: var(--gronn-myk); color: var(--gronn-tekst); border-radius: 10px; padding: 8px 12px; font-size: 13px; flex: none; margin-top: 8px; }
+  .sjekkRad[data-sjekk] { cursor: pointer; } .sjekkRad[data-sjekk]:hover { background: var(--bla-myk); }
+  .sjekkRad span[data-su] { cursor: pointer; } .sjekkRad span[data-su]:hover { text-decoration: underline; color: var(--bla); }
+  .detalj ul.kildeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+  .detalj ul.kildeGrid li::before { display: none; }
+  .kilde .sha { font: var(--t12); color: var(--dempet); user-select: text; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .ingenAi { display: flex; gap: 10px; align-items: center; background: var(--gronn-myk); color: var(--gronn-tekst); border-radius: var(--r1); padding: 8px 12px; flex: none; }
   .ingenAi svg { width: 18px; height: 18px; flex: none; }
+  .brikker { display: flex; flex-wrap: wrap; gap: 6px; flex: none; }
+  .brikker span { background: var(--flate); border-radius: var(--r3); padding: 2px 10px; font: var(--t12); color: var(--dempet); }
   /* Datagrunnlag → Kart: alle steder søket rørte, som SpaceSniffer. Klikk for å gå inn, ⓘ for detaljer. */
-  .skTopp { display: flex; gap: 8px; align-items: center; flex: none; margin: 4px 0 6px; min-width: 0; }
-  .skSti { display: flex; gap: 2px; align-items: center; flex: 1; min-width: 0; overflow: hidden; font-size: 13px; white-space: nowrap; }
-  .skSti button { border: 0; background: none; color: var(--bla); font: inherit; padding: 2px 4px; border-radius: 6px; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
+  .skTopp { display: flex; gap: 8px; align-items: center; flex: none; margin: 0 0 8px; min-width: 0; }
+  .skSti { display: flex; gap: 2px; align-items: center; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
+  .skSti button { border: 0; background: none; color: var(--bla); padding: 2px 4px; border-radius: var(--r1); cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
   .skSti button:last-child { color: var(--tekst); font-weight: 600; }
   .skSti i { color: var(--dempet); font-style: normal; flex: none; }
-  .skInfoKnapp { border: 0; background: var(--fyll); color: var(--tekst); font: inherit; font-size: 12.5px; padding: 4px 11px; border-radius: 20px; cursor: pointer; flex: none; }
-  .skFlate { position: relative; flex: 1; min-height: 120px; border-radius: 10px; overflow: hidden; background: var(--fyll); }
-  .skFlis { position: absolute; box-sizing: border-box; border: 1px solid var(--kort); border-radius: 4px; overflow: hidden; cursor: pointer; background: var(--fyll); font-size: 11.5px; line-height: 1.25; }
+  .skInfoKnapp { border: 0; background: var(--fyll); color: var(--tekst); font: var(--t12); padding: 4px 12px; border-radius: var(--r3); cursor: pointer; flex: none; }
+  .skFlate { position: relative; flex: 1; min-height: 120px; border-radius: var(--r1); overflow: hidden; background: var(--flate); }
+  .skFlis { position: absolute; box-sizing: border-box; border: 1px solid var(--kort); overflow: hidden; cursor: pointer; background: var(--flate); font: var(--t12); }
   .skFlis:hover { outline: 2px solid var(--bla); outline-offset: -2px; }
   .skFlis.niva2:hover { z-index: 2; }
   .skFlis .skNavn { padding: 3px 6px 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -169,216 +334,58 @@
   .skFlis.niva1.r0 { box-shadow: inset 0 3px 0 var(--gronn); } .skFlis.niva1.r1 { box-shadow: inset 0 3px 0 var(--gul); } .skFlis.niva1.r2 { box-shadow: inset 0 3px 0 var(--rod); }
   .skFlis.mangler { border: 1.5px dashed var(--gul); }
   .skFlis.rest { opacity: .7; }
-  .skFunn { display: inline-block; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--rod-myk); color: var(--rod-tekst); font-size: 10.5px; font-weight: 700; text-align: center; line-height: 15px; margin-left: 4px; vertical-align: 1px; }
+  .skFunn { display: inline-block; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r3); background: var(--rod-myk); color: var(--rod-tekst); font: 600 var(--t12); text-align: center; margin-left: 4px; vertical-align: 0; }
   .skFunn.r1 { background: var(--gul-myk); color: var(--gul-tekst); } .skFunn.r0 { background: var(--gronn-myk); color: var(--gronn-tekst); }
-  .skForklaring { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--dempet); flex: none; margin-top: 6px; }
+  .skForklaring { display: flex; gap: 12px; flex-wrap: wrap; font: var(--t12); color: var(--dempet); flex: none; margin-top: 8px; }
   .skForklaring span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--fyll); }
   .skForklaring .r2::before { background: var(--rod-myk); box-shadow: inset 0 0 0 1.5px var(--rod); } .skForklaring .r1::before { background: var(--gul-myk); box-shadow: inset 0 0 0 1.5px var(--gul); }
   .skForklaring .r0::before { background: var(--gronn-myk); box-shadow: inset 0 0 0 1.5px var(--gronn); } .skForklaring .m::before { background: none; border: 1.5px dashed var(--gul); box-sizing: border-box; }
-  .skTom { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dempet); font-size: 13px; padding: 20px; text-align: center; }
+  .skTom { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dempet); padding: 20px; text-align: center; }
   /* Infovinduet: åpnes over kartet */
   .skVindu { position: absolute; inset: 0; background: rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; z-index: 4; padding: 18px; }
-  .skKort { background: var(--kort); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.3); width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  .skKort header { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px 8px; }
+  .skKort { background: var(--kort); border-radius: var(--r2); box-shadow: 0 12px 40px rgba(0,0,0,.3); width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  .skKort header { display: flex; gap: 10px; align-items: flex-start; padding: 16px 16px 8px; }
   .skKort header div { flex: 1; min-width: 0; }
-  .detalj .skKort header h3, .skKort header h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; text-transform: none; letter-spacing: normal; color: var(--tekst); font-weight: 700; }
-  .skKort .skFull { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); overflow-wrap: anywhere; user-select: text; margin-top: 3px; }
-  .skKort header button { border: 0; background: var(--fyll); color: var(--tekst); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 15px; flex: none; }
-  .skKort .skInnhold { padding: 0 16px 14px; overflow: auto; display: grid; gap: 10px; }
-  .skKort h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--dempet); font-weight: 600; }
+  .detalj .skKort header h3, .skKort header h3 { margin: 0; font: var(--t20); overflow-wrap: anywhere; color: var(--tekst); }
+  .skKort .skFull { font: var(--t12); color: var(--dempet); overflow-wrap: anywhere; user-select: text; margin-top: 3px; }
+  .skKort header button { border: 0; background: var(--fyll); color: var(--tekst); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; flex: none; }
+  .skKort .skInnhold { padding: 0 16px 16px; overflow: auto; display: grid; gap: 10px; }
+  .skKort h4 { margin: 0 0 4px; font: 600 var(--t12); color: var(--dempet); }
   .skRuter { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
-  .skRuter div { background: var(--fyll); border-radius: 10px; padding: 6px 10px; }
-  .skRuter b { display: block; font-size: 16px; } .skRuter small { color: var(--dempet); font-size: 11.5px; }
+  .skRuter div { background: var(--flate); border-radius: var(--r1); padding: 6px 10px; }
+  .skRuter b { display: block; font: var(--t20); font-variant-numeric: tabular-nums; } .skRuter small { color: var(--dempet); font: var(--t12); }
   .skRuter .mangler b { color: var(--rod-tekst); }
   .skListe { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-  .skListe li { background: var(--fyll); border-radius: 9px; padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; min-width: 0; }
+  .skListe li { background: var(--flate); border-radius: var(--r1); padding: 6px 10px; display: flex; gap: 8px; align-items: center; min-width: 0; }
   .skListe li.klikk { cursor: pointer; } .skListe li.klikk:hover { background: var(--bla-myk); }
-  .skListe li .prikk { width: 8px; height: 8px; border-radius: 50%; flex: none; }
   .skListe li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .skListe li small { color: var(--dempet); margin-left: auto; flex: none; }
+  .skListe li small { color: var(--dempet); margin-left: auto; flex: none; font: var(--t12); }
   /* Nettverk (live) */
-  .nettTopp { flex: none; margin: 6px 0 8px; }
+  .nettTopp { flex: none; margin: 0 0 8px; }
   .nettTopp .folgGraf svg { height: 92px; }
-  .nettListe { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-  .nettRad { display: grid !important; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr) 54px 88px 88px; gap: 10px; align-items: center; background: var(--fyll); border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .detalj .nettListe { background: none; border-radius: 0; }
+  .nettRad { display: grid !important; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr) 54px 88px 88px; gap: 10px; align-items: center; padding: 7px 4px !important; cursor: pointer; }
   .nettRad > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nettRad small { display: block; color: var(--dempet); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+  .nettRad small { display: block; color: var(--dempet); font: var(--t12); overflow: hidden; text-overflow: ellipsis; }
   .nettRad .prog i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gronn); margin-right: 6px; vertical-align: 1px; }
   .nettRad.ukjent .prog i { background: var(--rod); } .nettRad.ukjent .prog small { color: var(--rod-tekst); font-weight: 600; }
   .nettRad .tall { text-align: right; font-variant-numeric: tabular-nums; }
-  .nettRad.valgt { box-shadow: inset 0 0 0 2px var(--bla); } .nettRad:not(.hode):hover { background: var(--bla-myk); }
-  .nettRad.hode { background: none; color: var(--dempet); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding-top: 0; padding-bottom: 2px; cursor: default; }
-  .nettListe .mer { list-style: none; color: var(--dempet); font-size: 13px; padding: 6px 10px; }
-  #nettDl { margin-top: 4px; }
-  /* Språkvalg: øverst til høyre før søket, ved knappene i resultatet. Ett trykk bytter all tekst. */
-  .sprak { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; z-index: 5; }
-  body > .sprak { position: fixed; top: 14px; right: 18px; }
-  .sprak button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--dempet); border-radius: 980px; padding: 5px 11px 5px 8px; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: .02em; }
-  .sprak button svg { width: 20px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex: none; }
-  .sprak button.valgt { background: var(--kort); color: var(--tekst); box-shadow: var(--skygge); }
-  .topp .sprak { align-self: flex-end; margin-bottom: 3px; }
-
-  /* ---------- Søker ---------- */
-  #soker { align-items: center; justify-content: center; text-align: center; gap: 10px; }
-  /* Søkesirkelen fylles fra 0 til 100 % etter hvor langt søket faktisk har kommet */
-  .ringBoks { position: relative; width: 130px; height: 130px; margin-bottom: 18px; }
-  .ring { width: 130px; height: 130px; transform: rotate(-90deg); }
-  .ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
-  .ring .spor { stroke: var(--linje); }
-  .ring .bue { stroke: var(--bla); stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .35s ease; }
-  .ringBoks .prosent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-  @keyframes snurr { to { transform: rotate(360deg); } }
-
-  /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
-  #resultat { padding: 14px 18px 14px; gap: 10px; max-width: 1240px; width: 100%; margin: 0 auto; }
-  .topp { display: flex; align-items: flex-end; gap: 12px; flex: none; padding: 4px 4px 2px; }
-  .topp .tittel { flex: 1; min-width: 0; }
-  .topp h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
-  .knapp { border: 0; border-radius: 980px; padding: 9px 18px; font-size: 15px; font-weight: 600; cursor: pointer; flex: none; }
-  .knapp.primar { background: var(--bla-knapp); color: #fff; }
-  .knapp.tonal { background: var(--bla-myk); color: var(--bla); }
-  /* Kompakt (32 px) for handlingene i resultatet */
-  .knapp.liten { height: 32px; padding: 0 14px; font-size: 13.5px; display: inline-flex; align-items: center; }
-  /* Visningene som en segmentert kontroll, samme form som språkvalget */
-  .segment { display: inline-flex; background: var(--fyll); border-radius: 980px; padding: 3px; gap: 2px; flex: none; height: 32px; }
-  .segment button { border: 0; background: none; color: var(--tekst); border-radius: 980px; padding: 0 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .segment button:hover { background: var(--fyll); }
-  .segment button.paa { background: var(--kort); color: var(--tekst); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-  .knapp.sekundar { background: var(--kort); color: var(--bla); box-shadow: var(--skygge); }
-  /* Alle valgene i resultatet samlet til høyre, like tydelige. Den som er åpen, får en ring. */
-  .meny { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
-  .meny .knapper { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
-
-  #resultat .hoved { flex: 1; }
-  .andreFunn { font-size: 16px; color: var(--dempet); margin-top: 3px; font-weight: 500; }
-  .andreFunn:empty { display: none; }
-  .bar { display: flex; gap: 2px; height: 7px; border-radius: 4px; overflow: hidden; margin: 10px 0 6px; max-width: 460px; }
-  .bar:empty { display: none; }
-  .bar span { display: block; }
-  .bar .rod { background: var(--rod); } .bar .ukjent { background: repeating-linear-gradient(135deg, var(--rod) 0 4px, var(--rod-myk) 4px 7px); } .bar .gul { background: var(--gul); } .bar .gronn { background: var(--gronn); }
-  .fordeling { display: flex; gap: 18px; color: var(--dempet); font-size: 13.5px; }
-  .fordeling b { font-size: 18px; font-weight: 700; margin-right: 4px; }
-  .fordeling .rod b, .fordeling .ukjent b { color: var(--rod-tekst); } .fordeling .gul b { color: var(--gul-tekst); } .fordeling .gronn b { color: var(--gronn-tekst); }
-
-  /* Tabellen: AI, risiko, type, hvor den ligger, hvor den sender data. Detaljer ved trykk. */
-  .panel { background: var(--kort); border-radius: 18px; box-shadow: var(--skygge); min-height: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
-  .tr { display: grid; grid-template-columns: minmax(0, 1.4fr) 104px minmax(0, .9fr) minmax(0, 1fr) minmax(0, 1fr) 14px; align-items: center; gap: 14px; padding: 0 20px; }
-  .th { flex: none; height: 38px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--dempet); border-bottom: 1px solid var(--linje); }
-  .liste { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .rad { height: 50px; flex: none; cursor: pointer; border-bottom: 1px solid var(--linje); }
-  .rad:hover { background: var(--fyll); }
-  .rad .ai { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rad .ai .ver { font-weight: 400; font-size: 12.5px; color: var(--dempet); margin-left: 7px; font-variant-numeric: tabular-nums; }
-  .rad .type, .rad .lok { color: var(--dempet); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rad .land { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rad .land .ingen { color: var(--dempet); }
-  .fare { color: var(--rod-tekst); font-weight: 600; }
-  .rad .pil { color: var(--dempet); font-size: 18px; text-align: right; opacity: .6; }
-  .pille { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 3px 11px 3px 9px; border-radius: 20px; white-space: nowrap; }
-  .pille::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-  .pille.rod, .pille.ukjent { background: var(--rod-myk); color: var(--rod-tekst); } .pille.rod::before, .pille.ukjent::before { background: var(--rod); }
-  .pille.gul { background: var(--gul-myk); color: var(--gul-tekst); } .pille.gul::before { background: var(--gul); }
-  .pille.gronn { background: var(--gronn-myk); color: var(--gronn-tekst); } .pille.gronn::before { background: var(--gronn); }
-  .flyt { display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; flex: none; margin-top: 12px; }
-  .flyt .pil2 { display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--dempet); }
-  .flis2 { background: var(--fyll); border-radius: 14px; padding: 11px 14px; min-width: 0; }
-  .flis2 small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--dempet); margin-bottom: 5px; }
-  .flis2 .stor { font-size: 20px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .flis2 .liten { font-size: 13px; color: var(--dempet); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .flis2 .grunn { font-size: 14px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .flis2 .lokalt { color: var(--gronn-tekst); }
-  .prikk { flex: none; width: 10px; height: 10px; border-radius: 50%; }
-  .ark { position: absolute; inset: 0; background: var(--kort); display: none; flex-direction: column; z-index: 2; }
-  .ark.apen { display: flex; }
-  .merke { flex: none; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .rod .prikk, .ukjent .prikk { background: var(--rod); }   .rod .merke, .ukjent .merke { background: var(--rod-myk); color: var(--rod-tekst); }
-  .gul .prikk { background: var(--gul); }   .gul .merke { background: var(--gul-myk); color: var(--gul-tekst); }
-  .gronn .prikk { background: var(--gronn); } .gronn .merke { background: var(--gronn-myk); color: var(--gronn-tekst); }
-  .sider { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; height: 38px; color: var(--dempet); font-size: 13.5px; }
-  .sider:empty { display: none; }
-  .sider button { border: 0; background: var(--fyll); color: var(--bla); width: 30px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; }
-  .sider button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
-  .bunn { flex: none; display: flex; justify-content: space-between; gap: 12px; color: var(--dempet); font-size: 12.5px; padding: 0 4px; }
-  .bunn button { border: 0; background: none; color: var(--bla); font: inherit; cursor: pointer; padding: 0; }
-  .tom { margin: auto; text-align: center; color: var(--dempet); padding: 24px; }
-
-  .detalj { padding: 14px 16px; gap: 2px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .detalj .navnRad { display: flex; align-items: center; gap: 10px; flex: none; }
-  .detalj h2 { font-size: 20px; font-weight: 650; letter-spacing: -.01em; flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .detalj .dtype { color: var(--dempet); font-size: 14px; flex: none; }
-  .detalj .tilbake { border: 0; background: none; color: var(--bla); cursor: pointer; font-size: 15px; padding-right: 4px; }
-  .detalj p { color: var(--dempet); flex: none; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .detalj h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin: 10px 0 5px; color: var(--dempet); flex: none; }
-  .detalj ul { list-style: none; display: grid; gap: 4px; flex: none; }
-  .detalj li { display: flex; align-items: center; gap: 10px; background: var(--fyll); border-radius: 10px; padding: 6px 10px; min-width: 0; }
-  .detalj li.mer { background: none; color: var(--dempet); font-size: 13px; padding: 2px 10px; }
-  .sted > div { flex: 1; min-width: 0; }
-  .sted .l1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
-  .sted .l1 b { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; max-width: 60%; }
-  .sted .l1 small { color: var(--dempet); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .sted .l2 { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
-  .brikker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; flex: none; }
-  .brikker span { background: var(--fyll); border-radius: 20px; padding: 2px 10px; font-size: 12.5px; color: var(--dempet); }
-  .folg { margin-top: 10px; flex: none; }
-  .folg label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .folg input { width: 16px; height: 16px; accent-color: var(--bla); margin: 0; }
-  .folgGraf { margin-top: 6px; background: var(--fyll); border-radius: 10px; padding: 8px 10px 6px; }
-  .folgGraf svg { display: block; width: 100%; height: 64px; }
-  .folgGraf .ut { stroke: var(--rod); } .folgGraf .inn { stroke: var(--bla); } .folgGraf .n { stroke: var(--dempet); }
-  .folgGraf polyline { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
-  .folgTekst { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--dempet); margin-top: 4px; }
-  .folgTekst b { font-weight: 600; } .folgTekst .ut b { color: var(--rod-tekst); } .folgTekst .inn b { color: var(--bla); }
-  .medSider { display: flex; align-items: center; justify-content: space-between; }
-  .sidevalg { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-weight: 500; }
-  .sidevalg button { border: 0; background: var(--fyll); color: var(--bla); width: 26px; height: 22px; border-radius: 7px; cursor: pointer; font-size: 15px; line-height: 1; }
-  .sidevalg button:disabled { color: var(--dempet); opacity: .4; cursor: default; }
-  .ident span { flex: 1; min-width: 0; font-size: 13px; color: var(--tekst); user-select: text; overflow-wrap: anywhere; }
-  .ident span b { font-weight: 600; }
-  .detalj ul.apiListe { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 4px; }
-  .detalj li.api { padding: 4px 10px; }
-  .apiKompakt { display: flex; flex-wrap: wrap; gap: 2px 14px; background: var(--fyll); border-radius: 10px; padding: 6px 10px; flex: none; }
-  .apiKompakt .api { display: inline-flex; font-size: 12.5px; color: var(--dempet); }
-  .apiKompakt .api b { font-weight: 600; color: var(--tekst); margin-right: 4px; }
-  .api span { flex: 1; min-width: 0; font-size: 12.5px; color: var(--dempet); overflow-wrap: anywhere; }
-  .api span b { font-weight: 600; color: var(--tekst); }
-  .api::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--dempet); margin: 6px 8px 0 0; align-self: flex-start; }
-  .api.paa::before { background: var(--gul); } .api.manuelt::before { background: var(--rod); } .api.av::before { background: var(--gronn); }
-  .vis { border: 0; background: none; color: var(--bla); font-size: 14px; font-weight: 500; cursor: pointer; flex: none; }
-  .kartRad { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 10px; flex: none; align-items: start; }
-  .kartRad ul { align-content: start; }
-  .kart { position: relative; background: var(--fyll); border-radius: 14px; padding: 6px; }
-  .kart svg { display: block; width: 100%; height: auto; max-height: 190px; }
-  .kart path { fill: var(--linje); stroke: var(--kort); stroke-width: .6; }
-  .kart path.mal { fill: var(--bla); opacity: .55; } .kart path.fare { fill: var(--rod); opacity: .6; }
-  .kart .nal circle { fill: var(--bla); stroke: #fff; stroke-width: 2; } .kart .nal.fare circle { fill: var(--rod); }
-  .kart .nal text { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; }
-  .kart .cdn { position: absolute; left: 12px; bottom: 8px; font-size: 11.5px; color: var(--dempet); }
-  .kartInfo { font-size: 13.5px; color: var(--dempet); padding: 8px 4px; }
-  .mal .ip span { display: block; } .mal .ip .farlig { color: var(--rod-tekst); }
-  .mal .land.skjult { color: var(--gul-tekst); font-weight: 600; text-align: right; } .mal .land.skjult small { display: block; font-weight: 400; color: var(--dempet); }
-  .mal .ip { display: block; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--dempet); font-weight: 400; }
-  .mal .vert { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
-  .mal .vert small { color: var(--dempet); font-weight: 400; font-size: 12.5px; }
-  .mal .land { flex: none; font-size: 13px; color: var(--dempet); }
-  .mal .land.farlig { color: var(--rod-tekst); font-weight: 600; }
-  .mal .data { flex: none; font-size: 12.5px; color: var(--dempet); font-variant-numeric: tabular-nums; text-align: right; min-width: 92px; }
-  .kilde { margin-top: auto; padding-top: 8px; color: var(--dempet); font-size: 11px; flex: none; }
+  .nettRad.valgt { background: var(--bla-myk); } .nettRad:not(.hode):hover { background: var(--fyll); }
+  .nettRad.hode { color: var(--dempet); font: 600 var(--t12); padding-top: 0 !important; cursor: default; }
+  .nettRad.hode::before { display: none; }
+  .nettListe .mer { color: var(--dempet); padding: 6px 4px; }
+  #nettDl { margin-top: 0; }
 
   @media (max-width: 760px) {
+    #resultat { padding: 16px 16px 10px; }
+    .toppRad { flex-wrap: wrap; padding-right: 0; padding-top: 36px; }
     .kartRad { grid-template-columns: 1fr; }
-    .tr { grid-template-columns: minmax(0, 1.4fr) 92px minmax(0, 1fr) 10px; gap: 8px; padding: 0 12px; }
-    .tr > :nth-child(3), .tr > :nth-child(4) { display: none; }
-    .flyt { grid-template-columns: 1fr 1fr; } .flyt .pil2 { display: none; } .flyt .flis2:last-child { grid-column: 1 / -1; }
-    #bunnHoyre .maaling, #bunnHoyre .skille { display: none; }
-    #hodeInfo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #bunnHoyre { flex: none; }
+    .hoved.delt #listePanel { display: none; }
+    .flyt { grid-template-columns: 1fr; } .flyt .pil2 { display: none; }
+    #bunnHoyre .maaling { display: none; }
     .sjekkRad { grid-template-columns: minmax(0, 1fr) 50px 64px 80px !important; }
     .sjekkRad > :nth-child(4), .sjekkRad > :nth-child(5) { display: none; }
-    .detalj .navnRad .dtype { display: none; }
-    .uflis { padding: 5px 8px; } .uflis b { font-size: 15px; } .uflis small { font-size: 11px; }
-    .topp { flex-wrap: wrap; } .topp .tittel { flex-basis: 100%; }
-    .meny { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-    .meny .knapper { justify-content: flex-start; }
+    .storTittel { font: var(--t28); }
   }
 </style>
 </head>
@@ -388,53 +395,56 @@
 
 <section id="start" class="side aktiv">
   <div class="storTittel" data-en="Is there AI on this PC?">Er det AI på denne PC-en?</div>
-  <div class="undertittel" data-en="Find AI programs, AI in the browser and AI that sends data in secret.">Finn AI-programmer, AI i nettleseren og AI som sender data i det skjulte.</div>
-  <div class="omfang" id="omfang" role="group" aria-label="Hvor mye som søkes / How much to scan">
-    <button data-o="hurtig" class="paa" data-en="&lt;b&gt;Quick scan&lt;/b&gt;Seconds · your profile and the known AI places"><b>Hurtigsøk</b>Sekunder · din profil og de kjente AI-stedene</button>
-    <button data-o="fullt" data-en="&lt;b&gt;Full scan of PC&lt;/b&gt;Minutes · all users, all disks and USB, no depth limit"><b>Fullt søk av PC</b>Minutter · alle brukere, alle disker og USB, uten dybdegrense</button>
-  </div>
   <div class="valg" id="valg">
-    <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst" id="ringTekst">SØK SOM ADMIN</span><span class="rliten" data-en="Requires approval">Krever godkjenning</span></button>
-    <button class="sokKnapp" id="sok" title="Søk som vanlig bruker: mindre data">Søk<small>som bruker</small></button>
+    <button class="ring2" id="sokAdmin" title="Søk som administrator: mer data"><span class="rtekst"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 2.8 3.7v4c0 3.1 2.2 5.5 5.2 6.5 3-1 5.2-3.4 5.2-6.5v-4z"/></svg><span id="ringTekst">Admin</span></span></button>
+    <button class="sokKnapp" id="sok" title="Søk som vanlig bruker: mindre data">Søk</button>
   </div>
-  <div class="modus">
-    <div data-en="&lt;b&gt;User · less data&lt;/b&gt;Fast, no approval. Does not see how much data AI sends, or programs running as administrator."><b>Bruker · mindre data</b>Rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator.</div>
-    <div class="adm" data-en="&lt;b&gt;Admin · more data&lt;/b&gt;Measures how much data each AI sends, and sees every running program. Windows asks for approval first."><b>Admin · mer data</b>Måler hvor mye data hver AI sender, og ser alle programmer som kjører. Windows ber om godkjenning først.</div>
+  <div class="hint" id="hint"></div>
+  <div class="omfang" id="omfang" role="group" aria-label="Hvor mye som søkes / How much to scan">
+    <button data-o="hurtig" class="paa" data-en="Quick scan&lt;small&gt;seconds&lt;/small&gt;" title="Din profil og de kjente AI-stedene">Hurtigsøk<small>sekunder</small></button>
+    <button data-o="fullt" data-en="Full scan&lt;small&gt;minutes&lt;/small&gt;" title="Alle brukere, alle disker og USB, uten dybdegrense">Fullt søk<small>minutter</small></button>
   </div>
-  <div class="revisjon" id="revisjon">
-    <b data-en="Audit trail">Revisjonslogg</b><small id="revTekst"></small>
-    <div class="bryter" role="group" aria-label="Revisjonslogg"><button data-r="nei" data-en="No">Nei</button><button data-r="ja" data-en="Yes">Ja</button></div>
-  </div>
-  <div class="tillit">
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg><i data-en="Changes nothing">Endrer ingenting</i></span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><i data-en="Never reads passwords">Leser aldri passord</i></span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/><path d="M4 4l16 16"/></svg><i data-en="Sends only product names">Sender bare produktnavn</i></span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg><i data-en="No AI inside">Ingen AI i programmet</i></span>
-  </div>
-  <div class="inkludert" data-en="The scan covers AI programs and models, AI from vendors, the AI APIs in Chrome and Edge, YARA rules that find dangerous AI models, browser history (analysed on the PC and never stored) and known vulnerabilities (only product names such as “ollama” are looked up in NVD).">Søket tar med AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler som finner farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</div>
   <div class="feil" id="feil"></div>
+  <div class="tillit">
+    <span><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg><i data-en="Changes nothing">Endrer ingenting</i></span>
+    <span><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg><i data-en="Never reads passwords">Leser aldri passord</i></span>
+    <span><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg><i data-en="No AI inside">Ingen AI i programmet</i></span>
+    <span id="revStatus"></span>
+    <button id="omKnapp" data-en="What is scanned?">Hva søkes?</button>
+  </div>
+  <div class="om" id="om" role="dialog" aria-modal="true" aria-labelledby="omTittel">
+    <div class="omKort">
+      <header><h2 id="omTittel" data-en="What is scanned">Hva søkes</h2><button class="lukk" id="omLukk" title="Lukk / Close"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></header>
+      <p data-en="AI programs and models, AI from vendors, the AI APIs in Chrome and Edge, YARA rules for dangerous AI models, the browser history (analysed on the PC, never saved) and known vulnerabilities (only product names such as «ollama» are looked up in NVD).">AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler for farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</p>
+      <p data-en="&lt;b&gt;As user:&lt;/b&gt; fast, no approval. Does not see how much data AI sends, or programs running as administrator. &lt;b&gt;As admin:&lt;/b&gt; measures the data each AI sends and sees every running program. Windows asks for approval first."><b>Som bruker:</b> rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator. <b>Som admin:</b> måler dataene hver AI sender og ser alle programmer som kjører. Windows ber om godkjenning først.</p>
+      <div class="omRad" id="revisjon"><div><b data-en="Audit trail">Revisjonslogg</b><small id="revTekst"></small></div>
+        <div class="bryter" role="group" aria-label="Revisjonslogg / Audit trail"><button data-r="nei" data-en="No">Nei</button><button data-r="ja" data-en="Yes">Ja</button></div></div>
+    </div>
+  </div>
 </section>
 
 <section id="soker" class="side">
   <div class="ringBoks"><svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" id="ringBue" cx="50" cy="50" r="44"/></svg><div class="prosent" id="ringProsent" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</div></div>
-  <div class="storTittel" style="font-size:26px" data-en="Scanning for AI…">Søker etter AI…</div>
+  <div class="sokTittel" data-en="Looking for AI…">Søker etter AI…</div>
   <div class="fremdrift" id="fremdrift"></div>
 </section>
 
 <section id="resultat" class="side">
   <div class="topp">
-    <div class="tittel"><h1 id="hodeTittel"></h1><div class="andreFunn" id="andreFunn"></div><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
-    <div class="meny" id="meny"><div class="knapper">
-      <div class="segment" role="group" aria-label="Visning / View"><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
-      <button class="knapp tonal liten" id="igjen" data-en="Scan again">Søk igjen</button>
-      <button class="knapp primar liten" id="lagre" data-en="Download report">Last ned rapport</button>
-    </div></div>
+    <div class="toppRad"><h1 id="hodeTittel"></h1>
+      <div class="knapper">
+        <button class="knapp tonal" id="igjen"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M12.5 1.8v2.8H9.7"/></svg><span data-en="Scan again">Søk igjen</span></button>
+        <button class="knapp primar" id="lagre"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8.5M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span data-en="Save report">Lagre rapport</span></button>
+      </div></div>
+    <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div></div>
+    <div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
   </div>
-  <div class="panel hoved" id="hoved">
-    <div class="tr th"><span>AI</span><span data-en="Risk">Risiko</span><span>Type</span><span data-en="Location">Ligger her</span><span data-en="Sends data to">Sender data til</span><span></span></div>
-    <div class="liste" id="liste"></div>
-    <div class="sider" id="sider"></div>
-    <div class="ark" id="ark"><div class="detalj" id="detalj"></div></div>
+  <div class="hoved" id="hoved">
+    <div class="panel" id="listePanel">
+      <div class="liste" id="liste"></div>
+      <div class="sider" id="sider"></div>
+    </div>
+    <div class="panel ark" id="ark"><div class="detalj" id="detalj"></div></div>
   </div>
   <div class="bunn"><span id="hodeInfo"></span><span id="bunnHoyre"></span></div>
 </section>
@@ -451,9 +461,6 @@ const vert = window.chrome && window.chrome.webview;   // satt når siden kjøre
 const send = m => vert ? vert.postMessage(m) : demo(m);
 function vis(id) {
   document.querySelectorAll(".side").forEach(s => s.classList.toggle("aktiv", s.id === id));
-  // Språkvalget står øverst til høyre, og ved knappene når resultatet vises
-  const sp = $("sprak");
-  if (id === "resultat") $("meny").prepend(sp); else if (sp.parentElement !== document.body) document.body.prepend(sp);
 }
 
 // Språk: følger Windows til brukeren trykker på et flagg. Valget lagres ikke.
@@ -493,19 +500,17 @@ const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 // ett funn. Linja under viser hva de er, og risikolinja (Høy, Middels, Lav, Ukjent) teller de samme radene.
 // Begge summerer til tallet i overskriften. Tallene kommer fra Oversikt.Telling, så skjerm og rapport er like.
 function visTelling(antall, t) {
+  // Typene står på hver rad, så skjermen viser bare summen. Rapporten har fortsatt fordelingen per type.
   const deler = [[t.modeller, L("lokal AI-modell", "local AI model"), L("lokale AI-modeller", "local AI models")], [t.nettsteder, L("AI-nettsted", "AI website"), L("AI-nettsteder", "AI websites")], [t.utvidelser, L("nettleserutvidelse", "browser extension"), L("nettleserutvidelser", "browser extensions")], [t.apper, L("AI-app eller agent", "AI app or agent"), L("AI-apper og agenter", "AI apps and agents")], [t.innebygd, L("program med innebygd AI", "program with built-in AI"), L("programmer med innebygd AI", "programs with built-in AI")], [t.spor, L("ukjent AI-spor", "unknown AI trace"), L("ukjente AI-spor", "unknown AI traces")], [t.itregler, L("sett med AI-regler fra IT", "set of AI rules from IT"), L("sett med AI-regler fra IT", "sets of AI rules from IT")]]
     .filter(x => x[0] > 0);
   const sum = t.totalt ?? antall;
   $("hodeTittel").textContent = sum === 0 ? L("Fant ingen AI", "No AI found") : sum === 1 ? L("1 lokalt AI-funn på PC", "1 local AI finding on PC") : L(`${sum} lokale AI-funn på PC`, `${sum} local AI findings on PC`);
-  // Står det bare én eller to lokale AI-modeller, vises navnet, så det er klart hva de er
-  const navn = (t.modellNavn || []).length && t.modellNavn.length <= 2 ? ` (${t.modellNavn.join(", ")})` : "";
-  $("andreFunn").textContent = deler.map((x, i) => `${x[0]} ${x[0] === 1 ? x[1] : x[2]}${i === 0 && t.modeller > 0 ? navn : ""}`).join(" · ");
 }
 
 // Én tabell: høy risiko først. Hver rad: AI-modell (med det viktigste på høyst tre ord), risiko og hvor den ligger.
 function visResultat(funn, inf) {
-  const RISIKO = { rod: 0, ukjent: 0, gul: 1, gronn: 2 };
-  alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO[a[0].risiko] - RISIKO[b[0].risiko] || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
+  const RISIKO = r => Math.max(0, RISIKOGRUPPER.indexOf(r));
+  alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO(a[0].risiko) - RISIKO(b[0].risiko) || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null;
   const ant = r => alle.filter(f => f.risiko === r).length;
   visTelling(funn.length, info.telling || { totalt: funn.length });
@@ -521,22 +526,22 @@ function tegnFordeling() {
   const funn = alle, ant = r => alle.filter(f => f.risiko === r).length;
   // Høy, Middels, Lav og Ukjent: hvert funn står i nøyaktig én, så de summerer til overskriften. Ukjent vises bare når det finnes.
   $("fordeling").innerHTML = funn.length
-    ? `<span class="rod"><b>${ant("rod")}</b>${L("Høy risiko", "High risk")}</span><span class="gul"><b>${ant("gul")}</b>${merke("gul")}</span><span class="gronn"><b>${ant("gronn")}</b>${merke("gronn")}</span>${ant("ukjent") ? `<span class="ukjent"><b>${ant("ukjent")}</b>${merke("ukjent")}</span>` : ""}`
+    ? RISIKOGRUPPER.filter(r => r !== "ukjent" || ant(r)).map(r => `<span><span class="prikk ${r}"></span><b>${ant(r)}</b>${merke(r)}</span>`).join("")
     : L("Ingen spor etter AI", "No traces of AI");
 }
 
 function tegnBunn() {
   const deler = [];
   if (oppstartMs != null) deler.push(`${L("Oppstart", "Startup")} ${(oppstartMs / 1000).toFixed(1).replace(".", L(",", "."))} s`);
-  if (info.sekunder) deler.push(`${L("Søketid", "Scan time")} ${Math.max(1, Math.round(info.sekunder))} s`);
-  deler.push(info.fullt ? L("Fullt søk av PC", "Full scan of PC") : L("Hurtigsøk", "Quick scan"));
-  deler.push(info.admin ? L("Søkt som admin", "Scanned as admin") : L("Søkt som bruker", "Scanned as user"));
+  if (info.sekunder) deler.push(`${L("Søk", "Scan")} ${Math.max(1, Math.round(info.sekunder))} s`);
+  deler.push(info.fullt ? L("Fullt søk", "Full scan") : L("Hurtigsøk", "Quick scan"));
+  deler.push(info.admin ? L("Som admin", "As admin") : L("Som bruker", "As user"));
   // Godkjent med en annen konto (IT): søket gjelder brukeren som er logget inn, ikke IT-kontoen
   if (info.kjortAv) deler.push(L(`Søkt i profilen til ${info.bruker} (godkjent av ${info.kjortAv})`, `Scanned the profile of ${info.bruker} (approved by ${info.kjortAv})`));
   if (info.brukerFeil) deler.push(info.brukerFeil);
   if (!info.revisjon) deler.push(L("Ingenting lagret", "Nothing stored"));
-  deler.push(L("Rød = ukjent AI eller skygge-AI", "Red = unknown AI or shadow AI"));
-  deler.push(info.nvd === "ferdig" ? L("Sikkerhetshull sjekket", "Vulnerabilities checked") : info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
+  // Sikkerhetshull nevnes bare mens de sjekkes, eller når de ikke ble sjekket
+  if (info.nvd !== "ferdig") deler.push(info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
   $("hodeInfo").textContent = deler.join(" · ");
   const rev = info.revisjon
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
@@ -545,43 +550,68 @@ function tegnBunn() {
   $("bunnHoyre").innerHTML = rev + `<span class="maaling">` + (info.lytter
     ? `<span class="lytter">${esc(lytterIgjen > 0 ? L(`Lytter på nettverket: ${lytterIgjen} s igjen`, `Listening to the network: ${lytterIgjen} s left`) : L("Lytter på nettverket…", "Listening to the network…"))}</span>`
     : info.dataMalt
-    ? esc(L(`Sendt ut under søket: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent out during the scan: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
-    : `<button id="maal">${L("Mål datamengde (admin)", "Measure data volume (admin)")}</button>`) + `</span>`;
+    ? esc(L(`Sendt under søket: ${info.sendtTekst || "0 B"} på ${Math.round(info.maleSekunder)} s`, `Sent during the scan: ${info.sendtTekst || "0 B"} in ${Math.round(info.maleSekunder)} s`))
+    : `<button id="maal" title="${esc(L("Krever admin", "Requires admin"))}">${L("Mål datamengde", "Measure data volume")}</button>`) + `</span>`;
   const m = $("maal"); if (m) m.onclick = () => send({ type: "admin", revisjon });
   const rv = $("revVis"); if (rv) rv.onclick = () => send({ type: "vis", sti: info.revisjon });
 }
 
-const RAD_H = 50;
+// Gruppert etter risiko: overskriften «Høy · 4» står én gang, så har hver rad bare en prikk.
+// Gruppetallet er hele gruppen, også når den fortsetter på neste side, så det stemmer med linja over.
+const RAD_H = 48, GRUPPE_H = 30;
+const PIL = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg>`;
+const SKJERM = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="8" rx="1.5"/><path d="M5.5 13.5h5"/></svg>`;
+const CHEV = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg>`;
+const erLokal = f => f.lokalt || f.ingenLand === "Ingen · lokalt";
 const landListe = f => (f.senderTil || []).length
-  ? f.senderTil.map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
-  : `<span class="ingen">${esc(f.ingenLand || L("Ikke sett", "Not seen"))}</span>`;
-function perSide() { return Math.max(3, Math.floor(($("liste").clientHeight || 400) / RAD_H)); }
+  ? PIL + f.senderTil.map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
+  : erLokal(f) ? SKJERM + L("Lokalt", "Local") : `<span class="ingen">${esc(f.ingenLand || L("Ikke sett", "Not seen"))}</span>`;
+let sideDeling = [];
+function delSider() {
+  const h = ($("liste").clientHeight || 400) - 12, sider = [];
+  let side = [], brukt = 0, forrige = null;
+  for (const f of alle) {
+    const ny = f.risiko !== forrige || !side.length, trengs = RAD_H + (ny ? GRUPPE_H : 0);
+    if (side.length && brukt + trengs > h) { sider.push(side); side = []; brukt = 0; }
+    brukt += RAD_H + (f.risiko !== forrige || !side.length ? GRUPPE_H : 0);
+    side.push(f); forrige = f.risiko;
+  }
+  if (side.length) sider.push(side);
+  return sideDeling = sider;
+}
+const sideFor = f => Math.max(0, sideDeling.findIndex(s => s.includes(f)));
 
 function tegnListe() {
   const l = $("liste");
   l.innerHTML = "";
   if (!alle.length) { l.innerHTML = `<div class="tom">${L("Fant ingen spor etter AI på denne PC-en.", "Found no traces of AI on this PC.")}</div>`; $("sider").innerHTML = ""; return; }
-  const per = perSide(), sider = Math.ceil(alle.length / per);
-  side = Math.max(0, Math.min(side, sider - 1));
-  alle.slice(side * per, side * per + per).forEach(f => {
+  const sider = delSider();
+  side = Math.max(0, Math.min(side, sider.length - 1));
+  let forrige = null;
+  sider[side].forEach(f => {
+    if (f.risiko !== forrige) {
+      const g = document.createElement("div");
+      g.className = "gruppe";
+      g.innerHTML = `<span class="prikk ${f.risiko}"></span>${merke(f.risiko)} · ${alle.filter(x => x.risiko === f.risiko).length}`;
+      l.appendChild(g);
+      forrige = f.risiko;
+    }
     const r = document.createElement("div");
-    r.className = "tr rad";
+    r.className = "rad" + (f === valgt ? " valgt" : "");
     r.title = L("Trykk for detaljer", "Click for details");
-    r.innerHTML = `<div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
-      <div><span class="pille ${f.risiko}">${merke(f.risiko)}</span></div>
-      <div class="type">${esc(f.type || GRUPPER[gruppeNr(f)][1]())}</div>
-      <div class="lok" title="${esc(f.lokasjon || "")}">${esc(f.lokasjon || "")}</div>
-      <div class="land">${landListe(f)}</div><div class="pil">›</div>`;
-    r.onclick = () => apneArk(f);
+    r.innerHTML = `<span class="prikk ${f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
+      <div class="l2" title="${esc(f.lokasjon || "")}">${esc([f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
+      <div class="land${!(f.senderTil || []).length && erLokal(f) ? " lokalt" : ""}">${landListe(f)}</div><span class="pil">${CHEV}</span>`;
+    r.onclick = () => valgt === f ? lukkArk() : apneArk(f);
     l.appendChild(r);
   });
-  $("sider").innerHTML = sider > 1
-    ? `<button id="forrige" ${side === 0 ? "disabled" : ""}>‹</button><span>${side + 1} ${L("av", "of")} ${sider}</span><button id="neste" ${side >= sider - 1 ? "disabled" : ""}>›</button>`
+  $("sider").innerHTML = sider.length > 1
+    ? `<button id="forrige" ${side === 0 ? "disabled" : ""} aria-label="${esc(L("Forrige", "Previous"))}">‹</button><span>${side + 1} ${L("av", "of")} ${sider.length}</span><button id="neste" ${side >= sider.length - 1 ? "disabled" : ""} aria-label="${esc(L("Neste", "Next"))}">›</button>`
     : "";
-  if (sider > 1) {
+  if (sider.length > 1) {
     $("forrige").onclick = () => { side--; tegnListe(); }; $("neste").onclick = () => { side++; tegnListe(); };
-    // Siden ble lavere med sidevalget: tegn på nytt hvis siste rad ikke får plass
-    if (l.scrollHeight > l.clientHeight + 1 && l.children.length > 3 && !tegnListe.igjen) { tegnListe.igjen = true; tegnListe(); tegnListe.igjen = false; }
+    // Sidevalget tok plass: tegn på nytt hvis siste rad ikke får plass
+    if (l.scrollHeight > l.clientHeight + 1 && !tegnListe.igjen) { tegnListe.igjen = true; tegnListe(); tegnListe.igjen = false; }
   }
 }
 
@@ -612,7 +642,7 @@ function settFolg(f, pa) {
 let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {};
 function apneNett() {
   valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
-  $("ark").classList.add("apen"); tegnNett(); send({ type: "nettverk", pa: true });
+  visArk("full"); tegnNett(); send({ type: "nettverk", pa: true });
 }
 function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); merkMeny(); }
 function mottaNett(m) {
@@ -644,8 +674,9 @@ function nettGraf(p, admin, tittel) {
 function tegnNett() {
   merkMeny();
   const d = $("detalj");
+  d.classList.remove("trang");
   const valgtRad = nettValgt && nett.rader.find(r => r.nokkel === nettValgt);
-  const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Nettverk", "Network")}</h2><span class="dtype">${L("Live · hvilke programmer som snakker med AI-tjenester nå · lagres ikke", "Live · which programs are talking to AI services now · not saved")}${nett.tid ? " · " + esc(nett.tid) : ""}</span></div>`;
+  const hode = `<div class="navnRad"><span class="dtype">${L("Programmer som snakker med AI-tjenester nå · live · lagres ikke", "Programs talking to AI services now · live · not saved")}${nett.tid ? " · " + esc(nett.tid) : ""}</span></div>`;
   const graf = nettValgt && nett.hist[nettValgt]
     ? nettGraf(nett.hist[nettValgt], nett.admin, valgtRad ? `${valgtRad.program} → ${valgtRad.tjeneste || L("kan ikke avgjøre", "cannot tell")}` : L("Avsluttet", "Ended"))
     : nettGraf(nett.p, nett.admin, L("Alle AI-forbindelser", "All AI connections"));
@@ -695,8 +726,7 @@ function tegnNett() {
   d.innerHTML = hode + `<div class="nettTopp">${graf}</div>`
     + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${vistRader.length ? vistRader.map(rad).join("") : tom}</ul>`
     + (valgtRad ? `<h3>${L("Prosessen", "The process")}</h3><ul id="nettProsess">${prosessLinjer}</ul>` : "") + `</div>`
-    + `<div class="avLinje ikke">${esc(L("Bare TCP.", "TCP only.") + udp + (andre ? " " + andre : "") + " " + L("Ikke noe innhold leses, ingenting lagres.", "No content is read, nothing is saved."))}</div>`;
-  $("tilbake").onclick = lukkArk;
+    + `<div class="avLinje ikke boks">${esc(L("Bare TCP.", "TCP only.") + udp + (andre ? " " + andre : "") + " " + L("Ikke noe innhold leses, ingenting lagres.", "No content is read, nothing is saved."))}</div>`;
   // Rader som ikke får plass, telles i stedet for å rulle
   const dl = $("nettDl"), ul = $("nettUl");
   const pu = $("nettProsess");
@@ -718,8 +748,10 @@ function tegnNett() {
     tegnNett();
   });
 }
-function apneArk(f) { stoppNett(); dataApen = false; merkMeny(); valgt = f; $("ark").classList.add("apen"); tegnDetalj(); }
-function lukkArk() { stoppNett(); valgt = null; dataApen = false; merkMeny(); $("ark").classList.remove("apen"); }
+// Detalj: lista blir stående smal til venstre. Nettverk og Datagrunnlag: arket tar hele bredden.
+function visArk(modus) { $("hoved").className = "hoved" + (modus ? " " + modus : ""); }
+function apneArk(f) { stoppNett(); dataApen = false; merkMeny(); valgt = f; visArk("delt"); visIdent = false; tegnListe(); tegnDetalj(); }
+function lukkArk() { stoppNett(); const var_ = valgt; valgt = null; dataApen = false; merkMeny(); visArk(""); if (var_ && $("resultat").classList.contains("aktiv")) tegnListe(); }
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
 let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null, sjekkFilter = null;
@@ -751,7 +783,7 @@ function visPaKart(plass) {
   fane = "kart"; kartSti = kjede.slice(0, -1).map(x => x.n); kartInfo = null; tegnData(); apneKartInfo(kjede[kjede.length - 1]);
 }
 function apneListe(u, sjekk) { fane = "alt"; filter = u || null; sjekkFilter = sjekk || null; dataSide = 0; tegnData(); }
-function apneData() { stoppNett(); valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; $("ark").classList.add("apen"); merkMeny(); tegnData(); send({ type: "logg" }); }
+function apneData() { stoppNett(); valgt = null; dataApen = true; fane = "oversikt"; dataSide = 0; filter = null; sjekkFilter = null; logg = null; kartSti = []; kartInfo = null; visArk("full"); merkMeny(); tegnData(); send({ type: "logg" }); }
 const tall = n => (n || 0).toLocaleString(språk === "en" ? "en-GB" : "nb-NO");
 const postLinje = p => `<li class="post"${p.k ? ` data-k="${esc(p.k)}" title="${esc(L("Vis på kartet", "Show on the map"))}"` : ""}><span class="ut u-${p.u}">${esc(p.ut)}</span><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(p.h)}</b><small>${esc(p.s)}</small></div><div class="l2" title="${esc(p.m)}">${esc(p.m)}${p.d ? " · " + esc(p.d) : ""}</div></div><time>${esc(p.t)}</time></li>`;
 const BRIKKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M4 4l16 16"/></svg>`;
@@ -773,19 +805,28 @@ function fordelSider(rader, linje) {
 function tegnData() {
   merkMeny();
   const d = $("detalj"), g = logg;
-  const hode = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2>${L("Datagrunnlag", "Data basis")}</h2><span class="dtype">${L("Utviklermodus · hva søket leste, og hvorfor", "Developer mode · what the scan read, and why")}</span></div>`;
-  if (!g) { d.innerHTML = hode + `<div class="tom">${L("Henter…", "Loading…")}</div>`; $("tilbake").onclick = lukkArk; return; }
+  d.classList.remove("trang");
+  const hode = "";
+  if (!g) { d.innerHTML = `<div class="tom">${L("Henter…", "Loading…")}</div>`; return; }
   const mangler = g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0);
   // Samme tall som flisene i Oversikt til sammen: alt søket sjekket, også det som bare er talt (filer i en mappe)
   const sjekket = g.totalt.reduce((a, x) => a + x.n, 0);
-  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket sjekket", "Everything checked"), sjekket], ["regler", L("Regler og bevis", "Rules and proof")]];
+  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket sjekket", "Everything checked"), sjekket], ["regler", L("Regler", "Rules")]];
   let kropp = "", rader = null, linje = null;
   if (fane === "oversikt") {
-    kropp = `<div class="ufliser">${g.totalt.map(x => `<div class="uflis u-${x.u}${x.mangler ? " mangler" : ""}${x.n ? " har" : ""}"${x.n ? ` data-u="${x.u}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x.n)}</b><small>${esc(x.tekst)}</small></div>`).join("")}</div>`
-      + `<div class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</div>`
-      + `<h3 class="medSider" style="margin-bottom:2px"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
-      + `<ul><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Ingenting der", "Nothing there")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
-      + `<div class="dl" id="dl"><ul id="dlu">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
+    // Fire deler som til sammen er alt søket sjekket: lest, ingenting der, hoppet over og ikke dekket (nektet, låst, …)
+    const del = u => g.totalt.filter(x => x.u === u).reduce((a, x) => a + x.n, 0);
+    const ikkeDekket = g.totalt.filter(x => x.mangler && x.n);
+    const deler = [["lest", del("lest"), L("Lest", "Read")], ["ikkefunnet", del("ikkefunnet"), L("Sjekket, ingenting der", "Checked, nothing there")], ["hoppetover", del("hoppetover"), L("Hoppet over", "Skipped")],
+      ["mangler", mangler, L("Ikke dekket", "Not covered") + (ikkeDekket.length ? " · " + ikkeDekket.map(x => `${tall(x.n)} ${x.tekst}`).join(", ") : "")]];
+    const andre = sjekket - deler.reduce((a, x) => a + x[1], 0);
+    if (andre > 0) deler.push(["annet", andre, L("Annet", "Other")]);
+    kropp = `<div class="dSum"><span class="t20">${L(`${tall(sjekket)} steder sjekket`, `${tall(sjekket)} places checked`)}</span><span class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</span></div>`
+      + `<div class="stabel">${deler.filter(x => x[1]).map(x => `<i class="s-${x[0]}" style="flex:${x[1]}"></i>`).join("")}</div>`
+      + `<div class="ufliser">${deler.map(x => `<div class="uflis${x[0] === "mangler" ? " mangler" : ""}${x[1] ? " har" : ""}"${x[1] && x[0] !== "annet" ? ` data-u="${x[0]}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x[1])}</b><small><i class="s-${x[0]}"></i>${esc(x[2])}</small></div>`).join("")}</div>`
+      + `<h3 class="medSider"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
+      + `<ul class="sjekkTabell"><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Ingenting der", "Nothing there")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
+      + `<div class="dl" id="dl"><ul id="dlu" class="sjekkTabell">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
     rader = g.sjekker; linje = sjekkLinje;
   } else if (fane === "kart") {
     kropp = `<div class="skTopp"><div class="skSti" id="skSti"></div><div class="bryter" id="skMal"><button data-m="antall" class="${kartMal === "antall" ? "valgt" : ""}">${L("Antall", "Count")}</button><button data-m="storrelse" class="${kartMal === "storrelse" ? "valgt" : ""}">${L("Størrelse", "Size")}</button></div><button class="skInfoKnapp" id="skOm">ⓘ ${L("Om dette stedet", "About this place")}</button></div>`
@@ -818,10 +859,9 @@ function tegnData() {
     kropp = `<div class="ingenAi">${BRIKKE}<span>${esc(g.ingenAi)}</span></div>`
       + `<h3>${L("Program og regler som ga resultatet", "Program and rules behind the result")}</h3><ul class="kildeGrid">${g.kilder.map(kilde).join("")}</ul>`
       + `<h3>${L("Aldri lest, med vilje", "Never read, by design")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
-      + `<h3>${L("Revisjonslogg", "Audit trail")}</h3><div class="avLinje ${g.revisjon ? "ok" : ""}" style="margin-top:0">${g.revisjon ? esc(L(`Lagret: ${g.revisjon}`, `Saved: ${g.revisjon}`)) : esc(L("Av for dette søket. Ingenting er lagret.", "Off for this scan. Nothing is saved."))}</div>`;
+      + `<h3>${L("Revisjonslogg", "Audit trail")}</h3><div class="avLinje boks ${g.revisjon ? "ok" : ""}" style="margin-top:0">${g.revisjon ? esc(L(`Lagret: ${g.revisjon}`, `Saved: ${g.revisjon}`)) : esc(L("Av for dette søket. Ingenting er lagret.", "Off for this scan. Nothing is saved."))}</div>`;
   }
   d.innerHTML = hode + `<div class="faner">${faner.map(f => `<button data-fane="${f[0]}" class="${fane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? `<span class="ant">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>` + kropp;
-  $("tilbake").onclick = lukkArk;
   d.querySelectorAll("[data-fane]").forEach(b => b.onclick = () => { fane = b.dataset.fane; dataSide = 0; filter = null; tegnData(); });
   d.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f || null; dataSide = 0; tegnData(); });
   d.querySelectorAll(".uflis[data-u]").forEach(b => b.onclick = () => apneListe(b.dataset.u));
@@ -972,15 +1012,15 @@ function tegnKartInfo() {
 }
 const RISIKO_REKKE = { rod: 0, ukjent: 0, gul: 1, gronn: 2 };
 const sjekkLinje = s => `<li class="sjekkRad" data-sjekk="${esc(s.navn)}" title="${esc(L("Vis alt denne sjekken leste", "Show everything this check read"))}"><span title="${esc(s.navn)}">${esc(s.navn)}</span><span>${s.tid != null ? s.tid.toLocaleString(språk === "en" ? "en-GB" : "nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s" : ""}</span>`
-  + [["lest", s.lest], ["ikkefunnet", s.ikke], ["hoppetover", s.hoppet], ["mangler", s.mangler]].map(([u, n]) => `<span${n ? ` data-su="${u}"` : ""} class="${u === "mangler" && n ? "rodt" : ""}">${tall(n)}</span>`).join("") + `</li>`;
+  + [["lest", s.lest], ["ikkefunnet", s.ikke], ["hoppetover", s.hoppet], ["mangler", s.mangler]].map(([u, n]) => `<span${n ? ` data-su="${u}"` : ""} class="${!n ? "null" : u === "mangler" ? "rodt" : ""}">${tall(n)}</span>`).join("") + `</li>`;
 // Mushjul blar sider i lista
 $("liste").addEventListener("wheel", e => {
   if (Math.abs(e.deltaY) < 20) return;
-  const sider = Math.ceil(alle.length / perSide()), ny = Math.max(0, Math.min(sider - 1, side + (e.deltaY > 0 ? 1 : -1)));
+  const sider = sideDeling.length, ny = Math.max(0, Math.min(sider - 1, side + (e.deltaY > 0 ? 1 : -1)));
   if (ny !== side) { side = ny; tegnListe(); }
 }, { passive: true });
 
-let stedSide = 0;
+let stedSide = 0, visIdent = false;
 
 // "Fil: C:\...\x.gguf · GGUF · 4,7 GB · endret …" -> tittel, sti, detaljer
 function delOpp(t) {
@@ -1045,21 +1085,21 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     stedSide = Math.min(onsket, sider - 1);
     const vis = steder.slice(stedSide * per, stedSide * per + per);
     const sendt = (f.senderTil || []).length
-      ? f.senderTil.slice(0, 3).map(l => `<div class="stor ${l.farlig ? "fare" : ""}">${esc(l.land)}</div>`).join("") + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
-      : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "None")}</div><div class="liten">${L("Kjører lokalt på PC-en", "Runs locally on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
-    d.innerHTML = `<div class="navnRad"><button class="tilbake" id="tilbake">‹ ${L("Alle AI", "All AI")}</button><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>${f.versjon ? `<span class="dtype" title="${esc(L("Lest fra " + (f.versjonKilde || ""), "Read from " + (f.versjonKilde || "")))}">${L("Versjon", "Version")} ${esc(f.versjon)}</span>` : ""}<span class="pille ${f.risiko}">${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span class="dtype">${esc(f.type || "")}</span></div>
+      ? `<div class="stor">${f.senderTil.slice(0, 3).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")}</div>` + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
+      : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "Nobody")}</div><div class="liten">${L("Kjører bare på PC-en", "Runs only on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
+    d.innerHTML = `<button class="lukk hjorne" id="tilbake" title="${esc(L("Lukk (Esc)", "Close (Esc)"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button><div class="dTopp"><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>
+      <div class="dMeta"><span class="merke"><span class="prikk ${f.risiko}"></span>${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div></div>
       <div class="flyt">
         <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
-        <div class="pil2">→</div>
+        <div class="pil2">${PIL}</div>
         <div class="flis2"><small>${L("Sender data til", "Sends data to")}</small>${sendt}</div>
-        <div class="flis2"><small>${L(`Hvorfor ${merke(f.risiko).toLowerCase()} risiko`, `Why ${merke(f.risiko).toLowerCase()} risk`)}</small><div class="grunn">${esc(f.grunn || f.kort)}</div></div>
       </div>
-      <div class="brikker">${tider.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+      ${f.grunn || f.kort ? `<h3>${L(`Hvorfor ${merke(f.risiko).toLowerCase()}`, `Why ${merke(f.risiko).toLowerCase()}`)}</h3><div class="grunn">${esc(f.grunn || f.kort)}</div>` : ""}
       ${f.folgbar ? `<div class="folg"><label><input type="checkbox" id="folgBoks" ${folg[f.id] ? "checked" : ""}>${L("Følg med på datamengden", "Watch the data volume")}</label>${folg[f.id] ? `<div id="folgGraf">${folgGraf(f.id)}</div>` : ""}</div>` : ""}
-      ${ident.length ? `<h3>${identTittel}</h3><ul>${ident.map(identLinje).join("")}</ul>` : ""}
+      ${ident.length ? `<h3>${identTittel}</h3><ul>${(visIdent ? ident : ident.slice(0, 1)).map(identLinje).join("")}${ident.length > 1 ? `<li class="ident vis2"><button class="apne" id="identKnapp">${visIdent ? L("Færre detaljer", "Fewer details") : `${L("Detaljer", "Details")} (${ident.length - 1})`}</button></li>` : ""}</ul>` : ""}
       ${api.length ? `<h3>${L("AI-funksjoner for nettsider", "AI features for websites")}</h3>${kompakt ? apiKompakt() : `<ul class="apiListe">${api.map(apiLinje).join("")}</ul>`}` : ""}
       ${mal.length || (f.senderTil || []).length ? `<h3>${L("Hvor dataene går", "Where the data goes")}</h3><div class="kartRad">${kart(f)}${mal.length ? `<ul id="malListe">${mal.map(malLinje).join("")}</ul>` : `<div class="kartInfo">${esc(L(`Tjenesten hører hjemme i ${f.senderTil.map(l => l.land).join(", ")}. IP-adressene vises når den er i bruk under søket.`, `The service is based in ${f.senderTil.map(l => l.land).join(", ")}. IP addresses show when it is in use during the scan.`))}</div>`}</div>` : ""}
-      ${steder.length ? `<h3 class="medSider"><span>${L("Ligger her", "Located here")} · ${steder.length}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} ${L("av", "of")} ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
+      ${steder.length ? `<h3 class="medSider"><span>${L("Ligger her", "Located here")}${steder.length > 1 ? " · " + steder.length : ""}</span>${sider > 1 ? `<span class="sidevalg"><button id="stedForrige" ${stedSide === 0 ? "disabled" : ""}>‹</button>${stedSide + 1} ${L("av", "of")} ${sider}<button id="stedNeste" ${stedSide >= sider - 1 ? "disabled" : ""}>›</button></span>` : ""}</h3><ul id="stedListe">${vis.map(stedLinje).join("")}</ul>` : ""}
       ${(f.merk || []).length ? `<h3>${L("Merk", "Note")}</h3><ul>${f.merk.map(m => `<li class="ident"><span>${esc(m)}</span></li>`).join("")}</ul>` : ""}
       ${mal.length ? `<div class="kilde">${L("Målt fra Windows nå. Land: DB-IP.com (CC BY 4.0).", "Measured from Windows now. Country: DB-IP.com (CC BY 4.0).")}</div>` : ""}`;
     return d.scrollHeight <= d.clientHeight + 1;
@@ -1069,10 +1109,14 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
   while (!tegn(per) && per > 1) per--;
   // Fortsatt for høyt: AI-funksjonene på én tett blokk i stedet for en liste
   if (api.length && !tegn(per)) { kompakt = true; per = Math.max(1, steder.length); while (!tegn(per) && per > 1) per--; }
+  // Fortsatt for høyt (smal detalj ved siden av lista): mindre kart og tettere luft
+  d.classList.remove("trang");
+  if (!tegn(per)) { d.classList.add("trang"); per = Math.max(1, steder.length); while (!tegn(per) && per > 1) per--; }
   // Sidestørrelsen er funnet med første side, så «1 av N» står stille når man blar. Så tegnes siden brukeren ba om.
   if (onsketSide > 0) tegn(per, onsketSide);
   const ml = $("malListe");
   while (ml && d.scrollHeight > d.clientHeight + 1 && ml.children.length > 1) ml.lastElementChild.remove();
+  const ik = $("identKnapp"); if (ik) ik.onclick = () => { visIdent = !visIdent; tegnDetalj(true); };
   const fs = $("stedForrige"), ns = $("stedNeste");
   if (fs) fs.onclick = () => { stedSide--; tegnDetalj(true); };
   if (ns) ns.onclick = () => { stedSide++; tegnDetalj(true); };
@@ -1084,18 +1128,19 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
 // Tastatur: piler blar i lista. I detaljene: opp/ned bytter funn, venstre/høyre blar i stedene, Esc lukker.
 document.addEventListener("keydown", e => {
   if (!$("resultat").classList.contains("aktiv")) return;
+  if (e.key === "Escape" && (nettApen || dataApen) && !$("skVindu")?.offsetParent) { lukkArk(); return; }
   if (valgt) {
     const i = alle.indexOf(valgt);
     if (e.key === "Escape") lukkArk();
     else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       const ny = alle[Math.min(alle.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];
-      if (ny && ny !== valgt) { valgt = ny; side = Math.floor(alle.indexOf(ny) / perSide()); tegnListe(); tegnDetalj(); }
+      if (ny && ny !== valgt) { valgt = ny; visIdent = false; side = sideFor(ny); tegnListe(); tegnDetalj(); }
       e.preventDefault();
     } else if (e.key === "ArrowRight" && $("stedNeste") && !$("stedNeste").disabled) { stedSide++; tegnDetalj(true); }
     else if (e.key === "ArrowLeft" && $("stedForrige") && !$("stedForrige").disabled) { stedSide--; tegnDetalj(true); }
     return;
   }
-  const sider = Math.ceil(alle.length / perSide());
+  const sider = sideDeling.length;
   if ((e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown") && side < sider - 1) { side++; tegnListe(); e.preventDefault(); }
   else if ((e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") && side > 0) { side--; tegnListe(); e.preventDefault(); }
 });
@@ -1111,8 +1156,8 @@ function motta(m) {
     if (!m.behold) folg = {};
     if (!m.behold) stoppNett();
     visResultat(m.funn, m.info);
-    if (m.behold && varNett) { side = s0; tegnListe(); nettApen = true; $("ark").classList.add("apen"); send({ type: "nettverk", pa: true }); tegnNett(); return; }
-    if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; $("ark").classList.add("apen"); tegnData(); return; }
+    if (m.behold && varNett) { side = s0; tegnListe(); nettApen = true; visArk("full"); send({ type: "nettverk", pa: true }); tegnNett(); return; }
+    if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; visArk("full"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
   }
   else if (m.type === "nvd") {
@@ -1165,8 +1210,10 @@ setTimeout(klar, vert ? 1500 : 0);
 let erAdmin = false, sisteValg = "sok", revisjon = false, oppstartMs = null, lytterIgjen = 0, fullt = false;
 function tegnModus() {
   $("valg").classList.toggle("erAdmin", erAdmin);
-  $("ringTekst").textContent = erAdmin ? L("ADMIN ER PÅ", "ADMIN IS ON") : L("SØK SOM ADMIN", "SCAN AS ADMIN");
-  $("sok").innerHTML = erAdmin ? L("Søk<small>som admin</small>", "Scan<small>as admin</small>") : L("Søk<small>som bruker</small>", "Scan<small>as user</small>");
+  $("ringTekst").textContent = erAdmin ? L("Admin er på", "Admin is on") : "Admin";
+  $("sok").textContent = L("Søk", "Scan");
+  $("hint").textContent = erAdmin ? L("Søket kjører som admin, med mer data.", "The scan runs as admin, with more data.") : L("Midten søker som bruker. Ringen som admin, med mer data.", "The centre scans as user. The ring as admin, with more data.");
+  $("revStatus").textContent = revisjon ? L("Revisjonslogg på", "Audit trail on") : "";
   $("sok").title = L("Søk som vanlig bruker: mindre data", "Scan as a normal user: less data");
   $("sokAdmin").title = L("Søk som administrator: mer data", "Scan as administrator: more data");
   document.querySelectorAll("#revisjon button").forEach(b => b.classList.toggle("valgt", (b.dataset.r === "ja") === revisjon));
@@ -1180,6 +1227,12 @@ function tegnModus() {
 }
 document.querySelectorAll("#revisjon button").forEach(b => b.onclick = () => { revisjon = b.dataset.r === "ja"; tegnModus(); });
 document.querySelectorAll("#omfang button").forEach(b => b.onclick = () => { fullt = b.dataset.o === "fullt"; tegnModus(); });
+// «Hva søkes?»: forklaringen og revisjonsloggen, utenfor veien til Søk
+const apneOm = pa => { $("om").classList.toggle("apen", pa); if (pa) $("omLukk").focus(); };
+$("omKnapp").onclick = () => apneOm(true);
+$("omLukk").onclick = () => apneOm(false);
+$("om").onclick = e => { if (e.target === $("om")) apneOm(false); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("om").classList.contains("apen")) apneOm(false); });
 
 // Bytter all tekst med en gang, også et resultat som vises. Programmet sender funnene på nytt på riktig språk (uten nytt søk).
 function settSpråk(l, fraProgram) {
@@ -1206,16 +1259,17 @@ function settProsent(p) {
   $("ringProsent").textContent = p + " %";
   $("ringProsent").setAttribute("aria-valuenow", p);
 }
-function start() { $("feil").textContent = ""; $("fremdrift").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon, fullt }); }
+function start() { $("om").classList.remove("apen"); $("feil").textContent = ""; $("fremdrift").textContent = ""; lukkArk(); settProsent(0); vis("soker"); send({ type: sisteValg, revisjon, fullt }); }
 $("sok").onclick = () => { sisteValg = "sok"; start(); };
 $("sokAdmin").onclick = () => { sisteValg = "admin"; if (erAdmin) start(); else { $("feil").textContent = ""; send({ type: "admin", revisjon, fullt }); } };
 $("igjen").onclick = start;
 settSpråk(språk, true);
 $("lagre").onclick = () => send({ type: "lagre" });
-// Nettverk og Datagrunnlag: trykk igjen for å lukke
-$("nettKnapp").onclick = () => nettApen ? lukkArk() : apneNett();
-$("dataKnapp").onclick = () => dataApen ? lukkArk() : apneData();
-function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); }
+// Funn, Nettverk og Datagrunnlag er tre faner: trykk på den som er åpen gjør ingenting
+$("nettKnapp").onclick = () => { if (!nettApen) apneNett(); };
+$("dataKnapp").onclick = () => { if (!dataApen) apneData(); };
+function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); }
+$("funnKnapp").onclick = () => { if (nettApen || dataApen) lukkArk(); };
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------
 function demo(m) {

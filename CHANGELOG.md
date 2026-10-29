@@ -29,6 +29,32 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.24.0] - 2026-10-29
+
+Nytt utseende. Ingen endring i hva som søkes, hvordan risiko settes eller hva rapporten inneholder.
+Ikke testet på Windows ennå.
+
+### Endret
+- **Designsystem.** Fem skriftstørrelser (12, 14, 20, 28 og 40 px, Windows 11 sin Fluent-rampe), to vekter og tre
+  hjørner (8 px, 14 px og rund). Før var det 21 skriftstørrelser og 15 hjørner. Blått brukes bare på det som kan
+  trykkes, risikofarge bare på prikker og risikolinja. Ukjent er en rød ring, så den skilles fra Høy uten å lese farge.
+  Ingen etiketter med STORE BOKSTAVER. Bare systemfonter.
+- **Startskjermen** har ett spørsmål og én knapp: sirkelen søker som bruker, ringen rundt som admin, forklart i én
+  linje. Hurtigsøk eller fullt søk er en liten bryter. Revisjonsloggen og forklaringen av hva som søkes ligger under
+  «Hva søkes?». Står revisjonsloggen på, sier bunnlinja det.
+- **Resultatet** er gruppert etter risiko (Høy, Ukjent, Middels, Lav). Gruppetallet, tallet i risikolinja og
+  overskriften teller de samme radene. Hver rad har navn, type og sted på to linjer, og hvor dataene går til høyre.
+  Typelinja under overskriften er fjernet, typen står på hver rad. Rapporten er uendret.
+- **Funn, Nettverk og Datagrunnlag** er tre faner. Knappen heter «Lagre rapport».
+- **Detaljen** åpnes ved siden av lista, så lista blir stående. Kommer fra og sender til står i én flyt, så hvorfor.
+  Modell-ID og de andre linjene om modellen ligger bak «Detaljer». Filstier vises i vanlig skrift.
+- **Datagrunnlag → Oversikt** viser alt søket sjekket som én stablet linje: lest, ingenting der, hoppet over og ikke
+  dekket (med nektet, låst og resten forklart). Delene summerer til tallet over og til fanen «Alt søket sjekket».
+  Nuller i tabellen er svake. «Regler og bevis» heter «Regler».
+- **Bunnlinja** er kortere: oppstart, søketid, hurtig eller fullt, bruker eller admin, og om noe er lagret.
+  Sikkerhetshull nevnes bare mens de sjekkes eller hvis de ikke ble sjekket.
+- Språkvalget står alltid øverst til høyre.
+
 ## [2.23.1] - 2026-10-29
 
 ### Rettet
