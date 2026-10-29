@@ -1478,3 +1478,4 @@ AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Window
 Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi vet ikke hva den sender.|The extension is built to talk to AI services: the addresses are in its code. We do not know what it sends.
 Utvidelse med AI-adresser|Extension with AI addresses
 ~^Koden nevner: (.+)$|The code mentions: $1
+~^PID (\d+): bruker GPU/NPU til beregning nå: (\d+) %$|PID $1: using GPU/NPU for compute now: $2 %

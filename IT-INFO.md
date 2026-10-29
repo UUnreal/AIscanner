@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.32.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.33.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -197,6 +197,7 @@ fil»), fordi endringstider kan forfalskes.
 | Office-tillegg | `SOFTWARE\Microsoft\Office\<app>\Addins` (HKCU, HKLM, WOW6432Node), `%LOCALAPPDATA%\Microsoft\Office\16.0\Wef` (maks 500 filer, 512 KB) | `FriendlyName`, `Description`, `LoadBehavior`; i manifestene bare `DisplayName` og `Description`. Dokumenter røres aldri. |
 | Vektordatabaser | Filnavn i filgjennomgangen: `chroma.sqlite3`, `*.faiss`, `*.lance`, Qdrant `collections\*\collection.json`, LlamaIndex `docstore.json`, `*.usearch` | Bare sti, størrelse og endringstid. Innholdet leses aldri. |
 | Brannmurlogg (admin) | `pfirewall.log` (standard sti og `LogFilePath` fra brannmurregler), siste 16 MB | Bare linjer til adressene kjente AI-tjenester har nå: tid, protokoll, port, PID |
+| GPU/NPU | Ytelsestellere «GPU Engine» (Compute, Cuda), bare for PID-er som er AI-funn | Prosent beregning over ett sekund |
 | Docker | `\\.\pipe\docker_engine`, bare når Docker kjører: `GET /images/json` og `/containers/json` | Bildenavn, størrelse, om beholderen kjører og åpne porter. `~/.docker/config.json` åpnes aldri. |
 | WSL | `Lxss` i registeret; `\\wsl.localhost\<distro>\home\*` bare når Linux kjører | Navn på distribusjoner; antall filer i `.ollama\models\manifests`, `.cache\huggingface\hub`, `.cache\lm-studio\models` |
 | Utvidelsers kode | `*.js` i utvidelsens mappe (maks 200 filer, 2 MB per fil, 4 MB per utvidelse) | Bare adresser til AI-tjenester fra `regler.json`. Teksten beholdes aldri. |

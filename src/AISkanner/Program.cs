@@ -126,6 +126,15 @@ internal static class Program
             }
             finally { try { File.Delete(tom); } catch { } }
 
+            // Et helt søk i .NET Framework 4.8 (det brukeren kjører), uten NVD og med kort lytting: ingen sjekk skal krasje
+            var sok = new Skanner(Regelsett.Last()) { LytteSekunder = 2 };
+            var funn = Task.Run(() => sok.KjorAsync(false)).GetAwaiter().GetResult();
+            var stoppet = (Tilgangslogg.Aktiv?.Oppforinger ?? (IReadOnlyCollection<Tilgang>)Array.Empty<Tilgang>())
+                .Where(t => t.Hva == "Sjekk" && t.Utfall == Utfall.Feil).Select(t => $"{t.Mal}: {t.Detalj}").ToList();
+            Console.WriteLine($"Søk: {sok.Tider.Sum(t => t.Value.TotalSeconds):0.0} s i sum, {(stoppet.Count == 0 ? "ingen sjekk stoppet" : "stoppet: " + string.Join(" | ", stoppet))}");
+            Console.WriteLine("Rapport: " + (Rapport.Tekst(funn, sok).Length > 0 ? "OK" : "FEIL") + ", CSV: " + (Rapport.Csv(funn).Length > 0 ? "OK" : "FEIL"));
+            feil |= stoppet.Count > 0;
+
             // WebView2: begge DLL-ene og WebView2Loader.dll (runtimes\win-x64\native) lastes
             using (var vindu = new Microsoft.Web.WebView2.WinForms.WebView2()) { }
             try { Console.WriteLine("WebView2: " + Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()); }

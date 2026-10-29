@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.33.0] - 2026-10-29
+
+Ikke testet på Windows utover lastetesten i byggeløypa.
+
+### Lagt til
+- **GPU/NPU-bruk:** for prosesser som er AI-funn måles beregning på skjermkort og NPU (Windows' ytelsestellere
+  «GPU Engine», Compute og Cuda) over ett sekund, per PID.
+- Lastetesten i byggeløypa kjører nå også et helt søk i .NET Framework 4.8 på Windows, og stopper hvis en sjekk
+  krasjer.
+
 ## [2.32.0] - 2026-10-29
 
 Ikke testet på Windows utover lastetesten i byggeløypa.

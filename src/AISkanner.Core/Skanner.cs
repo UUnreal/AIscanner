@@ -63,7 +63,7 @@ public sealed partial class Skanner
         Admintilgang.SlaPa();
         var stegliste = new (string Tekst, Action Gjor)[]
         {
-            ("Ser etter AI som kjører nå...", () => { Prosesser(); Kommandolinjer(); MotorerIProsesser(); }),
+            ("Ser etter AI som kjører nå...", () => { Prosesser(); Kommandolinjer(); MotorerIProsesser(); GpuBruk(); }),
             ("Sjekker installerte programmer...", Installert),
             ("Sjekker hva som starter av seg selv...", Oppstart),
             ("Ser etter AI-verktøy og AI-nøkler...", () => { Spor(); Nokler(); }),
