@@ -39,9 +39,9 @@ public sealed partial class Skanner
         }
         var idTab = db.Finn("SruDbIdMapTable");
         var nett = db.Finn(SrumNett);
-        if (idTab == null || nett == null)
+        if (idTab == null)
         {
-            SrumStatus = $"SRUM: tabellene for nettbruk finnes ikke i denne databasen (sider {db.Side / 1024} kB, {db.Tabeller.Count()} tabeller lest: {string.Join(", ", db.Tabeller.Select(t => t.Navn).Take(12))}; {db.SiderLest} sider, {db.Feil} feil)";
+            SrumStatus = $"SRUM: id-tabellen finnes ikke ({db.Tabeller.Count()} tabeller lest)";
             Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus);
             return;
         }
@@ -70,18 +70,20 @@ public sealed partial class Skanner
         var sum = new Dictionary<int, (long Ut, long Inn, DateTime Forst, DateTime Sist)>();
         int rader = 0;
         DateTime? eldst = null, nyest = null;
-        if (db.KolonneId(nett, "TimeStamp") is { } cTid && db.KolonneId(nett, "AppId") is { } cApp && db.KolonneId(nett, "BytesSent") is { } cUt && db.KolonneId(nett, "BytesRecvd") is { } cInn)
-            foreach (var r in db.Poster(nett.Rot, () => klokke.Elapsed > frist))
+        // Uten nettbrukstabellen (ny PC, eller SRUM av): tilkoblingstabellen viser at lesingen virker, men har ingen mengder
+        var tabell = nett ?? db.Finn("{DD6636C4-8929-4683-974E-22C046A43763}");
+        if (tabell != null && db.KolonneId(tabell, "TimeStamp") is { } cTid && db.KolonneId(tabell, "AppId") is { } cApp)
+            foreach (var r in db.Poster(tabell.Rot, () => klokke.Elapsed > frist))
             {
                 try
                 {
-                var p = db.Tolk(r, nett);
+                var p = db.Tolk(r, tabell);
                 if (p.Tid(cTid) is not { } t || p.Tall(cApp) is not { } app) continue;
                 rader++;
                 if (eldst == null || t < eldst) eldst = t;
                 if (nyest == null || t > nyest) nyest = t;
-                if (t < grense) continue;
-                long ut = p.Tall(cUt) ?? 0, inn = p.Tall(cInn) ?? 0;
+                if (nett == null || t < grense) continue;
+                long ut = db.KolonneId(nett, "BytesSent") is { } cUt ? p.Tall(cUt) ?? 0 : 0, inn = db.KolonneId(nett, "BytesRecvd") is { } cInn ? p.Tall(cInn) ?? 0 : 0;
                 sum[(int)app] = sum.TryGetValue((int)app, out var x)
                     ? (x.Ut + ut, x.Inn + inn, t < x.Forst ? t : x.Forst, t > x.Sist ? t : x.Sist)
                     : (ut, inn, t, t);
@@ -105,7 +107,7 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumStatus = $"SRUM: {rader} timer med nettbruk ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
+        SrumStatus = $"SRUM: {rader} {(nett != null ? "timer med nettbruk" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }
 
