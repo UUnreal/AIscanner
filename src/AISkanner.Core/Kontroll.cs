@@ -419,6 +419,26 @@ public sealed partial class Skanner
         var falsk = new Funn { Navn = regel.Navn, Kategori = "Skygge-AI", Hvorfor = "x", Risiko = Risiko.Gul };
         Risikoregler.Bruk(new[] { falsk }, new Regelsett { BlokkertAi = new() { regel.Navn } });
         Sjekk(falsk.Godkjenning == "Ikke vurdert", "navn uten sterk identitet (ikke fra reglene) ble regnet som blokkert");
+        // Svake spor etter samme ukjente program blir ett funn med alle kildene, og flere spor gir høyere treffsikkerhet
+        var sm = new Skanner(regler);
+        sm.LeggTil("Program som har slått opp AI: notesync.exe", "Skygge-AI", Risiko.Rod, "x", "Windows", @"C:\Users\a\Downloads\notesync.exe slo opp api.deepseek.com (DeepSeek API, Kina)").Merk(Tilstand.SlattOpp);
+        sm.LeggTil("Ukjent program snakker med AI: notesync", SporKategori, Risiko.Rod, "x", "Koblet til nå", @"Program: C:\Users\a\Downloads\notesync.exe · PID 77");
+        sm.LeggTil("Ukjent program snakker med AI: annet", SporKategori, Risiko.Rod, "x", "Koblet til nå", @"Program: C:\Users\a\annet.exe · PID 78");
+        sm.SlaSammenSpor();
+        var samlet = sm._funn.Values.Where(f => f.Detaljer.Any(d => d.Contains("notesync.exe"))).ToList();
+        Sjekk(samlet.Count == 1 && samlet[0].Detaljer.Count(d => d.Contains("notesync.exe")) >= 2 && samlet[0].Sikkerhet == Sikkerhet.Hoy
+              && sm._funn.Values.Any(f => f.Navn.EndsWith(": annet")), "svake spor etter samme program ble ikke ett funn");
+        // Programmer som startet og stoppet mens søket lyttet
+        var sk = new Skanner(regler);
+        var nbk = new NettBilde { Lyttere = new() };
+        var t0 = DateTime.Now.AddSeconds(-5);
+        nbk.Kortlivede.Add(new Kortlivet(5101, "ollama", @"C:\Users\a\AppData\Local\Programs\Ollama\ollama.exe", null, t0) { Borte = t0.AddSeconds(2) });
+        nbk.Kortlivede.Add(new Kortlivet(5102, "python", @"C:\Python\python.exe", "python -m vllm.entrypoints.openai.api_server", t0) { Borte = t0.AddSeconds(1) });
+        nbk.Kortlivede.Add(new Kortlivet(5103, "notepad", @"C:\Windows\notepad.exe", null, t0) { Borte = t0.AddSeconds(1) });
+        sk.KortlivedeProsesser(nbk);
+        Sjekk(sk._funn.Values.Any(f => f.Navn.StartsWith("Ollama") && f.Detaljer.Any(d => d.Contains("startet og stoppet under søket")) && f.Status == Tilstand.BruktFor)
+              && sk._funn.Values.Any(f => f.Detaljer.Any(d => d.Contains("vllm") || d.Contains("PID 5102") || d.Contains("startet og stoppet"))) && sk._funn.Count == 2,
+            "kortlivede prosesser med AI ble ikke funnet, eller et vanlig program ble funnet");
         return (ok, alle);
     }
 

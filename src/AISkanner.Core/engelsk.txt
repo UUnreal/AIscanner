@@ -1493,3 +1493,6 @@ Slått opp, programmet er ukjent:|Looked up, program unknown:
 Land fra leverandør · ingen tilkobling sett|Country from vendor · no connection seen
 Fastvare (BIOS):|Firmware (BIOS):
 Tjenester og drivere endret siste 7 dager:|Services and drivers changed in the last 7 days:
+Kjørte kort:|Ran briefly:
+startet og stoppet under søket|started and stopped during the scan
+~^Samme program \((.+)\): (\d+) spor slått sammen til ett funn$|Same program ($1): $2 traces merged into one finding

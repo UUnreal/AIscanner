@@ -13,6 +13,7 @@ internal sealed class NettBilde
     public Dictionary<IPAddress, List<string>> Dns = new();
     public List<string> DnsNavn = new();
     public Dictionary<int, (string Navn, string? Sti)> Prosesser = new();
+    public List<Kortlivet> Kortlivede = new();
     /// <summary>Målte byte per forbindelse, eller null når vi ikke kjører som administrator.</summary>
     public Dictionary<string, (long Ut, long Inn)>? Bytes;
     public double Sekunder;

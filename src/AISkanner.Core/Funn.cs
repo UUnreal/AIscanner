@@ -161,6 +161,32 @@ public sealed class Funn
             if (sist != null && (Sist == null || sist > Sist)) Sist = sist;
         }
     }
+
+    /// <summary>Tar inn alt et annet funn for samme program har sett: kilder, tilstander, styrke, trafikk og land.</summary>
+    public void SlaInn(Funn a)
+    {
+        List<string> d, h, adv, mer; List<Mal> t; List<string> st;
+        lock (a) { d = a.Detaljer.ToList(); h = a.Hvor.ToList(); adv = a.Advarsler.ToList(); mer = a.Merknader.ToList(); t = a.Trafikk.ToList(); st = a.SenderTil.ToList(); }
+        foreach (var x in d) Detalj(x);
+        foreach (var x in h) LeggTilHvor(x);
+        foreach (var x in adv) Advarsel(x);
+        lock (this)
+        {
+            foreach (var x in mer) if (!Merknader.Contains(x)) Merknader.Add(x);
+            foreach (var x in t) if (!Trafikk.Contains(x)) Trafikk.Add(x);
+            foreach (var x in st) if (!SenderTil.Contains(x)) SenderTil.Add(x);
+            Land ??= a.Land;
+            OpprinnelseLand ??= a.OpprinnelseLand;
+            Bruk ??= a.Bruk;
+        }
+        Merk(a.Tilstander);
+        Interlocked.Add(ref _sterke, Volatile.Read(ref a._sterke));
+        Interlocked.Add(ref _svake, Volatile.Read(ref a._svake));
+        LeggTilModeller(a.Modeller);
+        LeggTilInnebygde(a.Innebygde);
+        Tidspunkt(a.Forst, a.Sist);
+        Risiko = RisikoTekst.Hoyeste(Risiko, a.Risiko);
+    }
 }
 
 /// <summary>

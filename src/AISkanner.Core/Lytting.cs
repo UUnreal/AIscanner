@@ -17,6 +17,10 @@ internal sealed class Lyttevindu : IDisposable
     private readonly Dictionary<int, (string Navn, string? Sti)> _prosesser = new();
     private readonly HashSet<int> _ukjentPid = new();
     private readonly Dictionary<string, (long Ut, long Inn)> _bytes = new();
+    // Prosesser som starter og stopper mens vinduet er åpent (kortlivede): sett hvert halve sekund
+    private HashSet<int>? _vedStart;
+    private readonly Dictionary<int, Kortlivet> _nye = new();
+    private readonly bool _lesLinjer;
     private readonly Datamaling? _maling;
     private readonly CancellationTokenSource _stopp = new();
     private readonly Stopwatch _klokke = Stopwatch.StartNew();
@@ -24,23 +28,26 @@ internal sealed class Lyttevindu : IDisposable
     public int Avlesninger { get; private set; }
     public double Sekunder => _klokke.Elapsed.TotalSeconds;
 
-    private Lyttevindu(Datamaling? maling)
+    private Lyttevindu(Datamaling? maling, bool lesLinjer)
     {
         _maling = maling;
+        _lesLinjer = lesLinjer;
         _lop = Task.Run(Lop);
     }
 
-    public static Lyttevindu Start(Datamaling? maling) => new(maling);
+    public static Lyttevindu Start(Datamaling? maling, bool lesLinjer = false) => new(maling, lesLinjer);
 
     private async Task Lop()
     {
         var sistDns = TimeSpan.FromSeconds(-10);
         var sistBytes = TimeSpan.Zero;
+        var sistPid = TimeSpan.FromSeconds(-10);
         while (!_stopp.IsCancellationRequested)
         {
             try
             {
                 Les();
+                if (_klokke.Elapsed - sistPid >= TimeSpan.FromMilliseconds(500)) { LesPider(); sistPid = _klokke.Elapsed; }
                 if (_klokke.Elapsed - sistDns >= TimeSpan.FromSeconds(2)) { LesDns(); sistDns = _klokke.Elapsed; }
                 if (_maling != null && _klokke.Elapsed - sistBytes >= TimeSpan.FromSeconds(1)) { LesBytes(); sistBytes = _klokke.Elapsed; }
             }
@@ -82,6 +89,36 @@ internal sealed class Lyttevindu : IDisposable
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Nye prosesser siden vinduet åpnet: navn, programfil og (for tolkere, når IT tillater det) kommandolinja leses
+    /// første gang de ses, mens de ennå kjører. Kommandolinja holdes bare i minnet og vises aldri.
+    /// </summary>
+    private void LesPider()
+    {
+        var naa = DateTime.Now;
+        Process[] alle;
+        try { alle = Process.GetProcesses(); } catch { return; }
+        var pider = new HashSet<int>();
+        foreach (var p in alle)
+        {
+            using (p)
+            {
+                pider.Add(p.Id);
+                if (_vedStart == null || _vedStart.Contains(p.Id) || p.Id <= 4 || Plattform.ErEgen(p.Id)) continue;
+                lock (_nye)
+                {
+                    if (_nye.TryGetValue(p.Id, out var k)) { k.Sist = naa; continue; }
+                    string? sti = null, linje = null;
+                    try { sti = ProsessSti.Hent(p); } catch { }
+                    if (_lesLinjer && Kommandolinje.ErTolk(p.ProcessName)) linje = Kommandolinje.Les(p.Id);
+                    _nye[p.Id] = new Kortlivet(p.Id, p.ProcessName, sti, linje, naa) { Sist = naa };
+                }
+            }
+        }
+        if (_vedStart == null) { _vedStart = pider; return; }
+        lock (_nye) foreach (var k in _nye.Values) if (k.Borte == null && !pider.Contains(k.Pid)) k.Borte = naa;
     }
 
     private void LesDns()
@@ -134,6 +171,7 @@ internal sealed class Lyttevindu : IDisposable
                 Dns = _dns.ToDictionary(x => x.Key, x => x.Value.ToList()),
                 DnsNavn = _dnsNavn.ToList(),
                 Prosesser = new Dictionary<int, (string, string?)>(_prosesser),
+                Kortlivede = Kortlivede(),
                 Bytes = _maling != null ? new Dictionary<string, (long, long)>(_bytes) : null,
                 Sekunder = _maling?.Sekunder ?? 0,
                 Tider = _sett.ToDictionary(x => x.Key, x => (x.Value.Forst, x.Value.Sist)),
@@ -147,6 +185,8 @@ internal sealed class Lyttevindu : IDisposable
             return nb;
         }
     }
+
+    private List<Kortlivet> Kortlivede() { lock (_nye) return _nye.Values.Where(k => k.Borte != null).ToList(); }
 
     public void Dispose() { _stopp.Cancel(); _stopp.Dispose(); }
 }
@@ -211,4 +251,16 @@ public sealed class Folger : IDisposable
     }
 
     public void Dispose() => _maling?.Dispose();
+}
+
+/// <summary>En prosess som startet og stoppet mens søket lyttet.</summary>
+internal sealed class Kortlivet(int pid, string navn, string? sti, string? linje, DateTime sett)
+{
+    public int Pid { get; } = pid;
+    public string Navn { get; } = navn;
+    public string? Sti { get; } = sti;
+    public string? Linje { get; } = linje;
+    public DateTime Sett { get; } = sett;
+    public DateTime Sist { get; set; }
+    public DateTime? Borte { get; set; }
 }

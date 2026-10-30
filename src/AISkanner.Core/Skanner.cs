@@ -90,7 +90,7 @@ public sealed partial class Skanner
         Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
         var maling = TestNett == null ? Datamaling.Start() : null;
         // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
-        var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling) : null;
+        var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling, Kommandolinje.Tillatt(_regler, out _)) : null;
         // Adressene til kjente AI-tjenester slås opp mens søket går, så nettleserens egne oppslag (DoH) kan kjennes igjen
         _nettleserVerter = null;
         _aiIp = TestNett == null && Plattform.ErWindows
@@ -162,9 +162,11 @@ public sealed partial class Skanner
             LyttetSekunder = nb.LytteSekunder;
             Trafikk(nb);
             InnTilAiServer(nb);
+            KortlivedeProsesser(nb);
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
+        SlaSammenSpor();
         Risikoregler.Bruk(_funn.Values, _regler);
         // Stoppet antivirus noe av det vi leste? Defender skriver det i sin egen logg.
         Tilgangslogg.Sjekk.Value = "Antivirus";
@@ -228,6 +230,8 @@ public sealed partial class Skanner
                 LyttetSekunder = nb.LytteSekunder;
                 Trafikk(nb);
                 InnTilAiServer(nb);
+                KortlivedeProsesser(nb);
+                SlaSammenSpor();
                 Risikoregler.Bruk(_funn.Values, _regler);
                 Tilgangslogg.Sjekk.Value = null;
                 lock (Tider) Tider["Ser hvor AI sender data"] = Tider.TryGetValue("Ser hvor AI sender data", out var f) ? f + tid.Elapsed : tid.Elapsed;

@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.35.0] - 2026-10-30
+
+### Lagt til
+
+- Kortlivede prosesser: mens søket lytter, leses prosesslista hvert halve sekund. Programmer som starter og stopper i den tiden, sjekkes med de samme reglene (tolkere med kommandolinja i minnet når IT tillater det). Detaljen viser tidsrommet og PID.
+
+### Endret
+
+- Svake spor etter samme ukjente program (DNS-hendelse, tilkobling, AI-biblioteker, modeller i mappa) blir ett funn. Hvert spor står fortsatt under «Funnet her», og flere uavhengige spor gir høyere treffsikkerhet.
+
 ## [2.34.0] - 2026-10-30
 
 ### Endret
