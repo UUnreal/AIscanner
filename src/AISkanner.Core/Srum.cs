@@ -41,7 +41,7 @@ public sealed partial class Skanner
         var nett = db.Finn(SrumNett);
         if (idTab == null || nett == null)
         {
-            SrumStatus = "SRUM: tabellene for nettbruk finnes ikke i denne databasen";
+            SrumStatus = $"SRUM: tabellene for nettbruk finnes ikke i denne databasen (sider {db.Side / 1024} kB, {db.Tabeller.Count()} tabeller lest: {string.Join(", ", db.Tabeller.Select(t => t.Navn).Take(12))}; {db.SiderLest} sider, {db.Feil} feil)";
             Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus);
             return;
         }
