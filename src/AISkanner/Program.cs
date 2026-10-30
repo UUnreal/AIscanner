@@ -141,6 +141,29 @@ internal static class Program
             Console.WriteLine(utenKilde.Count == 0 ? "Kilder: hvert funn har kilde" : "Kilder FEIL: " + string.Join(" | ", utenKilde));
             feil |= utenKilde.Count > 0;
 
+            // UDP fra Windows' nettverkshendelser: ett testdatagram til en dokumentasjonsadresse (TEST-NET-1, rutes ikke) skal sees
+            // med riktig program, adresse og port. Bare i testen; programmet selv sender aldri noe slikt.
+            using (var etw = NettEtw.Start(out var etwGrunn))
+            {
+                if (etw == null) { Console.WriteLine("UDP-hendelser: FEIL, " + etwGrunn); feil = true; }
+                else
+                {
+                    using (var u = new System.Net.Sockets.UdpClient())
+                        for (int i = 0; i < 3; i++) { u.Send(new byte[32], 32, "192.0.2.1", 3478); Thread.Sleep(300); }
+                    NettEtw.Strom? sett = null;
+                    for (int i = 0; i < 20 && sett == null; i++)
+                    {
+                        Thread.Sleep(250);
+                        sett = etw.Strommer().FirstOrDefault(s => s.Ip.ToString() == "192.0.2.1");
+                    }
+                    var egenPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+                    bool riktig = sett != null && sett.Port == 3478 && sett.Pid == egenPid && sett.Ut >= 32;
+                    Console.WriteLine($"UDP-hendelser: {(riktig ? "OK" : "FEIL")}, {etw.Hendelser} UDP-hendelser, {etw.Strommer().Count} strømmer" +
+                        (sett != null ? $", testdatagram sett: pid {sett.Pid} (egen {egenPid}), port {sett.Port}, {sett.Ut} byte ut" : ", testdatagrammet ble ikke sett"));
+                    feil |= !riktig;
+                }
+            }
+
             // WebView2: begge DLL-ene og WebView2Loader.dll (runtimes\win-x64\native) lastes
             using (var vindu = new Microsoft.Web.WebView2.WinForms.WebView2()) { }
             try { Console.WriteLine("WebView2: " + Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()); }

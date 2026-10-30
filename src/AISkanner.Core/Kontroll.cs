@@ -393,6 +393,57 @@ public sealed partial class Skanner
     }
 
     /// <summary>Status, treffsikkerhet og godkjenning per funn.</summary>
+    /// <summary>Nettverk: UDP-hendelser tolkes riktig, porter og kryptert DNS kjennes igjen, lyttende AI-porter og kildene.</summary>
+    private static (int Ok, int Alle) ProtokollKontroll(Regelsett regler, StringBuilder sb)
+    {
+        int ok = 0, alle = 0;
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Protokoller: {hva}"); }
+        var egen = IPAddress.Parse("192.168.1.10");
+        static byte[] V4(int pid, int str, IPAddress a, IPAddress b, int pa, int pb)
+        {
+            var d = new byte[28];
+            BitConverter.GetBytes(pid).CopyTo(d, 0); BitConverter.GetBytes(str).CopyTo(d, 4);
+            a.GetAddressBytes().CopyTo(d, 8); b.GetAddressBytes().CopyTo(d, 12);
+            d[16] = (byte)(pa >> 8); d[17] = (byte)pa; d[18] = (byte)(pb >> 8); d[19] = (byte)pb;
+            return d;
+        }
+        var e = NettEtw.ForTest(egen);
+        var fjern = IPAddress.Parse("104.18.32.47");
+        e.Legg(42, V4(77, 1200, fjern, egen, 443, 50000), DateTime.Now);
+        e.Legg(43, V4(77, 800, egen, fjern, 50000, 443), DateTime.Now);
+        e.Legg(42, V4(78, 100, IPAddress.Loopback, IPAddress.Loopback, 9, 50001), DateTime.Now);
+        var v6 = new byte[52];
+        BitConverter.GetBytes(79).CopyTo(v6, 0); BitConverter.GetBytes(300).CopyTo(v6, 4);
+        IPAddress.Parse("2606:4700::6810:202f").GetAddressBytes().CopyTo(v6, 8); IPAddress.Parse("fe80::1").GetAddressBytes().CopyTo(v6, 24);
+        v6[40] = 0x0D; v6[41] = 0x96;   // 3478
+        e.Legg(58, v6, DateTime.Now);
+        var st = e.Strommer();
+        var q = st.FirstOrDefault(x => x.Pid == 77);
+        Sjekk(q != null && q.Ip.Equals(fjern) && q.Port == 443 && q.Ut == 1200 && q.Inn == 800 && q.Datagram == 2, "UDP sendt og mottatt blir én strøm med motpart, port og mengde");
+        Sjekk(!st.Any(x => x.Pid == 78), "trafikk bare på PC-en (loopback) telles ikke");
+        Sjekk(st.Any(x => x.Pid == 79 && x.Port == 3478), "IPv6-hendelse tolkes (port i nettverksrekkefølge)");
+        Sjekk(NettProtokoll.Udp(443) == "QUIC (HTTP/3)" && NettProtokoll.Udp(3478).StartsWith("STUN") && NettProtokoll.Udp(53) == "DNS" && NettProtokoll.Udp(4791).StartsWith("RoCE"), "UDP-porter navngis");
+        Sjekk(NettProtokoll.KryptertDns(IPAddress.Parse("1.1.1.1"), 443, true) == "DNS over HTTPS (Cloudflare)" && NettProtokoll.KryptertDns(IPAddress.Parse("8.8.8.8"), 853, true) == "DNS over TLS (Google)"
+              && NettProtokoll.KryptertDns(IPAddress.Parse("104.18.32.47"), 443, true) == null, "DoH og DoT mot kjente DNS-servere, vanlig 443 ikke");
+        Sjekk(NettProtokoll.VisLytter(11434, false, "x", false) && NettProtokoll.VisLytter(8080, false, "python", false) && !NettProtokoll.VisLytter(8080, false, "nginx", false)
+              && NettProtokoll.VisLytter(4791, true, "x", false) && !NettProtokoll.VisLytter(5000, true, "x", false), "lyttende porter: AI-porter og tolkere vises, vanlig webserver ikke");
+        var s = new Skanner(regler);
+        var nb = new NettBilde
+        {
+            Prosesser = { [9301] = ("ollama", @"C:\Program Files\Ollama\ollama.exe"), [9302] = ("python", @"C:\Python\python.exe"), [9303] = ("nginx", @"C:\nginx\nginx.exe") },
+            Lyttere = new() { new TcpTabell.Lytter(IPAddress.Any, 11434, 9301), new TcpTabell.Lytter(IPAddress.IPv6Any, 11434, 9301), new TcpTabell.Lytter(IPAddress.Loopback, 7860, 9302), new TcpTabell.Lytter(IPAddress.Any, 8080, 9303) },
+        };
+        s.TestNett = () => nb;
+        using var v = new Nettverkvisning(s);
+        var b = v.Les();
+        var ol = b.Lyttere?.FirstOrDefault(l => l.Port == 11434);
+        Sjekk(ol != null && ol.Apen && ol.Adresse == "0.0.0.0, ::" && b.Lyttere!.Count(l => l.Port == 11434) == 1, "Ollama på 0.0.0.0 og :: blir én rad, åpen mot nettet");
+        Sjekk(b.Lyttere!.Any(l => l.Port == 7860 && !l.Apen) && !b.Lyttere!.Any(l => l.Port == 8080), "python på 127.0.0.1:7860 bare lokal, nginx på 8080 vises ikke");
+        Sjekk(b.Kilder != null && b.Kilder.Any(k => k.Navn.StartsWith("UDP-trafikk") && k.Utfall.StartsWith("kunne ikke leses")) && b.Kilder.Any(k => k.Utfall.StartsWith("aldri lest: personvern")),
+            "Datagrunnlag i Nettverk sier hva som ikke ble lest og hvorfor");
+        return (ok, alle);
+    }
+
     private static (int Ok, int Alle) StatusKontroll(Regelsett regler, StringBuilder sb)
     {
         int ok = 0, alle = 0;
@@ -611,7 +662,10 @@ public sealed partial class Skanner
             var (stOk, stAlle) = StatusKontroll(regler, sb);
             ok += stOk;
             sb.AppendLine($"{(stOk == stAlle ? "OK  " : "FEIL")}  Status, treffsikkerhet og godkjenning: {stOk} av {stAlle} riktige (kjører nå, brukt før, høy, middels, lav, godkjent, blokkert)");
-            int alle = Kontrollspor.Length + 4 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle;
+            var (prOk, prAlle) = ProtokollKontroll(regler, sb);
+            ok += prOk;
+            sb.AppendLine($"{(prOk == prAlle ? "OK  " : "FEIL")}  Nettverk og protokoller: {prOk} av {prAlle} riktige (UDP-strømmer fra Windows' hendelser, QUIC/STUN/DNS, DoH/DoT, lyttende AI-porter på 0.0.0.0, datagrunnlag)");
+            int alle = Kontrollspor.Length + 4 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

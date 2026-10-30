@@ -36,6 +36,15 @@ public static class TcpTabell
     public static Dictionary<int, int> UdpPerProgram()
     {
         var svar = new Dictionary<int, int>();
+        foreach (var l in UdpLyttere())
+            if (!LokaleUdp.Contains(l.Port)) svar[l.Pid] = svar.TryGetValue(l.Pid, out var n) ? n + 1 : 1;
+        return svar;
+    }
+
+    /// <summary>Alle åpne UDP-porter med adresse og eier. Bare lokal side: UDP-tabellen sier ikke hvor det sendes.</summary>
+    public static List<Lytter> UdpLyttere()
+    {
+        var svar = new List<Lytter>();
         if (!Plattform.ErWindows) return svar;
         foreach (var familie in new[] { AF_INET, AF_INET6 })
         {
@@ -53,9 +62,10 @@ public static class TcpTabell
                 var rad = buf + 4;
                 for (int i = 0; i < antall; i++, rad += str)
                 {
-                    if (LokaleUdp.Contains(Port((uint)Marshal.ReadInt32(rad, portVed)))) continue;
-                    int pid = Marshal.ReadInt32(rad, pidVed);
-                    svar[pid] = svar.TryGetValue(pid, out var n) ? n + 1 : 1;
+                    IPAddress adr;
+                    if (familie == AF_INET) adr = new IPAddress((uint)Marshal.ReadInt32(rad));
+                    else { var b = new byte[16]; Marshal.Copy(rad, b, 0, 16); adr = new IPAddress(b); }
+                    svar.Add(new Lytter(adr, Port((uint)Marshal.ReadInt32(rad, portVed)), Marshal.ReadInt32(rad, pidVed)));
                 }
             }
             finally { Marshal.FreeHGlobal(buf); }

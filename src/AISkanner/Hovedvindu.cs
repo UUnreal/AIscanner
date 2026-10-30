@@ -565,9 +565,14 @@ public sealed class Hovedvindu : Form
                 {
                     type = "nettdata", admin = visning.MalerData, tid = b.Tid.ToString("HH:mm:ss"), ut = b.UtPerSek, inn = b.InnPerSek, andre = b.AndreForbindelser, andreNettleser = b.AndreNettleser,
                     udp = b.UdpHint.Select(u => new { program = u.Program, porter = u.Porter, nettleser = u.Nettleser }),
+                    etw = b.Kilder?.Any(k => k.Navn.StartsWith("UDP-trafikk") && k.Utfall == "lest") == true,
+                    lyttere = (b.Lyttere ?? new()).Select(l => new { program = l.Program, pid = l.Pid, port = l.Port, udp = l.ErUdp, adresse = l.Adresse, apen = l.Apen, hva = T(l.Hva), ai = T(l.Ai) }),
+                    udpTyper = (b.UdpTyper ?? new()).Select(u => new { hva = T(u.Hva), n = u.Strommer, programmer = u.Programmer, ut = u.Ut, inn = u.Inn }),
+                    kryptertDns = (b.KryptertDns ?? new()).Select(T),
+                    kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj) }),
                     rader = b.Rader.Select(r => new
                     {
-                        nokkel = $"{r.Pid}|{r.Tjeneste}", program = r.Program, sti = r.Sti, pid = r.Pid, tjeneste = r.Tjeneste, vert = r.Vert,
+                        nokkel = $"{r.Pid}|{r.Tjeneste}|{r.Protokoll}", proto = T(r.Protokoll), program = r.Program, sti = r.Sti, pid = r.Pid, tjeneste = r.Tjeneste, vert = r.Vert,
                         land = T(r.Cdn != null ? $"Skjult bak {r.Cdn}" : r.Land != null ? IpLand.Navn(r.Land) : r.AlleLand.Count > 1 ? $"{r.AlleLand.Count} land" : null),
                         eier = r.EierLand == null ? null : T(IpLand.Navn(r.EierLand)),
                         ipEiere = r.IpEiere,

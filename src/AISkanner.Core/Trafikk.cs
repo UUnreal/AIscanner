@@ -23,6 +23,7 @@ internal sealed class NettBilde
     public int Avlesninger;
     /// <summary>Lyttende porter. Null: leses fra Windows når de trengs.</summary>
     public List<TcpTabell.Lytter>? Lyttere;
+    public List<TcpTabell.Lytter>? UdpLyttere;
 
     public static NettBilde Hent(Datamaling? maling)
     {

@@ -387,6 +387,8 @@
   .nettRad.hode { color: var(--dempet); font: 600 var(--t12); padding-top: 0 !important; cursor: default; }
   .nettRad.hode::before { display: none; }
   .nettListe .mer { color: var(--dempet); padding: 6px 4px; }
+  .nettFaner { margin: 10px 0 4px; align-self: flex-start; } .nettFaner .ant { color: var(--dempet); font-weight: 400; } .nettFaner .ant.fare { color: var(--rod-tekst); font-weight: 600; }
+  .fareTekst { color: var(--rod-tekst) !important; }
   #nettDl { margin-top: 0; }
 
   @media (max-width: 760px) {
@@ -708,7 +710,7 @@ function folgGraf(id) {
     ? `<span class="ut">${L("Sendt", "Sent")} <b>${fart(sist.ut)}</b></span><span class="inn">${L("Mottatt", "Received")} <b>${fart(sist.inn)}</b></span><span>${L("Topp", "Peak")} ${fart(maks)}</span>`
     : `<span>${L("Datamengde krever administrator. Viser antall forbindelser.", "Data volume requires administrator. Showing number of connections.")}</span>`;
   const til = sist.n ? `${sist.n} ${sist.n === 1 ? L("forbindelse", "connection") : L("forbindelser", "connections")}${sist.til.length ? " · " + sist.til.map(esc).join(", ") : ""}` : L("Ingen åpne forbindelser nå", "No open connections now");
-  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${til}</span><span>${L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
+  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${til}</span><span>${nett.etw ? L("TCP og UDP · siste 2 min · lagres ikke", "TCP and UDP · last 2 min · not saved") : L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
 }
 function settFolg(f, pa) {
   if (pa) folg[f.id] = folg[f.id] || { p: [], admin: false }; else delete folg[f.id];
@@ -717,15 +719,15 @@ function settFolg(f, pa) {
 }
 
 // ---------- Nettverk: hvem som snakker med AI-tjenester akkurat nå (live, bare mens visningen er åpen) ----------
-let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {};
+let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {}, nettFane = "forb";
 function apneNett() {
-  valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
+  valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nettFane = "forb"; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
   visArk("full"); tegnNett(); send({ type: "nettverk", pa: true });
 }
 function stoppNett() { if (!nettApen) return; nettApen = false; send({ type: "nettverk", pa: false }); merkMeny(); }
 function mottaNett(m) {
   if (!nettApen) return;
-  nett.admin = m.admin; nett.andre = m.andre; nett.andreNettleser = m.andreNettleser || 0; nett.udp = m.udp || []; nett.rader = m.rader || []; nett.tid = m.tid;
+  nett.admin = m.admin; nett.andre = m.andre; nett.andreNettleser = m.andreNettleser || 0; nett.udp = m.udp || []; nett.rader = m.rader || []; nett.tid = m.tid; nett.etw = m.etw; nett.lyttere = m.lyttere || []; nett.udpTyper = m.udpTyper || []; nett.kryptertDns = m.kryptertDns || []; nett.kilder = m.kilder || [];
   nett.p.push({ ut: m.ut, inn: m.inn, n: nett.rader.reduce((a, r) => a + r.n, 0) });
   if (nett.p.length > 120) nett.p.shift();
   const sett = new Set();
@@ -747,7 +749,7 @@ function nettGraf(p, admin, tittel) {
   const tekst = admin
     ? `<span><b>${esc(tittel)}</b></span><span class="ut">${L("Sendt", "Sent")} <b>${fart(sist.ut)}</b></span><span class="inn">${L("Mottatt", "Received")} <b>${fart(sist.inn)}</b></span><span>${L("Topp", "Peak")} ${fart(maks)}</span>`
     : `<span><b>${esc(tittel)}</b></span><span>${tall(sist.n)} ${sist.n === 1 ? L("forbindelse", "connection") : L("forbindelser", "connections")}</span><span>${L("Datamengde krever administrator. Viser antall forbindelser.", "Data volume requires administrator. Showing number of connections.")}</span>`;
-  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
+  return `<div class="folgGraf">${svg}<div class="folgTekst">${tekst}<span>${nett.etw ? L("TCP og UDP · siste 2 min · lagres ikke", "TCP and UDP · last 2 min · not saved") : L("Bare TCP · siste 2 min · lagres ikke", "TCP only · last 2 min · not saved")}</span></div></div>`;
 }
 function tegnNett() {
   merkMeny();
@@ -762,16 +764,18 @@ function tegnNett() {
       <span class="prog"><i></i><b>${esc(r.program)}</b><small>${r.kjent ? esc(r.nettleser || r.ai || L("kjent fra søket", "known from the scan")) : r.ai ? L("Ukjent AI-spor", "Unknown AI trace") : L("Ukjent program", "Unknown program")}</small></span>
       ${r.uavklart
         ? `<span>${L("Kan ikke avgjøre", "Cannot tell")}<small>${esc(r.vert || L("adressen har ikke noe navn i DNS-bufferen", "the address has no name in the DNS cache"))}</small></span>`
-        : `<span>${esc(r.tjeneste)}<small>${esc(r.vert || "")}</small></span>`}
+        : `<span>${esc(r.tjeneste)}<small>${esc([r.proto && r.proto !== "TCP" ? r.proto : "", r.vert || ""].filter(Boolean).join(" · "))}</small></span>`}
       <span class="${r.farlig ? "fare" : ""}">${esc(r.land || L("ukjent", "unknown"))}${r.eier && r.eier !== r.land ? `<small>${L("selskap", "company")}: ${esc(r.eier)}</small>` : ""}${(r.ipEiere || []).length ? `<small title="${esc(r.ipEiere.join("\n") + "\n" + L("Eier fra offentlige rutetabeller (OSINT), ikke målt", "Owner from public routing tables (OSINT), not measured"))}">${esc(r.ipEiere[0])}${r.ipEiere.length > 1 ? ` +${r.ipEiere.length - 1}` : ""}</small>` : ""}</span>
       <span class="tall">${tall(r.n)}</span><span class="tall">${fart(r.ut)}</span><span class="tall">${fart(r.inn)}</span></li>`;
   const kolonner = `<li class="nettRad hode"><span>${L("Program", "Program")}</span><span>${L("AI-tjeneste", "AI service")}</span><span>${L("Land", "Country")}</span><span class="tall">${L("Forb.", "Conn.")}</span><span class="tall">${L("Sendt", "Sent")}</span><span class="tall">${L("Mottatt", "Received")}</span></li>`;
   // Tom liste: si nøyaktig hva det betyr, ikke mer
   const tom = `<li class="mer">${nett.tid
-    ? L("Ingen programmer har TCP-forbindelser til kjente AI-tjenester akkurat nå. AI-nettsteder fra nettleserhistorikken trenger ikke være åpne nå.",
-        "No programs have TCP connections to known AI services right now. AI sites from the browser history need not be open now.")
+    ? (nett.etw ? L("Ingen programmer har TCP- eller UDP-trafikk til kjente AI-tjenester akkurat nå. AI-nettsteder fra nettleserhistorikken trenger ikke være åpne nå.",
+        "No programs have TCP or UDP traffic to known AI services right now. AI sites from the browser history need not be open now.")
+      : L("Ingen programmer har TCP-forbindelser til kjente AI-tjenester akkurat nå. AI-nettsteder fra nettleserhistorikken trenger ikke være åpne nå.",
+        "No programs have TCP connections to known AI services right now. AI sites from the browser history need not be open now."))
     : L("Leser…", "Reading…")}</li>`;
-  const udp = (nett.udp || []).length
+  const udp = !nett.etw && (nett.udp || []).length
     ? " " + L("Åpne UDP-porter (kan være QUIC/HTTP/3, vises ikke her): ", "Open UDP ports (may be QUIC/HTTP/3, not shown here): ") + nett.udp.slice(0, 5).map(u => `${u.program} ${u.porter}`).join(", ") + "."
     : "";
   const andre = nett.andre
@@ -801,10 +805,29 @@ function tegnNett() {
       [`PID ${pi.pid}`, pi.startet ? L(`startet ${pi.startet}`, `started ${pi.startet}`) : "", signatur(pi), pi.selskap && pi.selskap !== pi.signert ? L(`filinfo: ${pi.selskap}`, `file info: ${pi.selskap}`) : ""].filter(Boolean).join(" · "),
       pi.sti, ingenSti)
     + forelder(pi);
-  d.innerHTML = hode + `<div class="nettTopp">${graf}</div>`
-    + `<ul class="nettListe">${kolonner}</ul><div class="dl" id="nettDl"><ul class="nettListe" id="nettUl">${vistRader.length ? vistRader.map(rad).join("") : tom}</ul>`
-    + (valgtRad ? `<h3>${L("Prosessen", "The process")}</h3><ul id="nettProsess">${prosessLinjer}</ul>` : "") + `</div>`
-    + `<div class="avLinje ikke boks">${esc(L("Bare TCP.", "TCP only.") + udp + (andre ? " " + andre : "") + " " + L("Ikke noe innhold leses, ingenting lagres.", "No content is read, nothing is saved."))}</div>`;
+  const apne = (nett.lyttere || []).filter(l => l.apen).length;
+  const nf = [["forb", L("Forbindelser", "Connections"), nett.rader.length], ["lytt", L("Lyttende AI-porter", "Listening AI ports"), (nett.lyttere || []).length, apne],
+    ["udp", "UDP", nett.etw ? (nett.udpTyper || []).reduce((a, x) => a + x.n, 0) : null], ["dg", L("Datagrunnlag", "Data basis"), (nett.kilder || []).length]];
+  const faner = `<div class="bryter nettFaner">${nf.map(f => `<button data-nf="${f[0]}" class="${nettFane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? ` <span class="ant${f[3] ? " fare" : ""}">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>`;
+  const linje = (tittel, meta, under, fare) => `<li class="sted"><div><div class="l1"><b>${esc(tittel)}</b>${meta ? `<small>${esc(meta)}</small>` : ""}</div><div class="l2${fare ? " fareTekst" : ""}">${esc(under || "")}</div></div></li>`;
+  let innhold;
+  if (nettFane === "lytt") innhold = `<ul>${(nett.lyttere || []).length ? nett.lyttere.map(l => linje(`${l.program} · ${l.udp ? "UDP" : "TCP"} ${l.port}`, [`PID ${l.pid}`, l.hva, l.ai || ""].filter(Boolean).join(" · "),
+      `${L("Lytter på", "Listening on")} ${l.adresse} · ${l.apen ? L("åpen mot nettet: kan nås fra andre maskiner", "open to the network: reachable from other machines") : L("bare denne PC-en", "this PC only")}`, l.apen)).join("")
+    : `<li class="mer">${nett.tid ? L("Ingen programmer lytter på porter AI-servere bruker.", "No programs listen on ports AI servers use.") : L("Leser…", "Reading…")}</li>`}</ul>`;
+  else if (nettFane === "udp") innhold = !nett.etw
+    ? `<ul><li class="mer">${esc(((nett.kilder || []).find(k => /^UDP-trafikk|^UDP traffic/.test(k.navn)) || {}).utfall || L("UDP-trafikk krever administrator.", "UDP traffic requires administrator."))}</li></ul>`
+      + ((nett.udp || []).length ? `<ul>${nett.udp.map(u => linje(u.program, L(`${u.porter} åpne UDP-porter`, `${u.porter} open UDP ports`), L("Bare lokal port: hvor det sendes, krever administrator", "Local port only: where it is sent requires administrator"))).join("")}</ul>` : "")
+    : `<ul>${(nett.udpTyper || []).length ? nett.udpTyper.map(u => linje(u.hva, `${tall(u.n)} ${u.n === 1 ? L("strøm", "stream") : L("strømmer", "streams")} · ${tall(u.programmer)} ${u.programmer === 1 ? L("program", "program") : L("programmer", "programs")}`, nett.admin ? `${L("Sendt", "Sent")} ${fart(u.ut)} · ${L("Mottatt", "Received")} ${fart(u.inn)}` : "")).join("")
+      : `<li class="mer">${L("Ingen UDP-trafikk til andre maskiner siste 10 sekunder.", "No UDP traffic to other machines in the last 10 seconds.")}</li>`}`
+      + (nett.kryptertDns || []).map(x => linje(x, L("kryptert DNS", "encrypted DNS"), L("Navnene som slås opp slik, kommer ikke i DNS-bufferen", "Names looked up this way do not reach the DNS cache"))).join("") + `</ul>`;
+  else if (nettFane === "dg") innhold = `<ul>${(andre ? [linje(L("Andre forbindelser", "Other connections"), tall(nett.andre), andre)] : []).concat(udp ? [linje(L("Åpne UDP-porter", "Open UDP ports"), "", udp.trim())] : [])
+      .concat((nett.kilder || []).map(k => linje(k.navn, k.n != null ? tall(k.n) : "", `${k.utfall}${k.detalj ? " · " + k.detalj : ""}`, !k.lest && !k.aldri))).join("")}</ul>`;
+  else innhold = `<ul class="nettListe" id="nettUl">${vistRader.length ? vistRader.map(rad).join("") : tom}</ul>`
+    + (valgtRad ? `<h3>${L("Prosessen", "The process")}</h3><ul id="nettProsess">${prosessLinjer}</ul>` : "");
+  d.innerHTML = hode + `<div class="nettTopp">${graf}</div>` + faner
+    + (nettFane === "forb" ? `<ul class="nettListe">${kolonner}</ul>` : "") + `<div class="dl" id="nettDl">${innhold}</div>`
+    + `<div class="avLinje ikke boks">${esc((nett.etw ? L("TCP og UDP.", "TCP and UDP.") : L("TCP; for UDP bare lokale porter (adresse krever administrator).", "TCP; for UDP local ports only (address requires administrator).")) + " " + L("Bare lesing: ingen tilkoblinger, ikke noe innhold, ingenting lagres.", "Read only: no connections, no content, nothing is saved."))}</div>`;
+  d.querySelectorAll("[data-nf]").forEach(b => b.onclick = () => { nettFane = b.dataset.nf; nettValgt = null; tegnNett(); });
   // Rader som ikke får plass, telles i stedet for å rulle
   const dl = $("nettDl"), ul = $("nettUl");
   const pu = $("nettProsess");
@@ -814,7 +837,7 @@ function tegnNett() {
     if (skjult) { const li = pu.lastElementChild; if (li) { li.remove(); skjult++; } pu.insertAdjacentHTML("beforeend", `<li class="mer">+ ${skjult} ${L("til", "more")}</li>`); }
   }
   d.querySelectorAll("#nettProsess .vis").forEach(b => b.onclick = e => { e.stopPropagation(); send({ type: "vis", sti: b.dataset.sti }); });
-  if (dl && ul && nett.rader.length && !valgtRad) {
+  if (dl && ul && nettFane === "forb" && nett.rader.length && !valgtRad) {
     const bunn = dl.getBoundingClientRect().bottom, lis = [...ul.children]; let skjult = 0;
     for (const li of lis) if (li.getBoundingClientRect().bottom > bunn + 1) { li.remove(); skjult++; }
     if (skjult) { const li = ul.lastElementChild; if (li) { li.remove(); skjult++; } ul.insertAdjacentHTML("beforeend", `<li class="mer">+ ${skjult} ${L("til", "more")}</li>`); }

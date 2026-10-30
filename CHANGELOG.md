@@ -29,6 +29,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.40.0] - 2026-10-30
+
+### Lagt til
+- Nettverk: UDP i sanntid per program fra Windows' egne nettverkshendelser (Microsoft-Windows-Kernel-Network, krever administrator): adresse, port og mengde for QUIC/HTTP/3 (443), STUN/TURN for WebRTC (3478), DNS (53), DNS over QUIC (853), RoCEv2 (4791) og høye porter. QUIC til AI-tjenester vises som egne rader. Aldri innhold, ingen fil, ingen driver; økten stoppes når visningen lukkes.
+- Nettverk: fanen «Lyttende AI-porter» (Ollama 11434, LM Studio 1234, Gradio 7860, vLLM/Triton 8000–8002, llama.cpp/Open WebUI 8080/3000, Text Generation WebUI 5000, Jupyter 8888, TensorFlow Serving 8500/8501, PyTorch 29500, UDP 4791). Rødt når porten lytter på 0.0.0.0 eller :: og kan nås fra andre maskiner. Vanlige porter vises bare for AI-programmer og tolkere.
+- Nettverk: DNS over HTTPS og DNS over TLS mot kjente DNS-servere kjennes igjen (forklarer forbindelser uten navn i DNS-bufferen).
+- Nettverk: fanen «Datagrunnlag» med hver kilde, antall og utfall: TCP-tabellen, lyttende porter, UDP-tabellen, UDP-hendelser, DNS-bufferen, datamengde, og det som aldri leses (navnet i TLS krever pakkefangst; innhold av personvern).
+- Kontroll og CI-lastetest for UDP-hendelsene (testdatagram til TEST-NET-1 skal sees med riktig program og port).
+
 ## [2.39.0] - 2026-10-30
 
 ### Endret

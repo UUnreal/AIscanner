@@ -1515,3 +1515,34 @@ SRUM (Windows' ressursbruk,|SRUM (Windows resource usage,
  → ingen IP i bufferen (navnet fantes ikke eller er utløpt)| → no IP in the cache (the name did not exist or has expired)
 ~^IP-eiere \(ASN\): (.+)\. Slått opp i programmet, ingen IP sendes ut\. Eier er registrerte data \(OSINT\), ikke målt; alt annet om tilkoblinger er målt under søket\.$|IP owners (ASN): $1. Looked up inside the program, no IP is sent out. Owner is registered data (OSINT), not measured; everything else about connections is measured during the scan.
   Adresse nå (skannerens oppslag, ikke sett under søket):|  Address now (the scanner's own lookup, not seen during the scan):
+
+# ---------- 2.40: Nettverk, UDP og datagrunnlag ----------
+~^standardport for (.+)$|default port for $1
+~^UDP · (.+)$|UDP · $1
+~^port (\d+)$|port $1
+~^(.+): DNS over HTTPS \((.+)\)$|$1: DNS over HTTPS ($2)
+høy port (f.eks. WebRTC-lyd/-video)|high port (e.g. WebRTC audio/video)
+tid (NTP)|time (NTP)
+TCP-tabellen (IPv4 og IPv6)|TCP table (IPv4 and IPv6)
+forbindelser ut nå, med program (PID) og adresse|outgoing connections now, with program (PID) and address
+Lyttende TCP-porter|Listening TCP ports
+porter programmer venter på tilkoblinger på, med adresse|ports programs wait for connections on, with address
+UDP-tabellen|UDP table
+åpne UDP-porter per program; Windows lagrer ikke hvor UDP sendes|open UDP ports per program; Windows does not record where UDP is sent
+UDP-trafikk (Windows' nettverkshendelser)|UDP traffic (Windows network events)
+~^strømmer siste 10 s med adresse, port og mengde; (\d+) UDP-hendelser lest, aldri innhold$|streams in the last 10 s with address, port and volume; $1 UDP events read, never content
+uten dette vises bare lokale UDP-porter, ikke hvor det sendes|without this only local UDP ports are shown, not where data is sent
+~^kunne ikke leses: (.+)$|could not be read: $1
+krever administrator (Windows gir bare administrator tilgang til nettverkshendelsene)|requires administrator (Windows only gives administrators access to network events)
+DNS-bufferen|DNS cache
+navn → IP, gir navn til adressene|name → IP, names the addresses
+Datamengde TCP (EStats)|TCP data volume (EStats)
+byte sendt og mottatt per forbindelse|bytes sent and received per connection
+krever administrator|requires administrator
+antall forbindelser vises i stedet|number of connections shown instead
+Navnet i krypteringen (TLS SNI)|The name in the encryption (TLS SNI)
+aldri lest: krever pakkefangst, som programmet aldri gjør|never read: requires packet capture, which the program never does
+navnene kommer fra DNS-bufferen|names come from the DNS cache
+Innholdet i trafikken|The content of the traffic
+aldri lest: personvern|never read: privacy
+ingen TLS-inspeksjon, ingen pakker fanges|no TLS inspection, no packets captured
