@@ -149,6 +149,12 @@
   .prikk.rod { background: var(--rod); } .prikk.gul { background: var(--gul); } .prikk.gronn { background: var(--gronn); }
   .prikk.ukjent { background: transparent; box-shadow: inset 0 0 0 2px var(--rod); }
   /* Funn, Nettverk og Datagrunnlag: tre likeverdige visninger */
+  .fanerad { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .azValg { font: inherit; font-weight: 600; color: var(--dempet); background: var(--fyll); border: 0; border-radius: var(--r1); padding: 0 12px; height: 32px; cursor: pointer; }
+  .azValg:hover { color: var(--tekst); }
+  .azValg.valgt { color: var(--tekst); background: var(--kort); box-shadow: inset 0 0 0 1px var(--linje), var(--skygge); }
+  .azValg:focus-visible { outline: 2px solid var(--bla); outline-offset: 2px; }
+  .kjort { margin-left: auto; font: var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .segment { display: inline-flex; background: var(--fyll); border-radius: var(--r1); padding: 2px; gap: 2px; align-self: flex-start; }
   .segment button { border: 0; background: none; color: var(--dempet); border-radius: 6px; padding: 5px 16px; font-weight: 600; cursor: pointer; }
   .segment button:hover { color: var(--tekst); }
@@ -449,7 +455,8 @@
       </div></div>
     <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div>
       </div>
-    <div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
+    <div class="fanerad"><div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
+      <button class="azValg" id="azValg" aria-pressed="false" title="Alfabetisk / Alphabetical">A–Å</button><span class="kjort" id="kjort"></span></div>
   </div>
   <div class="hoved" id="hoved">
     <div class="panel" id="listePanel">
@@ -586,6 +593,10 @@ function tegnFordeling() {
   });
   const lv = $("landValg");
   if (lv) lv.onclick = () => { sortering = sortering === "land" ? "risiko" : "land"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
+  const az = $("azValg");
+  az.classList.toggle("valgt", sortering === "navn"); az.setAttribute("aria-pressed", sortering === "navn");
+  az.onclick = () => { sortering = sortering === "navn" ? "risiko" : "navn"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
+  $("kjort").textContent = info.kjort ? L("Søket kjørt ", "Scan run ") + info.kjort : "";
 }
 
 function tegnBunn() {
@@ -627,6 +638,14 @@ const landListe = f => settLand(f).length
   ? PIL + settLand(f).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
   : (f.senderTil || []).length ? `<span class="ingen" title="${esc(L("Land fra leverandør, ingen tilkobling sett under søket", "Country from vendor, no connection seen during the scan"))}">${esc(f.senderTil.map(l => l.land).join(", "))}</span>`
   : erLokal(f) ? SKJERM + L("Lokalt", "Local") : `<span class="ingen">${esc(f.ingenLand || L("Ikke sett", "Not seen"))}</span>`;
+// Hva funnet er knyttet til: målt IP med eier, ellers tjenestens adresse nå (ikke sett), ellers denne PC-en (Høy og Ukjent)
+function kobling(f) {
+  const m = (f.trafikk || [])[0], ip = m && (m.ip || [])[0];
+  if (ip && typeof ip === "object") return `IP ${ip.ip}${ip.eier ? " · " + ip.eier : ""}`;
+  if ((f.oppslag || []).length) return f.oppslag[0] + " · " + L("ikke sett", "not seen");
+  if ((f.risiko === "rod" || f.risiko === "ukjent") && info.enhet) return L("Denne PC-en: ", "This PC: ") + info.enhet;
+  return "";
+}
 let sideDeling = [];
 function delSider() {
   const h = ($("liste").clientHeight || 400) - 12, sider = [];
@@ -663,7 +682,7 @@ function tegnListe() {
     r.className = "rad" + (f === valgt ? " valgt" : "");
     r.title = L("Trykk for detaljer", "Click for details");
     r.innerHTML = `<span class="prikk ${f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
-      <div class="l2" title="${esc(sortering === "land" ? kildeTekst(f) : f.lokasjon || "")}">${esc(sortering === "land" ? [f.lokasjon, kildeTekst(f)].filter(Boolean).join(" · ") : [f.status && f.status !== L("Finnes", "Present") ? f.status : "", f.type || GRUPPER[gruppeNr(f)][1](), f.lokasjon].filter(Boolean).join(" · "))}</div></div>
+      <div class="l2" title="${esc(sortering === "land" ? kildeTekst(f) : f.lokasjon || "")}">${esc(sortering === "land" ? [f.lokasjon, kildeTekst(f)].filter(Boolean).join(" · ") : [f.status && f.status !== L("Finnes", "Present") ? f.status : "", kobling(f) || f.type || GRUPPER[gruppeNr(f)][1](), f.sist ? L("sist ", "last ") + f.sist : ""].filter(Boolean).join(" · "))}</div></div>
       <div class="land${!(f.senderTil || []).length && erLokal(f) ? " lokalt" : ""}">${landListe(f)}</div><span class="pil">${CHEV}</span>`;
     r.onclick = () => valgt === f ? lukkArk() : apneArk(f);
     l.appendChild(r);
@@ -1343,7 +1362,7 @@ $("lagre").onclick = () => send({ type: "lagre" });
 // Funn, Nettverk og Datagrunnlag er tre faner: trykk på den som er åpen gjør ingenting
 $("nettKnapp").onclick = () => { if (!nettApen) apneNett(); };
 $("dataKnapp").onclick = () => { if (!dataApen) apneData(); };
-function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); }
+function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); $("azValg").hidden = nettApen || dataApen; }
 $("funnKnapp").onclick = () => { if (nettApen || dataApen) lukkArk(); };
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------

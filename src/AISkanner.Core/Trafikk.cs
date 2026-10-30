@@ -101,6 +101,7 @@ public sealed partial class Skanner
         try { if (_aiIp != null && _aiIp.Wait(TimeSpan.FromSeconds(5))) egne = _aiIp.Result; } catch { }
         if (egne != null) _nettleserVerter ??= AiAdresser.NettleserVerter(ChromiumRotter(), v => Tjeneste(v) != null);
         var viaIp = new HashSet<Tilkobling>();
+        if (egne != null) AdresseNa(egne);
 
         (string? Vert, AiNettsted? Tj) Navn(IPAddress ip)
         {
@@ -285,6 +286,31 @@ public sealed partial class Skanner
 
     internal const string AiTjenesterSlattOpp = "AI-tjenester slått opp på PC-en";
     internal const string AiTjenesterHvorfor = "Et program på PC-en har slått opp navnet til AI-tjenester. Et oppslag er ikke bruk: Windows lagrer ikke hvilket program som spurte eller om noe ble sendt.";
+
+    /// <summary>
+    /// Hvor tjenesten bak et funn ligger nå: IP-ene skannerens eget DNS-oppslag ga for tjenestens adresser, med land og
+    /// eier (OSINT). Ikke bevis for bruk og ikke sett under søket; det står slik i lista og rapporten.
+    /// </summary>
+    private void AdresseNa(Dictionary<IPAddress, List<string>> egne)
+    {
+        var perNavn = new Dictionary<string, List<IPAddress>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (ip, navn) in egne) foreach (var n in navn) { if (!perNavn.TryGetValue(n, out var l)) perNavn[n] = l = new(); l.Add(ip); }
+        List<Funn> alle;
+        lock (_funn) alle = _funn.Values.ToList();
+        foreach (var tj in _regler.AiNettsteder.Concat(_regler.AiTjenester))
+        {
+            var f = alle.FirstOrDefault(x => x.Navn == tj.Navn);
+            if (f == null) continue;
+            foreach (var d in tj.Domener)
+            {
+                if (!perNavn.TryGetValue(d.Trim('.'), out var ipene)) continue;
+                var ip = ipene[0];
+                var hvor = new[] { IpLand.Finn(ip) is { } k ? IpLand.Navn(k) : null, IpEier.Finn(ip) is { } e ? $"eier {e} (OSINT)" : null }.Where(x => x != null);
+                lock (f) if (f.Oppslag.Count < 2) f.Oppslag.Add($"{d.Trim('.')} → {ip} ({string.Join(", ", hvor)})");
+                break;
+            }
+        }
+    }
 
     internal Funn? FunnForProsess(string navn, string? sti)
     {

@@ -68,6 +68,8 @@ public sealed class Funn
     public string? RisikoGrunn { get; set; }
     /// <summary>Land (to bokstaver) dataene går til, utenom målte forbindelser: tjenester Windows har slått opp nylig.</summary>
     public List<string> SenderTil { get; } = new();
+    /// <summary>Tjenestens adresse nå (skannerens eget oppslag, med land og eier fra OSINT). Ikke sett under søket, ikke bevis for bruk.</summary>
+    public List<string> Oppslag { get; } = new();
     private int _modeller;
     /// <summary>Hvor mange AI-modeller (modellfiler eller modellmapper) funnet hører til.</summary>
     public int Modeller => _modeller;

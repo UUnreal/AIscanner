@@ -27,6 +27,7 @@ public static class Rapport
         if (Bruker.KjortAv != null) L($"Kjørt av: {Bruker.KjortAv} (søket gjelder brukeren som er logget inn)");
         if (Bruker.Feil != null) L(Bruker.Feil);
         L($"Søket kjørt: {(skanner?.Startet ?? DateTime.Now):dd.MM.yyyy HH:mm:ss}   Rapport laget: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
+        if (Enhet.Tekst() is { } enhet) Ra($"{(engelsk ? "This PC" : "Denne PC-en")}: {enhet}");
         L($"Søkt som: {(Nettverk.ErAdmin() ? "administrator (mer data)" : "bruker (mindre data, uten datamengde og programmer som kjører som administrator)")}");
         var tell = Oversikt.Telling(liste);
         L($"Funnet: {Oversikt.TellingTekst(liste)}");
@@ -93,6 +94,7 @@ public static class Rapport
                 L("  Sender til nå:");
                 foreach (var m in f.Trafikk) L($"    - {MalTekst(m)}");
             }
+            if (f.Trafikk.Count == 0 && f.Oppslag.Count > 0) L($"  Adresse nå (skannerens oppslag, ikke sett under søket): {string.Join("; ", f.Oppslag)}");
             if (f.Detaljer.Count > 0)
             {
                 L("  Funnet her:");

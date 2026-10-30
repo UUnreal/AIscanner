@@ -68,7 +68,7 @@ public sealed partial class Skanner
         // Nettbruk per program siste 30 dager
         var grense = DateTime.Now.AddDays(-30);
         var sum = new Dictionary<int, (long Ut, long Inn, DateTime Forst, DateTime Sist)>();
-        int rader = 0;
+        int rader = 0, poster = 0, utenTid = 0, utenApp = 0;
         DateTime? eldst = null, nyest = null;
         // Uten nettbrukstabellen (ny PC, eller SRUM av): tilkoblingstabellen viser at lesingen virker, men har ingen mengder
         var tabell = nett ?? db.Finn("{DD6636C4-8929-4683-974E-22C046A43763}");
@@ -78,7 +78,9 @@ public sealed partial class Skanner
                 try
                 {
                 var p = db.Tolk(r, tabell);
-                if (p.Tid(cTid) is not { } t || p.Tall(cApp) is not { } app) continue;
+                poster++;
+                if (p.Tid(cTid) is not { } t) { utenTid++; continue; }
+                if (p.Tall(cApp) is not { } app) { utenApp++; continue; }
                 rader++;
                 if (eldst == null || t < eldst) eldst = t;
                 if (nyest == null || t > nyest) nyest = t;
@@ -107,9 +109,12 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumStatus = $"SRUM: {rader} {(nett != null ? "timer med nettbruk" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
+        SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster (rot side {nett.Rot})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }
+
+    private static string Kolonner(EseFil.Tabell t) =>
+        string.Join(" ", t.Kolonner.Values.OrderBy(k => k.Id).Where(k => k.Id < 256).Select(k => $"{k.Id}:{k.Navn}/{k.Type}"));
 
     private static Dictionary<string, string> Enheter()
     {

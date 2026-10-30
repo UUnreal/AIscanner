@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.38.0] - 2026-10-30
+
+### Lagt til
+
+- Hver rad i lista viser hva funnet er knyttet til: målt IP med eier (OSINT), ellers tjenestens adresse nå med eier, merket «ikke sett». For Høy og Ukjent uten noen adresse vises denne PC-ens IP og MAC.
+- Rapporten viser denne PC-ens IP og MAC, og «Adresse nå» per funn uten tilkobling.
+- Rader viser når funnet sist ble sett eller brukt. Tidspunktet søket ble kjørt, står over lista.
+- «A–Å»-knapp ved siden av Funn, Nettverk og Datagrunnlag.
+- SRUM-linja viser hvor mange poster som ble lest, og kolonnene når rader ikke kan tolkes. Tider lagret som FILETIME leses også.
+
 ## [2.37.1] - 2026-10-30
 
 ### Endret

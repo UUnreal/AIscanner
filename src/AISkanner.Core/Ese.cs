@@ -185,7 +185,10 @@ internal sealed class EseFil
         {
             if (Fast(id) is not { Lengde: 8 } v || v.Start < 0 || v.Start + 8 > _p.Length) return null;
             var d = BitConverter.ToDouble(_p, v.Start);
-            return d is > 30000 and < 80000 ? DateTime.FromOADate(d) : null;
+            if (d is > 30000 and < 80000) return DateTime.FromOADate(d);
+            // Noen kolonner lagrer tiden som FILETIME (100 ns siden 1601)
+            var ft = BitConverter.ToInt64(_p, v.Start);
+            return ft is > 125911584000000000 and < 157469184000000000 ? DateTime.FromFileTimeUtc(ft).ToLocalTime() : null;
         }
 
         public string? Tekst(int id)
