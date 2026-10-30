@@ -220,6 +220,7 @@
   .flis2 .stor { font: var(--t20); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .flis2 .liten { color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .flis2 .lokalt { color: var(--gronn-tekst); }
+  .flis2 .stor.ingen { color: var(--dempet); }
   .grunn { flex: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .ident span { flex: 1; min-width: 0; user-select: text; overflow-wrap: anywhere; }
   .ident span b { font-weight: 600; }
@@ -622,8 +623,11 @@ const PIL = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.
 const SKJERM = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="8" rx="1.5"/><path d="M5.5 13.5h5"/></svg>`;
 const CHEV = `<svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg>`;
 const erLokal = f => f.lokalt || f.ingenLand === "Ingen · lokalt";
-const landListe = f => (f.senderTil || []).length
-  ? PIL + f.senderTil.map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
+// Pil og rødt bare for land der en tilkobling er sett. Land fra leverandøren alene vises dempet.
+const settLand = f => (f.senderTil || []).filter(l => l.sett);
+const landListe = f => settLand(f).length
+  ? PIL + settLand(f).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")
+  : (f.senderTil || []).length ? `<span class="ingen" title="${esc(L("Land fra leverandør, ingen tilkobling sett under søket", "Country from vendor, no connection seen during the scan"))}">${esc(f.senderTil.map(l => l.land).join(", "))}</span>`
   : erLokal(f) ? SKJERM + L("Lokalt", "Local") : `<span class="ingen">${esc(f.ingenLand || L("Ikke sett", "Not seen"))}</span>`;
 let sideDeling = [];
 function delSider() {
@@ -1149,7 +1153,9 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     const sider = Math.max(1, Math.ceil(steder.length / per));
     stedSide = Math.min(onsket, sider - 1);
     const vis = steder.slice(stedSide * per, stedSide * per + per);
-    const sendt = (f.senderTil || []).length
+    const sendt = !settLand(f).length && (f.senderTil || []).length
+      ? `<div class="stor ingen">${esc(f.senderTil.slice(0, 3).map(l => l.land).join(", "))}</div><div class="liten">${L("Land fra leverandør · ingen tilkobling sett", "Country from vendor · no connection seen")}</div>`
+      : (f.senderTil || []).length
       ? `<div class="stor">${f.senderTil.slice(0, 3).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")}</div>` + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
       : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "Nobody")}</div><div class="liten">${L("Kjører bare på PC-en", "Runs only on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
     d.innerHTML = `<button class="lukk hjorne" id="tilbake" title="${esc(L("Lukk (Esc)", "Close (Esc)"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button><div class="dTopp"><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>

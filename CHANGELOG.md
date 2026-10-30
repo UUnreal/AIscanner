@@ -29,6 +29,25 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.34.0] - 2026-10-30
+
+### Endret
+
+- Et DNS-oppslag alene er ikke bruk. Navn fra Windows' DNS-buffer og DNS-loggen gir status «Bare slått opp» med lav treffsikkerhet, ikke «Brukt før». Bruk kommer bare fra nettleserhistorikk, programstart eller en tilkobling som er sett.
+- Hvert DNS-funn viser kilden (DNS-bufferen eller DNS-loggen), IP-adressen navnet pekte på, og hvilket program som slo opp når det kan bevises. Ellers står det at programmet er ukjent.
+- Land fra leverandøren uten tilkobling sett under søket vises dempet, uten pil og uten rødt.
+- «AI-tjenester kontaktet nylig» heter nå «AI-tjenester slått opp på PC-en».
+- En ProgramData-mappe inne i AppData regnes som samlemappe, så modellfiler i én undermappe ikke tilskrives et program i en annen.
+
+### Lagt til
+
+- Versjonsnummeret står øverst i rapporten.
+- DNS-loggen (hendelse 3008) kobles til programmet via PID og programstartene (4688 og Sysmon 1).
+- Fastvare: WPBT-tabellen i BIOS leses (bare lesing). Rapporten viser om BIOS ber Windows starte et program (wpbbin.exe), med fil, signatur, SHA-256 og om en AI-regel traff.
+- Tjenester og drivere endret siste 7 dager, med firma, sjekket mot AI-reglene.
+- Regler for Lenovo AI Now og HP AI Companion.
+- Kildesjekk i --kontroll og i lastetesten i CI: et funn uten kilde, eller et funn som bygger på skannerens egen aktivitet, gir feil.
+
 ## [2.33.0] - 2026-10-29
 
 Ikke testet på Windows utover lastetesten i byggeløypa.

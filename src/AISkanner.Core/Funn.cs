@@ -24,7 +24,7 @@ public static class RisikoTekst
 
 /// <summary>Hva sporene viser om AI-en. Flere kan gjelde samme funn.</summary>
 [Flags]
-public enum Tilstand { Finnes = 1, SattOpp = 2, BruktFor = 4, KjorerNa = 8 }
+public enum Tilstand { Finnes = 1, SattOpp = 2, BruktFor = 4, KjorerNa = 8, SlattOpp = 16 }
 
 /// <summary>Hvor sikkert det er at funnet er AI, ut fra hvor sterke og hvor mange uavhengige spor som peker dit.</summary>
 public enum Sikkerhet { Hoy = 0, Middels = 1, Lav = 2 }
@@ -100,10 +100,10 @@ public sealed class Funn
     public Tilstand Tilstander => (Tilstand)Volatile.Read(ref _tilstand);
     public void Merk(Tilstand t) { int gammel; do gammel = _tilstand; while (Interlocked.CompareExchange(ref _tilstand, gammel | (int)t, gammel) != gammel); }
 
-    /// <summary>Det sterkeste sporet: Kjører nå, så Brukt før, så Satt opp, ellers Finnes.</summary>
+    /// <summary>Det sterkeste sporet: Kjører nå, så Brukt før, så Satt opp, så Bare slått opp (et DNS-navn, ingen bruk sett), ellers Finnes.</summary>
     public Tilstand Status =>
         Tilstander.HasFlag(Tilstand.KjorerNa) ? Tilstand.KjorerNa : Tilstander.HasFlag(Tilstand.BruktFor) ? Tilstand.BruktFor
-        : Tilstander.HasFlag(Tilstand.SattOpp) ? Tilstand.SattOpp : Tilstand.Finnes;
+        : Tilstander.HasFlag(Tilstand.SattOpp) ? Tilstand.SattOpp : Tilstander.HasFlag(Tilstand.SlattOpp) ? Tilstand.SlattOpp : Tilstand.Finnes;
 
     /// <summary>Spor som kjenner igjen AI på innholdet eller oppførselen (modellhode, import i kode, trafikk til AI-tjeneste, YARA, utvidelses-ID).</summary>
     private int _sterke;
@@ -194,3 +194,27 @@ public sealed record IpSted(string Ip, string? Land, string? Cdn);
 
 /// <summary>Et program (PID og full sti) som hadde en forbindelse.</summary>
 public sealed record Prosessfil(int Pid, string Fil);
+
+/// <summary>
+/// Ingen funn uten kilde: hvert funn må ha minst én linje som sier hvor det ble sett (fil, register, buffer, logg,
+/// tilkobling), og skannerens egen aktivitet er aldri et bevis. Brukes av --kontroll og lastetesten i CI.
+/// </summary>
+public static class Kildesjekk
+{
+    public static List<string> Mangler(IEnumerable<Funn> funn)
+    {
+        var feil = new List<string>();
+        string? egen = null;
+        try { egen = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName; } catch { }
+        foreach (var f in funn)
+        {
+            List<string> d;
+            lock (f) d = f.Detaljer.ToList();
+            if (d.Count == 0 && f.Trafikk.Count == 0) feil.Add($"{f.Navn}: ingen kilde");
+            if (d.Any(x => x.IndexOf("AISkanner.exe", StringComparison.OrdinalIgnoreCase) >= 0
+                           || (egen != null && x.IndexOf(egen, StringComparison.OrdinalIgnoreCase) >= 0)))
+                feil.Add($"{f.Navn}: skannerens egen aktivitet brukt som bevis");
+        }
+        return feil;
+    }
+}

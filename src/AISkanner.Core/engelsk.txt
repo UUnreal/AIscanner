@@ -1479,3 +1479,17 @@ Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi 
 Utvidelse med AI-adresser|Extension with AI addresses
 ~^Koden nevner: (.+)$|The code mentions: $1
 ~^PID (\d+): bruker GPU/NPU til beregning nå: (\d+) %$|PID $1: using GPU/NPU for compute now: $2 %
+Bare slått opp|Only looked up
+AI-tjenester slått opp på PC-en|AI services looked up on the PC
+AI-tjenester slått opp|AI services looked up
+Et program på PC-en har slått opp navnet til AI-tjenester. Et oppslag er ikke bruk: Windows lagrer ikke hvilket program som spurte eller om noe ble sendt.|A program on the PC has looked up the name of AI services. A lookup is not use: Windows does not store which program asked or whether anything was sent.
+Program som har slått opp AI|Program that looked up AI
+Et program som ikke er en nettleser, har slått opp navnet til en AI-tjeneste. Windows har registrert det, men ikke om noe ble sendt.|A program that is not a browser has looked up the name of an AI service. Windows recorded it, but not whether anything was sent.
+~^Program som har slått opp AI: (.+)$|Program that looked up AI: $1
+Windows' DNS-buffer:|Windows DNS cache:
+ · programmet som slo opp er ukjent (Windows lagrer det ikke) · ingen tilkobling sett under søket| · the program that looked it up is unknown (Windows does not store it) · no connection seen during the scan
+Slått opp av |Looked up by 
+Slått opp, programmet er ukjent:|Looked up, program unknown:
+Land fra leverandør · ingen tilkobling sett|Country from vendor · no connection seen
+Fastvare (BIOS):|Firmware (BIOS):
+Tjenester og drivere endret siste 7 dager:|Services and drivers changed in the last 7 days:

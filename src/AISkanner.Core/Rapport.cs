@@ -21,6 +21,8 @@ public static class Rapport
         string T(string s) => engelsk ? Engelsk.Til(s)! : s;
         string strek = new('-', 60);
         L("AI-SKANNER RAPPORT");
+        // Versjonen står alltid, så en rapport fra en eldre versjon kan kjennes igjen
+        Ra($"{(engelsk ? "Version" : "Versjon")}: AI-skanner {typeof(Rapport).Assembly.GetName().Version?.ToString(3)}");
         Ra($"PC: {Environment.MachineName}   {(engelsk ? "User" : "Bruker")}: {Bruker.Navn}");
         if (Bruker.KjortAv != null) L($"Kjørt av: {Bruker.KjortAv} (søket gjelder brukeren som er logget inn)");
         if (Bruker.Feil != null) L(Bruker.Feil);
@@ -48,6 +50,7 @@ public static class Rapport
         if (skanner != null) L(skanner.LyttetSekunder > 0
             ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). UDP og QUIC (HTTP/3) vises ikke."
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
+        if (skanner != null) lock (skanner.Fastvarelinjer) foreach (var b in skanner.Fastvarelinjer) L(b);
         if (skanner != null) foreach (var b in skanner.Blindsoner) L($"Blindsone: {b}");
         L(Revisjon.IngenAi);
         L(new string('=', 60));

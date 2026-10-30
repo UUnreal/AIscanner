@@ -30,6 +30,8 @@ public sealed partial class Skanner
     {
         "Microsoft", "Programs", "Google", "NVIDIA Corporation", "NVIDIA", "Intel", "Intel Corporation", "AMD", "Advanced Micro Devices, Inc",
         "Adobe", "Common Files", "Packages", "Lenovo", "Dell", "HP", "Hewlett-Packard", "ASUS", "Qualcomm", "Apps", "Logitech", "Apple",
+        // En ProgramData-mappe inne i AppData samler firmaer, som igjen samler programmer (ProgramData\Google\Chrome)
+        "ProgramData",
     };
 
     // Antivirusets egne mapper røres aldri, heller ikke i fullt søk
@@ -169,7 +171,14 @@ public sealed partial class Skanner
                 if (LeverandorHopp.Contains(navn) && (!Fullt || AntivirusMappe(navn))) continue;
                 // Samlemapper (Microsoft, Programs, Packages osv.): hver undermappe er et eget program
                 if (!pakker && Samlemapper.Contains(navn))
-                    foreach (var u in Mapper(d)) jobber.Add((u, u, dybde - 2, beskyttet));
+                    foreach (var u in Mapper(d))
+                    {
+                        // Samlemappe i samlemappe (ProgramData\Microsoft): programmet er et nivå lenger ned, så et program
+                        // i én undermappe ikke får æren for modellene i en annen (GitHub-exe og Chrome-modeller i samme rot)
+                        if (Samlemapper.Contains(Path.GetFileName(u)))
+                            foreach (var uu in Mapper(u)) jobber.Add((uu, uu, dybde - 3, beskyttet));
+                        else jobber.Add((u, u, dybde - 2, beskyttet));
+                    }
                 else jobber.Add((d, d, dybde - 1, beskyttet));
             }
         }

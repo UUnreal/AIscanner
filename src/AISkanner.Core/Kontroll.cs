@@ -292,8 +292,20 @@ public sealed partial class Skanner
         Sjekk(s3.DnsBufferForurenset && s3._funn.Count == 0, "DNS-buffer fylt av skannerens egne oppslag ble brukt som bevis");
         var s4 = new Skanner(regler);
         var nb4 = new NettBilde { Lyttere = new(), DnsNavn = { "chat.deepseek.com" } };
+        nb4.Dns[System.Net.IPAddress.Parse("203.0.113.9")] = new List<string> { "chat.deepseek.com" };
         s4.Trafikk(nb4);
-        Sjekk(!s4.DnsBufferForurenset && s4._funn.Values.Any(f => f.Navn == "DeepSeek"), "ett ekte DNS-oppslag (chat.deepseek.com) ble ikke funnet");
+        var ds = s4._funn.Values.FirstOrDefault(f => f.Navn == "DeepSeek");
+        Sjekk(!s4.DnsBufferForurenset && ds != null, "ett ekte DNS-oppslag (chat.deepseek.com) ble ikke funnet");
+        // Et oppslag alene er ikke bruk: «Bare slått opp», lav treffsikkerhet, IP-en og at programmet er ukjent
+        Sjekk(ds != null && ds.Status == Tilstand.SlattOpp && !ds.Tilstander.HasFlag(Tilstand.BruktFor) && ds.Sikkerhet == Sikkerhet.Lav,
+            "DNS-oppslag alene ble vist som bruk");
+        Sjekk(ds != null && ds.Detaljer.Any(d => d.StartsWith("Windows' DNS-buffer: chat.deepseek.com → 203.0.113.9") && d.Contains("programmet som slo opp er ukjent")),
+            "DNS-funnet viser ikke kilde, IP og at programmet er ukjent");
+        // DNS-loggen har bare PID: programmet finnes fra programstarten med samme PID før oppslaget
+        var starter = new Dictionary<int, List<(DateTime Tid, string Exe)>> { [4321] = new() { (new DateTime(2026, 1, 1, 9, 0, 0), @"C:\A\gammel.exe"), (new DateTime(2026, 1, 1, 12, 0, 0), @"C:\B\ny.exe") } };
+        Sjekk(ProgramForPid("4321", new DateTime(2026, 1, 1, 10, 0, 0), starter) == @"C:\A\gammel.exe"
+              && ProgramForPid("4321", new DateTime(2026, 1, 1, 13, 0, 0), starter) == @"C:\B\ny.exe",
+            "PID i DNS-loggen ble koblet til feil program");
         return (ok, alle);
     }
 
@@ -550,6 +562,10 @@ public sealed partial class Skanner
             bool stemmer = tf.Totalt == funn.Count && tf.Hoy + tf.Middels + tf.Lav + tf.Ukjent == funn.Count;
             if (stemmer) ok++;
             sb.AppendLine($"{(stemmer ? "OK  " : "FEIL")}  Tallene stemmer: overskrift, arter og Høy/Middels/Lav/Ukjent er like mange som radene{(stemmer ? "" : $" (rader {funn.Count}, overskrift {tf.Totalt}, risiko {tf.Hoy + tf.Middels + tf.Lav + tf.Ukjent})")}");
+            // Ingen funn uten kilde, og skannerens egen aktivitet er aldri bevis
+            var utenKilde = Kildesjekk.Mangler(funn);
+            if (utenKilde.Count == 0) ok++;
+            sb.AppendLine($"{(utenKilde.Count == 0 ? "OK  " : "FEIL")}  Kilder: hvert funn viser hvor det ble sett, og skannerens egen aktivitet er ikke brukt som bevis{(utenKilde.Count == 0 ? "" : $" ({string.Join(" | ", utenKilde.Take(5))})")}");
             var (falskOk, falskAlle) = FalskeTreffKontroll(s, sb, rot);
             ok += falskOk;
             sb.AppendLine($"{(falskOk == falskAlle ? "OK  " : "FEIL")}  Falske treff: {falskOk} av {falskAlle} riktige (presentasjonssider, Microsoft 365-startsiden, skytjenester, DirectML, innebygde modeller i tellingen)");
@@ -568,7 +584,7 @@ public sealed partial class Skanner
             var (stOk, stAlle) = StatusKontroll(regler, sb);
             ok += stOk;
             sb.AppendLine($"{(stOk == stAlle ? "OK  " : "FEIL")}  Status, treffsikkerhet og godkjenning: {stOk} av {stAlle} riktige (kjører nå, brukt før, høy, middels, lav, godkjent, blokkert)");
-            int alle = Kontrollspor.Length + 3 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle;
+            int alle = Kontrollspor.Length + 4 + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

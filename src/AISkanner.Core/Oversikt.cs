@@ -129,17 +129,17 @@ public static class Oversikt
 
     public static string Tilstandtekst(Tilstand t) => t switch
     {
-        Tilstand.KjorerNa => "Kjører nå", Tilstand.BruktFor => "Brukt før", Tilstand.SattOpp => "Satt opp", _ => "Finnes",
+        Tilstand.KjorerNa => "Kjører nå", Tilstand.BruktFor => "Brukt før", Tilstand.SattOpp => "Satt opp", Tilstand.SlattOpp => "Bare slått opp", _ => "Finnes",
     };
 
-    /// <summary>Det sterkeste sporet (Kjører nå, Brukt før, Satt opp, Finnes).</summary>
+    /// <summary>Det sterkeste sporet (Kjører nå, Brukt før, Satt opp, Bare slått opp, Finnes).</summary>
     public static string Status(Funn f) => Tilstandtekst(f.Status);
 
     /// <summary>Alle tilstandene sporene viser, sterkeste først.</summary>
     public static List<string> Tilstander(Funn f)
     {
         var t = f.Tilstander;
-        var l = new[] { Tilstand.KjorerNa, Tilstand.BruktFor, Tilstand.SattOpp, Tilstand.Finnes }.Where(x => t.HasFlag(x)).Select(Tilstandtekst).ToList();
+        var l = new[] { Tilstand.KjorerNa, Tilstand.BruktFor, Tilstand.SattOpp, Tilstand.SlattOpp, Tilstand.Finnes }.Where(x => t.HasFlag(x)).Select(Tilstandtekst).ToList();
         if (l.Count == 0) l.Add("Finnes");
         return l;
     }

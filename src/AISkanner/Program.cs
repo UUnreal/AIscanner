@@ -134,6 +134,10 @@ internal static class Program
             Console.WriteLine($"Søk: {sok.Tider.Sum(t => t.Value.TotalSeconds):0.0} s i sum, {(stoppet.Count == 0 ? "ingen sjekk stoppet" : "stoppet: " + string.Join(" | ", stoppet))}");
             Console.WriteLine("Rapport: " + (Rapport.Tekst(funn, sok).Length > 0 ? "OK" : "FEIL") + ", CSV: " + (Rapport.Csv(funn).Length > 0 ? "OK" : "FEIL"));
             feil |= stoppet.Count > 0;
+            // Ingen funn uten kilde, og skannerens egen aktivitet er aldri bevis
+            var utenKilde = Kildesjekk.Mangler(funn);
+            Console.WriteLine(utenKilde.Count == 0 ? "Kilder: hvert funn har kilde" : "Kilder FEIL: " + string.Join(" | ", utenKilde));
+            feil |= utenKilde.Count > 0;
 
             // WebView2: begge DLL-ene og WebView2Loader.dll (runtimes\win-x64\native) lastes
             using (var vindu = new Microsoft.Web.WebView2.WinForms.WebView2()) { }

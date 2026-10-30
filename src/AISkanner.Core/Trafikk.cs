@@ -237,6 +237,17 @@ public sealed partial class Skanner
             if (!nylig.TryGetValue(tj, out var s)) nylig[tj] = s = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             s.Add(n);
         }
+        // Bufferen sier bare at navnet er slått opp, ikke av hvem og ikke at noe ble sendt. Derfor «Bare slått opp»,
+        // svakt spor, IP-en navnet pekte på, og at programmet er ukjent. Bruk kommer bare fra historikk eller tilkobling.
+        var ipFor = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (ip, navn) in nb.Dns)
+            foreach (var n in navn)
+            {
+                if (!ipFor.TryGetValue(n, out var l)) ipFor[n] = l = new List<string>();
+                if (l.Count < 3) l.Add($"{ip}{(IpLand.Finn(ip) is { } k ? $" ({IpLand.Navn(k)})" : "")}");
+            }
+        string Bevis(string v) =>
+            $"Windows' DNS-buffer: {v}{(ipFor.TryGetValue(v, out var ip) ? $" → {string.Join(", ", ip)}" : "")} · programmet som slo opp er ukjent (Windows lagrer det ikke) · ingen tilkobling sett under søket";
         var api = new List<(AiNettsted Tj, SortedSet<string> Verter)>();
         foreach (var (tj, verter) in nylig)
         {
@@ -245,11 +256,11 @@ public sealed partial class Skanner
                 // Et AI-nettsted: legg til på nettstedsfunnet
                 var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, "Windows", null, enkelt: tj.Enkelt);
                 f.Privat = true;
-                f.Bruk ??= "Åpnet nylig.";
-                f.Merk(Tilstand.BruktFor);
+                f.Merk(Tilstand.SlattOpp);
+                f.Svakt();
                 f.Land ??= tj.Land;
                 f.OpprinnelseLand ??= tj.Land;
-                foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v}");
+                foreach (var v in verter) f.Detalj(Bevis(v));
             }
             else api.Add((tj, verter));
         }
@@ -257,17 +268,20 @@ public sealed partial class Skanner
         {
             bool fraLand = api.Any(a => a.Tj.Land != null && farlige.Contains(a.Tj.Land));
             var risiko = api.Select(a => RisikoTekst.Fra(a.Tj.Risiko)).Aggregate(Risiko.Gronn, RisikoTekst.Hoyeste);
-            var f = LeggTil("AI-tjenester kontaktet nylig", "Skygge-AI", fraLand ? Risiko.Rod : RisikoTekst.Hoyeste(risiko, Risiko.Gul),
-                "Et program på PC-en har nylig snakket med AI-tjenester. Windows forteller ikke hvilket program, bare at navnet ble slått opp.",
-                "Windows", null, enkelt: "AI-tjenester kontaktet");
+            var f = LeggTil(AiTjenesterSlattOpp, "Skygge-AI", fraLand ? Risiko.Rod : RisikoTekst.Hoyeste(risiko, Risiko.Gul),
+                AiTjenesterHvorfor, "Windows", null, enkelt: "AI-tjenester slått opp");
             f.Bruk = $"{string.Join(", ", api.Select(a => a.Tj.Navn).Distinct().Take(4))}.";
-            f.Merk(Tilstand.BruktFor);
+            f.Merk(Tilstand.SlattOpp);
+            f.Svakt();
             foreach (var (tj, verter) in api)
-                foreach (var v in verter) f.Detalj($"Windows har nylig slått opp: {v} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")})");
+                foreach (var v in verter) f.Detalj($"{Bevis(v)} · {tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")}");
             if (fraLand) f.Advarsel("Minst én av tjenestene hører hjemme i et land der dataene ikke bør havne.");
             foreach (var (tj, _) in api) if (tj.Land != null && !f.SenderTil.Contains(tj.Land)) f.SenderTil.Add(tj.Land);
         }
     }
+
+    internal const string AiTjenesterSlattOpp = "AI-tjenester slått opp på PC-en";
+    internal const string AiTjenesterHvorfor = "Et program på PC-en har slått opp navnet til AI-tjenester. Et oppslag er ikke bruk: Windows lagrer ikke hvilket program som spurte eller om noe ble sendt.";
 
     internal Funn? FunnForProsess(string navn, string? sti)
     {

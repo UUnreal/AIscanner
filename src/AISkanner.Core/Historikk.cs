@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -19,7 +20,7 @@ public sealed partial class Skanner
         if (!Plattform.ErWindows) return;
         foreach (var (navn, steg) in new (string, Action)[]
         {
-            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg),
+            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare),
         })
         {
             try { steg(); }
@@ -363,15 +364,31 @@ public sealed partial class Skanner
                 Vurder(prosess, exe, 0, linje!, ai ?? FraRegel(r, "Kjørt før", $"Kjørt før: {exe}"), tid, kilde);
             }
         }
-        Logglest("Security", $"*[System[(EventID=4688) and {Siste30Dager}]]", "hendelse 4688 (programstart)", maks, frist,
-            (d, t) => Start(Felt(d, "NewProcessName"), Felt(d, "CommandLine"), t, Felt(d, "SubjectUserName"), "hendelse 4688 i Windows"));
+        // PID -> program fra programstartene, så DNS-loggen (som bare har PID) kan si hvilket program som slo opp
+        var pidStart = new Dictionary<int, List<(DateTime Tid, string Exe)>>();
+        void Pid(string? pid, string? exe, DateTime tid)
+        {
+            if (string.IsNullOrEmpty(exe) || string.IsNullOrEmpty(pid)) return;
+            pid = pid!.Trim();
+            bool ok = pid.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? int.TryParse(pid.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out var n)
+                : int.TryParse(pid, out n);
+            if (!ok) return;
+            if (!pidStart.TryGetValue(n, out var l)) pidStart[n] = l = new();
+            l.Add((tid, exe!));
+        }
+        Logglest("Security", $"*[System[(EventID=4688) and {Siste30Dager}]]", "hendelse 4688 (programstart)", maks, frist, (d, t) =>
+        {
+            Pid(Felt(d, "NewProcessId"), Felt(d, "NewProcessName"), t);
+            Start(Felt(d, "NewProcessName"), Felt(d, "CommandLine"), t, Felt(d, "SubjectUserName"), "hendelse 4688 i Windows");
+        });
         Logglest("Microsoft-Windows-Sysmon/Operational", $"*[System[(EventID=1 or EventID=22) and {Siste30Dager}]]", "Sysmon 1 og 22 (programstart og DNS)", maks, frist, (d, t) =>
         {
             if (d.ContainsKey("QueryName")) DnsHendelse(d["QueryName"], Felt(d, "Image"), t, "Sysmon");
-            else Start(Felt(d, "Image"), Felt(d, "CommandLine"), t, Felt(d, "User"), "Sysmon i Windows");
+            else { Pid(Felt(d, "ProcessId"), Felt(d, "Image"), t); Start(Felt(d, "Image"), Felt(d, "CommandLine"), t, Felt(d, "User"), "Sysmon i Windows"); }
         });
         Logglest("Microsoft-Windows-DNS-Client/Operational", $"*[System[(EventID=3008) and {Siste30Dager}]]", "DNS-loggen (oppslag)", maks, frist,
-            (d, t) => DnsHendelse(Felt(d, "QueryName"), null, t, "DNS-loggen i Windows"));
+            (d, t) => DnsHendelse(Felt(d, "QueryName"), ProgramForPid(Felt(d, "_pid"), t, pidStart), t, "DNS-loggen i Windows"));
 
         foreach (var (exe, sist, antall, konto) in starter.Values)
         {
@@ -395,6 +412,27 @@ public sealed partial class Skanner
                 lest == 0 ? $"{hva}: ingen hendelser siste 30 dager (loggen er av eller tom)" : $"{hva}: {lest} hendelser siste 30 dager{(lest >= maks ? $", de {maks} nyeste" : "")}; bare programnavn, tid og AI-navn brukes");
     }
 
+    /// <summary>
+    /// Programmet bak en PID på et tidspunkt: siste programstart med den PID-en før tidspunktet (4688/Sysmon 1),
+    /// ellers prosessen som kjører nå hvis den startet før tidspunktet. Null når det ikke kan bevises.
+    /// </summary>
+    internal static string? ProgramForPid(string? pid, DateTime tid, Dictionary<int, List<(DateTime Tid, string Exe)>> starter)
+    {
+        if (!int.TryParse(pid, out var n) || n <= 4) return null;
+        if (starter.TryGetValue(n, out var l))
+        {
+            var treff = l.Where(x => x.Tid <= tid).OrderByDescending(x => x.Tid).FirstOrDefault();
+            if (treff.Exe != null) return treff.Exe;
+        }
+        try
+        {
+            using var p = Process.GetProcessById(n);
+            if (p.StartTime <= tid) return p.MainModule?.FileName;
+        }
+        catch { }
+        return null;
+    }
+
     private readonly object _dnsLaas = new();
 
     private void DnsHendelse(string? navn, string? exe, DateTime tid, string kilde)
@@ -406,32 +444,33 @@ public sealed partial class Skanner
         {
             if (prosess != null && !Nettleserprosesser.ContainsKey(prosess) && !string.Equals(Path.GetFileName(exe), "AISkanner.exe", StringComparison.OrdinalIgnoreCase))
             {
-                var f = FunnForProsess(prosess, exe) ?? LeggTil($"Program som har kontaktet AI: {Path.GetFileName(exe)}", "Skygge-AI", Risiko.Rod,
-                    "Et program som ikke er en nettleser, har slått opp navnet til en AI-tjeneste. Windows har registrert det.", "Kjørt før", null,
-                    enkelt: "Program som har kontaktet AI");
-                f.Detalj($"{exe} slo opp {navn} ({tj.Navn}) · {Nar(tid, kilde)}");
-                f.Bruk ??= "Brukt før.";
-                f.Merk(Tilstand.BruktFor);
+                // Et oppslag er ikke bevis på at noe ble sendt: «Bare slått opp», men programmet er kjent
+                var f = FunnForProsess(prosess, exe) ?? LeggTil($"Program som har slått opp AI: {Path.GetFileName(exe)}", "Skygge-AI", Risiko.Rod,
+                    "Et program som ikke er en nettleser, har slått opp navnet til en AI-tjeneste. Windows har registrert det, men ikke om noe ble sendt.", "Windows", null,
+                    enkelt: "Program som har slått opp AI");
+                f.Detalj($"{exe} slo opp {navn} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")}) · {Nar(tid, kilde)}");
+                f.Merk(Tilstand.SlattOpp);
                 f.Tidspunkt(null, tid);
                 return;
             }
             if (!_regler.AiTjenester.Contains(tj))
             {
                 var f = LeggTil(tj.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(tj.Risiko), tj.Hvorfor, prosess != null ? Nettleserprosesser[prosess] : "Windows", null, enkelt: tj.Enkelt);
+                // Nettlesere slår opp navn på forhånd (lenker på en side), så oppslaget alene er ikke et besøk
                 f.Privat = true;
-                f.Bruk ??= "Åpnet før.";
-                f.Merk(Tilstand.BruktFor);
+                f.Merk(Tilstand.SlattOpp);
+                f.Svakt();
                 f.Land ??= tj.Land;
                 f.OpprinnelseLand ??= tj.Land;
-                f.Detalj($"Slått opp: {navn} · {Nar(tid, kilde)}");
+                f.Detalj($"Slått opp{(exe != null ? $" av {exe}" : ", programmet er ukjent")}: {navn} · {Nar(tid, kilde)}");
                 f.Tidspunkt(null, tid);
             }
             else
             {
-                var f = LeggTil("AI-tjenester kontaktet nylig", "Skygge-AI", RisikoTekst.Hoyeste(RisikoTekst.Fra(tj.Risiko), Risiko.Gul),
-                    "Et program på PC-en har nylig snakket med AI-tjenester. Windows forteller ikke hvilket program, bare at navnet ble slått opp.",
-                    "Windows", null, enkelt: "AI-tjenester kontaktet");
-                f.Detalj($"Slått opp: {navn} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")}) · {Nar(tid, kilde)}");
+                var f = LeggTil(AiTjenesterSlattOpp, "Skygge-AI", RisikoTekst.Hoyeste(RisikoTekst.Fra(tj.Risiko), Risiko.Gul),
+                    AiTjenesterHvorfor, "Windows", null, enkelt: "AI-tjenester slått opp");
+                f.Merk(Tilstand.SlattOpp);
+                f.Detalj($"Slått opp{(exe != null ? $" av {exe}" : ", programmet er ukjent")}: {navn} ({tj.Navn}{(tj.Land != null ? ", " + IpLand.Navn(tj.Land) : "")}) · {Nar(tid, kilde)}");
                 if (tj.Land != null && !f.SenderTil.Contains(tj.Land)) f.SenderTil.Add(tj.Land);
                 f.Tidspunkt(null, tid);
             }
