@@ -81,6 +81,45 @@ internal sealed class EseFil
         return $"rotside {t.Rot}: flagg 0x{flagg:X}, eier {eier} (tabell {t.ObjId}), {tagger} verdier{(tom ? ", siden er tom i fila (ikke skrevet fra Windows' logg ennå)" : eier != t.ObjId ? ", siden tilhører en annen tabell" : "")}";
     }
 
+    private void Les(byte[] p, bool blad, bool forelder, List<uint> barn, List<(byte[], int, int)> poster)
+    {
+        try
+        {
+            foreach (var (start, lengde, tf) in Tagger(p))
+            {
+                int o = start, slutt = start + lengde;
+                if ((tf & 0x4) != 0) o += 2; // felles nøkkel
+                if (o + 2 > slutt) continue;
+                int lokal = U16(p, o) & 0x1FFF;
+                o += 2 + lokal;
+                if (o > slutt) continue;
+                if (forelder && !blad) { if (slutt - 4 >= o) barn.Add(BitConverter.ToUInt32(p, slutt - 4)); }
+                else if (blad && (tf & 0x2) == 0) poster.Add((p, o, slutt - o));
+            }
+        }
+        catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { Feil++; }
+    }
+
+    /// <summary>
+    /// Når treet fra rotsiden ikke gir noe (rotsiden er ikke skrevet ferdig til fila mens Windows har databasen åpen):
+    /// alle bladsider i fila som tilhører tabellen, side for side. Kan gi gamle kopier av poster; den som kaller, fjerner like.
+    /// </summary>
+    public IEnumerable<(byte[] Side, int Start, int Lengde)> PosterForEier(int objId, Func<bool>? stopp = null)
+    {
+        long sider = _s.Length / Side - 1;
+        for (uint nr = 1; nr < sider; nr++)
+        {
+            if (stopp?.Invoke() == true) yield break;
+            var p = LesSide(nr);
+            if (p == null || BitConverter.ToInt32(p, 24) != objId) continue;
+            uint flagg = BitConverter.ToUInt32(p, 36);
+            if ((flagg & 0x2) == 0 || (flagg & 0xE0) != 0) continue;
+            var poster = new List<(byte[], int, int)>();
+            Les(p, true, false, new List<uint>(), poster);
+            foreach (var x in poster) yield return x;
+        }
+    }
+
     /// <summary>Alle poster i et B-tre (bladsidene), som (side, start, lengde) for postdataene.</summary>
     public IEnumerable<(byte[] Side, int Start, int Lengde)> Poster(uint rot, Func<bool>? stopp = null)
     {
@@ -99,21 +138,7 @@ internal sealed class EseFil
             if ((flagg & 0x20) != 0 || (flagg & 0x40) != 0 || (flagg & 0x80) != 0) continue; // plass-, indeks- og LV-trær
             var barn = new List<uint>();
             var poster = new List<(byte[], int, int)>();
-            try
-            {
-                foreach (var (start, lengde, tf) in Tagger(p))
-                {
-                    int o = start, slutt = start + lengde;
-                    if ((tf & 0x4) != 0) o += 2; // felles nøkkel
-                    if (o + 2 > slutt) continue;
-                    int lokal = U16(p, o) & 0x1FFF;
-                    o += 2 + lokal;
-                    if (o > slutt) continue;
-                    if (forelder && !blad) { if (slutt - 4 >= o) barn.Add(BitConverter.ToUInt32(p, slutt - 4)); }
-                    else if (blad && (tf & 0x2) == 0) poster.Add((p, o, slutt - o));
-                }
-            }
-            catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { Feil++; }
+            Les(p, blad, forelder, barn, poster);
             foreach (var x in poster) yield return x;
             for (int i = barn.Count - 1; i >= 0; i--) stabel.Push(barn[i]);
         }

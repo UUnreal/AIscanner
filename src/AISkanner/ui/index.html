@@ -141,6 +141,13 @@
   .fordeling button:hover { background: var(--flate2, rgba(127,127,127,.12)); }
   .fordeling button.valgt { background: var(--flate2, rgba(127,127,127,.18)); box-shadow: inset 0 0 0 1px var(--kant, rgba(127,127,127,.35)); }
   .fordeling button.av { opacity: .45; }
+  .sjekkStripe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 2px; font: var(--t12); }
+  .sjekkStripe:empty, .sjekkStripe[hidden] { display: none; }
+  .sjTittel { color: var(--dempet); font-weight: 600; margin-right: 2px; }
+  .sj { display: inline-flex; align-items: center; gap: 5px; background: var(--fyll); border-radius: 999px; padding: 3px 10px; color: var(--dempet); white-space: nowrap; }
+  .sj b { color: var(--tekst); font-weight: 600; }
+  .sj i { width: 7px; height: 7px; border-radius: 50%; background: var(--gronn); flex: none; }
+  .sj.n1 i { background: var(--bla); } .sj.n2 i { background: var(--rod); } .sj.n2 { color: var(--rod-tekst); } .sj.nx i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--dempet); }
   .fordeling #landValg, .fordeling #azValg { margin-left: 4px; color: var(--dempet); } .fordeling #landValg.valgt, .fordeling #azValg.valgt { color: var(--tekst); }
   .fordeling #landValg .ik { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.3; }
   .gruppe.fare { color: var(--rod); }
@@ -455,6 +462,7 @@
       </div>
     <div class="fanerad"><div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
       <span class="kjort" id="kjort"></span></div>
+    <div class="sjekkStripe" id="sjekkStripe"></div>
   </div>
   <div class="hoved" id="hoved">
     <div class="panel" id="listePanel">
@@ -595,6 +603,9 @@ function tegnFordeling() {
   const az = $("azValg");
   if (az) az.onclick = () => { sortering = sortering === "navn" ? "risiko" : "navn"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
   $("kjort").textContent = info.kjort ? L("Søket kjørt ", "Scan run ") + info.kjort : "";
+  // Hver sjekk som ellers bare står i rapporten: hva den fant, eller at den ikke fant noe
+  $("sjekkStripe").innerHTML = (info.sjekker || []).length
+    ? `<span class="sjTittel">${L("Sjekket", "Checked")}</span>` + info.sjekker.map(s => `<span class="sj n${s.niva < 0 ? "x" : s.niva}" title="${esc(s.navn + ": " + s.tekst)}"><i></i><b>${esc(s.navn)}</b> ${esc(s.tekst)}</span>`).join("") : "";
 }
 
 function tegnBunn() {
@@ -1171,7 +1182,7 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
   };
   const kildeLinje = m => (m.kilde || []).length || (m.prosesser || []).length
     ? `<span class="ip"><span>${esc([(m.kilde || []).length ? L("Fra ", "From ") + m.kilde.join(", ") : "", ...(m.prosesser || []).map(p => `${p.fil} (PID ${p.pid})`)].filter(Boolean).join(" · "))}</span></span>` : "";
-  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${ipLinje(m)}${kildeLinje(m)}</span>` +
+  const malLinje = m => `<li class="mal"><span class="vert">${esc(m.adresse)}${m.tjeneste ? ` <small>${esc(m.tjeneste)}</small>` : ""}${(m.proto || []).some(p => p !== "TCP") ? ` <small>${esc(m.proto.join(", "))}</small>` : ""}${ipLinje(m)}${kildeLinje(m)}</span>` +
     `<span class="land ${m.farlig ? "farlig" : ""} ${m.landKode === "CDN" ? "skjult" : ""}">${m.landKode === "CDN" ? `${L("Tjenesten skjuler IP-en", "The service hides the IP")}<small>${L("bak", "behind")} ${esc(m.cdn || "CDN")}</small>` : esc(m.land || L("ukjent land", "unknown country"))}</span>` +
     `<span class="data">${esc(m.data || (info.dataMalt ? L("ikke målt", "not measured") : m.antall + (m.antall === 1 ? L(" forbindelse", " connection") : L(" forbindelser", " connections"))))}</span></li>`;
   const bredde = d.clientWidth - 110;
@@ -1381,7 +1392,7 @@ $("lagre").onclick = () => send({ type: "lagre" });
 // Funn, Nettverk og Datagrunnlag er tre faner: trykk på den som er åpen gjør ingenting
 $("nettKnapp").onclick = () => { if (!nettApen) apneNett(); };
 $("dataKnapp").onclick = () => { if (!dataApen) apneData(); };
-function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); }
+function merkMeny() { const ss = $("sjekkStripe"); if (ss) ss.hidden = nettApen || dataApen; $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); }
 $("funnKnapp").onclick = () => { if (nettApen || dataApen) lukkArk(); };
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------

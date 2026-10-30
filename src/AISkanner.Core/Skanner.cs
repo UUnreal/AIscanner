@@ -159,15 +159,17 @@ public sealed partial class Skanner
             var tid = Stopwatch.StartNew();
             Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
             var nb = TestNett?.Invoke() ?? (bakgrunn ? lytting!.Bilde() : lytting?.Stopp()) ?? NettBilde.Hent(maling);
-            LyttetSekunder = nb.LytteSekunder;
+            LyttetSekunder = nb.LytteSekunder; UdpLest = nb.UdpLest;
             Trafikk(nb);
             InnTilAiServer(nb);
             KortlivedeProsesser(nb);
+            LyttendeAiPorter();
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
         SlaSammenSpor();
         Risikoregler.Bruk(_funn.Values, _regler);
+        LagSjekker();
         // Stoppet antivirus noe av det vi leste? Defender skriver det i sin egen logg.
         Tilgangslogg.Sjekk.Value = "Antivirus";
         Forsvar = Antivirus.Hendelser(Startet.Value);
@@ -227,12 +229,13 @@ public sealed partial class Skanner
                 Tilgangslogg.Aktiv = Logg;
                 Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
                 var nb = b.Lytting.Stopp();
-                LyttetSekunder = nb.LytteSekunder;
+                LyttetSekunder = nb.LytteSekunder; UdpLest = nb.UdpLest;
                 Trafikk(nb);
                 InnTilAiServer(nb);
                 KortlivedeProsesser(nb);
                 SlaSammenSpor();
                 Risikoregler.Bruk(_funn.Values, _regler);
+                LagSjekker();
                 Tilgangslogg.Sjekk.Value = null;
                 lock (Tider) Tider["Ser hvor AI sender data"] = Tider.TryGetValue("Ser hvor AI sender data", out var f) ? f + tid.Elapsed : tid.Elapsed;
             }, ct).ConfigureAwait(false);

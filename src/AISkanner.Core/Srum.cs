@@ -12,6 +12,9 @@ public sealed partial class Skanner
 {
     private const string SrumNett = "{973F5D5C-1D90-4944-BE8E-24B94231A174}";
     public string? SrumStatus { get; private set; }
+    /// <summary>Timer med nettbruk lest fra SRUM, og AI-programmer blant dem (til «Sjekket» i Funn).</summary>
+    public int SrumRader { get; private set; } = -1;
+    public int SrumAi { get; private set; }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern uint QueryDosDevice(string enhet, StringBuilder mal, int lengde);
@@ -72,12 +75,16 @@ public sealed partial class Skanner
         DateTime? eldst = null, nyest = null;
         // Uten nettbrukstabellen (ny PC, eller SRUM av): tilkoblingstabellen viser at lesingen virker, men har ingen mengder
         var tabell = nett ?? db.Finn("{DD6636C4-8929-4683-974E-22C046A43763}");
+        bool sideForSide = false;
+        var sett = new HashSet<long>();
         if (tabell != null && db.KolonneId(tabell, "TimeStamp") is { } cTid && db.KolonneId(tabell, "AppId") is { } cApp)
-            foreach (var r in db.Poster(tabell.Rot, () => klokke.Elapsed > frist))
+            foreach (var r in Rader())
             {
                 try
                 {
                 var p = db.Tolk(r, tabell);
+                // Side for side kan samme post finnes i en gammel kopi av en side: AutoIncId telles én gang
+                if (sideForSide && db.KolonneId(tabell, "AutoIncId") is { } cId && p.Tall(cId) is { } id && !sett.Add(id)) continue;
                 poster++;
                 if (p.Tid(cTid) is not { } t) { utenTid++; continue; }
                 if (p.Tall(cApp) is not { } app) { utenApp++; continue; }
@@ -92,6 +99,15 @@ public sealed partial class Skanner
                 }
                 catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { feil++; }
             }
+
+        IEnumerable<(byte[], int, int)> Rader()
+        {
+            int n = 0;
+            foreach (var r in db.Poster(tabell!.Rot, () => klokke.Elapsed > frist)) { n++; yield return r; }
+            if (n > 0) yield break;
+            sideForSide = true;
+            foreach (var r in db.PosterForEier(tabell.ObjId, () => klokke.Elapsed > frist)) yield return r;
+        }
 
         int ai = 0;
         var enheter = Enheter();
@@ -109,7 +125,8 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster ({(poster == 0 ? db.RotInfo(nett) : $"rot side {nett.Rot}")})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
+        SrumRader = nett != null ? rader : -1; SrumAi = ai;
+        SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster ({(poster == 0 ? db.RotInfo(nett) : sideForSide ? $"lest side for side: treet fra rotside {nett.Rot} var tomt, {db.RotInfo(nett)}" : $"rot side {nett.Rot}")})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }
 

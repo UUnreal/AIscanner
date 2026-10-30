@@ -6,7 +6,7 @@ namespace AISkanner;
 /// <summary>
 /// Lyttevindu: leser TCP-tabellen hvert 250. ms og DNS-bufferen hvert 2. sekund mens søket går,
 /// så korte forbindelser (et API-kall på to sekunder) også blir sett. Ingen pakker fanges, ingenting sendes ut,
-/// ingenting lagres. Alt ligger i minnet til søket er ferdig. Bare TCP: UDP og QUIC (HTTP/3) vises ikke.
+/// ingenting lagres. Alt ligger i minnet til søket er ferdig. UDP (QUIC, WebRTC) med adresse og mengde fra Windows' nettverkshendelser når søket kjører som administrator.
 /// </summary>
 internal sealed class Lyttevindu : IDisposable
 {
@@ -25,6 +25,9 @@ internal sealed class Lyttevindu : IDisposable
     private readonly CancellationTokenSource _stopp = new();
     private readonly Stopwatch _klokke = Stopwatch.StartNew();
     private readonly Task _lop;
+    // UDP (QUIC, WebRTC, DNS) fra Windows' nettverkshendelser, bare som administrator
+    private readonly NettEtw? _etw;
+    private readonly string _etwGrunn = "";
     public int Avlesninger { get; private set; }
     public double Sekunder => _klokke.Elapsed.TotalSeconds;
 
@@ -32,6 +35,7 @@ internal sealed class Lyttevindu : IDisposable
     {
         _maling = maling;
         _lesLinjer = lesLinjer;
+        _etw = NettEtw.Start(out _etwGrunn);
         _lop = Task.Run(Lop);
     }
 
@@ -164,22 +168,40 @@ internal sealed class Lyttevindu : IDisposable
     {
         lock (_sett)
         {
+            // UDP-strømmene blir «forbindelser» merket UDP, med målt mengde og tid fra hendelsene
+            var udp = new List<Tilkobling>();
+            var udpTider = new Dictionary<string, (DateTime, DateTime)>();
+            var udpBytes = new Dictionary<string, (long, long)>();
+            if (_etw != null)
+                foreach (var st in _etw.Strommer())
+                {
+                    if (st.Pid <= 4) continue;
+                    var t = new Tilkobling(st.Pid, IPAddress.None, 0, st.Ip, st.Port) { Udp = true };
+                    udp.Add(t);
+                    udpTider[t.Nokkel] = (st.Forst, st.Sist);
+                    udpBytes[t.Nokkel] = (st.Ut, st.Inn);
+                    if (!_prosesser.ContainsKey(st.Pid) && !_ukjentPid.Contains(st.Pid))
+                        try { using var p = Process.GetProcessById(st.Pid); _prosesser[st.Pid] = (p.ProcessName, ProsessSti.Hent(p)); } catch { _ukjentPid.Add(st.Pid); }
+                }
             var nb = new NettBilde
             {
-                Tilkoblinger = _sett.Values.Select(x => x.T).ToList(),
+                Tilkoblinger = _sett.Values.Select(x => x.T).Concat(udp).ToList(),
                 Lokale = _lokale.Values.ToList(),
                 Dns = _dns.ToDictionary(x => x.Key, x => x.Value.ToList()),
                 DnsNavn = _dnsNavn.ToList(),
                 Prosesser = new Dictionary<int, (string, string?)>(_prosesser),
                 Kortlivede = Kortlivede(),
-                Bytes = _maling != null ? new Dictionary<string, (long, long)>(_bytes) : null,
+                Bytes = _maling != null ? new Dictionary<string, (long, long)>(_bytes).Concat(udpBytes.Where(x => !_bytes.ContainsKey(x.Key))).ToDictionary(x => x.Key, x => x.Value) : null,
                 Sekunder = _maling?.Sekunder ?? 0,
-                Tider = _sett.ToDictionary(x => x.Key, x => (x.Value.Forst, x.Value.Sist)),
+                Tider = _sett.ToDictionary(x => x.Key, x => (x.Value.Forst, x.Value.Sist)).Concat(udpTider.Where(x => !_sett.ContainsKey(x.Key))).ToDictionary(x => x.Key, x => x.Value),
                 LytteSekunder = Sekunder,
                 Avlesninger = Avlesninger,
+                UdpLest = _etw != null,
             };
             if (logg) Tilgangslogg.Logg("Nettverk", "TCP-tabellen (GetExtendedTcpTable), lyttevindu", Utfall.Lest,
                 $"{Avlesninger} avlesninger på {Sekunder:0} sekunder, {_sett.Count} forbindelser sett");
+            if (logg) Tilgangslogg.Logg("Nettverk", "UDP-trafikk (Windows' nettverkshendelser), lyttevindu", _etw != null ? Utfall.Lest : Utfall.Nektet,
+                _etw != null ? $"{udp.Count} UDP-strømmer med adresse, port og mengde; {_etw.Hendelser} hendelser, aldri innhold" : _etwGrunn);
             if (logg) Tilgangslogg.Logg("Nettverk", "DNS-bufferen (bare navn Windows allerede har slått opp), lyttevindu", Utfall.Lest,
                 $"{_dnsNavn.Count} navn; bare AI-navn brukes, resten forkastes");
             return nb;
@@ -188,7 +210,8 @@ internal sealed class Lyttevindu : IDisposable
 
     private List<Kortlivet> Kortlivede() { lock (_nye) return _nye.Values.Where(k => k.Borte != null).ToList(); }
 
-    public void Dispose() { _stopp.Cancel(); _stopp.Dispose(); }
+    public bool UdpLest => _etw != null;
+    public void Dispose() { _stopp.Cancel(); _stopp.Dispose(); _etw?.Dispose(); }
 }
 
 /// <summary>

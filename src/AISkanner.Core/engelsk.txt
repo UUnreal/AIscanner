@@ -1546,3 +1546,40 @@ navnene kommer fra DNS-bufferen|names come from the DNS cache
 Innholdet i trafikken|The content of the traffic
 aldri lest: personvern|never read: privacy
 ingen TLS-inspeksjon, ingen pakker fanges|no TLS inspection, no packets captured
+~^Nettverk: lyttet i (\d+) sekunder \(TCP-tabellen hvert 250\. ms\)\. UDP \(QUIC/HTTP/3, WebRTC, DNS\) lest fra Windows' nettverkshendelser: adresse, port og mengde, aldri innhold\.$|Network: listened for $1 seconds (TCP table every 250 ms). UDP (QUIC/HTTP/3, WebRTC, DNS) read from Windows network events: address, port and volume, never content.
+~^Nettverk: lyttet i (\d+) sekunder \(TCP-tabellen hvert 250\. ms\)\. UDP og QUIC \(HTTP/3\): bare lokale porter, adresse krever administrator\.$|Network: listened for $1 seconds (TCP table every 250 ms). UDP and QUIC (HTTP/3): local ports only, address requires administrator.
+Modellfilene har samme navn og mappestruktur som Chrome/Edge sine; hvem som kopierte dem hit, står ikke i filene|The model files have the same names and folder structure as Chrome/Edge's; who copied them here is not recorded in the files
+Tjenester endret 7 d|Services changed 7 d
+Lyttende AI-porter|Listening AI ports
+ingen program fra BIOS|no program from BIOS
+BIOS starter et AI-program|BIOS starts an AI program
+BIOS starter et program (ikke AI)|BIOS starts a program (not AI)
+ikke lest|not read
+bare Windows|Windows only
+ingen endret|none changed
+ingen timer kunne leses|no hours could be read
+ingen AI over UDP|no AI over UDP
+sjekket, ingen AI|checked, no AI
+ingen tilgang|no access
+kjører ikke|not running
+installert, kjørte ikke|installed, not running
+ikke installert|not installed
+ingen GPU-tellere|no GPU counters
+ingen AI bruker GPU nå|no AI uses the GPU now
+ingen|none
+~^(\d+) endret, ingen AI$|$1 changed, no AI
+~^(\d+) endret, AI-regel traff$|$1 changed, AI rule matched
+~^(\d+) AI-program med nettbruk$|$1 AI programs with network use
+~^(\d+) timer lest, ingen AI$|$1 hours read, no AI
+~^(\d+) AI over UDP$|$1 AI over UDP
+~^(\d+) åpen mot nettet$|$1 open to the network
+~^(\d+) bare på PC-en$|$1 on this PC only
+~^(\d+) AI-bilde$|$1 AI images
+~^(\d+) AI i Linux$|$1 AI in Linux
+~^(\d+) AI bruker GPU nå$|$1 AI using the GPU now
+~^Sjekket: (.+)\.$|Checked: $1.
+~^Lytter på (TCP|UDP) (.+) port (\d+) \((.+)\) · (.+) · åpen mot nettet: kan nås fra andre maskiner$|Listening on $1 $2 port $3 ($4) · $5 · open to the network: reachable from other machines
+~^Lytter på (TCP|UDP) (.+) port (\d+) \((.+)\) · (.+) · bare denne PC-en$|Listening on $1 $2 port $3 ($4) · $5 · this PC only
+~^AI-serveren lytter på alle nettverkskort \(port (\d+)\) og kan nås fra andre maskiner på nettet\.$|The AI server listens on all network interfaces (port $1) and can be reached from other machines on the network.
+ingen AI-prosess kjørte|no AI process was running
+ikke målt|not measured

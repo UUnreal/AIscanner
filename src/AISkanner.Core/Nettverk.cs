@@ -7,9 +7,11 @@ namespace AISkanner;
 /// <summary>En åpen TCP-forbindelse fra et program på PC-en til en maskin på nettet.</summary>
 public sealed record Tilkobling(int Pid, IPAddress Lokal, int LokalPort, IPAddress Fjern, int FjernPort)
 {
+    /// <summary>UDP-strøm fra Windows' nettverkshendelser (QUIC, WebRTC …), ikke en TCP-forbindelse.</summary>
+    public bool Udp { get; init; }
     internal uint[]? Rad4;      // MIB_TCPROW, brukes til datamåling
     internal byte[]? Rad6;      // MIB_TCP6ROW
-    public string Nokkel => $"{Lokal}:{LokalPort}-{Fjern}:{FjernPort}";
+    public string Nokkel => Udp ? $"udp:{Pid}-{Fjern}:{FjernPort}" : $"{Lokal}:{LokalPort}-{Fjern}:{FjernPort}";
 }
 
 /// <summary>

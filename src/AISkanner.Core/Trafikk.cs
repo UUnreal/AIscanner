@@ -21,6 +21,8 @@ internal sealed class NettBilde
     public Dictionary<string, (DateTime Forst, DateTime Sist)> Tider = new();
     public double LytteSekunder;
     public int Avlesninger;
+    /// <summary>UDP-strømmene fra Windows' nettverkshendelser er med (administrator).</summary>
+    public bool UdpLest;
     /// <summary>Lyttende porter. Null: leses fra Windows når de trengs.</summary>
     public List<TcpTabell.Lytter>? Lyttere;
     public List<TcpTabell.Lytter>? UdpLyttere;
@@ -63,6 +65,7 @@ public sealed partial class Skanner
 
     /// <summary>Hvor lenge det faktisk ble lyttet i siste søk.</summary>
     public double LyttetSekunder { get; private set; }
+    public bool UdpLest { get; private set; }
 
     /// <summary>Programmene (PID) som hørte til hvert funn i siste søk. Brukes av «Følg med».</summary>
     private readonly ConcurrentDictionary<Funn, HashSet<int>> _funnPid = new();
@@ -181,8 +184,9 @@ public sealed partial class Skanner
             m.Antall++;
             var ip = t.Fjern.ToString();
             if (m.Ip.Count < 8 && !m.Ip.Any(x => x.Ip == ip)) m.Ip.Add(new IpSted(ip, land, cdn, IpEier.Finn(ip)));
+            m.Protokoller.Add(t.Udp ? "UDP · " + NettProtokoll.Udp(t.FjernPort) : "TCP");
             var kilde = t.Lokal.ToString();
-            if (m.KildeIp.Count < 4 && !m.KildeIp.Contains(kilde)) m.KildeIp.Add(kilde);
+            if (!t.Udp && m.KildeIp.Count < 4 && !m.KildeIp.Contains(kilde)) m.KildeIp.Add(kilde);
             var fil = p.Sti ?? p.Navn;
             if (m.Prosesser.Count < 4 && !m.Prosesser.Any(x => x.Pid == t.Pid)) m.Prosesser.Add(new Prosessfil(t.Pid, fil));
             if (nb.Tider.TryGetValue(t.Nokkel, out var tt))

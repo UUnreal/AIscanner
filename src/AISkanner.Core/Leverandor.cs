@@ -55,7 +55,7 @@ public sealed partial class Skanner
     private sealed class AppAi
     {
         public required string Rot;
-        public bool Beskyttet;
+        public bool Beskyttet, Kopi;
         public readonly List<(string Sti, long Lengde, string Format, DateTime Opprettet, DateTime Endret)> Filer = new();
         public readonly SortedSet<string> Motorer = new();
         public readonly List<string> MotorFiler = new();
@@ -166,17 +166,17 @@ public sealed partial class Skanner
         {
             foreach (var d in Mapper(rot))
             {
-                if (hopp.Contains(d) || rotter.Any(r => r.Sti.Equals(d, StringComparison.OrdinalIgnoreCase))) continue;
+                if (hopp.Contains(d) || rotter.Any(r => r.Sti.Equals(d, StringComparison.OrdinalIgnoreCase)) || Lenke(d)) continue;
                 var navn = Path.GetFileName(d);
                 if (LeverandorHopp.Contains(navn) && (!Fullt || AntivirusMappe(navn))) continue;
                 // Samlemapper (Microsoft, Programs, Packages osv.): hver undermappe er et eget program
                 if (!pakker && Samlemapper.Contains(navn))
-                    foreach (var u in Mapper(d))
+                    foreach (var u in Mapper(d).Where(u => !Lenke(u)))
                     {
                         // Samlemappe i samlemappe (ProgramData\Microsoft): programmet er et nivå lenger ned, så et program
                         // i én undermappe ikke får æren for modellene i en annen (GitHub-exe og Chrome-modeller i samme rot)
                         if (Samlemapper.Contains(Path.GetFileName(u)))
-                            foreach (var uu in Mapper(u)) jobber.Add((uu, uu, dybde - 3, beskyttet));
+                            foreach (var uu in Mapper(u).Where(uu => !Lenke(uu))) jobber.Add((uu, uu, dybde - 3, beskyttet));
                         else jobber.Add((u, u, dybde - 2, beskyttet));
                     }
                 else jobber.Add((d, d, dybde - 1, beskyttet));
@@ -194,7 +194,22 @@ public sealed partial class Skanner
         foreach (var p in Process.GetProcesses())
             using (p) { var s = ProsessSti.Hent(p); if (s != null) kjorer.Add(s); }
 
-        foreach (var app in apper.Values.OrderBy(a => a.Rot, StringComparer.OrdinalIgnoreCase)) LeggTilLeverandorFunn(app, kjorer);
+        foreach (var app in apper.Values.OrderBy(a => a.Rot, StringComparer.OrdinalIgnoreCase))
+        {
+            // Modellfiler i nettleserens modellstruktur hører ikke til programmet som ligger i samme mappe (GitHub-exe ved siden av
+            // en kopi av Chrome-modellene): de blir et eget funn, «Kopi av nettleserens AI-modeller»
+            var kopier = app.Filer.Where(x => Nettlesermodell(x.Sti)).ToList();
+            if (kopier.Count > 0 && kopier.Count < app.Filer.Count + app.MotorFiler.Count + app.AiPakker.Count)
+            {
+                var k = new AppAi { Rot = app.Rot, Beskyttet = app.Beskyttet, Kopi = true };
+                k.Filer.AddRange(kopier);
+                app.Filer.RemoveAll(x => Nettlesermodell(x.Sti));
+                LeggTilLeverandorFunn(k, kjorer);
+                if (app.Filer.Count == 0 && app.AiPakker.Count == 0 && (app.Motorer.Count == 0 || BareGrafikkMotor(app.Motorer))) continue;
+            }
+            else if (kopier.Count > 0 && kopier.Count == app.Filer.Count && app.MotorFiler.Count == 0 && app.AiPakker.Count == 0) app.Kopi = true;
+            LeggTilLeverandorFunn(app, kjorer);
+        }
 
         LeggTilFarlige(ff);
         // Modeller fra Hugging Face, LM Studio osv. og Python/Node med AI i AppData
@@ -293,6 +308,9 @@ public sealed partial class Skanner
         catch (Exception e) { Tilgangslogg.Feil("Fil", xml, e); return false; }
     }
 
+    private bool Nettlesermodell(string sti) =>
+        sti.Split('\\', '/').Any(d => KjenteNettleserModeller.ContainsKey(d) || d.Equals("ProvenanceData", StringComparison.OrdinalIgnoreCase));
+
     private void LeggTilLeverandorFunn(AppAi app, HashSet<string> kjorer)
     {
         var rot = app.Rot;
@@ -343,10 +361,9 @@ public sealed partial class Skanner
         long storrelse = app.Filer.Sum(f => f.Lengde);
         bool stor = storrelse >= 500L * 1024 * 1024;
         var risiko = !kjent ? Risiko.Rod : stor ? Risiko.Gul : Risiko.Gronn;
-        // Bare modellfiler i nettleserens egen modellstruktur, uten program: en kopi av Chrome/Edge sine modeller, ikke et ukjent program
-        bool kopi = exe == null && app.MotorFiler.Count == 0 && app.AiPakker.Count == 0 && app.Filer.Count > 0
-                    && app.Filer.All(x => x.Sti.Split('\\', '/').Any(d => KjenteNettleserModeller.ContainsKey(d) || d.Equals("ProvenanceData", StringComparison.OrdinalIgnoreCase)));
-        if (kopi) { risiko = Risiko.Gul; produkt = "Kopi av nettleserens AI-modeller"; frø = null; utgiver = null; kilde = null; }
+        // Bare modellfiler i nettleserens egen modellstruktur: en kopi av Chrome/Edge sine modeller, ikke et ukjent program
+        bool kopi = app.Kopi;
+        if (kopi) { risiko = Risiko.Gul; produkt = "Kopi av nettleserens AI-modeller"; frø = null; utgiver = null; kilde = null; exe = null; }
 
         var regel = FinnRegel($"{produkt} {exe}");
         // Samme komponent skal bli én rad: kjente mapper får navnet fra regelfila uten utgiver, og ellers fjernes
@@ -363,7 +380,7 @@ public sealed partial class Skanner
             ? $"{Forkort(utgiver!)} har lagt AI inn i programmet: {hva}. Kom med programmet eller en oppdatering, uten at noen ble spurt."
             : "Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.";
         var f = regel != null ? FraRegel(regel, "Innebygd AI", null!)
-            : LeggTil(navn, LeverandorKategori, risiko, hvorfor, "Innebygd AI", null,
+            : LeggTil(navn, kopi ? LeverandorKategori + " (nettleser)" : LeverandorKategori, risiko, hvorfor, "Innebygd AI", null,
                 enkelt: kopi ? "Kopi av nettleserens AI-modeller" : kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
@@ -390,7 +407,8 @@ public sealed partial class Skanner
         if (iGang) f.Merk(Tilstand.KjorerNa);
 
         f.Detalj($"Mappe: {rot} · {hva}{(lagtInn != null ? $" · lagt inn {Tid(lagtInn)}" : "")}");
-        f.Detalj($"Utgiver: {utgiver ?? "ukjent"}{(kilde != null ? $" · {kilde}" : "")}");
+        if (kopi) f.Detalj("Modellfilene har samme navn og mappestruktur som Chrome/Edge sine; hvem som kopierte dem hit, står ikke i filene");
+        else f.Detalj($"Utgiver: {utgiver ?? "ukjent"}{(kilde != null ? $" · {kilde}" : "")}");
         foreach (var x in app.Filer.OrderByDescending(x => x.Lengde).Take(40))
             f.Detalj($"Fil: {x.Sti} · {x.Format} · {Rapport.Storrelse(x.Lengde)} · lagt inn {Tid(x.Opprettet)}{(x.Endret.Date != x.Opprettet.Date ? $" · oppdatert {Tid(x.Endret)}" : "")}");
         if (app.Filer.Count > 40) f.Detalj($"Og {app.Filer.Count - 40} modellfiler til i {rot}");

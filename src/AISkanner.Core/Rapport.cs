@@ -46,10 +46,11 @@ public static class Rapport
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
+        if (skanner != null && skanner.Sjekker.Count > 0) L("Sjekket: " + string.Join(" · ", skanner.Sjekker.Select(x => $"{x.Navn}: {x.Tekst}")) + ".");
         int spor = liste.Count(f => f.Gruppe == "spor");
         L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
         if (skanner != null) L(skanner.LyttetSekunder > 0
-            ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). UDP og QUIC (HTTP/3) vises ikke."
+            ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). " + (skanner.UdpLest ? "UDP (QUIC/HTTP/3, WebRTC, DNS) lest fra Windows' nettverkshendelser: adresse, port og mengde, aldri innhold." : "UDP og QUIC (HTTP/3): bare lokale porter, adresse krever administrator.")
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
         L($"IP-eiere (ASN): {IpEier.Kilde}. Slått opp i programmet, ingen IP sendes ut. Eier er registrerte data (OSINT), ikke målt; alt annet om tilkoblinger er målt under søket.");
         if (skanner != null) lock (skanner.Fastvarelinjer) foreach (var b in skanner.Fastvarelinjer) L(b);
@@ -129,6 +130,7 @@ public static class Rapport
         deler.Add(m.Land == "LAN" ? "lokalt nett" : m.Land == "CDN" ? $"tjenesten skjuler IP-en (bak {m.Cdn ?? "CDN"})" : $"server i {IpLand.Navn(m.Land)}");
         if (m.EierLand != null && m.EierLand != m.Land) deler.Add($"selskap i {IpLand.Navn(m.EierLand)}");
         deler.Add(m.Antall == 1 ? "1 forbindelse" : $"{m.Antall} forbindelser");
+        if (m.Protokoller.Count > 0) deler.Add(string.Join(", ", m.Protokoller));
         if (m.Ut != null) deler.Add($"sendt {Storrelse(m.Ut.Value)}, mottatt {Storrelse(m.Inn ?? 0)}");
         if (m.Ip.Count > 0) deler.Add($"IP {string.Join(", ", m.Ip.Select(x => x.Eier != null ? $"{x.Ip} (eier {x.Eier}, OSINT)" : x.Ip))}");
         if (m.KildeIp.Count > 0) deler.Add($"fra {string.Join(", ", m.KildeIp)}");

@@ -37,6 +37,14 @@ Kategoriene er:
 - Nettverk: DNS over HTTPS og DNS over TLS mot kjente DNS-servere kjennes igjen (forklarer forbindelser uten navn i DNS-bufferen).
 - Nettverk: fanen «Datagrunnlag» med hver kilde, antall og utfall: TCP-tabellen, lyttende porter, UDP-tabellen, UDP-hendelser, DNS-bufferen, datamengde, og det som aldri leses (navnet i TLS krever pakkefangst; innhold av personvern).
 - Kontroll og CI-lastetest for UDP-hendelsene (testdatagram til TEST-NET-1 skal sees med riktig program og port).
+- Funn: stripe «Sjekket» øverst med resultatet av hver sjekk som før bare sto i rapporten: BIOS (WPBT), tjenester endret siste 7 dager, SRUM, UDP/QUIC, lyttende AI-porter, Docker, WSL og GPU/NPU. «Ingen» når sjekken ikke fant noe, tom ring når den ikke kunne kjøres (med grunn). Samme linje i rapporten.
+- Søket (som administrator) leser også UDP i lyttevinduet: AI-tjenester nådd over QUIC/HTTP/3 blir funn, og hver adresse viser protokollen (TCP eller UDP · QUIC).
+- Lyttende AI-porter blir detalj på funnet for programmet; åpen mot nettet (0.0.0.0 eller ::) blir advarsel.
+
+### Rettet
+- Mapper som er lenker (AppData\Local\Programdata pekte inn i seg selv) følges ikke lenger i leverandørsjekken; de samme filene ble telt opptil tre ganger.
+- Kopier av Chrome/Edge-modeller i en mappe med et annet program ble regnet som det programmets AI (GitHub Desktop). De er nå et eget funn, «Kopi av nettleserens AI-modeller» (Middels, ikke Ukjent).
+- SRUM: når nettbrukstabellens rotside i fila ikke er skrevet ferdig (Windows har databasen åpen), leses tabellens sider én og én; like poster telles én gang (AutoIncId).
 
 ## [2.39.0] - 2026-10-30
 

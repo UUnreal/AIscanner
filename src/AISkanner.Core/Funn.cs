@@ -213,6 +213,8 @@ public sealed class Mal
     public List<IpSted> Ip { get; } = new();
     /// <summary>Lokale IP-adresser forbindelsene gikk fra (høyst 4).</summary>
     public List<string> KildeIp { get; } = new();
+    /// <summary>Protokollene som ble sett hit: «TCP», «UDP · QUIC (HTTP/3)» …</summary>
+    public SortedSet<string> Protokoller { get; } = new(StringComparer.Ordinal);
     /// <summary>Programfilene (full sti) som hadde forbindelsene, med PID (høyst 4).</summary>
     public List<Prosessfil> Prosesser { get; } = new();
 }
