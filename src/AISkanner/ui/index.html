@@ -141,19 +141,8 @@
   .fordeling button:hover { background: var(--flate2, rgba(127,127,127,.12)); }
   .fordeling button.valgt { background: var(--flate2, rgba(127,127,127,.18)); box-shadow: inset 0 0 0 1px var(--kant, rgba(127,127,127,.35)); }
   .fordeling button.av { opacity: .45; }
-  .sorter { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--tekst2, var(--tekst)); font-size: 13px; height: 20px; margin-block: -4px; }
-  /* Egen meny i stedet for Windows' nedtrekksliste: samme farger som resten i lys og mørk modus (Apple-stil, hake på valgt) */
-  .sorter button.velg { font: inherit; color: var(--tekst); background: var(--fyll); border: 0; border-radius: var(--r3); padding: 0 10px 0 12px; height: 20px; line-height: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-  .sorter button.velg:hover { background: var(--bla-myk); }
-  .sorter button.velg svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-  .sorter button.velg:focus-visible, .sorterMeny button:focus-visible { outline: 2px solid var(--bla); outline-offset: 2px; }
-  .sorterMeny { position: fixed; z-index: 50; min-width: 160px; padding: 5px; background: var(--kort); color: var(--tekst); border: 1px solid var(--linje); border-radius: var(--r2);
-    box-shadow: 0 8px 28px rgba(0,0,0,.28), 0 1px 3px rgba(0,0,0,.12); animation: menyInn .14s ease-out; }
-  .sorterMeny[hidden] { display: none; }
-  .sorterMeny button { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; color: inherit; font: var(--t14); text-align: left; padding: 5px 10px 5px 6px; border-radius: var(--r1); cursor: pointer; }
-  .sorterMeny button:hover, .sorterMeny button.aktiv { background: var(--bla-knapp); color: #fff; }
-  .sorterMeny button .hake { width: 14px; flex: none; text-align: center; }
-  @keyframes menyInn { from { opacity: 0; transform: scale(.97) translateY(-2px); } to { opacity: 1; transform: none; } }
+  .fordeling #landValg { margin-left: 4px; color: var(--dempet); } .fordeling #landValg.valgt { color: var(--tekst); }
+  .fordeling #landValg .ik { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.3; }
   .gruppe.fare { color: var(--rod); }
   .fordeling button:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
   .prikk { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--svak); }
@@ -459,8 +448,7 @@
         <button class="knapp primar" id="lagre"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8.5M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span data-en="Save report">Lagre rapport</span></button>
       </div></div>
     <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div>
-      <div class="sorter"><span data-en="Sort">Sorter</span><button class="velg" id="sorter" aria-haspopup="listbox" aria-expanded="false"><span id="sorterTekst"></span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button></div></div>
-    <div class="sorterMeny" id="sorterMeny" role="listbox" hidden></div>
+      </div>
     <div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
   </div>
   <div class="hoved" id="hoved">
@@ -501,32 +489,6 @@ let risikoValg = null;
 const synlige = () => risikoValg ? alle.filter(f => f.risiko === risikoValg) : alle;
 // Sortering: risiko (standard), land, A–Å eller type AI. Hvert funn står i nøyaktig én gruppe, så gruppene summerer til lista.
 let sortering = "risiko";
-const SORTER = [["risiko", () => L("Risiko", "Risk")], ["land", () => L("Land", "Country")], ["navn", () => L("A–Å", "A–Z")], ["type", () => L("Type AI", "AI type")]];
-function velgSortering(v) { sortering = v; side = 0; lukkSorter(); lukkArk(); $("sorterTekst").textContent = SORTER.find(x => x[0] === v)[1](); tegnListe(); $("sorter").focus(); }
-function apneSorter() {
-  const m = $("sorterMeny"), r = $("sorter").getBoundingClientRect();
-  m.innerHTML = SORTER.map(([v, t]) => `<button role="option" data-v="${v}" aria-selected="${v === sortering}"><span class="hake">${v === sortering ? "✓" : ""}</span>${esc(t())}</button>`).join("");
-  m.hidden = false;
-  m.style.top = (r.bottom + 6) + "px";
-  m.style.left = Math.max(8, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
-  $("sorter").setAttribute("aria-expanded", "true");
-  m.querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); velgSortering(b.dataset.v); });
-  (m.querySelector('[aria-selected="true"]') || m.querySelector("button")).focus();
-}
-function lukkSorter() { const m = $("sorterMeny"); if (m && !m.hidden) { m.hidden = true; $("sorter").setAttribute("aria-expanded", "false"); } }
-document.addEventListener("click", e => { if (!e.target.closest || !e.target.closest("#sorterMeny")) lukkSorter(); });
-window.addEventListener("resize", lukkSorter);
-document.addEventListener("keydown", e => {
-  const m = $("sorterMeny");
-  if (!m || m.hidden) return;
-  const k = [...m.querySelectorAll("button")], i = k.indexOf(document.activeElement);
-  if (e.key === "Escape") { lukkSorter(); $("sorter").focus(); }
-  else if (e.key === "ArrowDown") k[(i + 1) % k.length].focus();
-  else if (e.key === "ArrowUp") k[(i - 1 + k.length) % k.length].focus();
-  else if (e.key === "Enter" || e.key === " ") { if (i >= 0) velgSortering(k[i].dataset.v); }
-  else return;
-  e.preventDefault(); e.stopImmediatePropagation();
-}, true);
 const RISIKO_NR = r => Math.max(0, RISIKOGRUPPER.indexOf(r));
 // Landet dataene går til. Et farlig land går foran, så funnet står der det betyr mest.
 function hovedland(f) {
@@ -614,14 +576,16 @@ function tegnFordeling() {
   $("fordeling").innerHTML = funn.length
     ? RISIKOGRUPPER.filter(r => r !== "ukjent" || ant(r)).map(r => `<button data-r="${r}" class="${risikoValg === r ? "valgt" : risikoValg ? "av" : ""}" aria-pressed="${risikoValg === r}" title="${esc(risikoValg === r ? L("Vis alle", "Show all") : L(`Vis bare ${merke(r).toLowerCase()}`, `Show only ${merke(r).toLowerCase()}`))}"><span class="prikk ${r}"></span><b>${ant(r)}</b>${merke(r)}</button>`).join("")
       + (risikoValg ? `<button data-r="" title="${esc(L("Vis alle", "Show all"))}"><b>${alle.length}</b>${L("Alle", "All")}</button>` : "")
+      // Land: samme rad, grupperer funnene etter landet dataene går til (målt eller fra leverandør, sagt per land)
+      + `<button id="landValg" class="${sortering === "land" ? "valgt" : ""}" aria-pressed="${sortering === "land"}" title="${esc(sortering === "land" ? L("Tilbake til risiko", "Back to risk") : L("Grupper etter land", "Group by country"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 2 1.8 10 0 12M8 2c-1.8 2-1.8 10 0 12"/></svg>${L("Land", "Country")}</button>`
     : L("Ingen spor etter AI", "No traces of AI");
   $("fordeling").querySelectorAll("button[data-r]").forEach(b => b.onclick = () => {
     const r = b.dataset.r || null;
     risikoValg = risikoValg === r ? null : r;
     side = 0; lukkArk(); tegnFordeling(); tegnListe();
   });
-  $("sorterTekst").textContent = SORTER.find(x => x[0] === sortering)[1]();
-  $("sorter").onclick = e => { e.stopPropagation(); $("sorterMeny").hidden ? apneSorter() : lukkSorter(); };
+  const lv = $("landValg");
+  if (lv) lv.onclick = () => { sortering = sortering === "land" ? "risiko" : "land"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
 }
 
 function tegnBunn() {
@@ -784,7 +748,7 @@ function tegnNett() {
       ${r.uavklart
         ? `<span>${L("Kan ikke avgjøre", "Cannot tell")}<small>${esc(r.vert || L("adressen har ikke noe navn i DNS-bufferen", "the address has no name in the DNS cache"))}</small></span>`
         : `<span>${esc(r.tjeneste)}<small>${esc(r.vert || "")}</small></span>`}
-      <span class="${r.farlig ? "fare" : ""}">${esc(r.land || L("ukjent", "unknown"))}${r.eier && r.eier !== r.land ? `<small>${L("selskap", "company")}: ${esc(r.eier)}</small>` : ""}</span>
+      <span class="${r.farlig ? "fare" : ""}">${esc(r.land || L("ukjent", "unknown"))}${r.eier && r.eier !== r.land ? `<small>${L("selskap", "company")}: ${esc(r.eier)}</small>` : ""}${(r.ipEiere || []).length ? `<small title="${esc(r.ipEiere.join("\n") + "\n" + L("Eier fra offentlige rutetabeller (OSINT), ikke målt", "Owner from public routing tables (OSINT), not measured"))}">${esc(r.ipEiere[0])}${r.ipEiere.length > 1 ? ` +${r.ipEiere.length - 1}` : ""}</small>` : ""}</span>
       <span class="tall">${tall(r.n)}</span><span class="tall">${fart(r.ut)}</span><span class="tall">${fart(r.inn)}</span></li>`;
   const kolonner = `<li class="nettRad hode"><span>${L("Program", "Program")}</span><span>${L("AI-tjeneste", "AI service")}</span><span>${L("Land", "Country")}</span><span class="tall">${L("Forb.", "Conn.")}</span><span class="tall">${L("Sendt", "Sent")}</span><span class="tall">${L("Mottatt", "Received")}</span></li>`;
   // Tom liste: si nøyaktig hva det betyr, ikke mer
@@ -1163,7 +1127,8 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
     const sted = x => x.cdn || x.kode === "CDN" ? `${L("bak", "behind")} ${x.cdn || m.cdn || "CDN"}` : x.land || L("ukjent land", "unknown country");
     // Samme sted for alle står bare én gang, til høyre
     const ulike = new Set(l.map(sted)).size > 1;
-    const vis = l.slice(0, 4).map(x => `<span class="${x.farlig ? "farlig" : ""}">${esc(x.ip)}${ulike ? ` · ${esc(sted(x))}` : ""}</span>`).join("");
+    // Eier (ASN) er registrerte data fra offentlige rutetabeller, ikke målt: merket «OSINT»
+    const vis = l.slice(0, 4).map(x => `<span class="${x.farlig ? "farlig" : ""}" title="${esc(x.eier ? L("Eier fra offentlige rutetabeller (OSINT), ikke målt", "Owner from public routing tables (OSINT), not measured") : "")}">${esc(x.ip)}${ulike ? ` · ${esc(sted(x))}` : ""}${x.eier ? ` · ${esc(x.eier)} <small>OSINT</small>` : ""}</span>`).join("");
     return `<span class="ip">${vis}${l.length > 4 ? `<span>+ ${l.length - 4} ${L("til", "more")}</span>` : ""}</span>`;
   };
   const kildeLinje = m => (m.kilde || []).length || (m.prosesser || []).length

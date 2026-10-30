@@ -6,7 +6,7 @@ Ett vindu, én knapp: **Søk**.
 AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
 å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
 
-- **Versjon:** 2.36.2 (se [CHANGELOG.md](CHANGELOG.md))
+- **Versjon:** 2.37.0 (se [CHANGELOG.md](CHANGELOG.md))
 - **Plattform:** Windows 10 og 11, x64
 - **Lisens:** [MIT](LICENSE)
 - **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
@@ -194,3 +194,4 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 
 MIT, se [LICENSE](LICENSE).
 Landtabellen er IP to Country Lite fra [DB-IP.com](https://db-ip.com), lisensiert under CC BY 4.0.
+Eiertabellen (IP → ASN og firma) er IP to ASN Lite fra [DB-IP.com](https://db-ip.com) og RouteViews, samlet av [ip-location-db](https://github.com/sapics/ip-location-db), lisensiert under CC BY 4.0. Den ligger i programmet; ingen IP sendes ut.

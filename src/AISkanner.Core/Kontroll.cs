@@ -442,6 +442,10 @@ public sealed partial class Skanner
         // SRUM: Windows' enhetssti blir en vanlig sti, så programmet kan kobles til funnet
         Sjekk(Dosti(@"\Device\HarddiskVolume3\Program Files\Ollama\ollama.exe", new Dictionary<string, string> { [@"\Device\HarddiskVolume3"] = "C:" }) == @"C:\Program Files\Ollama\ollama.exe",
             "SRUM-sti ble ikke gjort om til stasjonsbokstav");
+        // IP-eier (ASN) fra dataene i programmet: kjente adresser gir riktig eier, lokale gir ingen
+        Sjekk(IpEier.Finn("1.1.1.1")?.StartsWith("AS13335 ") == true && IpEier.Finn("8.8.8.8")?.StartsWith("AS15169 ") == true
+              && IpEier.Finn("192.168.1.10") == null && IpEier.Finn("2606:4700:4700::1111")?.StartsWith("AS13335 ") == true,
+            "IP-eier (ASN) ble feil");
         return (ok, alle);
     }
 

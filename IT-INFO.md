@@ -1,6 +1,6 @@
 # AI-skanner: informasjon til IT og sikkerhet
 
-Gjelder versjon 2.36.2. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
+Gjelder versjon 2.37.0. Endringer per versjon står i [CHANGELOG.md](CHANGELOG.md). Trusselmodell og kjente svakheter
 står i [SECURITY.md](SECURITY.md).
 
 ## Kort fortalt
@@ -145,6 +145,7 @@ sjekkes bare for om den er tom, og kastes med en gang. Alle nøkkelnavn samles i
   havner ikke i bufferen. Står de fleste kjente AI-navnene i bufferen samtidig (rester etter en eldre versjon), brukes
   bufferen ikke som bevis i det søket.
 - Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
+- Eier (ASN og firma) fra en innebygd tabell (DB-IP og RouteViews via ip-location-db, CC BY 4.0). Merket «OSINT»: registrerte data, ikke målt. Ingen IP sendes ut.
 - Kartet i resultatet er innebygd (Natural Earth, fri bruk, via world-atlas, ISC). Det viser land, ikke by, og henter
   ingenting fra nettet. IP-adressene vises i vinduet, men lagres ikke.
 - IP-adresser bak en CDN får ikke land, fordi adressen bare er nærmeste kantserver. Cloudflare, Fastly og Amazon

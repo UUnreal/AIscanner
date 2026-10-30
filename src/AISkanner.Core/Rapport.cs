@@ -50,6 +50,7 @@ public static class Rapport
         if (skanner != null) L(skanner.LyttetSekunder > 0
             ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). UDP og QUIC (HTTP/3) vises ikke."
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
+        L($"IP-eiere (ASN): {IpEier.Kilde}. Slått opp i programmet, ingen IP sendes ut. Eier er registrerte data (OSINT), ikke målt; alt annet om tilkoblinger er målt under søket.");
         if (skanner != null) lock (skanner.Fastvarelinjer) foreach (var b in skanner.Fastvarelinjer) L(b);
         if (skanner != null) foreach (var b in skanner.Blindsoner) L($"Blindsone: {b}");
         L(Revisjon.IngenAi);
@@ -126,7 +127,7 @@ public static class Rapport
         if (m.EierLand != null && m.EierLand != m.Land) deler.Add($"selskap i {IpLand.Navn(m.EierLand)}");
         deler.Add(m.Antall == 1 ? "1 forbindelse" : $"{m.Antall} forbindelser");
         if (m.Ut != null) deler.Add($"sendt {Storrelse(m.Ut.Value)}, mottatt {Storrelse(m.Inn ?? 0)}");
-        if (m.Ip.Count > 0) deler.Add($"IP {string.Join(", ", m.Ip.Select(x => x.Ip))}");
+        if (m.Ip.Count > 0) deler.Add($"IP {string.Join(", ", m.Ip.Select(x => x.Eier != null ? $"{x.Ip} (eier {x.Eier}, OSINT)" : x.Ip))}");
         if (m.KildeIp.Count > 0) deler.Add($"fra {string.Join(", ", m.KildeIp)}");
         if (m.Prosesser.Count > 0) deler.Add($"program {string.Join(", ", m.Prosesser.Select(p => $"{p.Fil} (PID {p.Pid})"))}");
         return string.Join(" · ", deler);

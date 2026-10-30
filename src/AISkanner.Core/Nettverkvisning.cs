@@ -16,7 +16,7 @@ public sealed class Nettverkvisning : IDisposable
     /// </summary>
     public sealed record Rad(string Program, string? Sti, int Pid, string? Tjeneste, string? Vert, string? Land, string? Cdn,
         string? EierLand, int Forbindelser, long? UtPerSek, long? InnPerSek, bool Kjent, string? Nettleser, string? Ai, bool Uavklart,
-        IReadOnlyCollection<string> AlleLand);
+        IReadOnlyCollection<string> AlleLand, IReadOnlyList<string>? IpEiere = null);
     /// <summary>Et program med åpne UDP-porter (mulig QUIC/HTTP/3, som ikke synes her). Bare antall, ikke hvor.</summary>
     public sealed record Udp(string Program, int Porter, bool Nettleser);
     public sealed record Bilde(DateTime Tid, List<Rad> Rader, long? UtPerSek, long? InnPerSek, int AndreForbindelser, int AndreNettleser, List<Udp> UdpHint);
@@ -156,7 +156,9 @@ public sealed class Nettverkvisning : IDisposable
             bool uavklart = forste.Tj == null;
             var vertene = g.Select(x => x.Vert).Where(v => v != null).Distinct().ToList();
             rader.Add(new Rad(prog, sti, pid, forste.Tj?.Navn, uavklart ? (vertene.Count == 1 ? vertene[0] : null) : forste.Vert, land, cdn, forste.Tj?.Land,
-                g.Count, ut, inn, kjent, nettleser, funn == null ? null : Oversikt.Navn(funn), uavklart, alleLand));
+                g.Count, ut, inn, kjent, nettleser, funn == null ? null : Oversikt.Navn(funn), uavklart, alleLand,
+                // IP-adressene med eier (ASN) fra offentlige rutetabeller i programmet (OSINT, ikke målt)
+                g.Select(x => x.T.Fjern).Distinct().Take(6).Select(ip => IpEier.Finn(ip) is { } e ? $"{ip} · {e}" : ip.ToString()).ToList()));
         }
         rader = rader.OrderBy(r => r.Kjent).ThenBy(r => r.Uavklart).ThenByDescending(r => r.UtPerSek ?? 0).ThenByDescending(r => r.Forbindelser).ToList();
 

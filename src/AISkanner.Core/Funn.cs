@@ -216,7 +216,8 @@ public sealed class Mal
 }
 
 /// <summary>En IP-adresse og landet den er registrert i. Cdn er satt når adressen bare er en kantserver.</summary>
-public sealed record IpSted(string Ip, string? Land, string? Cdn);
+/// Eier er firmaet som har adressen (ASN), fra offentlige rutetabeller (OSINT), ikke målt.
+public sealed record IpSted(string Ip, string? Land, string? Cdn, string? Eier = null);
 
 /// <summary>Et program (PID og full sti) som hadde en forbindelse.</summary>
 public sealed record Prosessfil(int Pid, string Fil);

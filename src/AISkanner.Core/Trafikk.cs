@@ -178,7 +178,7 @@ public sealed partial class Skanner
                 liste[adresse] = m = new Mal { Adresse = adresse, Tjeneste = tj?.Navn, Land = land, Cdn = cdn, EierLand = tj?.Land };
             m.Antall++;
             var ip = t.Fjern.ToString();
-            if (m.Ip.Count < 8 && !m.Ip.Any(x => x.Ip == ip)) m.Ip.Add(new IpSted(ip, land, cdn));
+            if (m.Ip.Count < 8 && !m.Ip.Any(x => x.Ip == ip)) m.Ip.Add(new IpSted(ip, land, cdn, IpEier.Finn(ip)));
             var kilde = t.Lokal.ToString();
             if (m.KildeIp.Count < 4 && !m.KildeIp.Contains(kilde)) m.KildeIp.Add(kilde);
             var fil = p.Sti ?? p.Navn;
@@ -246,7 +246,7 @@ public sealed partial class Skanner
             {
                 if (!ipFor.TryGetValue(n, out var l)) ipFor[n] = l = new List<string>();
                 // Land der IP-en står, og mellomleddet (CDN eller sky) som svarer for tjenesten, fra IP-nettet eller CNAME-kjeden
-                var hvor = new[] { IpLand.Finn(ip) is { } k ? IpLand.Navn(k) : null, IpLand.Cdn(ip, navn) is { } cdn ? $"via {cdn}" : null }.Where(x => x != null).ToList();
+                var hvor = new[] { IpLand.Finn(ip) is { } k ? IpLand.Navn(k) : null, IpLand.Cdn(ip, navn) is { } cdn ? $"via {cdn}" : null, IpEier.Finn(ip) is { } e ? $"eier {e} (OSINT)" : null }.Where(x => x != null).ToList();
                 if (l.Count < 3) l.Add($"{ip}{(hvor.Count > 0 ? $" ({string.Join(", ", hvor)})" : "")}");
             }
         string Bevis(string v) =>

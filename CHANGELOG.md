@@ -29,6 +29,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.37.0] - 2026-10-30
+
+### Lagt til
+
+- IP-eier (ASN og firma) for hver IP: i funnene, i rapporten, i DNS-funnene og live i Nettverk. Dataene (DB-IP og RouteViews, CC BY 4.0) ligger i programmet, så ingen IP sendes ut. Eier er merket «OSINT»: registrerte data, ikke målt. Rapporten sier hva som er målt og hva som er eierdata.
+
+### Endret
+
+- «Sorter»-menyen er fjernet. «Land» er et eget valg på linja med Høy, Ukjent, Middels og Lav, og grupperer funnene etter land. Valgene A–Å og Type AI er borte.
+
 ## [2.36.2] - 2026-10-30
 
 ### Endret
