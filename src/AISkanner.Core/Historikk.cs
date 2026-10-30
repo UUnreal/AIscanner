@@ -20,7 +20,7 @@ public sealed partial class Skanner
         if (!Plattform.ErWindows) return;
         foreach (var (navn, steg) in new (string, Action)[]
         {
-            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare),
+            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
         })
         {
             try { steg(); }

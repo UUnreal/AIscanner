@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.36.0] - 2026-10-30
+
+### Lagt til
+
+- SRUM: Windows' egen telling av nettbruk per program (System32\sru\SRUDB.dat) leses som administrator med en egen ESE-leser, bare lesing og uten kopi. AI-programmer får «Brukt før» med sendt og mottatt mengde siste 30 dager og tidsrommet. Nettlesere og AI-skanneren selv telles ikke.
+
 ## [2.35.0] - 2026-10-30
 
 ### Lagt til

@@ -134,6 +134,7 @@ internal static class Program
             Console.WriteLine($"Søk: {sok.Tider.Sum(t => t.Value.TotalSeconds):0.0} s i sum, {(stoppet.Count == 0 ? "ingen sjekk stoppet" : "stoppet: " + string.Join(" | ", stoppet))}");
             Console.WriteLine("Rapport: " + (Rapport.Tekst(funn, sok).Length > 0 ? "OK" : "FEIL") + ", CSV: " + (Rapport.Csv(funn).Length > 0 ? "OK" : "FEIL"));
             feil |= stoppet.Count > 0;
+            Console.WriteLine(sok.SrumStatus ?? "SRUM: ikke lest");
             // Ingen funn uten kilde, og skannerens egen aktivitet er aldri bevis
             var utenKilde = Kildesjekk.Mangler(funn);
             Console.WriteLine(utenKilde.Count == 0 ? "Kilder: hvert funn har kilde" : "Kilder FEIL: " + string.Join(" | ", utenKilde));

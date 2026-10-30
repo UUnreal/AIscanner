@@ -439,6 +439,9 @@ public sealed partial class Skanner
         Sjekk(sk._funn.Values.Any(f => f.Navn.StartsWith("Ollama") && f.Detaljer.Any(d => d.Contains("startet og stoppet under søket")) && f.Status == Tilstand.BruktFor)
               && sk._funn.Values.Any(f => f.Detaljer.Any(d => d.Contains("vllm") || d.Contains("PID 5102") || d.Contains("startet og stoppet"))) && sk._funn.Count == 2,
             "kortlivede prosesser med AI ble ikke funnet, eller et vanlig program ble funnet");
+        // SRUM: Windows' enhetssti blir en vanlig sti, så programmet kan kobles til funnet
+        Sjekk(Dosti(@"\Device\HarddiskVolume3\Program Files\Ollama\ollama.exe", new Dictionary<string, string> { [@"\Device\HarddiskVolume3"] = "C:" }) == @"C:\Program Files\Ollama\ollama.exe",
+            "SRUM-sti ble ikke gjort om til stasjonsbokstav");
         return (ok, alle);
     }
 
