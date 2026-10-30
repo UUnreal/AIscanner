@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.36.2] - 2026-10-30
+
+### Endret
+
+- «Sorter» er en egen meny i stedet for Windows' nedtrekksliste, med appens farger i lys og mørk modus og hake på valget. Piltaster, Enter og Esc virker.
+
 ## [2.36.1] - 2026-10-30
 
 ### Endret
