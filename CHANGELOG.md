@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.37.1] - 2026-10-30
+
+### Endret
+
+- SRUM-linja (hva som ble lest fra Windows' ressursbruk) står øverst i rapporten.
+
 ## [2.37.0] - 2026-10-30
 
 ### Lagt til

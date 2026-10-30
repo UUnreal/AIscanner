@@ -52,6 +52,7 @@ public static class Rapport
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
         L($"IP-eiere (ASN): {IpEier.Kilde}. Slått opp i programmet, ingen IP sendes ut. Eier er registrerte data (OSINT), ikke målt; alt annet om tilkoblinger er målt under søket.");
         if (skanner != null) lock (skanner.Fastvarelinjer) foreach (var b in skanner.Fastvarelinjer) L(b);
+        if (skanner?.SrumStatus != null) L(skanner.SrumStatus + ".");
         if (skanner != null) foreach (var b in skanner.Blindsoner) L($"Blindsone: {b}");
         L(Revisjon.IngenAi);
         L(new string('=', 60));
