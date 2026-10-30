@@ -396,6 +396,9 @@
   .nettListe .mer { color: var(--dempet); padding: 6px 4px; }
   .nettFaner { margin: 10px 0 4px; align-self: flex-start; } .nettFaner .ant { color: var(--dempet); font-weight: 400; } .nettFaner .ant.fare { color: var(--rod-tekst); font-weight: 600; }
   .fareTekst { color: var(--rod-tekst) !important; }
+  .sted.klikk { cursor: pointer; } .sted.klikk:hover { background: var(--fyll); }
+  .dgTopp { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font: var(--t12); color: var(--dempet); } .dgTopp b { color: var(--tekst); font: var(--t15, inherit); font-weight: 600; } .dgTopp .sidevalg { margin-left: auto; }
+  .tilbake { border: 0; background: var(--fyll); color: var(--bla); border-radius: 999px; padding: 3px 10px; cursor: pointer; font: inherit; font-weight: 600; }
   #nettDl { margin-top: 0; }
 
   @media (max-width: 760px) {
@@ -730,7 +733,7 @@ function settFolg(f, pa) {
 }
 
 // ---------- Nettverk: hvem som snakker med AI-tjenester akkurat nå (live, bare mens visningen er åpen) ----------
-let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {}, nettFane = "forb";
+let nettApen = false, nett = { p: [], rader: [], admin: false, andre: 0, hist: {} }, nettValgt = null, nettProsess = {}, nettFane = "forb", nettDg = null, nettDgSide = 0;
 function apneNett() {
   valgt = null; dataApen = false; nettApen = true; nettValgt = null; nettProsess = {}; nettFane = "forb"; nett = { p: [], rader: [], admin: false, andre: 0, hist: {} };
   visArk("full"); tegnNett(); send({ type: "nettverk", pa: true });
@@ -831,14 +834,36 @@ function tegnNett() {
     : `<ul>${(nett.udpTyper || []).length ? nett.udpTyper.map(u => linje(u.hva, `${tall(u.n)} ${u.n === 1 ? L("strøm", "stream") : L("strømmer", "streams")} · ${tall(u.programmer)} ${u.programmer === 1 ? L("program", "program") : L("programmer", "programs")}`, nett.admin ? `${L("Sendt", "Sent")} ${fart(u.ut)} · ${L("Mottatt", "Received")} ${fart(u.inn)}` : "")).join("")
       : `<li class="mer">${L("Ingen UDP-trafikk til andre maskiner siste 10 sekunder.", "No UDP traffic to other machines in the last 10 seconds.")}</li>`}`
       + (nett.kryptertDns || []).map(x => linje(x, L("kryptert DNS", "encrypted DNS"), L("Navnene som slås opp slik, kommer ikke i DNS-bufferen", "Names looked up this way do not reach the DNS cache"))).join("") + `</ul>`;
-  else if (nettFane === "dg") innhold = `<ul>${(andre ? [linje(L("Andre forbindelser", "Other connections"), tall(nett.andre), andre)] : []).concat(udp ? [linje(L("Åpne UDP-porter", "Open UDP ports"), "", udp.trim())] : [])
-      .concat((nett.kilder || []).map(k => linje(k.navn, k.n != null ? tall(k.n) : "", `${k.utfall}${k.detalj ? " · " + k.detalj : ""}`, !k.lest && !k.aldri))).join("")}</ul>`;
+  else if (nettFane === "dg" && nettDg != null && (nett.kilder || [])[nettDg]) {
+    // Radene bak tallet: program og PID, adresse og port, navn, land og eier (OSINT). Bare i minnet.
+    const k = nett.kilder[nettDg], r = k.rader || [];
+    innhold = `<div class="dgTopp"><button class="tilbake" id="dgTilbake">‹ ${L("Datagrunnlag", "Data basis")}</button><b>${esc(k.navn)}</b><span>${k.n != null ? tall(k.n) + " · " : ""}${esc(k.utfall)}</span><span class="sidevalg" id="dgSv"></span></div>`
+      + `<ul id="dgUl">${r.length ? r.map(x => linje(x.t, x.m, x.u)).join("") : `<li class="mer">${esc(k.detalj || L("Ingen rader akkurat nå.", "No rows right now."))}</li>`}</ul>`;
+  }
+  else if (nettFane === "dg") innhold = `<ul>${(udp ? [linje(L("Åpne UDP-porter", "Open UDP ports"), "", udp.trim())] : [])
+      .concat((nett.kilder || []).map((k, i) => linje(k.navn, k.n != null ? tall(k.n) : "", `${k.utfall}${k.detalj ? " · " + k.detalj : ""}`, !k.lest && !k.aldri).replace('<li class="sted">', `<li class="sted${(k.rader || []).length ? " klikk" : ""}" data-dg="${i}" title="${esc(L("Vis radene", "Show the rows"))}">`))).join("")}</ul>`;
   else innhold = `<ul class="nettListe" id="nettUl">${vistRader.length ? vistRader.map(rad).join("") : tom}</ul>`
     + (valgtRad ? `<h3>${L("Prosessen", "The process")}</h3><ul id="nettProsess">${prosessLinjer}</ul>` : "");
-  d.innerHTML = hode + `<div class="nettTopp">${graf}</div>` + faner
+  // Radene bak et tall i Datagrunnlag får hele flaten; grafen kommer tilbake med «‹ Datagrunnlag»
+  d.innerHTML = hode + (nettFane === "dg" && nettDg != null ? "" : `<div class="nettTopp">${graf}</div>`) + faner
     + (nettFane === "forb" ? `<ul class="nettListe">${kolonner}</ul>` : "") + `<div class="dl" id="nettDl">${innhold}</div>`
     + `<div class="avLinje ikke boks">${esc((nett.etw ? L("TCP og UDP.", "TCP and UDP.") : L("TCP; for UDP bare lokale porter (adresse krever administrator).", "TCP; for UDP local ports only (address requires administrator).")) + " " + L("Bare lesing: ingen tilkoblinger, ikke noe innhold, ingenting lagres.", "Read only: no connections, no content, nothing is saved."))}</div>`;
-  d.querySelectorAll("[data-nf]").forEach(b => b.onclick = () => { nettFane = b.dataset.nf; nettValgt = null; tegnNett(); });
+  d.querySelectorAll("[data-nf]").forEach(b => b.onclick = () => { nettFane = b.dataset.nf; nettValgt = null; nettDg = null; tegnNett(); });
+  d.querySelectorAll("[data-dg]").forEach(li => li.onclick = () => { nettDg = +li.dataset.dg; nettDgSide = 0; tegnNett(); });
+  if ($("dgTilbake")) $("dgTilbake").onclick = () => { nettDg = null; tegnNett(); };
+  // Sider i stedet for rulling: så mange rader som får plass
+  const dgUl = $("dgUl");
+  if (dgUl && $("nettDl")) {
+    const lis = [...dgUl.children], bunn = $("nettDl").getBoundingClientRect().bottom;
+    const per = Math.max(1, lis.filter(li => li.getBoundingClientRect().bottom <= bunn - 36).length);
+    const sider = Math.ceil(lis.length / per);
+    nettDgSide = Math.min(nettDgSide, sider - 1);
+    lis.forEach((li, i) => { if (i < nettDgSide * per || i >= (nettDgSide + 1) * per) li.style.display = "none"; });
+    if (sider > 1) {
+      $("dgSv").innerHTML = `<button id="dgF" ${nettDgSide ? "" : "disabled"}>‹</button><span>${nettDgSide + 1} ${L("av", "of")} ${sider}</span><button id="dgN" ${nettDgSide < sider - 1 ? "" : "disabled"}>›</button>`;
+      $("dgF").onclick = () => { nettDgSide--; tegnNett(); }; $("dgN").onclick = () => { nettDgSide++; tegnNett(); };
+    }
+  }
   // Rader som ikke får plass, telles i stedet for å rulle
   const dl = $("nettDl"), ul = $("nettUl");
   const pu = $("nettProsess");

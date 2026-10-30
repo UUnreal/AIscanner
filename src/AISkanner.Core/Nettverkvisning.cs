@@ -25,7 +25,9 @@ public sealed class Nettverkvisning : IDisposable
     /// <summary>UDP-strømmer akkurat nå etter type (QUIC, STUN/TURN, DNS …): antall strømmer og programmer.</summary>
     public sealed record UdpType(string Hva, int Strommer, int Programmer, long Ut, long Inn);
     /// <summary>Én kilde Nettverk leser: utfall «lest», «kunne ikke leses: grunn» eller «aldri lest: grunn».</summary>
-    public sealed record Kilde(string Navn, string Utfall, long? Antall, string Detalj);
+    public sealed record Kilde(string Navn, string Utfall, long? Antall, string Detalj, IReadOnlyList<KildeRad>? Rader = null);
+    /// <summary>Én rad bak tallet i Datagrunnlag: program og PID, adresse og port, navn, land og eier.</summary>
+    public sealed record KildeRad(string Tittel, string? Meta, string? Under);
     public sealed record Bilde(DateTime Tid, List<Rad> Rader, long? UtPerSek, long? InnPerSek, int AndreForbindelser, int AndreNettleser, List<Udp> UdpHint,
         List<LytterRad>? Lyttere = null, List<UdpType>? UdpTyper = null, List<string>? KryptertDns = null, List<Kilde>? Kilder = null);
 
@@ -98,6 +100,7 @@ public sealed class Nettverkvisning : IDisposable
         // Tjeneste "" = kjent AI-program, men vi kan ikke avgjøre hvor forbindelsen går
         var grupper = new Dictionary<(int, string), List<(Tilkobling T, string? Vert, AiNettsted? Tj)>>();
         int andre = 0, andreNettleser = 0;
+        var andreListe = new List<Tilkobling>();
         var navngitt = new List<(Tilkobling T, string? Vert, AiNettsted? Tj)>();
         foreach (var t in alle)
         {
@@ -120,6 +123,7 @@ public sealed class Nettverkvisning : IDisposable
                 if (nettleser || (!aiPid.Contains(t.Pid) && AiFor(t.Pid, prog, sti) == null))
                 {
                     andre++;
+                    andreListe.Add(t);
                     if (nettleser) andreNettleser++;
                     continue;
                 }
@@ -164,6 +168,8 @@ public sealed class Nettverkvisning : IDisposable
         var udpTyper = new Dictionary<string, (int N, HashSet<int> Pid, long Ut, long Inn)>();
         var kryptert = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         int udpAktive = 0;
+        var udpRader = new List<KildeRad>();
+        var udpNettleser = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         if (_etw != null)
         {
             var udpGrupper = new Dictionary<(int, string), List<(IPAddress Ip, string? Vert, AiNettsted? Tj, long Ut, long Inn, string Hva)>>();
@@ -184,6 +190,12 @@ public sealed class Nettverkvisning : IDisposable
                 string? vert = null; AiNettsted? tj = null;
                 if (_dns.TryGetValue(st.Ip, out var navn))
                     foreach (var n in navn) if (_skanner.Tjeneste(n) is { } x) { vert = n; tj = x; break; }
+                // Datagrunnlag: nettlesernes vanlige surfing telles, men adressene vises ikke
+                if (tj == null && Skanner.Nettleserprosesser.TryGetValue(prog, out var nlu)) udpNettleser[nlu] = udpNettleser.TryGetValue(nlu, out var nn) ? nn + 1 : 1;
+                else if (udpRader.Count < 400)
+                    udpRader.Add(new KildeRad($"{prog} (PID {st.Pid})", $"{st.Ip}:{st.Port} · {hva}",
+                        string.Join(" · ", new[] { vert ?? (_dns.TryGetValue(st.Ip, out var dv) && dv.Count > 0 ? dv[0] : null), Sted(st.Ip),
+                            $"↑ {Rapport.Storrelse(st.Ut)} ↓ {Rapport.Storrelse(st.Inn)}", $"sist {st.Sist:HH:mm:ss}" }.Where(x => x != null))));
                 if (tj == null)
                 {
                     if (Skanner.Nettleserprosesser.ContainsKey(prog) || AiFor(st.Pid, prog, sti) == null) continue;
@@ -234,16 +246,25 @@ public sealed class Nettverkvisning : IDisposable
                 : new LytterRad(prog, l.Pid, l.Port, erUdp, adr, NettProtokoll.Apen(l.Adresse), hva, funn == null ? null : Oversikt.Navn(funn));
         }
 
+        foreach (var (nl, n) in udpNettleser.OrderByDescending(x => x.Value))
+            udpRader.Add(new KildeRad($"{nl} (nettleser)", $"{n} strømmer", "adressene vises ikke: vanlig surfing angår ikke søket, bare AI-tjenester vises"));
+        var dnsAi = _dns.SelectMany(x => x.Value.Select(n => (Navn: n, Ip: x.Key))).Where(x => _skanner.Tjeneste(x.Navn) != null)
+            .GroupBy(x => x.Navn, StringComparer.OrdinalIgnoreCase).Take(400)
+            .Select(g => new KildeRad(g.Key, _skanner.Tjeneste(g.Key)!.Navn, string.Join(", ", g.Select(x => $"{x.Ip} ({Sted(x.Ip)})").Distinct().Take(4)))).ToList();
+        int dnsAndre = _dns.Values.SelectMany(x => x).Distinct(StringComparer.OrdinalIgnoreCase).Count() - dnsAi.Count;
+        if (dnsAndre > 0) dnsAi.Add(new KildeRad($"{dnsAndre} andre navn", null, "vises ikke: bare navn på AI-tjenester brukes, resten forkastes"));
+        var malt = rader.Where(r => r.UtPerSek != null).Select(r => new KildeRad($"{r.Program} (PID {r.Pid})", r.Tjeneste ?? r.Vert, $"↑ {Rapport.Storrelse(r.UtPerSek ?? 0)}/s ↓ {Rapport.Storrelse(r.InnPerSek ?? 0)}/s · {r.Protokoll}")).ToList();
         var kilder = new List<Kilde>
         {
-            new("TCP-tabellen (IPv4 og IPv6)", "lest", alle.Count, "forbindelser ut nå, med program (PID) og adresse"),
-            new("Lyttende TCP-porter", "lest", _tcpL.Count, "porter programmer venter på tilkoblinger på, med adresse"),
-            new("UDP-tabellen", "lest", _udpL.Count, "åpne UDP-porter per program; Windows lagrer ikke hvor UDP sendes"),
+            new("Andre forbindelser", "lest", andre, "har ingen kjent AI-adresse og vises ikke under Forbindelser. Navnet kan ha gått ut av DNS-bufferen, eller nettleseren bruker DNS over HTTPS.", TcpRader(andreListe)),
+            new("TCP-tabellen (IPv4 og IPv6)", "lest", alle.Count, "forbindelser ut nå, med program (PID) og adresse", TcpRader(alle)),
+            new("Lyttende TCP-porter", "lest", _tcpL.Count, "porter programmer venter på tilkoblinger på, med adresse", LytteRader(_tcpL)),
+            new("UDP-tabellen", "lest", _udpL.Count, "åpne UDP-porter per program; Windows lagrer ikke hvor UDP sendes", LytteRader(_udpL)),
             _etw != null
-                ? new("UDP-trafikk (Windows' nettverkshendelser)", "lest", udpAktive, $"strømmer siste 10 s med adresse, port og mengde; {_etw.Hendelser} UDP-hendelser lest, aldri innhold")
+                ? new("UDP-trafikk (Windows' nettverkshendelser)", "lest", udpAktive, $"strømmer siste 10 s med adresse, port og mengde; {_etw.Hendelser} UDP-hendelser lest, aldri innhold", udpRader)
                 : new("UDP-trafikk (Windows' nettverkshendelser)", "kunne ikke leses: " + (_etwGrunn.Length > 0 ? _etwGrunn : "ikke startet"), null, "uten dette vises bare lokale UDP-porter, ikke hvor det sendes"),
-            new("DNS-bufferen", "lest", _dns.Count, "navn → IP, gir navn til adressene"),
-            _maling != null ? new("Datamengde TCP (EStats)", "lest", null, "byte sendt og mottatt per forbindelse")
+            new("DNS-bufferen", "lest", _dns.Count, "navn → IP, gir navn til adressene", dnsAi),
+            _maling != null ? new("Datamengde TCP (EStats)", "lest", malt.Count, "byte sendt og mottatt per forbindelse", malt)
                 : new("Datamengde TCP (EStats)", "kunne ikke leses: krever administrator", null, "antall forbindelser vises i stedet"),
             new("Navnet i krypteringen (TLS SNI)", "aldri lest: krever pakkefangst, som programmet aldri gjør", null, "navnene kommer fra DNS-bufferen"),
             new("Innholdet i trafikken", "aldri lest: personvern", null, "ingen TLS-inspeksjon, ingen pakker fanges"),
@@ -253,6 +274,44 @@ public sealed class Nettverkvisning : IDisposable
             udpTyper.Select(x => new UdpType(x.Key, x.Value.N, x.Value.Pid.Count, x.Value.Ut, x.Value.Inn)).OrderByDescending(x => x.Strommer).ToList(),
             kryptert.ToList(), kilder);
     }
+
+    private string Sted(IPAddress ip)
+    {
+        var land = IpLand.Cdn(ip, _dns.TryGetValue(ip, out var dn) ? dn : null) is { } c ? $"bak {c}" : IpLand.Navn(IpLand.Finn(ip));
+        land ??= "ukjent land";
+        return IpEier.Finn(ip) is { } e ? $"{land} · eier {e} (OSINT)" : land;
+    }
+
+    /// <summary>Forbindelser per program. Nettlesernes vanlige surfing telles, men adressene vises ikke.</summary>
+    private List<KildeRad> TcpRader(IEnumerable<Tilkobling> liste)
+    {
+        var ut = new List<KildeRad>();
+        var nett = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var t in liste.OrderBy(t => t.Pid))
+        {
+            if (t.Pid <= 4) continue;
+            var (prog, _) = Prosess(t.Pid);
+            bool ai = _dns.TryGetValue(t.Fjern, out var nv) && nv.Any(n => _skanner.Tjeneste(n) != null);
+            if (Skanner.Nettleserprosesser.TryGetValue(prog, out var nl) && !ai) { nett[nl] = nett.TryGetValue(nl, out var n) ? n + 1 : 1; continue; }
+            if (ut.Count >= 400) continue;
+            var navn = nv?.FirstOrDefault(n => _skanner.Tjeneste(n) != null) ?? nv?.FirstOrDefault();
+            ut.Add(new KildeRad(Plattform.ErEgen(t.Pid) ? $"{prog} (PID {t.Pid}, dette programmet)" : $"{prog} (PID {t.Pid})", $"{t.Fjern}:{t.FjernPort}" + (NettProtokoll.KryptertDns(t.Fjern, t.FjernPort, true) is { } kd ? $" · {kd}" : ""),
+                string.Join(" · ", new[] { navn, Sted(t.Fjern), $"fra {t.Lokal}:{t.LokalPort}" }.Where(x => x != null))));
+        }
+        foreach (var (nl, n) in nett.OrderByDescending(x => x.Value))
+            ut.Add(new KildeRad($"{nl} (nettleser)", $"{n} forbindelser", "adressene vises ikke: vanlig surfing angår ikke søket, bare AI-tjenester vises"));
+        return ut;
+    }
+
+    private List<KildeRad> LytteRader(List<TcpTabell.Lytter> liste) =>
+        liste.Where(l => l.Pid > 4).OrderBy(l => l.Port).Take(400).Select(l =>
+        {
+            var (prog, sti) = Prosess(l.Pid);
+            var adr = l.Adresse.Equals(IPAddress.Any) ? "0.0.0.0" : l.Adresse.Equals(IPAddress.IPv6Any) ? "::" : l.Adresse.ToString();
+            return new KildeRad($"{prog} (PID {l.Pid})", $"{adr}:{l.Port}",
+                string.Join(" · ", new[] { NettProtokoll.AiPorter.TryGetValue(l.Port, out var ap) ? $"standardport for {ap.Hva}" : null,
+                    NettProtokoll.Apen(l.Adresse) ? "kan nås fra andre maskiner" : "bare denne PC-en", sti }.Where(x => x != null)));
+        }).ToList();
 
     private Rad LagRad(int pid, List<(IPAddress Ip, string? Vert, AiNettsted? Tj)> g, int n, long? ut, long? inn, string protokoll)
     {

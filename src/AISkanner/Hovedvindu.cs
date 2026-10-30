@@ -571,7 +571,7 @@ public sealed class Hovedvindu : Form
                     lyttere = (b.Lyttere ?? new()).Select(l => new { program = l.Program, pid = l.Pid, port = l.Port, udp = l.ErUdp, adresse = l.Adresse, apen = l.Apen, hva = T(l.Hva), ai = T(l.Ai) }),
                     udpTyper = (b.UdpTyper ?? new()).Select(u => new { hva = T(u.Hva), n = u.Strommer, programmer = u.Programmer, ut = u.Ut, inn = u.Inn }),
                     kryptertDns = (b.KryptertDns ?? new()).Select(T),
-                    kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj) }),
+                    kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj), rader = k.Rader?.Select(r => new { t = T(r.Tittel), m = T(r.Meta), u = T(r.Under) }) }),
                     rader = b.Rader.Select(r => new
                     {
                         nokkel = $"{r.Pid}|{r.Tjeneste}|{r.Protokoll}", proto = T(r.Protokoll), program = r.Program, sti = r.Sti, pid = r.Pid, tjeneste = r.Tjeneste, vert = r.Vert,

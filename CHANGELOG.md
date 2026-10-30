@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.41.0] - 2026-10-30
+
+### Lagt til
+- Nettverk → Datagrunnlag: hver kilde kan trykkes på og viser radene bak tallet: program og PID, adresse og port, navn fra DNS-bufferen, land, eier (OSINT), lokal adresse, mengde og tid. Gjelder andre forbindelser, TCP-tabellen, lyttende porter, UDP-tabellen, UDP-trafikk, DNS-bufferen og datamengde. Sider i stedet for rulling.
+- Nettlesernes vanlige surfing telles per nettleser, men adressene vises ikke; i DNS-bufferen vises bare AI-navn. Ingenting lagres, ikke noe innhold.
+
 ## [2.40.0] - 2026-10-30
 
 ### Lagt til

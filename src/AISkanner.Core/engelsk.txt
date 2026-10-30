@@ -1583,3 +1583,13 @@ ingen|none
 ~^AI-serveren lytter på alle nettverkskort \(port (\d+)\) og kan nås fra andre maskiner på nettet\.$|The AI server listens on all network interfaces (port $1) and can be reached from other machines on the network.
 ingen AI-prosess kjørte|no AI process was running
 ikke målt|not measured
+Andre forbindelser|Other connections
+har ingen kjent AI-adresse og vises ikke under Forbindelser. Navnet kan ha gått ut av DNS-bufferen, eller nettleseren bruker DNS over HTTPS.|have no known AI address and are not shown under Connections. The name may have expired from the DNS cache, or the browser uses DNS over HTTPS.
+adressene vises ikke: vanlig surfing angår ikke søket, bare AI-tjenester vises|addresses are not shown: ordinary browsing is not the scan's business, only AI services are shown
+vises ikke: bare navn på AI-tjenester brukes, resten forkastes|not shown: only names of AI services are used, the rest is discarded
+kan nås fra andre maskiner|reachable from other machines
+bare denne PC-en|this PC only
+~^(.+) \(nettleser\)$|$1 (browser)
+~^(\d+) forbindelser$|$1 connections
+~^(\d+) strømmer$|$1 streams
+~^(\d+) andre navn$|$1 other names
