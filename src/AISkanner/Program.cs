@@ -135,6 +135,7 @@ internal static class Program
             Console.WriteLine("Rapport: " + (Rapport.Tekst(funn, sok).Length > 0 ? "OK" : "FEIL") + ", CSV: " + (Rapport.Csv(funn).Length > 0 ? "OK" : "FEIL"));
             feil |= stoppet.Count > 0;
             Console.WriteLine(sok.SrumStatus ?? "SRUM: ikke lest");
+            feil |= sok.SrumStatus == null || sok.SrumStatus.StartsWith("SRUM: feil") || sok.SrumStatus.Contains("SRUM: 0 timer");
             // Ingen funn uten kilde, og skannerens egen aktivitet er aldri bevis
             var utenKilde = Kildesjekk.Mangler(funn);
             Console.WriteLine(utenKilde.Count == 0 ? "Kilder: hvert funn har kilde" : "Kilder FEIL: " + string.Join(" | ", utenKilde));

@@ -29,7 +29,14 @@ public sealed partial class Skanner
     {
         var klokke = System.Diagnostics.Stopwatch.StartNew();
         var frist = Fullt ? TimeSpan.FromSeconds(40) : TimeSpan.FromSeconds(10);
-        var db = new EseFil(s);
+        EseFil db;
+        try { db = new EseFil(s); }
+        catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException or InvalidDataException)
+        {
+            SrumStatus = $"SRUM: feil, katalogen kunne ikke leses ({e.GetType().Name}: {e.StackTrace?.Split('\n').FirstOrDefault()?.Trim()})";
+            Tilgangslogg.Logg("Fil", fil, Utfall.Feil, SrumStatus);
+            return;
+        }
         var idTab = db.Finn("SruDbIdMapTable");
         var nett = db.Finn(SrumNett);
         if (idTab == null || nett == null)
@@ -41,10 +48,12 @@ public sealed partial class Skanner
 
         // Id -> program (sti eller appnavn)
         var program = new Dictionary<int, string>();
-        int hoppet = 0;
+        int hoppet = 0, feil = 0;
         if (db.KolonneId(idTab, "IdType") is { } cType && db.KolonneId(idTab, "IdIndex") is { } cIdx && db.KolonneId(idTab, "IdBlob") is { } cBlob)
             foreach (var r in db.Poster(idTab.Rot, () => klokke.Elapsed > frist))
             {
+                try
+                {
                 var p = db.Tolk(r, idTab);
                 if (p.Tall(cType) is not (0 or 1 or 2) || p.Tall(cIdx) is not { } idx) continue;
                 var b = p.Binar(cBlob, out var hopp);
@@ -52,6 +61,8 @@ public sealed partial class Skanner
                 if (b == null || b.Length < 2) continue;
                 var tekst = Encoding.Unicode.GetString(b).TrimEnd('\0');
                 if (tekst.Length > 0) program[(int)idx] = tekst;
+                }
+                catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { feil++; }
             }
 
         // Nettbruk per program siste 30 dager
@@ -62,6 +73,8 @@ public sealed partial class Skanner
         if (db.KolonneId(nett, "TimeStamp") is { } cTid && db.KolonneId(nett, "AppId") is { } cApp && db.KolonneId(nett, "BytesSent") is { } cUt && db.KolonneId(nett, "BytesRecvd") is { } cInn)
             foreach (var r in db.Poster(nett.Rot, () => klokke.Elapsed > frist))
             {
+                try
+                {
                 var p = db.Tolk(r, nett);
                 if (p.Tid(cTid) is not { } t || p.Tall(cApp) is not { } app) continue;
                 rader++;
@@ -72,6 +85,8 @@ public sealed partial class Skanner
                 sum[(int)app] = sum.TryGetValue((int)app, out var x)
                     ? (x.Ut + ut, x.Inn + inn, t < x.Forst ? t : x.Forst, t > x.Sist ? t : x.Sist)
                     : (ut, inn, t, t);
+                }
+                catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { feil++; }
             }
 
         int ai = 0;
@@ -90,7 +105,7 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumStatus = $"SRUM: {rader} timer med nettbruk ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}, {db.SiderLest} sider lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
+        SrumStatus = $"SRUM: {rader} timer med nettbruk ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }
 

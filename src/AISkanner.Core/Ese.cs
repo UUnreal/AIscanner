@@ -50,7 +50,8 @@ internal sealed class EseFil
         return b;
     }
 
-    private static ushort U16(byte[] b, int o) => BitConverter.ToUInt16(b, o);
+    private static ushort U16(byte[] b, int o) => o >= 0 && o + 2 <= b.Length ? BitConverter.ToUInt16(b, o) : (ushort)0;
+    public int Feil { get; private set; }
 
     /// <summary>Verdiene på en side (tag 1 og utover): start, lengde og flagg.</summary>
     private IEnumerable<(int Start, int Lengde, int Flagg)> Tagger(byte[] p)
@@ -86,17 +87,23 @@ internal sealed class EseFil
             bool blad = (flagg & 0x2) != 0, forelder = (flagg & 0x4) != 0;
             if ((flagg & 0x20) != 0 || (flagg & 0x40) != 0 || (flagg & 0x80) != 0) continue; // plass-, indeks- og LV-trær
             var barn = new List<uint>();
-            foreach (var (start, lengde, tf) in Tagger(p))
+            var poster = new List<(byte[], int, int)>();
+            try
             {
-                int o = start, slutt = start + lengde;
-                if ((tf & 0x4) != 0) o += 2; // felles nøkkel
-                if (o + 2 > slutt) continue;
-                int lokal = U16(p, o) & 0x1FFF;
-                o += 2 + lokal;
-                if (o > slutt) continue;
-                if (forelder && !blad) { if (slutt - 4 >= o) barn.Add(BitConverter.ToUInt32(p, slutt - 4)); }
-                else if (blad && (tf & 0x2) == 0) yield return (p, o, slutt - o);
+                foreach (var (start, lengde, tf) in Tagger(p))
+                {
+                    int o = start, slutt = start + lengde;
+                    if ((tf & 0x4) != 0) o += 2; // felles nøkkel
+                    if (o + 2 > slutt) continue;
+                    int lokal = U16(p, o) & 0x1FFF;
+                    o += 2 + lokal;
+                    if (o > slutt) continue;
+                    if (forelder && !blad) { if (slutt - 4 >= o) barn.Add(BitConverter.ToUInt32(p, slutt - 4)); }
+                    else if (blad && (tf & 0x2) == 0) poster.Add((p, o, slutt - o));
+                }
             }
+            catch (Exception e) when (e is ArgumentException or IndexOutOfRangeException) { Feil++; }
+            foreach (var x in poster) yield return x;
             for (int i = barn.Count - 1; i >= 0; i--) stabel.Push(barn[i]);
         }
     }
@@ -109,8 +116,8 @@ internal sealed class EseFil
         private readonly bool _stor;
         public Post(byte[] p, int start, int lengde, Dictionary<int, Kolonne> k, bool stor) { _p = p; _start = start; _lengde = lengde; _k = k; _stor = stor; }
 
-        private int SisteFast => _p[_start];
-        private int SisteVariabel => _p[_start + 1];
+        private int SisteFast => _start + 4 <= _p.Length ? _p[_start] : 0;
+        private int SisteVariabel => _start + 4 <= _p.Length ? _p[_start + 1] : 0;
         private int VarStart => U16(_p, _start + 2);
 
         public (int Start, int Lengde)? Fast(int id)
@@ -124,7 +131,7 @@ internal sealed class EseFil
             // Nullbitene står rett før de variable dataene
             int bitmap = _start + VarStart - (SisteFast + 7) / 8;
             int nr = id - 1;
-            if (bitmap + nr / 8 < _start + _lengde && (_p[bitmap + nr / 8] & (1 << (nr % 8))) != 0) return null;
+            if (bitmap >= 0 && bitmap + nr / 8 < Math.Min(_p.Length, _start + _lengde) && (_p[bitmap + nr / 8] & (1 << (nr % 8))) != 0) return null;
             return o + n <= _start + _lengde ? (o, n) : null;
         }
 
@@ -161,7 +168,7 @@ internal sealed class EseFil
                 int til = i + 1 < n ? U16(_p, t + 4 * (i + 1) + 2) & (_stor ? 0x7FFF : 0x3FFF) : slutt - t;
                 if (fra > til || t + til > slutt) return null;
                 bool harFlagg = _stor || (raa & 0x4000) != 0;
-                int flagg = harFlagg && til > fra ? _p[t + fra] : 0;
+                int flagg = harFlagg && til > fra && t + fra < _p.Length ? _p[t + fra] : 0;
                 return harFlagg ? (t + fra + 1, til - fra - 1, flagg) : (t + fra, til - fra, 0);
             }
             return null;
@@ -170,12 +177,13 @@ internal sealed class EseFil
         public long? Tall(int id)
         {
             if (Fast(id) is not { } v) return null;
+            if (v.Start < 0 || v.Start + v.Lengde > _p.Length) return null;
             return v.Lengde switch { 1 => _p[v.Start], 2 => BitConverter.ToInt16(_p, v.Start), 4 => BitConverter.ToInt32(_p, v.Start), 8 => BitConverter.ToInt64(_p, v.Start), _ => null };
         }
 
         public DateTime? Tid(int id)
         {
-            if (Fast(id) is not { Lengde: 8 } v) return null;
+            if (Fast(id) is not { Lengde: 8 } v || v.Start < 0 || v.Start + 8 > _p.Length) return null;
             var d = BitConverter.ToDouble(_p, v.Start);
             return d is > 30000 and < 80000 ? DateTime.FromOADate(d) : null;
         }
@@ -183,7 +191,7 @@ internal sealed class EseFil
         public string? Tekst(int id)
         {
             var v = Variabel(id);
-            if (v == null) return null;
+            if (v == null || v.Value.Start < 0 || v.Value.Lengde < 0 || v.Value.Start + v.Value.Lengde > _p.Length) return null;
             return Encoding.ASCII.GetString(_p, v.Value.Start, v.Value.Lengde).TrimEnd('\0');
         }
 
@@ -193,6 +201,7 @@ internal sealed class EseFil
             hoppetOver = false;
             if (Tagget(id) is not { } v) return null;
             if ((v.Flagg & 0x04) != 0) { hoppetOver = true; return null; }
+            if (v.Start < 0 || v.Lengde < 0 || v.Start + v.Lengde > _p.Length) return null;
             var b = new byte[v.Lengde];
             Array.Copy(_p, v.Start, b, 0, v.Lengde);
             if ((v.Flagg & 0x02) == 0 || b.Length == 0) return b;
@@ -239,6 +248,8 @@ internal sealed class EseFil
         var kolonner = new List<(int Tabell, Kolonne K)>();
         foreach (var r in Poster(4))
         {
+          try
+          {
             var p = new Post(r.Side, r.Start, r.Lengde, kat, _stor);
             var type = p.Tall(2);
             var navn = p.Tekst(128);
@@ -247,6 +258,9 @@ internal sealed class EseFil
                 perId[(int)id] = _tabeller[navn] = new Tabell { ObjId = (int)id, Rot = (uint)rot, Navn = navn };
             else if (type == 2 && p.Tall(1) is { } tab && p.Tall(3) is { } kid && p.Tall(4) is { } kt)
                 kolonner.Add(((int)tab, new Kolonne { Id = (int)kid, Type = (int)kt, Storrelse = (int)(p.Tall(5) ?? 0), Navn = navn }));
+          }
+          catch (ArgumentException) { Feil++; }
+          catch (IndexOutOfRangeException) { Feil++; }
         }
         foreach (var (tab, k) in kolonner) if (perId.TryGetValue(tab, out var t)) t.Kolonner[k.Id] = k;
     }
