@@ -343,6 +343,10 @@ public sealed partial class Skanner
         long storrelse = app.Filer.Sum(f => f.Lengde);
         bool stor = storrelse >= 500L * 1024 * 1024;
         var risiko = !kjent ? Risiko.Rod : stor ? Risiko.Gul : Risiko.Gronn;
+        // Bare modellfiler i nettleserens egen modellstruktur, uten program: en kopi av Chrome/Edge sine modeller, ikke et ukjent program
+        bool kopi = exe == null && app.MotorFiler.Count == 0 && app.AiPakker.Count == 0 && app.Filer.Count > 0
+                    && app.Filer.All(x => x.Sti.Split('\\', '/').Any(d => KjenteNettleserModeller.ContainsKey(d) || d.Equals("ProvenanceData", StringComparison.OrdinalIgnoreCase)));
+        if (kopi) { risiko = Risiko.Gul; produkt = "Kopi av nettleserens AI-modeller"; frø = null; utgiver = null; kilde = null; }
 
         var regel = FinnRegel($"{produkt} {exe}");
         // Samme komponent skal bli én rad: kjente mapper får navnet fra regelfila uten utgiver, og ellers fjernes
@@ -353,12 +357,14 @@ public sealed partial class Skanner
                    ?? (firma != null && !UtenVersjon(produkt).Inneholder(firma) ? $"{UtenVersjon(produkt)} ({firma})" : UtenVersjon(produkt));
         var hva = frø?.Hva ?? (app.Filer.Count > 0 ? "AI-modeller som kjører lokalt i programmet"
             : app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer) ? "AI-motor som kan kjøre AI-modeller lokalt" : "AI-biblioteker pakket inn i programmet");
-        var hvorfor = kjent
+        var hvorfor = kopi
+            ? "Modellfiler med samme mappestruktur som Chrome/Edge sine innebygde AI-modeller, utenfor nettleserens egen mappe og uten noe program ved siden av. Hvem som la dem her, er ikke bekreftet."
+            : kjent
             ? $"{Forkort(utgiver!)} har lagt AI inn i programmet: {hva}. Kom med programmet eller en oppdatering, uten at noen ble spurt."
             : "Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.";
         var f = regel != null ? FraRegel(regel, "Innebygd AI", null!)
             : LeggTil(navn, LeverandorKategori, risiko, hvorfor, "Innebygd AI", null,
-                enkelt: kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
+                enkelt: kopi ? "Kopi av nettleserens AI-modeller" : kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
         f.LeggTilInnebygde(app.Filer.Count);

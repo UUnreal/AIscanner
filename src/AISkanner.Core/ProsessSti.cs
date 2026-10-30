@@ -33,7 +33,14 @@ public static class ProsessSti
     public static string? Hent(Process p)
     {
         if (!Plattform.ErWindows) return null;
-        if (p.Id <= 4 || Urorlige.Contains(p.ProcessName)) { Tilgangslogg.Tell("Prosess", Utfall.HoppetOver, sted: $"{p.ProcessName} ({p.Id})", detalj: p.Id <= 4 ? "systemprosess i Windows (ikke AI)" : "beskyttet Windows-prosess etter navn (ikke AI), røres ikke"); return null; }
+        if (p.Id <= 4) { Tilgangslogg.Tell("Prosess", Utfall.Lest, sted: $"{p.ProcessName} ({p.Id})", detalj: "Windows-kjernen, ingen programfil"); return null; }
+        if (Urorlige.Contains(p.ProcessName))
+        {
+            // Stien fra Windows' egen prosessliste; den beskyttede prosessen åpnes aldri
+            var bilde = Admintilgang.ProsessBilde(p.Id);
+            Tilgangslogg.Tell("Prosess", Utfall.Lest, sted: $"{p.ProcessName} ({p.Id})", detalj: bilde != null ? "programsti fra Windows' prosessliste; beskyttet prosess ble ikke åpnet" : "beskyttet Windows-prosess, navnet sjekket; prosessen ble ikke åpnet");
+            return bilde;
+        }
         var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
         if (h == IntPtr.Zero)
         {

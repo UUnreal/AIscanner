@@ -141,7 +141,7 @@
   .fordeling button:hover { background: var(--flate2, rgba(127,127,127,.12)); }
   .fordeling button.valgt { background: var(--flate2, rgba(127,127,127,.18)); box-shadow: inset 0 0 0 1px var(--kant, rgba(127,127,127,.35)); }
   .fordeling button.av { opacity: .45; }
-  .fordeling #landValg { margin-left: 4px; color: var(--dempet); } .fordeling #landValg.valgt { color: var(--tekst); }
+  .fordeling #landValg, .fordeling #azValg { margin-left: 4px; color: var(--dempet); } .fordeling #landValg.valgt, .fordeling #azValg.valgt { color: var(--tekst); }
   .fordeling #landValg .ik { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.3; }
   .gruppe.fare { color: var(--rod); }
   .fordeling button:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
@@ -150,10 +150,6 @@
   .prikk.ukjent { background: transparent; box-shadow: inset 0 0 0 2px var(--rod); }
   /* Funn, Nettverk og Datagrunnlag: tre likeverdige visninger */
   .fanerad { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .azValg { font: inherit; font-weight: 600; color: var(--dempet); background: var(--fyll); border: 0; border-radius: var(--r1); padding: 0 12px; height: 32px; cursor: pointer; }
-  .azValg:hover { color: var(--tekst); }
-  .azValg.valgt { color: var(--tekst); background: var(--kort); box-shadow: inset 0 0 0 1px var(--linje), var(--skygge); }
-  .azValg:focus-visible { outline: 2px solid var(--bla); outline-offset: 2px; }
   .kjort { margin-left: auto; font: var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .segment { display: inline-flex; background: var(--fyll); border-radius: var(--r1); padding: 2px; gap: 2px; align-self: flex-start; }
   .segment button { border: 0; background: none; color: var(--dempet); border-radius: 6px; padding: 5px 16px; font-weight: 600; cursor: pointer; }
@@ -456,7 +452,7 @@
     <div class="risikoRad"><div class="bar" id="bar"></div><div class="fordeling" id="fordeling"></div>
       </div>
     <div class="fanerad"><div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
-      <button class="azValg" id="azValg" aria-pressed="false" title="Alfabetisk / Alphabetical">A–Å</button><span class="kjort" id="kjort"></span></div>
+      <span class="kjort" id="kjort"></span></div>
   </div>
   <div class="hoved" id="hoved">
     <div class="panel" id="listePanel">
@@ -585,6 +581,7 @@ function tegnFordeling() {
       + (risikoValg ? `<button data-r="" title="${esc(L("Vis alle", "Show all"))}"><b>${alle.length}</b>${L("Alle", "All")}</button>` : "")
       // Land: samme rad, grupperer funnene etter landet dataene går til (målt eller fra leverandør, sagt per land)
       + `<button id="landValg" class="${sortering === "land" ? "valgt" : ""}" aria-pressed="${sortering === "land"}" title="${esc(sortering === "land" ? L("Tilbake til risiko", "Back to risk") : L("Grupper etter land", "Group by country"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c1.8 2 1.8 10 0 12M8 2c-1.8 2-1.8 10 0 12"/></svg>${L("Land", "Country")}</button>`
+      + `<button id="azValg" class="${sortering === "navn" ? "valgt" : ""}" aria-pressed="${sortering === "navn"}" title="${esc(sortering === "navn" ? L("Tilbake til risiko", "Back to risk") : L("Sorter alfabetisk", "Sort alphabetically"))}">A–Å</button>`
     : L("Ingen spor etter AI", "No traces of AI");
   $("fordeling").querySelectorAll("button[data-r]").forEach(b => b.onclick = () => {
     const r = b.dataset.r || null;
@@ -594,8 +591,7 @@ function tegnFordeling() {
   const lv = $("landValg");
   if (lv) lv.onclick = () => { sortering = sortering === "land" ? "risiko" : "land"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
   const az = $("azValg");
-  az.classList.toggle("valgt", sortering === "navn"); az.setAttribute("aria-pressed", sortering === "navn");
-  az.onclick = () => { sortering = sortering === "navn" ? "risiko" : "navn"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
+  if (az) az.onclick = () => { sortering = sortering === "navn" ? "risiko" : "navn"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
   $("kjort").textContent = info.kjort ? L("Søket kjørt ", "Scan run ") + info.kjort : "";
 }
 
@@ -893,22 +889,22 @@ function tegnData() {
   const mangler = g.totalt.filter(x => x.mangler).reduce((a, x) => a + x.n, 0);
   // Samme tall som flisene i Oversikt til sammen: alt søket sjekket, også det som bare er talt (filer i en mappe)
   const sjekket = g.totalt.reduce((a, x) => a + x.n, 0);
-  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Ikke dekket", "Not covered"), mangler], ["alt", L("Alt søket sjekket", "Everything checked"), sjekket], ["regler", L("Regler", "Rules")]];
+  const faner = [["oversikt", L("Oversikt", "Overview")], ["kart", L("Kart", "Map")], ["ikke", L("Kunne ikke leses", "Could not be read"), mangler], ["alt", L("Alt søket sjekket", "Everything checked"), sjekket], ["regler", L("Regler", "Rules")]];
   let kropp = "", rader = null, linje = null;
   if (fane === "oversikt") {
     // Fire deler som til sammen er alt søket sjekket: lest, ingenting der, hoppet over og ikke dekket (nektet, låst, …)
     const del = u => g.totalt.filter(x => x.u === u).reduce((a, x) => a + x.n, 0);
     const ikkeDekket = g.totalt.filter(x => x.mangler && x.n);
-    const deler = [["lest", del("lest"), L("Lest", "Read")], ["ikkefunnet", del("ikkefunnet"), L("Sjekket, ingenting der", "Checked, nothing there")], ["hoppetover", del("hoppetover"), L("Hoppet over", "Skipped")], ["dekket", del("dekket"), L("Dekket av annen sjekk", "Covered by another check")],
-      ["mangler", mangler, L("Ikke dekket", "Not covered") + (ikkeDekket.length ? " · " + ikkeDekket.map(x => `${tall(x.n)} ${x.tekst}`).join(", ") : "")]];
+    const deler = [["lest", del("lest"), L("Sjekket for AI", "Checked for AI")], ["ikkefunnet", del("ikkefunnet"), L("Sjekket – finnes ikke", "Checked – does not exist")], ["dekket", del("dekket"), L("Sjekket av en annen sjekk", "Checked by another check")], ["hoppetover", del("hoppetover"), L("Utelatt etter regel", "Left out by rule")],
+      ["mangler", mangler, L("Kunne ikke leses", "Could not be read") + (ikkeDekket.length ? " · " + ikkeDekket.map(x => `${tall(x.n)} ${x.tekst}`).join(", ") : "")]];
     const andre = sjekket - deler.reduce((a, x) => a + x[1], 0);
     if (andre > 0) deler.push(["annet", andre, L("Annet", "Other")]);
-    kropp = `<div class="dSum"><span class="t20">${L(`${tall(sjekket)} steder sjekket`, `${tall(sjekket)} places checked`)}</span><span class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</span></div>`
+    kropp = `<div class="dSum"><span class="t20">${L(`${tall(sjekket)} steder sjekket · ${sjekket ? (Math.floor(1000 * (sjekket - mangler) / sjekket) / 10).toLocaleString("nb-NO") : 100} % dekket`, `${tall(sjekket)} places checked · ${sjekket ? Math.floor(1000 * (sjekket - mangler) / sjekket) / 10 : 100} % covered`)}</span><span class="avLinje ${g.defenderOk ? "ok" : "ikke"}">${esc(g.defender)}</span></div>`
       + `<div class="stabel">${deler.filter(x => x[1]).map(x => `<i class="s-${x[0]}" style="flex:${x[1]}"></i>`).join("")}</div>`
       + (g.disker && g.disker.length ? `<div class="disker">${g.disker.map(k => `<span><b>${esc(k.disk)}</b> ${tall(k.filer)} ${L("filer", "files")} · ${esc(byteTekst(k.bytes))} ${L("av", "of")} ${esc(byteTekst(k.brukt))} ${L("i bruk", "used")} (${k.brukt ? Math.min(100, Math.round(100 * k.bytes / k.brukt)) : 0} %)</span>`).join("")}<span>${tall(g.filhoder || 0)} ${L("filhoder lest", "file headers read")}</span></div>` : "")
       + `<div class="ufliser">${deler.map(x => `<div class="uflis${x[0] === "mangler" ? " mangler" : ""}${x[1] ? " har" : ""}"${x[1] && x[0] !== "annet" ? ` data-u="${x[0]}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x[1])}</b><small><i class="s-${x[0]}"></i>${esc(x[2])}</small></div>`).join("")}</div>`
       + `<h3 class="medSider"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
-      + `<ul class="sjekkTabell"><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Lest", "Read")}</span><span>${L("Ingenting der", "Nothing there")}</span><span>${L("Hoppet over", "Skipped")}</span><span>${L("Ikke dekket", "Not covered")}</span></li></ul>`
+      + `<ul class="sjekkTabell"><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Sjekket for AI", "Checked for AI")}</span><span>${L("Finnes ikke", "Does not exist")}</span><span>${L("Utelatt etter regel", "Left out by rule")}</span><span>${L("Kunne ikke leses", "Could not be read")}</span></li></ul>`
       + `<div class="dl" id="dl"><ul id="dlu" class="sjekkTabell">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
     rader = g.sjekker; linje = sjekkLinje;
   } else if (fane === "kart") {
@@ -934,14 +930,14 @@ function tegnData() {
     const tittel = antall != null && antall > steder
       ? L(`${tall(liste.length)} steder · ${tall(antall - steder)} av ${tall(antall)} er bare talt (filer i en mappe, skyfiler) og har ingen egen linje`, `${tall(liste.length)} places · ${tall(antall - steder)} of ${tall(antall)} are only counted (files in a folder, cloud files) and have no line of their own`)
       : liste.length === 1 ? L("1 sted", "1 place") : L(`${tall(liste.length)} steder`, `${tall(liste.length)} places`);
-    kropp = `<div class="filter"><button data-f="" class="${filter ? "" : "valgt"}">${L("Alle", "All")}</button>${typer.map(x => `<button data-f="${x.u}" class="${filter === x.u ? "valgt" : ""}">${esc(x.tekst)} <span class="ant">${tall(x.n)}</span></button>`).join("")}${filter === "mangler" ? `<button class="valgt">${L("Ikke dekket", "Not covered")}</button>` : ""}${sjekkFilter ? `<button class="sjekkValg" id="sjekkAv" title="${esc(L("Vis alle sjekker", "Show all checks"))}">${esc(sjekkFilter)} ✕</button>` : ""}</div>`
+    kropp = `<div class="filter"><button data-f="" class="${filter ? "" : "valgt"}">${L("Alle", "All")}</button>${typer.map(x => `<button data-f="${x.u}" class="${filter === x.u ? "valgt" : ""}">${esc(x.tekst)} <span class="ant">${tall(x.n)}</span></button>`).join("")}${filter === "mangler" ? `<button class="valgt">${L("Kunne ikke leses", "Could not be read")}</button>` : ""}${sjekkFilter ? `<button class="sjekkValg" id="sjekkAv" title="${esc(L("Vis alle sjekker", "Show all checks"))}">${esc(sjekkFilter)} ✕</button>` : ""}</div>`
       + sideListe(tittel, liste, postLinje);
     rader = liste; linje = postLinje;
   } else {
     const kilde = k => `<li class="kilde"><div style="flex:1;min-width:0" class="sted"><div class="l1"><b>${esc(k.navn)}</b><small>${esc(k.hvor)}</small></div><div class="sha">SHA-256 ${esc(k.sha || "–")}</div></div></li>`;
     kropp = `<div class="ingenAi">${BRIKKE}<span>${esc(g.ingenAi)}</span></div>`
       + `<h3>${L("Program og regler som ga resultatet", "Program and rules behind the result")}</h3><ul class="kildeGrid">${g.kilder.map(kilde).join("")}</ul>`
-      + `<h3>${L("Aldri åpnet, med vilje", "Never opened, by design")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
+      + `<h3>${L("Aldri lest – personvern (ikke et hull i søket)", "Never read – privacy (not a gap in the scan)")}</h3><div class="brikker" style="margin-top:0">${g.aldri.map(a => `<span>${esc(a)}</span>`).join("")}</div>`
       + `<h3>${L("Lest i minnet, aldri vist", "Read in memory, never shown")}</h3><div class="brikker" style="margin-top:0">${(g.lestAldriVist || []).map(a => `<span>${esc(a)}</span>`).join("")}</div>`
       + `<h3>${L("Revisjonslogg", "Audit trail")}</h3><div class="avLinje boks ${g.revisjon ? "ok" : ""}" style="margin-top:0">${g.revisjon ? esc(L(`Lagret: ${g.revisjon}`, `Saved: ${g.revisjon}`)) : esc(L("Av for dette søket. Ingenting er lagret.", "Off for this scan. Nothing is saved."))}</div>`;
   }
@@ -1033,7 +1029,7 @@ function tegnKart() {
   let html = "";
   const flis = (b, x, y, w, h, niva) => {
     const m = b.node, kl = `skFlis niva${niva}${m.r >= 0 ? " r" + m.r : ""}${kartMangler(m) ? " mangler" : ""}${m.rest ? " rest" : ""}`;
-    const tittel = `${m.s || kartNavn(m)}\n${kartTall(m)}${kartMangler(m) ? "\n" + L("Ikke dekket: ", "Not covered: ") + tall(kartMangler(m)) : ""}`;
+    const tittel = `${m.s || kartNavn(m)}\n${kartTall(m)}${kartMangler(m) ? "\n" + L("Kunne ikke leses: ", "Could not be read: ") + tall(kartMangler(m)) : ""}`;
     const tekst = w > 46 && h > 17 ? `<div class="skNavn">${esc(kartNavn(m))}${kartFunnMerke(m)}</div>${h > 32 ? `<div class="skTall">${esc(kartTall(m))}</div>` : ""}` : "";
     return `<div class="${kl}" data-sti="${esc(JSON.stringify(b.sti))}" style="left:${x}px;top:${y}px;width:${Math.max(0, w)}px;height:${Math.max(0, h)}px" title="${esc(tittel)}">${tekst}</div>`;
   };
@@ -1362,7 +1358,7 @@ $("lagre").onclick = () => send({ type: "lagre" });
 // Funn, Nettverk og Datagrunnlag er tre faner: trykk på den som er åpen gjør ingenting
 $("nettKnapp").onclick = () => { if (!nettApen) apneNett(); };
 $("dataKnapp").onclick = () => { if (!dataApen) apneData(); };
-function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); $("azValg").hidden = nettApen || dataApen; }
+function merkMeny() { $("nettKnapp").classList.toggle("paa", nettApen); $("dataKnapp").classList.toggle("paa", dataApen); $("funnKnapp").classList.toggle("paa", !nettApen && !dataApen); }
 $("funnKnapp").onclick = () => { if (nettApen || dataApen) lukkArk(); };
 
 // ---------- Demo når siden åpnes i en vanlig nettleser ----------

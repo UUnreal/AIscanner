@@ -109,7 +109,7 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster (rot side {nett.Rot})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
+        SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster ({(poster == 0 ? db.RotInfo(nett) : $"rot side {nett.Rot}")})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }
 

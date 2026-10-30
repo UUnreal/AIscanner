@@ -29,6 +29,18 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.39.0] - 2026-10-30
+
+### Endret
+- Datagrunnlag: nye navn som sier hva hver del betyr: «Sjekket for AI», «Sjekket – finnes ikke», «Sjekket av en annen sjekk», «Utelatt etter regel» og «Kunne ikke leses: <grunn>». Dekning i prosent i Oversikt og i rapporten.
+- «Aldri åpnet» heter nå «Aldri lest – personvern (ikke et hull i søket)».
+- Beskyttede Windows-prosesser (lsass, csrss, Defender m.fl.) står ikke lenger som hoppet over: programstien hentes fra Windows' prosessliste uten at prosessen åpnes.
+- A–Å står nå i risikoraden ved siden av Land.
+- Kopier av Chrome/Edge sine innebygde AI-modeller utenfor nettleserens mappe (f.eks. AppData\Programdata\Google\Chrome) vises som «Kopi av nettleserens AI-modeller» (Middels), ikke som ukjent program.
+
+### Lagt til
+- SRUM: når nettbrukstabellen gir 0 poster, beskriver rapporten rotsiden (flagg, eier, tom side i fila).
+
 ## [2.38.0] - 2026-10-30
 
 ### Lagt til

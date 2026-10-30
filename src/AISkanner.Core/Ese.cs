@@ -70,6 +70,17 @@ internal sealed class EseFil
         }
     }
 
+    /// <summary>Hva rotsiden til en tabell inneholder: flagg, eier og antall verdier. Viser hvorfor en tabell gir 0 poster.</summary>
+    public string RotInfo(Tabell t)
+    {
+        var p = LesSide(t.Rot);
+        if (p == null) return $"rotside {t.Rot} ligger utenfor fila ({_s.Length / Side} sider)";
+        uint flagg = BitConverter.ToUInt32(p, 36);
+        int eier = BitConverter.ToInt32(p, 24), tagger = U16(p, 34);
+        var tom = eier == 0 && flagg == 0;
+        return $"rotside {t.Rot}: flagg 0x{flagg:X}, eier {eier} (tabell {t.ObjId}), {tagger} verdier{(tom ? ", siden er tom i fila (ikke skrevet fra Windows' logg ennå)" : eier != t.ObjId ? ", siden tilhører en annen tabell" : "")}";
+    }
+
     /// <summary>Alle poster i et B-tre (bladsidene), som (side, start, lengde) for postdataene.</summary>
     public IEnumerable<(byte[] Side, int Start, int Lengde)> Poster(uint rot, Func<bool>? stopp = null)
     {

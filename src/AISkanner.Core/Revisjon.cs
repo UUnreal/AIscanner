@@ -86,15 +86,15 @@ public static class Revisjon
 
     public static string UtfallTekst(Utfall u) => u switch
     {
-        Utfall.Lest => "lest",
-        Utfall.IkkeFunnet => "sjekket, ingenting der",
-        Utfall.Nektet => "nektet tilgang",
-        Utfall.Laast => "låst",
-        Utfall.Blokkert => "stoppet av antivirus",
-        Utfall.HoppetOver => "hoppet over",
-        Utfall.Tidsgrense => "tidsgrense",
-        Utfall.Dekket => "dekket av annen sjekk",
-        _ => "feil",
+        Utfall.Lest => "sjekket for AI",
+        Utfall.IkkeFunnet => "sjekket – finnes ikke",
+        Utfall.Nektet => "kunne ikke leses: Windows nektet",
+        Utfall.Laast => "kunne ikke leses: låst av et annet program",
+        Utfall.Blokkert => "kunne ikke leses: stoppet av antivirus",
+        Utfall.HoppetOver => "utelatt etter regel",
+        Utfall.Tidsgrense => "kunne ikke leses: tidsgrense",
+        Utfall.Dekket => "sjekket av en annen sjekk",
+        _ => "kunne ikke leses: feil",
     };
 
     /// <summary>Kort linje for rapporten: hvor mye som ble lest, og hvor mye som ikke ble dekket.</summary>
@@ -103,8 +103,9 @@ public static class Revisjon
         var sum = s.Logg.Antall.GroupBy(x => x.Utfall).ToDictionary(g => g.Key, g => g.Sum(x => x.Antall));
         int A(Utfall u) => sum.TryGetValue(u, out var n) ? n : 0;
         var ikke = IkkeDekket.Where(u => A(u) > 0).Select(u => $"{A(u)} {UtfallTekst(u)}");
-        return $"Datagrunnlag: {A(Utfall.Lest)} lest, {A(Utfall.IkkeFunnet)} fantes ikke, {A(Utfall.HoppetOver)} hoppet over" +
-               (ikke.Any() ? $"; ikke dekket: {string.Join(", ", ikke)}." : "; alt søket prøvde å lese, ble lest.");
+        int alle = sum.Values.Sum(), lest = alle - IkkeDekket.Sum(A);
+        return $"Datagrunnlag: {(alle > 0 ? 100.0 * lest / alle : 100):0.#} % dekket · {A(Utfall.Lest)} sjekket for AI, {A(Utfall.IkkeFunnet)} sjekket – finnes ikke, {A(Utfall.Dekket)} sjekket av en annen sjekk, {A(Utfall.HoppetOver)} utelatt etter regel" +
+               (ikke.Any() ? $"; {string.Join(", ", ikke)}." : "; alt søket prøvde å lese, ble lest.");
     }
 
     /// <summary>

@@ -811,7 +811,8 @@ Utvidelse|Extension
 har lastet ned små AI-modeller som kjører på PC-en, f.eks.|has downloaded small AI models that run on the PC, e.g.
 
 # ---------- 2.15: datagrunnlag, utviklermodus og revisjonslogg ----------
-~Datagrunnlag: (\d+) lest, (\d+) fantes ikke, (\d+) hoppet over|Data basis: $1 read, $2 not found, $3 skipped
+~Datagrunnlag: ([\d.,]+) % dekket · (\d+) sjekket for AI, (\d+) sjekket – finnes ikke, (\d+) sjekket av en annen sjekk, (\d+) utelatt etter regel|Data basis: $1 % covered · $2 checked for AI, $3 checked – does not exist, $4 checked by another check, $5 left out by rule
+~(\d+) kunne ikke leses: |$1 could not be read: 
 ~Ingen hendelser fra Defender om dette programmet under søket \((\d+) hendelser totalt i perioden\)\.|No Defender events about this program during the scan ($1 events in total in the period).
 ~Defender stoppet noe under søket \(hendelser: (\d+)\)\.|Defender stopped something during the scan (events: $1).
 ~(\d+) hendelser under søket, (\d+) gjelder dette programmet|$1 events during the scan, $2 concern this program
@@ -1261,6 +1262,20 @@ På jobb: bare med avtale.|At work: only with an agreement.
 Utvidelse som tar opp eller skriver ned møter og sender lyd og tekst til AI-tjenesten.|Extension that records or transcribes meetings and sends audio and text to the AI service.
 Tar opp eller skriver ned møtene dine og sender dem til AI-tjenesten.|Records or transcribes your meetings and sends them to the AI service.
 sjekket, ingenting der|checked, nothing there
+sjekket for AI|checked for AI
+sjekket – finnes ikke|checked – does not exist
+kunne ikke leses: Windows nektet|could not be read: Windows denied
+kunne ikke leses: låst av et annet program|could not be read: locked by another program
+kunne ikke leses: stoppet av antivirus|could not be read: stopped by antivirus
+utelatt etter regel|left out by rule
+kunne ikke leses: tidsgrense|could not be read: time limit
+sjekket av en annen sjekk|checked by another check
+kunne ikke leses: feil|could not be read: error
+Windows nektet|Windows denied
+låst av et annet program|locked by another program
+Windows-kjernen, ingen programfil|Windows kernel, no program file
+programsti fra Windows' prosessliste; beskyttet prosess ble ikke åpnet|program path from Windows' process list; protected process was not opened
+beskyttet Windows-prosess, navnet sjekket; prosessen ble ikke åpnet|protected Windows process, name checked; the process was not opened
 administratorens lesing for sikkerhetskopi er på: låste mapper og filer kan leses, ingenting endres|the administrator's backup read right is on: locked folders and files can be read, nothing is changed
 Windows ga ikke retten til lesing for sikkerhetskopi; låste mapper blir stående som nektet|Windows did not grant the backup read right; locked folders stay denied
 lest med administratorens lesing for sikkerhetskopi (fila var låst for vanlig lesing)|read with the administrator's backup read right (the file was locked for normal reading)
