@@ -1497,3 +1497,4 @@ Kjørte kort:|Ran briefly:
 startet og stoppet under søket|started and stopped during the scan
 ~^Samme program \((.+)\): (\d+) spor slått sammen til ett funn$|Same program ($1): $2 traces merged into one finding
 SRUM (Windows' ressursbruk,|SRUM (Windows resource usage,
+ → ingen IP i bufferen (navnet fantes ikke eller er utløpt)| → no IP in the cache (the name did not exist or has expired)

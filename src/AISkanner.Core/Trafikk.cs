@@ -245,10 +245,12 @@ public sealed partial class Skanner
             foreach (var n in navn)
             {
                 if (!ipFor.TryGetValue(n, out var l)) ipFor[n] = l = new List<string>();
-                if (l.Count < 3) l.Add($"{ip}{(IpLand.Finn(ip) is { } k ? $" ({IpLand.Navn(k)})" : "")}");
+                // Land der IP-en står, og mellomleddet (CDN eller sky) som svarer for tjenesten, fra IP-nettet eller CNAME-kjeden
+                var hvor = new[] { IpLand.Finn(ip) is { } k ? IpLand.Navn(k) : null, IpLand.Cdn(ip, navn) is { } cdn ? $"via {cdn}" : null }.Where(x => x != null).ToList();
+                if (l.Count < 3) l.Add($"{ip}{(hvor.Count > 0 ? $" ({string.Join(", ", hvor)})" : "")}");
             }
         string Bevis(string v) =>
-            $"Windows' DNS-buffer: {v}{(ipFor.TryGetValue(v, out var ip) ? $" → {string.Join(", ", ip)}" : "")} · programmet som slo opp er ukjent (Windows lagrer det ikke) · ingen tilkobling sett under søket";
+            $"Windows' DNS-buffer: {v}{(ipFor.TryGetValue(v, out var ip) ? $" → {string.Join(", ", ip)}" : " → ingen IP i bufferen (navnet fantes ikke eller er utløpt)")} · programmet som slo opp er ukjent (Windows lagrer det ikke) · ingen tilkobling sett under søket";
         var api = new List<(AiNettsted Tj, SortedSet<string> Verter)>();
         foreach (var (tj, verter) in nylig)
         {
