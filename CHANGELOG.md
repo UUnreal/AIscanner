@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.36.1] - 2026-10-30
+
+### Endret
+
+- Nedtrekkslista «Sorter» følger mørk og lys modus: mørk liste med lesbar tekst i mørk modus, valgt linje i blått.
+
 ## [2.36.0] - 2026-10-30
 
 ### Lagt til

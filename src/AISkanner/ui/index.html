@@ -145,6 +145,10 @@
   .sorter select { font: inherit; color: var(--tekst); background: var(--flate2, rgba(127,127,127,.12)); border: 0; border-radius: 999px; padding: 2px 26px 2px 12px; line-height: 20px; cursor: pointer;
     appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
     background-position: calc(100% - 14px) 52%, calc(100% - 10px) 52%; background-size: 4px 4px; background-repeat: no-repeat; }
+  /* Nedtrekkslista tegnes av Windows: color-scheme gir mørk liste i mørk modus, og valgene får temaets farger */
+  .sorter select { color-scheme: light dark; }
+  .sorter select option { background: var(--kort); color: var(--tekst); }
+  .sorter select option:checked { background: var(--bla-knapp); color: #fff; }
   .sorter select:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
   .gruppe.fare { color: var(--rod); }
   .fordeling button:focus-visible { outline: 2px solid var(--fokus, #0a84ff); outline-offset: 2px; }
