@@ -43,6 +43,10 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `Regler.cs` | Leser `regler.json` (innebygd eller ved siden av exe) og `godkjent-ai.txt`. |
 | `Sanntid.cs` | Prosesser og AI-motorer, lokale AI-servere (også Ollama-modeller lastet nå via `/api/ps`), AI-nøkler (navn på miljøvariabler og i `.env`-filer, aldri verdier), filgjennomgang (modeller og AI-kode). |
 | `Misbruk.cs` | Flere ukjente AI-spor (hooks, skjulte tegn, ferdigheter, autostart med farlige flagg, lenker, kjente filer). Filgjennomgangen samler kandidater; de vurderes etterpå. |
+| `Angrep.cs` | Angrep på AI-agenter: sårbare AI-verktøy (`saarbareVersjoner`), Shai-Hulud-filer i `node_modules`, AI-trafikk til en annen vert, instruksjonsfiler i Nedlastinger, `npx skills add`, Gemini i Chrome, Windows' MCP-koblinger (ODR). |
+| `Etw.cs` | `EtwOkt`: én sanntidsøkt mot Windows' hendelseskilder (admin). Brukes av `NettEtw` og `Vakt`. Bare i minnet. |
+| `Vakt.cs` | Vakt: følger AI-agentene og prosessene de starter live (prosesser, filåpninger, TCP, DNS, endringer i agentoppsett). Eies av vinduet; røde hendelser blir funn via `Skanner.VaktTilFunn`. |
+| `NettEtw.cs` | UDP per program (QUIC, STUN, DNS) fra Kernel-Network, via `EtwOkt`. |
 | `Nettverkvisning.cs` | «Nettverk» (live): hvilke programmer som snakker med AI-tjenester nå, per sekund. Bare i minnet. |
 | `Prosesstre.cs` | Hvem som startet en prosess (Toolhelp), signatur, filinfo og starttid. Skannerens egne prosesser. |
 | `Lytting.cs` | Lyttevindu under søket og «Følg med» (datamengde live). Bare i minnet. |
