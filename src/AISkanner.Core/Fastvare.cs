@@ -14,6 +14,8 @@ namespace AISkanner;
 public sealed partial class Skanner
 {
     public List<string> Fastvarelinjer { get; } = new();
+    /// <summary>Hver tjeneste og driver endret siste 7 dager (vises når «Tjenester endret 7 d» trykkes).</summary>
+    public List<string> EndredeTjenester { get; } = new();
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern uint GetSystemFirmwareTable(uint signatur, uint tabell, byte[]? buffer, uint lengde);
@@ -24,7 +26,7 @@ public sealed partial class Skanner
 
     private void Fastvare()
     {
-        lock (Fastvarelinjer) Fastvarelinjer.Clear();
+        lock (Fastvarelinjer) { Fastvarelinjer.Clear(); EndredeTjenester.Clear(); }
         Wpbt();
         NyeTjenester();
     }
@@ -93,6 +95,7 @@ public sealed partial class Skanner
                     try { var vi = FileVersionInfo.GetVersionInfo(sti); selskap = vi.CompanyName?.Trim(); produkt = vi.ProductName; } catch { }
                 var kort = string.IsNullOrEmpty(selskap) ? "ukjent firma" : Firma(selskap!);
                 firma[kort] = firma.TryGetValue(kort, out var c) ? c + 1 : 1;
+                lock (Fastvarelinjer) EndredeTjenester.Add($"{DateTime.FromFileTimeUtc(ft).ToLocalTime():yyyy-MM-dd HH:mm} · {navn} · {kort} · {sti ?? "programsti ukjent"}");
                 if (FinnRegel($"{navn} {k.GetValue("DisplayName")} {produkt} {sti}") is { } r) ai.Add($"{navn} ({r.Navn})");
             }
             catch { }

@@ -377,7 +377,7 @@ public sealed class Hovedvindu : Form
                 sendtTekst = T(Rapport.Storrelse(sendt)),
                 nvd = _nvdStatus,
                 enhet = Enhet.Tekst(),
-                sjekker = _skanner.Sjekker.Select(x => new { navn = T(x.Navn), tekst = T(x.Tekst), niva = x.Niva }),
+                sjekker = _skanner.Sjekker.Select(x => new { navn = T(x.Navn), tekst = T(x.Tekst), niva = x.Niva, linjer = x.Linjer }),
                 kjort = _skanner.Startet is { } st ? st.ToString("d. MMM yyyy 'kl.' HH:mm", System.Globalization.CultureInfo.GetCultureInfo("nb-NO")) : null,
                 admin = Nettverk.ErAdmin(),
                 fullt = _skanner.Fullt,
