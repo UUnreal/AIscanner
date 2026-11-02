@@ -59,6 +59,7 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `ModellGjenkjenning.cs` | Modellfamilie fra arkitektur og ordforråd, modell-ID (SHA-256 eller fingeravtrykk), Ollama-navn. |
 | `Leverandor.cs` | AI lagt inn av leverandører i AppData, ProgramData, Program Files, WindowsApps og SystemApps. |
 | `Signatur.cs` | Authenticode med `WinVerifyTrust`, uten tilbakekallingssjekk over nett. |
+| `NettsideAi.cs` | AI-modeller som nettsider kjører i nettleseren (WebLLM, Transformers.js, MediaPipe, wllama) fra Cache Storage, IndexedDB-blobber og File System. |
 | `Nettsteder.cs` | AI-nettsteder fra `site_engagement` og historikk, AI-utvidelser og modeller lagret i IndexedDB. |
 | `NettleserModeller.cs` | Modeller nettleserne laster ned (Gemini Nano, Edge-modeller, TranslateKit m.fl.). |
 | `NettleserApi.cs` | Status for innebygde AI-API-er i Chrome og Edge. |

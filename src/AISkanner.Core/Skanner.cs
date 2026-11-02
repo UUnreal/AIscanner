@@ -22,7 +22,7 @@ public sealed partial class Skanner
     /// Passord, informasjonskapsler, historikk og lommebøker i nettleseren blir aldri åpnet.
     /// </summary>
     public static readonly ISet<string> LovligeFiler =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json", "Preferences", "History", "places.sqlite" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json", "messages.json", "extensions.json", "Preferences", "History", "places.sqlite", "QuotaManager", "caches.sqlite" };
 
     private readonly bool _historikk;
 
@@ -71,6 +71,7 @@ public sealed partial class Skanner
             ("Sjekker utvidelser i nettleserne...", Nettlesere),
             ("Ser etter AI-nettsteder du har brukt...", Nettsteder),
             ("Sjekker innebygd AI i Chrome og Edge...", InnebygdAi),
+            ("Ser etter AI-modeller som nettsider kjører i nettleseren...", NettsideModeller),
             ("Leter gjennom filene etter AI-modeller og AI-kode...", Gjennomgang),
             ("Sjekker registeret...", () => { Register(); OfficeTillegg(); }),
             ("Leter etter AI som leverandører har lagt inn...", LeverandorAi),

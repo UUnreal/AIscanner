@@ -29,6 +29,13 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.49.0] - 2026-11-02
+
+### Lagt til
+- AI-modeller som nettsider kjører i nettleseren med WebGPU eller WebAssembly (WebLLM, Transformers.js/ONNX Runtime Web, MediaPipe/LiteRT, llama.cpp/wllama). Før så skanneren bare at nettstedet var besøkt. Nå finnes modellfilene i Chromiums Cache Storage (også lagringsbøttene i `WebStorage`), IndexedDB-blobber og File System, og i Firefox' `storage\default`. Funnet viser nettstedet, modellen (f.eks. `huggingface.co/mlc-ai/…-MLC`), biblioteket, størrelsen og når den ble lagret, og er alltid rødt (skygge-AI). Mens søket går måles om nettleseren bruker GPU til beregning; hvilken fane kan ikke ses, så det står som ikke bekreftet.
+- «AI i nettsider» under «Sjekket», og ny sjekk med egen fremdrift.
+- Kontrollspor: WebLLM-modell i Cache Storage, GGUF i IndexedDB, og en vanlig video i cachen som ikke skal tas med.
+
 ## [2.48.1] - 2026-11-02
 
 ### Rettet

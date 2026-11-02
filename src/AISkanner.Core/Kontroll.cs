@@ -163,6 +163,35 @@ public sealed partial class Skanner
             Sjekk(!ff.Any(x => x.Profil.Contains("Thunderbird")), "Thunderbird (e-post) ble tatt med som nettleser");
             s.AndreNettleseresAi();
             Sjekk(s._funn.Values.Any(f => f.Navn == "Leo (AI-assistent i Brave)"), "Leo i Brave ble ikke funnet");
+            // AI-modell som en nettside kjører i nettleseren (WebLLM i Cache Storage, GGUF i IndexedDB), og en vanlig video i cachen
+            var cs = Path.Combine(brave, "Default", "Service Worker", "CacheStorage", "abc123");
+            Directory.CreateDirectory(Path.Combine(cs, "c1"));
+            File.WriteAllBytes(Path.Combine(cs, "index.txt"), Encoding.ASCII.GetBytes("\n\u0016https://chat.webllm.ai/\u0012\fwebllm/model"));
+            void CacheFil(string navn, string adresse, string innhold)
+            {
+                var k = Encoding.UTF8.GetBytes(adresse);
+                var b = new byte[2 * 1024 * 1024];
+                BitConverter.GetBytes(0xfcfb6d1ba7725c30UL).CopyTo(b, 0);
+                BitConverter.GetBytes((uint)k.Length).CopyTo(b, 12);
+                k.CopyTo(b, 24);
+                Encoding.ASCII.GetBytes(innhold).CopyTo(b, 24 + k.Length);
+                File.WriteAllBytes(Path.Combine(cs, "c1", navn), b);
+            }
+            CacheFil("1a2b3c4d5e6f7a8b_0", "https://huggingface.co/mlc-ai/Llama-3.2-1B-Instruct-q4f16_1-MLC/resolve/main/params_shard_0.bin", "\0\0\0\0");
+            CacheFil("9a2b3c4d5e6f7a8b_0", "https://example.com/videoer/ferie.mp4", "\0\0\0\0");
+            var blob = Path.Combine(brave, "Default", "IndexedDB", "https_lokal-chat.example_0.indexeddb.blob", "1", "00");
+            Directory.CreateDirectory(blob);
+            var gg = new byte[2 * 1024 * 1024];
+            Encoding.ASCII.GetBytes("GGUF").CopyTo(gg, 0);
+            BitConverter.GetBytes(3u).CopyTo(gg, 4);
+            File.WriteAllBytes(Path.Combine(blob, "7"), gg);
+            s.NettsideModeller();
+            var web = s._funn.Values.FirstOrDefault(f => f.Navn == "AI-modell kjører i nettleseren: chat.webllm.ai");
+            Sjekk(web != null && web.Risiko == Risiko.Rod && web.Detaljer.Any(d => d == "Modell: huggingface.co/mlc-ai/Llama-3.2-1B-Instruct-q4f16_1-MLC")
+                  && web.Detaljer.Any(d => d.Contains("bibliotek: WebLLM")) && !web.Detaljer.Any(d => d.Contains("example.com")),
+                "WebLLM-modell i Cache Storage ble ikke funnet med nettsted og modellnavn, eller en vanlig fil i cachen ble tatt med");
+            Sjekk(s._funn.Values.Any(f => f.Navn == "AI-modell kjører i nettleseren: lokal-chat.example" && f.Detaljer.Any(d => d.Contains("GGUF"))),
+                "GGUF-modell i IndexedDB-blobbene til et nettsted ble ikke funnet");
             // Nettleserbro (Native Messaging): kjent AI, ukjent AI og et vanlig program
             var bro = Path.Combine(rot, "nett", "bro");
             Directory.CreateDirectory(bro);
@@ -656,7 +685,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(fulltOk == fulltAlle ? "OK  " : "FEIL")}  Fullt søk: {fulltOk} av {fulltAlle} riktige (modell omdøpt til .mp4 finnes bare i fullt søk og merkes forkledd, punktum-mapper gås gjennom, versjon fra modellfila)");
             var (nettOk, nettAlle) = NettleserKontroll(regler, sb, rot);
             ok += nettOk;
-            sb.AppendLine($"{(nettOk == nettAlle ? "OK  " : "FEIL")}  Nettlesere og nye regler: {nettOk} av {nettAlle} riktige (Comet, LibreWolf, Brave Leo, Firefox-chatbot og -modeller, Thunderbird ikke, AI-agenter og møteopptakere)");
+            sb.AppendLine($"{(nettOk == nettAlle ? "OK  " : "FEIL")}  Nettlesere og nye regler: {nettOk} av {nettAlle} riktige (Comet, LibreWolf, Brave Leo, Firefox-chatbot og -modeller, Thunderbird ikke, AI-agenter og møteopptakere, AI-modeller som nettsider kjører i nettleseren)");
             var (ipOk, ipAlle) = NettIpKontroll(regler, sb);
             ok += ipOk;
             sb.AppendLine($"{(ipOk == ipAlle ? "OK  " : "FEIL")}  AI-trafikk uten navn i DNS-bufferen: {ipOk} av {ipAlle} riktige (nettleser med DoH kjent igjen på IP, andre programmer ikke)");
