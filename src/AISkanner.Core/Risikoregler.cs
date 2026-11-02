@@ -41,7 +41,7 @@ public static class Risikoregler
         "IT har blokkert modellen",
     };
 
-    private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "Windows Recall", "Microsoft Copilot" };
+    private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "AI-motorer i Windows' egne filer", "Windows Recall", "Microsoft Copilot" };
 
     public static void Bruk(IEnumerable<Funn> funn, Regelsett regler)
     {

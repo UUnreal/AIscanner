@@ -835,6 +835,15 @@
   "leverandorAi": [
     {
       "ord": [
+        "windowsworkload"
+      ],
+      "navn": "Windows ML-akselerasjon fra maskinvareleverandøren",
+      "utgiver": "Microsoft",
+      "hva": "kjøremotor for AI i Windows (Windows ML) fra Intel, AMD, NVIDIA eller Qualcomm, lastet ned av Windows",
+      "bekreftet": false
+    },
+    {
+      "ord": [
         "microsoftwindows.client.aix"
       ],
       "navn": "Windows AI: Recall og Click to Do",
@@ -845,7 +854,6 @@
     {
       "ord": [
         "microsoftwindows.client.coreai",
-        "windowsworkload",
         "microsoft.windows.ai",
         "phisilica",
         "phi silica"

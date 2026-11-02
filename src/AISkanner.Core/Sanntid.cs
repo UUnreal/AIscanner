@@ -141,7 +141,13 @@ public sealed partial class Skanner
         if (kjorer) f.Merk(Tilstand.KjorerNa);
     }
 
-    private static string Utgiver(string exe) { try { return FileVersionInfo.GetVersionInfo(exe).CompanyName ?? ""; } catch { return ""; } }
+    // Utgiver fra filinfo, ellers fra signaturen (Windows-filer i SystemApps og WinSxS mangler ofte filinfo)
+    private static string Utgiver(string exe)
+    {
+        string? u = null;
+        try { u = FileVersionInfo.GetVersionInfo(exe).CompanyName; } catch { }
+        return string.IsNullOrWhiteSpace(u) ? Signatur.Utgiver(exe) ?? "" : u!;
+    }
 
     private static bool ErRisikabelPlass(string sti) =>
         Regex.IsMatch(sti, @"[\\/](Downloads|Nedlastinger|Desktop|Skrivebord|Temp|tmp)[\\/]", RegexOptions.IgnoreCase);

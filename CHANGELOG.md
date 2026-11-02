@@ -29,6 +29,13 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.46.0] - 2026-11-02
+
+### Rettet
+- «AI-motorer i Windows' egne filer» ble rød fordi kategorien ble regnet som skygge-AI. Nå «Fra Windows» og grønn.
+- Windows-programmer uten filinfo (for eksempel CoPilotLibraryBroker i SystemApps og WinSxS) ble «ukjent program». Utgiveren leses nå fra signaturen når filinfo mangler.
+- Intel OpenVINO-motoren for Windows ML (WindowsWorkload) ble kalt «Phi Silica». Nå eget navn: «Windows ML-akselerasjon fra maskinvareleverandøren».
+
 ## [2.45.0] - 2026-11-02
 
 ### Endret
