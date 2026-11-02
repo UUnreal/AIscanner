@@ -29,6 +29,12 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.46.1] - 2026-11-02
+
+### Rettet
+- Lagrede installasjonsfiler i Windows\Installer (for eksempel Adobe Acrobat sin oppdateringskopi) ble rødt som installert AI. Nå grønt «Lagret installasjonsfil fra …».
+- Funn fra Windows (for eksempel Microsoft Copilot) sto som «Skygge-AI» i oversikten. Nå «Fra Windows».
+
 ## [2.46.0] - 2026-11-02
 
 ### Rettet

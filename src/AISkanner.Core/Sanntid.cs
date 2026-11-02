@@ -454,6 +454,15 @@ public sealed partial class Skanner
                 w.Detalj($"{(exe != null ? "Program: " + exe : "Mappe: " + mappe)} (AI-motor: {string.Join(", ", motorer)})");
                 continue;
             }
+            // Windows\Installer: lagrede installasjonsfiler (oppdateringer), ikke et installert program. Det installerte programmet finnes andre steder.
+            if (ErSystemmappe(mappe) && mappe.IndexOf(@"\Installer\", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var u = exe != null ? Utgiver(exe) : "";
+                var i = LeggTil($"Lagret installasjonsfil{(u != "" ? " fra " + u.Trim() : "")}", "Innebygd AI fra leverandør", Risiko.Gronn,
+                    "Kopi av et installasjonsprogram som Windows har lagret for oppdateringer. Ikke et installert program, og det kjører ikke.", "AI-motor", null);
+                i.Detalj($"{(exe != null ? "Program: " + exe : "Mappe: " + mappe)} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
             if (exe == null)
             {
                 // Ingen program i mappa: vis mappa, aldri et oppdiktet programnavn
