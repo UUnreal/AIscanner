@@ -29,6 +29,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.43.0] - 2026-11-02
+
+### Lagt til
+- «Om»-knapp på startskjermen og i resultatet: hva skanneren er bygget på, hvordan den finner AI, regelsett og data med kilder (YARA, ATR, SigmaHQ, MITRE ATLAS, OWASP, DB-IP, ip-location-db, NVD) og personvern. Statisk, virker uten nett.
+
+### Rettet
+- AI-motorer i Windows' egne filer (WinSxS, System32, DriverStore, SystemApps) ble vist som røde «ukjente programmer», hver for seg. Nå ett grønt funn «AI-motorer i Windows' egne filer» med alle mappene, når programmet er fra Microsoft eller mappa ikke har noe program.
+- En mappe med AI-motor uten program fikk et oppdiktet programnavn (mappenavn + .exe). Nå vises mappa slik den er.
+
 ## [2.42.0] - 2026-11-02
 
 ### Lagt til

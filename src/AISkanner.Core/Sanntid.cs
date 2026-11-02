@@ -141,6 +141,8 @@ public sealed partial class Skanner
         if (kjorer) f.Merk(Tilstand.KjorerNa);
     }
 
+    private static string Utgiver(string exe) { try { return FileVersionInfo.GetVersionInfo(exe).CompanyName ?? ""; } catch { return ""; } }
+
     private static bool ErRisikabelPlass(string sti) =>
         Regex.IsMatch(sti, @"[\\/](Downloads|Nedlastinger|Desktop|Skrivebord|Temp|tmp)[\\/]", RegexOptions.IgnoreCase);
 
@@ -437,8 +439,22 @@ public sealed partial class Skanner
         foreach (var (mappe, motorer) in ff.Motorer)
         {
             if (BareGrafikkMotor(motorer)) continue;
-            var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                      ?? Path.Combine(mappe, Path.GetFileName(mappe) + ".exe");
+            var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+            // Windows' egne filer (WinSxS, System32, DriverStore, Installer) er del av Windows: ett grønt funn med mappene
+            if (ErSystemmappe(mappe) && (exe == null || Utgiver(exe).Inneholder("Microsoft")))
+            {
+                var w = LeggTil("AI-motorer i Windows' egne filer", "Lokal AI", Risiko.Gronn,
+                    "AI-biblioteker som følger med Windows (Windows ML, ONNX Runtime, DirectML). Del av Windows, ikke et eget program.", "AI-motor", null);
+                w.Detalj($"{(exe != null ? "Program: " + exe : "Mappe: " + mappe)} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
+            if (exe == null)
+            {
+                // Ingen program i mappa: vis mappa, aldri et oppdiktet programnavn
+                var m = LeggTil(Path.GetFileName(mappe), "Lokal AI", Risiko.Rod, "Mappe med egen AI-motor uten program. Kan brukes av et program et annet sted.", "AI-motor", null);
+                m.Detalj($"Mappe: {mappe} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
             LeggTilMotorFunn(exe, motorer, kjorer: false);
         }
 
