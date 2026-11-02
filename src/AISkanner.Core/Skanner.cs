@@ -130,11 +130,14 @@ public sealed partial class Skanner
             }
         });
         Rapporter();
+        Steg.Clear();
+        foreach (var x in stegliste) Steg[x.Tekst.TrimEnd('.')] = 0;
         await Task.WhenAll(stegliste.Select(x => Task.Run(() =>
         {
             ct.ThrowIfCancellationRequested();
             var tid = Stopwatch.StartNew();
             Tilgangslogg.Sjekk.Value = x.Tekst.TrimEnd('.');
+            Steg[x.Tekst.TrimEnd('.')] = 1;
             try { x.Gjor(); }
             catch (Exception e)
             {
@@ -142,6 +145,7 @@ public sealed partial class Skanner
                 Tilgangslogg.Logg("Sjekk", x.Tekst.TrimEnd('.'), Utfall.Feil, $"Sjekken stoppet: {Tilgangslogg.Beskriv(e)}");
             }
             lock (Tider) Tider[x.Tekst.TrimEnd('.')] = tid.Elapsed;
+            Steg[x.Tekst.TrimEnd('.')] = 2;
             var n = Interlocked.Increment(ref ferdig[0]);   // ikke inne i steg?.Report(...): ?. hopper over hele kallet når steg er null
             steg?.Report(n);
             Rapporter();
@@ -204,6 +208,8 @@ public sealed partial class Skanner
 
     private int Dybde(int vanlig) => Fullt ? 64 : vanlig;
     private TimeSpan Frist(int sekunder) => Fullt ? TimeSpan.FromMinutes(30) : TimeSpan.FromSeconds(sekunder);
+    /// <summary>Sjekkene i søket og hvor langt de er kommet (0 venter, 1 går, 2 ferdig), for fremdriften i vinduet.</summary>
+    public System.Collections.Concurrent.ConcurrentDictionary<string, int> Steg { get; } = new();
     /// <summary>Sant mens lyttevinduet fortsatt går etter at resultatet er vist.</summary>
     public bool LytterNa { get; private set; }
     private (Lyttevindu Lytting, Datamaling? Maling, double Minst)? _bakgrunn;

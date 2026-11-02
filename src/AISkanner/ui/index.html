@@ -120,6 +120,9 @@
   .ringBoks .prosent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: var(--t28); font-family: var(--visFont); font-variant-numeric: tabular-nums; }
   .sokTittel { font: var(--t20); }
   .fremdrift { color: var(--dempet); font-variant-numeric: tabular-nums; min-height: 20px; }
+  .stegNa { list-style: none; margin: 8px auto 0; padding: 0; width: min(420px, 90vw); font: var(--t12); text-align: left; }
+  .stegNa li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+  .stegNa span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
   #resultat { padding: 24px 32px 14px; gap: 16px; max-width: 1280px; width: 100%; margin: 0 auto; }
@@ -1336,9 +1339,12 @@ function motta(m) {
   else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "prosessinfo") { nettProsess[m.pid] = m; if (nettApen) tegnNett(); }
   else if (m.type === "prosent") settProsent(m.p);
-  else if (m.type === "fremdrift" && m.fullt) {
-    const min = Math.floor(m.sekunder / 60), sek = m.sekunder % 60;
-    $("fremdrift").textContent = `${L("Fullt søk", "Full scan")} · ${tall(m.mapper)} ${L("mapper", "folders")} · ${min ? `${min} min ` : ""}${sek} s`;
+  else if (m.type === "fremdrift") {
+    // Hva søket gjør nå: sjekkene som går, med det hver har lest så langt, og hvor mange som er ferdige
+    const min = Math.floor(m.sekunder / 60), sek = m.sekunder % 60, steg = m.steg || [], ferdig = steg.filter(x => x.s === 2).length;
+    const gar = steg.filter(x => x.s === 1).sort((a, b) => b.n - a.n);
+    $("fremdrift").innerHTML = `<div>${m.fullt ? `${L("Fullt søk", "Full scan")} · ${tall(m.mapper)} ${L("mapper", "folders")} · ` : ""}${tall(ferdig)} ${L("av", "of")} ${tall(steg.length)} ${L("sjekker ferdige", "checks done")} · ${min ? `${min} min ` : ""}${sek} s</div>`
+      + `<ul class="stegNa">${gar.slice(0, 6).map(x => `<li><span>${esc(x.navn)}</span><b>${tall(x.n)}</b></li>`).join("")}</ul>`;
   }
   else if (m.type === "lytter") { lytterIgjen = m.igjen; if (info && info.lytter) tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }

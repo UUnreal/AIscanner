@@ -29,6 +29,11 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.45.0] - 2026-11-02
+
+### Endret
+- Fremdriften under søket viser alle sjekkene, ikke bare filer: hvor mange som er ferdige, og sjekkene som går nå (register, prosesser, Windows-historikk, nettlesere, nettverk, filer m.fl.) med det hver har lest så langt. Tallene er de samme som i Datagrunnlag. Gjelder både hurtigsøk og fullt søk.
+
 ## [2.44.0] - 2026-11-02
 
 ### Endret

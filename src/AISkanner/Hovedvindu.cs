@@ -277,7 +277,13 @@ public sealed class Hovedvindu : Form
             // Fullt søk tar minutter: siden får vite hvor mange mapper som er gått gjennom og hvor lang tid som er brukt
             var aktiv = _skanner;
             using var fremdrift = new System.Windows.Forms.Timer { Interval = 1000 };
-            fremdrift.Tick += (_, _) => Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt });
+            // Hver sjekk med det den har lest så langt (samme tall som i Datagrunnlag), mens søket går
+            fremdrift.Tick += (_, _) =>
+            {
+                var antall = aktiv.Logg.Antall.GroupBy(x => x.Sjekk).ToDictionary(g => g.Key, g => g.Sum(x => x.Antall));
+                Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt,
+                    steg = aktiv.Steg.OrderBy(k => k.Key).Select(k => new { navn = _engelsk ? Engelsk.Til(k.Key) : k.Key, s = k.Value, n = antall.TryGetValue(k.Key, out var a) ? a : 0 }) });
+            };
             fremdrift.Start();
             // Vakt: følger AI-agentene live fra første søk til vinduet lukkes (bare i minnet)
             // Startes i bakgrunnen, så søket ikke venter på den
