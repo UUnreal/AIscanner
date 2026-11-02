@@ -821,7 +821,8 @@ function tegnNett() {
     + forelder(pi);
   const apne = (nett.lyttere || []).filter(l => l.apen).length;
   const nf = [["forb", L("Forbindelser", "Connections"), nett.rader.length], ["lytt", L("Lyttende AI-porter", "Listening AI ports"), (nett.lyttere || []).length, apne],
-    ["udp", "UDP", nett.etw ? (nett.udpTyper || []).reduce((a, x) => a + x.n, 0) : null], ["dg", L("Datagrunnlag", "Data basis"), (nett.kilder || []).length]];
+    ["udp", "UDP", nett.etw ? (nett.udpTyper || []).reduce((a, x) => a + x.n, 0) : null],
+    ["vakt", L("AI-agenter", "AI agents"), nett.vakt ? nett.vakt.hendelser.length : null, nett.vakt && nett.vakt.hendelser.some(h => h.rod)], ["dg", L("Datagrunnlag", "Data basis"), (nett.kilder || []).length]];
   const faner = `<div class="bryter nettFaner">${nf.map(f => `<button data-nf="${f[0]}" class="${nettFane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? ` <span class="ant${f[3] ? " fare" : ""}">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>`;
   const linje = (tittel, meta, under, fare) => `<li class="sted"><div><div class="l1"><b>${esc(tittel)}</b>${meta ? `<small>${esc(meta)}</small>` : ""}</div><div class="l2${fare ? " fareTekst" : ""}">${esc(under || "")}</div></div></li>`;
   let innhold;
@@ -834,6 +835,15 @@ function tegnNett() {
     : `<ul>${(nett.udpTyper || []).length ? nett.udpTyper.map(u => linje(u.hva, `${tall(u.n)} ${u.n === 1 ? L("strøm", "stream") : L("strømmer", "streams")} · ${tall(u.programmer)} ${u.programmer === 1 ? L("program", "program") : L("programmer", "programs")}`, nett.admin ? `${L("Sendt", "Sent")} ${fart(u.ut)} · ${L("Mottatt", "Received")} ${fart(u.inn)}` : "")).join("")
       : `<li class="mer">${L("Ingen UDP-trafikk til andre maskiner siste 10 sekunder.", "No UDP traffic to other machines in the last 10 seconds.")}</li>`}`
       + (nett.kryptertDns || []).map(x => linje(x, L("kryptert DNS", "encrypted DNS"), L("Navnene som slås opp slik, kommer ikke i DNS-bufferen", "Names looked up this way do not reach the DNS cache"))).join("") + `</ul>`;
+  else if (nettFane === "vakt") {
+    // Vakt: hva AI-agentene og programmene de starter gjør, live. Bare navn på programmer, filer og adresser, aldri innhold.
+    const v = nett.vakt;
+    innhold = !v ? `<ul><li class="mer">${L("Vakt starter med første søk.", "The watch starts with the first scan.")}</li></ul>`
+      : `<ul>${linje(L(`Vakt siden ${v.startet}`, `Watching since ${v.startet}`), `${tall(v.agenter.length)} ${L("agenter", "agents")} · ${tall(v.starter)} ${L("programmer startet av dem", "programs they started")}`, v.status)}`
+        + v.agenter.map(a => linje(a.agent, `PID ${a.pid}`, L("AI-agent som følges", "AI agent being watched"))).join("")
+        + (v.hendelser.length ? v.hendelser.map(h => linje(`${h.tid} · ${h.agent || L("ukjent program", "unknown program")} · ${h.regel}`, h.kilde, `${h.program} (PID ${h.pid})${h.hva ? " · " + h.hva : ""}`, h.rod)).join("")
+          : `<li class="mer">${L("Ingenting kjent fra angrep sett så langt.", "Nothing known from attacks seen so far.")}</li>`) + `</ul>`;
+  }
   else if (nettFane === "dg" && nettDg != null && (nett.kilder || [])[nettDg]) {
     // Radene bak tallet: program og PID, adresse og port, navn, land og eier (OSINT). Bare i minnet.
     const k = nett.kilder[nettDg], r = k.rader || [];

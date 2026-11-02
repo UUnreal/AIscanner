@@ -168,6 +168,7 @@ public sealed partial class Skanner
             Tider["Ser hvor AI sender data"] = tid.Elapsed;
         }
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
+        VaktTilFunn();
         SlaSammenSpor();
         Risikoregler.Bruk(_funn.Values, _regler);
         LagSjekker();
@@ -234,6 +235,7 @@ public sealed partial class Skanner
                 Trafikk(nb);
                 InnTilAiServer(nb);
                 KortlivedeProsesser(nb);
+                VaktTilFunn();
                 SlaSammenSpor();
                 Risikoregler.Bruk(_funn.Values, _regler);
                 LagSjekker();

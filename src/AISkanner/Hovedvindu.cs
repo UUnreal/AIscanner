@@ -184,6 +184,7 @@ public sealed class Hovedvindu : Form
         _lyttStopp?.Cancel();
         StoppAlleFolg();
         StoppNettverk();
+        _vakt?.Dispose(); _vakt = null;
         base.OnFormClosed(e);
         _web.Dispose();
         // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
@@ -277,6 +278,8 @@ public sealed class Hovedvindu : Form
             using var fremdrift = new System.Windows.Forms.Timer { Interval = 1000 };
             fremdrift.Tick += (_, _) => Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt });
             fremdrift.Start();
+            // Vakt: følger AI-agentene live fra første søk til vinduet lukkes (bare i minnet)
+            aktiv.Vakt = _vakt ??= await Task.Run(() => Vakt.Start(aktiv, Kommandolinje.Tillatt(_regler, out _), Array.Empty<string>()));
             _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
             fremdrift.Stop();
             _sekunder = klokke.Elapsed.TotalSeconds;
@@ -546,6 +549,7 @@ public sealed class Hovedvindu : Form
 
     // «Nettverk»: hvem som snakker med AI-tjenester nå, hvert sekund mens visningen er åpen. Bare i minnet.
     private (Nettverkvisning Visning, System.Windows.Forms.Timer Klokke)? _nettverk;
+    private Vakt? _vakt;
 
     private void StartNettverk()
     {
@@ -571,6 +575,12 @@ public sealed class Hovedvindu : Form
                     lyttere = (b.Lyttere ?? new()).Select(l => new { program = l.Program, pid = l.Pid, port = l.Port, udp = l.ErUdp, adresse = l.Adresse, apen = l.Apen, hva = T(l.Hva), ai = T(l.Ai) }),
                     udpTyper = (b.UdpTyper ?? new()).Select(u => new { hva = T(u.Hva), n = u.Strommer, programmer = u.Programmer, ut = u.Ut, inn = u.Inn }),
                     kryptertDns = (b.KryptertDns ?? new()).Select(T),
+                    vakt = _vakt == null ? null : new
+                    {
+                        status = T(_vakt.Status), startet = _vakt.Startet.ToString("HH:mm:ss"), starter = Interlocked.Read(ref _vakt.Starter),
+                        agenter = _vakt.Agenter().Select(a => new { pid = a.Pid, agent = a.Agent }),
+                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = h.Kilde, agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod }),
+                    },
                     kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj), rader = k.Rader?.Select(r => new { t = T(r.Tittel), m = T(r.Meta), u = T(r.Under) }) }),
                     rader = b.Rader.Select(r => new
                     {

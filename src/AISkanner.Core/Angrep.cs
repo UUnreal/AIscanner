@@ -299,8 +299,28 @@ public sealed partial class Skanner
 
     // ---------- Etter filgjennomgangen ----------
 
+    /// <summary>Sanntidsvakten for AI-agenter (eies av vinduet, lever mens det er åpent). Røde hendelser blir funn.</summary>
+    public Vakt? Vakt { get; set; }
+
+    private void VaktTilFunn()
+    {
+        if (Vakt is not { } v) return;
+        foreach (var g in v.Hendelser().Where(h => h.Rod).GroupBy(h => h.Agent))
+        {
+            var f = Spor($"AI-agent gjør noe kjent fra angrep: {(g.Key == "" ? "ukjent program" : g.Key)}",
+                $"Vakt så dette live (siden {v.Startet:HH:mm:ss}): AI-agenten eller et program den startet gjorde noe som er kjent fra angrep på og med AI-agenter. Bare navn på programmer, filer og adresser er lest, aldri innholdet.", null);
+            f.Advarsel("Sett live: AI-agent gjorde noe kjent fra angrep.");
+            foreach (var h in g.Take(30))
+            {
+                f.Tidspunkt(h.Tid, h.Tid);
+                f.Detalj($"{h.Tid:HH:mm:ss} · {h.Regel} · Program: {h.Program} (PID {h.Pid}){(h.Hva != null ? " · " + h.Hva : "")} · Regel: {h.Kilde} · Kilde: {(v.Etw ? "Windows' hendelser i sanntid" : "prosesslista")}");
+            }
+        }
+    }
+
     private void AngrepEtterGjennomgang()
     {
+        Vakt?.Folg(_prosjektOppsett.Select(p => Path.GetDirectoryName(Path.GetDirectoryName(p))).OfType<string>());
         try { SaarbareAiVerktoy(); } catch (Exception e) { Tilgangslogg.Logg("Sjekk", "Sårbare AI-verktøy", Utfall.Feil, Tilgangslogg.Beskriv(e)); }
         var saar = _saarbareTreff.Distinct().ToList();
         if (saar.Count > 0)

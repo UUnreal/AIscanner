@@ -579,7 +579,7 @@
     },
     {
       "navn": "Foundry Local (Microsoft)",
-      "kategori": "Skygge-AI (agent)",
+      "kategori": "Lokal AI",
       "risiko": "rod",
       "treff": [
         "foundry local",
