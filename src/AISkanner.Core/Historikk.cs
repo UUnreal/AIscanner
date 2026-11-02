@@ -23,8 +23,10 @@ public sealed partial class Skanner
             ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
         })
         {
+            var tid = System.Diagnostics.Stopwatch.StartNew();
             try { steg(); }
             catch (Exception e) { Tilgangslogg.Logg("Sjekk", $"Windows-historikk: {navn}", Utfall.Feil, $"Sjekken stoppet: {Tilgangslogg.Beskriv(e)}"); }
+            lock (Tider) Tider[$"Windows-historikk: {navn}"] = tid.Elapsed;
         }
     }
 
@@ -343,21 +345,26 @@ public sealed partial class Skanner
         // Programstarter: Security 4688 og Sysmon 1. Samme program telles én gang, med siste tid.
         var starter = new Dictionary<string, (string Exe, DateTime Sist, int Antall, string? Konto)>(StringComparer.OrdinalIgnoreCase);
         var tolket = new HashSet<string>(StringComparer.Ordinal);
+        // Samme program står i tusenvis av hendelser: regelen slås opp én gang per program
+        var regelFor = new Dictionary<string, Produkt?>(StringComparer.OrdinalIgnoreCase);
+        Produkt? Regel(string exe) => regelFor.TryGetValue(exe, out var r) ? r : regelFor[exe] = FinnRegel(exe);
         void Start(string? exe, string? linje, DateTime tid, string? konto, string kilde)
         {
             if (string.IsNullOrEmpty(exe)) return;
             var prosess = Path.GetFileNameWithoutExtension(exe);
+            // SigmaHQ proc_creation_win_node_new_agent_skills_installed: «npx skills add» legger ferdigheter til AI-agenter
+            if (linjer && linje != null && ErSkillsAdd(linje)) SkillsLagtTil(tid, kilde, konto);
             if (Kommandolinje.ErTolk(prosess))
             {
                 // Tolkere: kommandolinjen vurderes i minnet (samme regler som for prosesser som kjører nå)
                 if (linjer && !string.IsNullOrEmpty(linje) && tolket.Add(linje!)) Vurder(prosess, exe, 0, linje!, null, tid, kilde);
                 return;
             }
-            if (FinnRegel(exe) == null) return;
+            if (Regel(exe!) == null) return;
             starter[exe!] = starter.TryGetValue(exe!, out var s)
                 ? (exe!, s.Sist > tid ? s.Sist : tid, s.Antall + 1, s.Konto ?? konto)
                 : (exe!, tid, 1, konto);
-            if (linjer && !string.IsNullOrEmpty(linje) && tolket.Add(linje!) && FinnRegel(exe) is { } r)
+            if (linjer && !string.IsNullOrEmpty(linje) && tolket.Add(linje!) && Regel(exe!) is { } r)
             {
                 Funn? ai;
                 lock (_funn) _funn.TryGetValue(r.Navn, out ai);

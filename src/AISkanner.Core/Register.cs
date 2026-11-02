@@ -63,6 +63,7 @@ public sealed partial class Skanner
         Regel(@"SOFTWARE\Policies\Google\Chrome", "GeminiSettings", v => Tall(v) == 1 ? "Gemini i Chrome: slått av" : "Gemini i Chrome: tillatt");
         Regel(@"SOFTWARE\Policies\Google\Chrome", "GenAiDefaultSettings", v => Tall(v) == 2 ? "AI-funksjoner i Chrome: slått av" : "AI-funksjoner i Chrome: tillatt");
         Regel(@"SOFTWARE\Policies\Microsoft\Office\16.0\Common\AI", "DisableCopilot", v => Tall(v) == 1 ? "Copilot i Office: slått av" : null);
+        Regel(@"SOFTWARE\Policies\Microsoft\Windows\WindowsAI", "DisableRemoteAgentConnectors", v => Tall(v) == 1 ? "MCP på nettet for Windows-agenter: slått av" : "MCP på nettet for Windows-agenter: tillatt");
 
         if (AiRegler.Count == 0) return;
         var f = LeggTil("AI-regler fra IT", "Regler", Risiko.Gronn,

@@ -63,7 +63,6 @@ public sealed class InnebygdAI
 {
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
     [JsonPropertyName("nettleser")] public string Nettleser { get; set; } = "";
-    [JsonPropertyName("brukerdata")] public string Brukerdata { get; set; } = "";
     [JsonPropertyName("policyNokkel")] public string PolicyNokkel { get; set; } = "";
     [JsonPropertyName("policyVerdi")] public string PolicyVerdi { get; set; } = "";
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
@@ -76,6 +75,19 @@ public sealed class DaarligVersjon
     /// <summary>npm-pakke (f.eks. "nx", "@bitwarden/cli") eller utvidelse (utgiver.navn).</summary>
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
     [JsonPropertyName("versjoner")] public List<string> Versjoner { get; set; } = new();
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
+/// <summary>AI-verktøy med kjent sikkerhetshull: alle versjoner før <see cref="Retta"/> er sårbare.</summary>
+public sealed class SaarbarVersjon
+{
+    /// <summary>npm- eller PyPI-pakke.</summary>
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    /// <summary>"npm" eller "pypi".</summary>
+    [JsonPropertyName("type")] public string Type { get; set; } = "npm";
+    /// <summary>Første versjon som er retta.</summary>
+    [JsonPropertyName("retta")] public string Retta { get; set; } = "";
+    [JsonPropertyName("hull")] public string Hull { get; set; } = "";
     [JsonPropertyName("kilde")] public string? Kilde { get; set; }
 }
 
@@ -103,7 +115,6 @@ public sealed class Regelsett
     [JsonPropertyName("versjon")] public string Versjon { get; set; } = "";
     [JsonPropertyName("produkter")] public List<Produkt> Produkter { get; set; } = new();
     [JsonPropertyName("ukjentUtvidelseOrd")] public List<string> UkjentUtvidelseOrd { get; set; } = new();
-    [JsonPropertyName("modellfilEndelser")] public List<string> ModellfilEndelser { get; set; } = new();
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;
     [JsonPropertyName("nettleserInnebygd")] public List<InnebygdAI> NettleserInnebygd { get; set; } = new();
     [JsonPropertyName("aiNettsteder")] public List<AiNettsted> AiNettsteder { get; set; } = new();
@@ -121,10 +132,11 @@ public sealed class Regelsett
     [JsonIgnore] public string? GodkjentKilde { get; set; }
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
-    [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
     /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
     [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
     [JsonPropertyName("daarligeUtvidelser")] public List<DaarligUtvidelse> DaarligeUtvidelser { get; set; } = new();
+    /// <summary>AI-verktøy med kjente sikkerhetshull før en gitt versjon (CVE/GHSA). Blir «Ukjent AI-spor».</summary>
+    [JsonPropertyName("saarbareVersjoner")] public List<SaarbarVersjon> SaarbareVersjoner { get; set; } = new();
     [JsonPropertyName("iocFiler")] public List<IocFil> IocFiler { get; set; } = new();
     [JsonPropertyName("iocDomener")] public List<IocDomene> IocDomener { get; set; } = new();
     /// <summary>false: IT har slått av lesing av kommandolinjer (tolkere og AI-programmer).</summary>

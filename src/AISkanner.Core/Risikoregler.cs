@@ -14,7 +14,6 @@ namespace AISkanner;
 /// </summary>
 public static class Risikoregler
 {
-    public const string SkyggeDefinisjon = "AI som ikke er lagt inn av Windows, en signert leverandør eller IT.";
 
     /// <summary>Faresignaler som gjør en godkjent AI rød: andre kan bruke den, eller data havner der de ikke bør.</summary>
     private static readonly string[] RodeSignaler =
@@ -42,7 +41,7 @@ public static class Risikoregler
         "IT har blokkert modellen",
     };
 
-    private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "Windows Recall", "Microsoft Copilot" };
+    private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "AI-motorer i Windows' egne filer", "Windows Recall", "Microsoft Copilot" };
 
     public static void Bruk(IEnumerable<Funn> funn, Regelsett regler)
     {

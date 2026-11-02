@@ -141,6 +141,14 @@ public sealed partial class Skanner
         if (kjorer) f.Merk(Tilstand.KjorerNa);
     }
 
+    // Utgiver fra filinfo, ellers fra signaturen (Windows-filer i SystemApps og WinSxS mangler ofte filinfo)
+    private static string Utgiver(string exe)
+    {
+        string? u = null;
+        try { u = FileVersionInfo.GetVersionInfo(exe).CompanyName; } catch { }
+        return string.IsNullOrWhiteSpace(u) ? Signatur.Utgiver(exe) ?? "" : u!;
+    }
+
     private static bool ErRisikabelPlass(string sti) =>
         Regex.IsMatch(sti, @"[\\/](Downloads|Nedlastinger|Desktop|Skrivebord|Temp|tmp)[\\/]", RegexOptions.IgnoreCase);
 
@@ -437,8 +445,32 @@ public sealed partial class Skanner
         foreach (var (mappe, motorer) in ff.Motorer)
         {
             if (BareGrafikkMotor(motorer)) continue;
-            var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                      ?? Path.Combine(mappe, Path.GetFileName(mappe) + ".exe");
+            var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+            // Windows' egne filer (WinSxS, System32, DriverStore, Installer) er del av Windows: ett grønt funn med mappene
+            // Uten utgiver i filinfo eller innebygd signatur er Windows-filer katalogsignert; mappene kan bare TrustedInstaller skrive i
+            if (ErSystemmappe(mappe) && (exe == null || Utgiver(exe) is var wu && (wu == "" || wu.Inneholder("Microsoft"))))
+            {
+                var w = LeggTil("AI-motorer i Windows' egne filer", "Lokal AI", Risiko.Gronn,
+                    "AI-biblioteker som følger med Windows (Windows ML, ONNX Runtime, DirectML). Del av Windows, ikke et eget program.", "AI-motor", null);
+                w.Detalj($"{(exe != null ? "Program: " + exe : "Mappe: " + mappe)} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
+            // Windows\Installer: lagrede installasjonsfiler (oppdateringer), ikke et installert program. Det installerte programmet finnes andre steder.
+            if (ErSystemmappe(mappe) && mappe.IndexOf(@"\Installer\", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var u = exe != null ? Utgiver(exe) : "";
+                var i = LeggTil($"Lagret installasjonsfil{(u != "" ? " fra " + u.Trim() : "")}", "Innebygd AI fra leverandør", Risiko.Gronn,
+                    "Kopi av et installasjonsprogram som Windows har lagret for oppdateringer. Ikke et installert program, og det kjører ikke.", "AI-motor", null);
+                i.Detalj($"{(exe != null ? "Program: " + exe : "Mappe: " + mappe)} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
+            if (exe == null)
+            {
+                // Ingen program i mappa: vis mappa, aldri et oppdiktet programnavn
+                var m = LeggTil(Path.GetFileName(mappe), "Lokal AI", Risiko.Rod, "Mappe med egen AI-motor uten program. Kan brukes av et program et annet sted.", "AI-motor", null);
+                m.Detalj($"Mappe: {mappe} (AI-motor: {string.Join(", ", motorer)})");
+                continue;
+            }
             LeggTilMotorFunn(exe, motorer, kjorer: false);
         }
 
@@ -466,7 +498,7 @@ public sealed partial class Skanner
         }
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
-        if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
+        if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); SjekkNodeModules(mappe); return; }
         if (Fullt && navn is ".git" or ".svn" or ".hg") { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "versjonskontroll (git), ikke AI"); return; }
         if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
         if (!Fullt && navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }

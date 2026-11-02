@@ -29,6 +29,85 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.47.2] - 2026-11-02
+
+### Rettet
+- Vakt leste programbildet fra feil sted i prosesshendelsene på nyere Windows (versjon 3 har flere felt foran). Programbildet finnes nå ved å lete etter «\Device\», og forelderen tas fra Windows' prosessliste. Uten dette kjente Vakt ikke igjen noen AI-agent som startet etter at den var slått på (vakttesten i CI fant feilen).
+
+## [2.47.1] - 2026-11-02
+
+### Endret
+- Windows-historikk: regelen for et program slås opp én gang, ikke for hver hendelse i Security-loggen (hendelseslogger brukte opptil fristen på 30 s i fullt søk).
+
+### Rettet
+- CoPilotLibraryBroker (Windows App SDK) var fortsatt rødt: Windows-filer i SystemApps og WinSxS er katalogsignert og har verken utgiver i filinfo eller innebygd signatur. Uten utgiver regnes de nå som del av Windows (mappene kan bare Windows selv skrive i).
+- Vakttesten venter på at Vakt er klar og skriver hvor mange hendelser den fikk per kilde.
+
+## [2.47.0] - 2026-11-02
+
+### Lagt til
+- `AISkanner.Cli --vakttest` og et CI-steg som starter en falsk AI-agent (kopi av cmd.exe i en Claude Code-lignende sti). Vakt må se at den åpner en falsk nøkkelfil, kjører kodet PowerShell og slår opp en uttakstjeneste, ellers stopper bygget.
+- Rapporten viser tid per sjekk i millisekunder, og Windows-historikken delt opp (Prefetch, BAM, Amcache, hendelseslogger, brannmurlogg, fastvare, SRUM), så neste rapport viser hvor tiden går.
+
+## [2.46.2] - 2026-11-02
+
+### Endret
+- `CHANGELOG.md` (alle endringer siden v0.1) ligger nå i zip-fila ved siden av programmet.
+
+## [2.46.1] - 2026-11-02
+
+### Rettet
+- Lagrede installasjonsfiler i Windows\Installer (for eksempel Adobe Acrobat sin oppdateringskopi) ble rødt som installert AI. Nå grønt «Lagret installasjonsfil fra …».
+- Funn fra Windows (for eksempel Microsoft Copilot) sto som «Skygge-AI» i oversikten. Nå «Fra Windows».
+
+## [2.46.0] - 2026-11-02
+
+### Rettet
+- «AI-motorer i Windows' egne filer» ble rød fordi kategorien ble regnet som skygge-AI. Nå «Fra Windows» og grønn.
+- Windows-programmer uten filinfo (for eksempel CoPilotLibraryBroker i SystemApps og WinSxS) ble «ukjent program». Utgiveren leses nå fra signaturen når filinfo mangler.
+- Intel OpenVINO-motoren for Windows ML (WindowsWorkload) ble kalt «Phi Silica». Nå eget navn: «Windows ML-akselerasjon fra maskinvareleverandøren».
+
+## [2.45.0] - 2026-11-02
+
+### Endret
+- Fremdriften under søket viser alle sjekkene, ikke bare filer: hvor mange som er ferdige, og sjekkene som går nå (register, prosesser, Windows-historikk, nettlesere, nettverk, filer m.fl.) med det hver har lest så langt. Tallene er de samme som i Datagrunnlag. Gjelder både hurtigsøk og fullt søk.
+
+## [2.44.0] - 2026-11-02
+
+### Endret
+- Datagrunnlag lages i bakgrunnen så snart resultatet er klart, og én gang per resultat og språk. Fanen åpnes straks i stedet for å bygge alt på nytt (og på UI-tråden) hver gang.
+- Vakt startes i bakgrunnen, så søket ikke venter på den.
+- `AISkanner.Cli --datagrunnlag` skriver tid og størrelse.
+
+### Fjernet
+- Ubrukte felt i `regler.json` (`modellfilEndelser`, `innebygdMappeOrd`, `brukerdata`) og en ubrukt konstant.
+
+### Sikkerhet
+- «Vis i Utforsker» godtar bare hele, lokale stier: ikke nettverksstier (som kunne sende Windows-innlogging til en annen maskin) og ikke anførselstegn (ekstra argumenter til Utforsker).
+- Regf-leseren (Amcache) prøvd med tilfeldige og ødelagte filer uten krasj eller heng.
+
+## [2.43.0] - 2026-11-02
+
+### Lagt til
+- «Om»-knapp på startskjermen og i resultatet: hva skanneren er bygget på, hvordan den finner AI, regelsett og data med kilder (YARA, ATR, SigmaHQ, MITRE ATLAS, OWASP, DB-IP, ip-location-db, NVD) og personvern. Statisk, virker uten nett.
+
+### Rettet
+- AI-motorer i Windows' egne filer (WinSxS, System32, DriverStore, SystemApps) ble vist som røde «ukjente programmer», hver for seg. Nå ett grønt funn «AI-motorer i Windows' egne filer» med alle mappene, når programmet er fra Microsoft eller mappa ikke har noe program.
+- En mappe med AI-motor uten program fikk et oppdiktet programnavn (mappenavn + .exe). Nå vises mappa slik den er.
+
+## [2.42.0] - 2026-11-02
+
+### Lagt til
+- **Vakt** (Nettverk → AI-agenter): følger AI-agentene live fra første søk til vinduet lukkes, med programmene de starter. Som administrator med Windows' egne hendelser (prosesser, filåpninger, TCP, DNS), ellers prosesslista hvert halve sekund. Ser når agenten eller noe den startet lager autostart eller bruker, kjører skjult/kodet PowerShell, laster ned med Windows-verktøy, henter passordlageret, sletter spor, sletter alt, sender filer ut, kobler et skall til nettet, åpner hemmelighetsfiler (SSH, AWS, nettleserinnlogging, lommebøker), slår opp uttakstjenester, kobler til IP-adresser uten navn, starter svært mange programmer, eller endrer agentoppsett og instruksjonsfiler. Røde hendelser blir funn med regel (ATR, SigmaHQ, MITRE ATLAS), program, PID og tid. Kommandolinjen leses bare mens programmet kjører, sammenlignes og kastes; bare navn på programmer, filer og adresser vises, aldri innhold. Ingenting lagres.
+- Mønstre fra ATR i ferdigheter og instruksjonsfiler (skjulte beskjeder i HTML-kommentarer, ber agenten sende data eller skjule noe, skriver seg inn i agentoppsett, kryptomining, leser hemmeligheter og sender, skall mot nettet, nedlasting fra IP-adresse). Hver regel viser ATR- og ATLAS-ID som kilde.
+- YARA: pickle-filer (modeller) som laster farlige Python-moduler, i protokoll 0–4 og i zip/npy.
+- AI-verktøy med kjent sikkerhetshull (mcp-remote, MCP Inspector, MCP filesystem, Figma MCP, Claude Code, FastMCP), med CVE/GHSA og rettet versjon. Ondsinnede npm-pakker og Shai-Hulud 2.0-filer i node_modules.
+- AI-trafikk sendt til en annen vert (`*_BASE_URL` i miljø, Claude Code og Codex), AGENTS.md/CLAUDE.md i Nedlastinger, `npx skills add` fra hendelsesloggen.
+- Nye agenter: Warp, Hermes Agent, Foundry Local, OpenClaw, Google Antigravity. Nye skills-mapper (.agents, .gemini, Antigravity, Warp, Hermes), Gemini i Chrome, Windows' egne MCP-koblinger (ODR, ikke bekreftet på Windows 26H2).
+
+### Rettet
+- Regler med `\` i stien traff aldri (blant annet Kiro).
+
 ## [2.41.0] - 2026-10-30
 
 ### Lagt til

@@ -153,11 +153,12 @@ public sealed partial class Skanner
     /// <summary>Python-pakker i site-packages: navn-versjon.dist-info mot lista over dårlige versjoner.</summary>
     private void SjekkPip(string sitePackages)
     {
-        if (_regler.DaarligeVersjoner.Count == 0) return;
+        if (_regler.DaarligeVersjoner.Count == 0 && _regler.SaarbareVersjoner.Count == 0) return;
         foreach (var d in Mapper(sitePackages))
         {
             var m = Regex.Match(Path.GetFileName(d), @"^(.+?)-(\d[^-]*)\.dist-info$", RegexOptions.IgnoreCase);
             if (m.Success && DaarligVersjon($"{m.Groups[1].Value.Replace('_', '-')}@{m.Groups[2].Value}") is { } dv) _pipTreff.Add((d, dv));
+            if (m.Success && Saarbar(m.Groups[1].Value, m.Groups[2].Value, "pypi") is { } sv) _saarbareTreff.Add((d, sv));
         }
     }
 
@@ -166,6 +167,9 @@ public sealed partial class Skanner
     private void MisbrukEtterGjennomgang()
     {
         foreach (var sti in _instruksjonsfiler.Distinct(StringComparer.OrdinalIgnoreCase).Take(500)) SkjulteTegnIFil(sti, "instruksjonsfil");
+        // Etter gjennomgangen, så prosjektenes oppsett og node_modules er med
+        OmdirigertAi();
+        AngrepEtterGjennomgang();
         foreach (var sti in _geminiEnv.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             var t = Endret(sti);
@@ -236,16 +240,28 @@ public sealed partial class Skanner
         {
             (@"%USERPROFILE%\.claude\skills", "Claude Code"), (@"%USERPROFILE%\.claude\plugins", "Claude Code (tillegg)"),
             (@"%USERPROFILE%\.codex\skills", "Codex"), (@"%USERPROFILE%\.openclaw", "OpenClaw"), (@"%USERPROFILE%\.clawdbot", "Clawdbot"),
+            (@"%USERPROFILE%\.agents\skills", "AI-agenter (felles mappe for npx skills)"), (@"%USERPROFILE%\.gemini\skills", "Gemini CLI"),
+            (@"%USERPROFILE%\.gemini\antigravity-cli\skills", "Google Antigravity"), (@"%USERPROFILE%\.warp\skills", "Warp"), (@"%USERPROFILE%\.hermes\skills", "Hermes Agent"),
         })
         {
             var rot = Utvid(mappe);
             if (!Directory.Exists(rot)) { Tilgangslogg.Logg("Mappe", rot, Utfall.IkkeFunnet); continue; }
             foreach (var d in Mapper(rot).Take(300)) SjekkSkill(d, program);
         }
+        // Agenter og kommandoer for Claude Code er filer rett i mappa; utvidelser for Gemini CLI er én mappe hver
+        foreach (var (mappe, program) in new[] { (@"%USERPROFILE%\.claude\agents", "Claude Code (agenter)"), (@"%USERPROFILE%\.claude\commands", "Claude Code (kommandoer)") })
+        {
+            var rot = Utvid(mappe);
+            if (Directory.Exists(rot)) SjekkSkill(rot, program); else Tilgangslogg.Logg("Mappe", rot, Utfall.IkkeFunnet);
+        }
+        var gemini = Utvid(@"%USERPROFILE%\.gemini\extensions");
+        if (Directory.Exists(gemini)) foreach (var d in Mapper(gemini).Take(300)) SjekkSkill(d, "Gemini CLI (utvidelse)");
         HfOgOllama();
         AutostartMedFlagg();
         NpxForgiftning();
         KjenteFiler();
+        InstruksjonerINedlastinger();
+        WindowsMcp();
     }
 
     // ---------- N4: skjulte tegn ----------
@@ -272,13 +288,24 @@ public sealed partial class Skanner
             if (!info.Exists) { Tilgangslogg.Logg("Fil", sti, Utfall.IkkeFunnet); return; }
             if (info.Length > 1024 * 1024) { Tilgangslogg.Logg("Fil", sti, Utfall.HoppetOver, "større enn 1 MB"); return; }
             tekst = File.ReadAllText(sti, Encoding.UTF8);
-            Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "bare antall skjulte tegn; teksten lagres ikke");
+            Tilgangslogg.Logg("Fil", sti, Utfall.Lest, "bare antall skjulte tegn og navnene på mønstre fra kjente angrep; teksten lagres ikke");
         }
         catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return; }
         int n = TellSkjulte(tekst);
+        // Mønstre fra kjente angrep på AI-agenter (ATR). Skjulte tegn har sitt eget funn; lange base64-blokker er vanlige i notater.
+        var monstre = SkillTreff(tekst).Where(x => x.Navn is not ("skjulte tegn" or "lang base64-blokk")).ToList();
         tekst = "";
-        if (n == 0) return;
         var t = Endret(sti);
+        if (monstre.Count > 0)
+        {
+            var m = Spor($"Instruksjonsfil med mønster fra kjente angrep: {Path.GetFileName(sti)}",
+                $"En {hva} for AI-agenter inneholder mønstre fra kjente angrep på AI-agenter (ATR). Agenten leser fila som ordre. Teksten vises ikke, bare navnet på mønsteret.", null);
+            m.Advarsel($"Instruksjonsfil for AI-agenter som {monstre[0].Navn}.");
+            m.Tidspunkt(t, t);
+            m.Detalj($"Fil: {sti} · {string.Join(", ", monstre.Select(x => x.Navn).Distinct())}{(t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : "")}");
+            m.Detalj($"Regel: {string.Join(" · ", monstre.SelectMany(x => x.Kilde.Split(new[] { " · " }, StringSplitOptions.None)).Distinct())}");
+        }
+        if (n == 0) return;
         var f = Spor($"Skjulte tegn i {Path.GetFileName(sti)}",
             $"En {hva} for AI-agenter har tegn som ikke vises på skjermen, men som AI-en leser. Slik kan noen gi agenten skjulte ordrer.", null);
         f.Advarsel($"{n} skjulte tegn i en instruksjonsfil for AI-agenter.");
@@ -380,18 +407,63 @@ public sealed partial class Skanner
 
     // ---------- N6: ferdigheter og tillegg ----------
 
-    private static readonly (string Navn, Regex Monster)[] Skillmonstre =
+    private const RegexOptions Ri = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+
+    /// <summary>
+    /// Mønstre i ferdigheter, tillegg og instruksjonsfiler for AI-agenter. Kilde per mønster: ATR (Agent Threat Rules, MIT) og
+    /// MITRE ATLAS. Bare navnet på mønsteret vises, aldri teksten som slo til.
+    /// </summary>
+    private static readonly (string Navn, Regex Monster, string Kilde)[] Skillmonstre =
     {
-        ("laster ned og kjører kode", new Regex(@"(curl|wget)[^|\r\n]{0,200}\|\s*(sh|bash)\b|(irm|iwr|invoke-webrequest|invoke-restmethod)[^|\r\n]{0,200}\|\s*iex\b|-encodedcommand\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)),
-        ("lang base64-blokk", new Regex(@"[A-Za-z0-9+/]{200,}={0,2}", RegexOptions.Compiled)),
-        ("ber om passordbeskyttet zip", new Regex(@"(password|passord)[^\r\n]{0,60}\.(zip|7z|rar)|\.(zip|7z|rar)[^\r\n]{0,60}(password|passord)", RegexOptions.IgnoreCase | RegexOptions.Compiled)),
-        ("sender til uttakstjeneste", new Regex(@"glot\.io|webhook\.site|pipedream\.net|requestbin", RegexOptions.IgnoreCase | RegexOptions.Compiled)),
+        ("laster ned og kjører kode", new Regex(@"(curl|wget)[^|\r\n]{0,200}\|\s*(sh|bash)\b|(irm|iwr|invoke-webrequest|invoke-restmethod)[^|\r\n]{0,200}\|\s*iex\b|-encodedcommand\b", Ri),
+            "ATR-2026-00121 · ATLAS AML.T0110.001"),
+        ("lang base64-blokk", new Regex(@"[A-Za-z0-9+/]{200,}={0,2}", RegexOptions.Compiled), "ATR-2026-00220 · ATLAS AML.T0123"),
+        ("ber om passordbeskyttet zip", new Regex(@"(password|passord)[^\r\n]{0,60}\.(zip|7z|rar)|\.(zip|7z|rar)[^\r\n]{0,60}(password|passord)", Ri), "ATR-2026-02405 · ATLAS AML.T0115.002"),
+        ("sender til uttakstjeneste", new Regex(@"glot\.io|webhook\.site|pipedream\.net|requestbin|interact\.sh|oast\.(fun|pro|live|site)|burpcollaborator", Ri), "ATR-2026-00135 · ATLAS AML.T0086"),
+        ("skjult beskjed i HTML-kommentar", new Regex(@"<!--[^>]{0,400}?((ignore|override|bypass|disable|forget)\s+(all\s+|the\s+)?(previous|prior|safety|security)\s+(instruction|rule|restriction)s?|do\s+not\s+(mention|tell|inform|reveal|show|disclose)\s+(this|the\s+user|anyone)|exfiltrat|\bcurl\s|\bwget\s)", Ri),
+            "ATR-2026-00128 · ATLAS AML.T0080"),
+        ("ber agenten sende data til en adresse", new Regex(@"(send|post|upload|submit|forward|transmit)\s+(the|all|your|any|every)?\s*((env|environment)\s+variables?|api\s+keys?|report|data|keys?|credentials?|tokens?|secrets?|passwords?|config|env|variables?)\s+(to|at|via)\s+https?://", Ri),
+            "ATR-2026-00135 · ATLAS AML.T0086"),
+        ("ber agenten skjule noe for brukeren", new Regex(@"(do\s+not|don't|never)\s+(tell|inform|notify|alert|mention\s+(this\s+)?to)\s+the\s+user|without\s+(the\s+user\s+(knowing|noticing)|telling\s+the\s+user)", Ri),
+            "ATR-2026-00105 · ATR-2026-00425 · ATLAS AML.T0080"),
+        ("skriver seg inn i agentens oppsett", new Regex(@"(write|append|inject|insert)\s+(an?\s+)?(hidden\s+|new\s+|extra\s+|additional\s+)?(entry|line|block|hook|section)\s+(to|into)\s+[^\r\n]{0,40}(SKILL\.md|claude_desktop_config\.json|\.cursor[/\\]mcp\.json|\.claude[/\\]settings)|(inject|tamper\s+with|overwrite)\s+[^\r\n]{0,30}(the\s+user'?s|your\s+own)\s+[^\r\n]{0,20}(SKILL\.md|claude_desktop_config\.json|mcp\.json|settings\.json)", Ri),
+            "ATR-2026-00429 · ATR-2026-00200 · ATLAS AML.T0081"),
+        ("kryptomining", new Regex(@"\b(xmrig|xmr-stak|cpuminer|nbminer|phoenixminer|lolminer|teamredminer|nanominer|srbminer)\b|stratum\+(tcp|tcps|ssl)://", Ri), "ATR-2026-02845 · ATLAS AML.T0034"),
+        ("erklærer angrep som formål", new Regex(@"(?m)^\s*(category|type|purpose|class)\s*:\s*[""']?(attack|jailbreak|exploit|offensive)[""']?\s*$", Ri), "ATR-2026-02818 · ATLAS AML.T0104"),
     };
+
+    // Sammensatte mønstre: begge delene må finnes i samme fil
+    private static readonly Regex Hemmelighetssti = new(@"\.ssh[/\\]id_|\.aws[/\\]credentials|\.git-credentials|Login\s?Data|\.docker[/\\]config\.json|\.kube[/\\]config|\.azure[/\\]|\.codex[/\\]auth\.json|\.claude[/\\]\.credentials|oauth_creds\.json|wallet\.dat|\bkeystore[/\\]", Ri);
+    private static readonly Regex Nettsending = new(@"requests\.(post|put)\s*\(|\bfetch\s*\(|axios\.(post|put)|Invoke-(WebRequest|RestMethod)|\bcurl\s[^\r\n]{0,120}(\s-d\s|--data|\s-F\s|\s-T\s|--upload-file)|urllib\.request|https?\.request\s*\(|WebClient\b", Ri);
+    private static readonly Regex SokketTilkobling = new(@"socket\.socket\s*\([^)]{0,40}AF_INET[\s\S]{0,160}?\.connect\s*\(|\bnet\.(connect|createConnection)\s*\(|new\s+net\.Socket\s*\(|System\.Net\.Sockets\.TcpClient", Ri);
+    private static readonly Regex SkallPaRor = new(@"\bdup2\s*\([^)]{0,40}fileno|\bpty\.spawn\s*\(|\.pipe\s*\(\s*[\w.$]{1,24}\.stdin\s*\)|subprocess\.(call|run|Popen)\s*\(\s*\[\s*[""'](/bin/)?(sh|bash|cmd(\.exe)?|powershell(\.exe)?)[""']|GetStream\(\)[\s\S]{0,200}(cmd\.exe|powershell)", Ri);
+    // Nedlasting fra en offentlig IP-adresse uten navn
+    private static readonly Regex RaIpUrl = new(@"https?://(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(:\d+)?/", RegexOptions.Compiled);
+
+    /// <summary>Navnene på mønstrene som slår til i en tekst, med kilde. Teksten tas aldri med ut.</summary>
+    internal static List<(string Navn, string Kilde)> SkillTreff(string tekst)
+    {
+        var t = new List<(string, string)>();
+        foreach (var (navn, m, kilde) in Skillmonstre)
+            if (m.IsMatch(tekst)) t.Add((navn, kilde));
+        if (Hemmelighetssti.IsMatch(tekst) && Nettsending.IsMatch(tekst)) t.Add(("leser hemmeligheter og sender på nettet", "ATR-2026-02261 · ATLAS AML.T0098"));
+        if (SokketTilkobling.IsMatch(tekst) && SkallPaRor.IsMatch(tekst)) t.Add(("kobler et skall til nettet", "ATR-2026-02600 · ATLAS AML.T0072"));
+        foreach (Match x in RaIpUrl.Matches(tekst))
+        {
+            int a = int.Parse(x.Groups[1].Value), b = int.Parse(x.Groups[2].Value);
+            bool privat = a is 0 or 10 or 127 or > 223 || (a == 169 && b == 254) || (a == 172 && b is >= 16 and <= 31) || (a == 192 && b == 168) || (a == 100 && b is >= 64 and <= 127);
+            if (!privat) { t.Add(("henter fra en IP-adresse uten navn", "ATR-2026-00225 · ATR-2026-00220 · ATLAS AML.T0072")); break; }
+        }
+        if (TellSkjulte(tekst) > 0) t.Add(("skjulte tegn", "ATR-2026-00129 · ATLAS AML.T0068"));
+        return t;
+    }
+
     private static readonly HashSet<string> Skillendelser = new(StringComparer.OrdinalIgnoreCase) { ".md", ".ps1", ".sh", ".py", ".js", ".mjs", ".bat", ".cmd", ".txt", ".json" };
 
     private void SjekkSkill(string mappe, string program)
     {
         var treff = new SortedSet<string>();
+        var kilder = new SortedSet<string>();
         DateTime? sist = null;
         foreach (var fil in Plattform.Filer(mappe, "*", 4).Where(x => Skillendelser.Contains(x.Extension)).Take(100))
         {
@@ -405,17 +477,18 @@ public sealed partial class Skanner
                 Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
             }
             catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
-            foreach (var (navn, m) in Skillmonstre)
-                if (m.IsMatch(tekst)) { treff.Add(navn); if (sist == null || fil.LastWriteTime > sist) sist = fil.LastWriteTime; }
-            if (TellSkjulte(tekst) > 0) treff.Add("skjulte tegn");
+            var tr = SkillTreff(tekst);
             tekst = "";
+            foreach (var (navn, kilde) in tr) { treff.Add(navn); kilder.Add(kilde); }
+            if (tr.Count > 0 && (sist == null || fil.LastWriteTime > sist)) sist = fil.LastWriteTime;
         }
         if (treff.Count == 0) return;
         var f = Spor($"Ferdighet for AI-agent: {Path.GetFileName(mappe)}",
-            $"En ferdighet eller et tillegg for {program} inneholder mønstre som ofte brukes for å få agenten til å laste ned og kjøre kode. Teksten vises ikke.", null);
+            $"En ferdighet eller et tillegg for {program} inneholder mønstre fra kjente angrep på AI-agenter (ATR): å laste ned og kjøre kode, sende data ut, skjule handlinger eller endre agentens oppsett. Teksten vises ikke, bare navnet på mønsteret.", null);
         f.Advarsel($"Ferdighet for AI-agent som {treff.First()}.");
         f.Tidspunkt(sist, sist);
         f.Detalj($"Fil: {mappe} · {string.Join(", ", treff)}{(sist != null ? " · endret " + Nar(sist.Value, "endringstid på fil") : "")}");
+        f.Detalj($"Regel: {string.Join(" · ", kilder.SelectMany(k => k.Split(new[] { " · " }, StringSplitOptions.None)).Distinct())}");
     }
 
     // ---------- N7: fjernkode fra Hugging Face og ukjente Ollama-registre ----------
@@ -540,44 +613,50 @@ public sealed partial class Skanner
 
     private void NpxForgiftning()
     {
-        var rot = Utvid(@"%LOCALAPPDATA%\npm-cache\_npx");
-        if (!Directory.Exists(rot)) { Tilgangslogg.Logg("Mappe", rot, Utfall.IkkeFunnet); return; }
+        // npx-cachen, globale npm-pakker og uv-verktøy: MCP-servere som er lastet ned og kjøres av agenten
+        var rotter = Mapper(Utvid(@"%LOCALAPPDATA%\npm-cache\_npx")).Select(c => Path.Combine(c, "node_modules"))
+            .Append(Utvid(@"%APPDATA%\npm\node_modules"))
+            .Concat(Mapper(Utvid(@"%APPDATA%\uv\tools")).Select(t => Path.Combine(t, "Lib", "site-packages")))
+            .Where(Directory.Exists).ToList();
         var klokke = System.Diagnostics.Stopwatch.StartNew();
         int lest = 0;
-        var treff = new Dictionary<string, (int Skjulte, int Viktig, DateTime T)>(StringComparer.OrdinalIgnoreCase);
-        foreach (var cache in Mapper(rot))
+        var treff = new Dictionary<string, (int Skjulte, int Viktig, SortedSet<string> Monstre, DateTime T)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var nm in rotter)
         {
-            var nm = Path.Combine(cache, "node_modules");
             foreach (var pakke in Mapper(nm).SelectMany(d => Path.GetFileName(d).StartsWith("@") ? Mapper(d) : new[] { d }))
             {
-                var navn = Path.GetFileName(pakke);
                 // Bare MCP-pakker: navnet nevner mcp eller modelcontextprotocol
                 if (pakke.IndexOf("mcp", StringComparison.OrdinalIgnoreCase) < 0 && pakke.IndexOf("modelcontextprotocol", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                foreach (var fil in Plattform.Filer(pakke, "*", 4).Where(x => x.Extension is ".js" or ".mjs" or ".cjs" or ".ts"))
+                foreach (var fil in Plattform.Filer(pakke, "*", 4).Where(x => x.Extension is ".js" or ".mjs" or ".cjs" or ".ts" or ".py"))
                 {
-                    // Fullt søk: hele npx-cachen. Hurtigsøk: 200 filer eller 20 sekunder.
-                    if (!Fullt && (lest >= 200 || klokke.Elapsed > TimeSpan.FromSeconds(20))) { Tilgangslogg.EnGang("npx-200", "Mappe", rot, Utfall.Tidsgrense, "200 filer eller 20 sekunder brukt i npx-cachen"); goto ferdig; }
+                    // Fullt søk: alt. Hurtigsøk: 200 filer eller 20 sekunder.
+                    if (!Fullt && (lest >= 200 || klokke.Elapsed > TimeSpan.FromSeconds(20))) { Tilgangslogg.EnGang("npx-200", "Mappe", nm, Utfall.Tidsgrense, "200 filer eller 20 sekunder brukt på MCP-pakker"); goto ferdig; }
                     if (fil.Length > 1024 * 1024) continue;
                     string tekst;
                     try { tekst = File.ReadAllText(fil.FullName); lest++; Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName); }
                     catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); continue; }
                     int s = TellSkjulte(tekst), v = Regex.Matches(tekst, "<IMPORTANT>", RegexOptions.IgnoreCase).Count;
-                    if (s + v == 0) continue;
-                    var nokkel = Path.Combine(nm, navn);
+                    // Mønstre fra ATR i verktøybeskrivelser og kode. Base64 og IP-adresser er vanlige i ferdigbygd kode.
+                    var m = SkillTreff(tekst).Select(x => x.Navn).Where(n => n is not ("lang base64-blokk" or "skjulte tegn" or "henter fra en IP-adresse uten navn")).ToList();
+                    tekst = "";
+                    if (s + v + m.Count == 0) continue;
                     treff.TryGetValue(pakke, out var x);
-                    treff[pakke] = (x.Skjulte + s, x.Viktig + v, fil.LastWriteTime > x.T ? fil.LastWriteTime : x.T);
+                    var ms = x.Monstre ?? new SortedSet<string>();
+                    ms.UnionWith(m);
+                    treff[pakke] = (x.Skjulte + s, x.Viktig + v, ms, fil.LastWriteTime > x.T ? fil.LastWriteTime : x.T);
                 }
             }
         }
         ferdig:
         if (treff.Count == 0) return;
         var f = Spor("MCP-verktøy med skjulte beskjeder til AI-en",
-            "Et MCP-verktøy i npx-cachen har skjulte tegn eller <IMPORTANT>-blokker i koden. Slik kan et verktøy gi AI-agenten ordrer brukeren ikke ser.", null);
+            "Et MCP-verktøy som agenten har lastet ned, har skjulte tegn, <IMPORTANT>-blokker eller mønstre fra kjente angrep i koden. Slik kan et verktøy gi AI-agenten ordrer brukeren ikke ser.", null);
         foreach (var (pakke, x) in treff.Take(20))
         {
             f.Tidspunkt(x.T, x.T);
-            f.Detalj($"Fil: {pakke} · {x.Skjulte} skjulte tegn · {x.Viktig} <IMPORTANT>-blokker · endret {Nar(x.T, "endringstid på fil")}");
+            f.Detalj($"Fil: {pakke} · {x.Skjulte} skjulte tegn · {x.Viktig} <IMPORTANT>-blokker{(x.Monstre.Count > 0 ? " · " + string.Join(", ", x.Monstre) : "")} · endret {Nar(x.T, "endringstid på fil")}");
         }
+        f.Detalj("Regel: ATR-2026-00161 · ATR-2026-00100–00106 · ATLAS AML.T0110");
     }
 
     // ---------- N12: kjente filer ----------

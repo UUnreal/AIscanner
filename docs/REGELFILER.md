@@ -94,9 +94,7 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `leverandorAi` | liste | Navn på AI som leverandører legger inn. |
 | `nettleserInnebygd` | liste | Innebygd AI i nettlesere (Gemini Nano, Edge). |
 | `ukjentUtvidelseOrd` | liste med tekst | Ord i navn eller beskrivelse som gjør en ukjent utvidelse til et AI-funn, for eksempel `gpt` og `copilot`. |
-| `modellfilEndelser` | liste | Filendelser for modellfiler (`.gguf`, `.safetensors` …). |
 | `modellfilMinMB` | tall | Minste størrelse for modellfiler med kjent endelse. Standard 200. |
-| `innebygdMappeOrd` | liste | Ord i mappenavn som peker på innebygde nettlesermodeller. |
 
 ### produkter
 
@@ -169,7 +167,7 @@ på en ekte PC ennå.
 
 ### nettleserInnebygd
 
-Beskriver innebygd AI i en nettleser: `brukerdata` (mappen med brukerdata), `policyNokkel` og `policyVerdi` (policyen
+Beskriver innebygd AI i en nettleser: `policyNokkel` og `policyVerdi` (policyen
 som slår den av) og forklaringstekster.
 
 ### daarligeUtvidelser, iocFiler og iocDomener
@@ -194,6 +192,17 @@ innholdet åpnes aldri. `iocDomener` treffer domenet og alle underdomener i DNS-
 helhet; områder som `>=1.0.16` støttes ikke. `"*"` betyr alle versjoner (for navnetyveri som `claud-code`).
 Python-pakker sammenlignes med `site-packages\navn-versjon.dist-info`. Treff gir «Ukjent AI-spor» (rødt) og sammenlignes med `package.json`
 i globale npm-pakker, npm-loggene (`navn@versjon` og `/navn/-/navn-versjon.tgz`) og mappenavn i `.vscode\extensions`.
+
+### saarbareVersjoner
+
+```json
+{ "navn": "mcp-remote", "type": "npm", "retta": "0.1.16", "hull": "CVE-2025-6514", "kilde": "https://…" }
+```
+
+AI-verktøy med kjent sikkerhetshull. `type` er `npm` eller `pypi`. Alle versjoner lavere enn `retta` treffer
+(tall for tall; forhåndsversjoner som `2.13.0rc3` er lavere enn `2.13.0`). Sammenlignes med globale npm-pakker,
+npx-bufferen, uv-verktøy og `site-packages`. Treff gir «AI-verktøy med kjent sikkerhetshull» (rødt) med hull og
+rettet versjon.
 
 ## ai-modeller.yar
 
@@ -228,6 +237,7 @@ pickle-, PyTorch-, Keras- og NumPy-filer. Se [ARKITEKTUR.md](ARKITEKTUR.md#yara-
 | `AI_OpenVINO` | format | OpenVINO |
 | `AI_Pickle_kjorer_kommando` | ondsinnet | Pickle som kaller `os.system`, `subprocess`, `exec` eller `eval` |
 | `AI_Pickle_nettverk` | ondsinnet | Pickle med nettverkskall |
+| `AI_Pickle_farlig_import` | ondsinnet | Pickle (protokoll 0–4, også i zip/npy) som laster farlige moduler: `shutil`, `ctypes`, `importlib`, `pdb`, `asyncio`, `http.client`, `requests`, `pickle.loads`, `operator.attrgetter`, `builtins.open`/`getattr`/`compile` m.fl. (ATLAS AML.T0010) |
 | `AI_Keras_Lambda` | ondsinnet | Keras-modell med Lambda-lag (vilkårlig Python-kode) |
 | `AI_GGUF_mal_med_kode` | ondsinnet | GGUF-chatmal med Python-internals (CVE-2024-34359) |
 | `AI_Modell_med_program` | ondsinnet | Windows-program (MZ/PE) gjemt i en modellfil |

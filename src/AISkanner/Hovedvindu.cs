@@ -184,6 +184,8 @@ public sealed class Hovedvindu : Form
         _lyttStopp?.Cancel();
         StoppAlleFolg();
         StoppNettverk();
+        _vakt?.Dispose(); _vakt = null;
+        if (_vaktStart is { IsCompleted: false } vs) vs.ContinueWith(t => t.Result.Dispose(), TaskContinuationOptions.OnlyOnRanToCompletion);
         base.OnFormClosed(e);
         _web.Dispose();
         // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
@@ -275,9 +277,20 @@ public sealed class Hovedvindu : Form
             // Fullt søk tar minutter: siden får vite hvor mange mapper som er gått gjennom og hvor lang tid som er brukt
             var aktiv = _skanner;
             using var fremdrift = new System.Windows.Forms.Timer { Interval = 1000 };
-            fremdrift.Tick += (_, _) => Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt });
+            // Hver sjekk med det den har lest så langt (samme tall som i Datagrunnlag), mens søket går
+            fremdrift.Tick += (_, _) =>
+            {
+                var antall = aktiv.Logg.Antall.GroupBy(x => x.Sjekk).ToDictionary(g => g.Key, g => g.Sum(x => x.Antall));
+                Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt,
+                    steg = aktiv.Steg.OrderBy(k => k.Key).Select(k => new { navn = _engelsk ? Engelsk.Til(k.Key) : k.Key, s = k.Value, n = antall.TryGetValue(k.Key, out var a) ? a : 0 }) });
+            };
             fremdrift.Start();
+            // Vakt: følger AI-agentene live fra første søk til vinduet lukkes (bare i minnet)
+            // Startes i bakgrunnen, så søket ikke venter på den
+            _vaktStart ??= Task.Run(() => Vakt.Start(aktiv, Kommandolinje.Tillatt(_regler, out _), Array.Empty<string>()));
+            _ = _vaktStart.ContinueWith(t => { if (t.Status == TaskStatus.RanToCompletion) aktiv.Vakt = _vakt = t.Result; }, TaskScheduler.Default);
             _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
+            _ = LagLogg();
             fremdrift.Stop();
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
@@ -334,6 +347,7 @@ public sealed class Hovedvindu : Form
             var liste = await skanner.FullforLyttingAsync(new Progress<int>(s => { if (_skanner == skanner && !_soker) Send(new { type = "lytter", igjen = s }); }), stopp.Token);
             if (liste == null || _skanner != skanner || _soker) return;
             _resultat = liste;
+            _ = LagLogg();
             if (_revisjon) SkrivRevisjon(null);
             SendResultat(behold: true);
         }
@@ -433,6 +447,8 @@ public sealed class Hovedvindu : Form
     private void VisIUtforsker(string? sti)
     {
         if (string.IsNullOrWhiteSpace(sti)) return;
+        // Bare lokale, hele stier: ingen nettverksstier (\\server lekker innlogging), ingen anførselstegn (ekstra argumenter til Utforsker)
+        if (sti!.Length < 4 || sti.StartsWith(@"\\") || sti.IndexOf('"') >= 0 || !Path.IsPathRooted(sti) || sti[1] != ':') return;
         if (sti != _revisjonSti && !_visbare.Contains(sti!) && !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
         sti = sti!.Trim();
         if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
@@ -546,6 +562,8 @@ public sealed class Hovedvindu : Form
 
     // «Nettverk»: hvem som snakker med AI-tjenester nå, hvert sekund mens visningen er åpen. Bare i minnet.
     private (Nettverkvisning Visning, System.Windows.Forms.Timer Klokke)? _nettverk;
+    private Vakt? _vakt;
+    private Task<Vakt>? _vaktStart;
 
     private void StartNettverk()
     {
@@ -571,6 +589,12 @@ public sealed class Hovedvindu : Form
                     lyttere = (b.Lyttere ?? new()).Select(l => new { program = l.Program, pid = l.Pid, port = l.Port, udp = l.ErUdp, adresse = l.Adresse, apen = l.Apen, hva = T(l.Hva), ai = T(l.Ai) }),
                     udpTyper = (b.UdpTyper ?? new()).Select(u => new { hva = T(u.Hva), n = u.Strommer, programmer = u.Programmer, ut = u.Ut, inn = u.Inn }),
                     kryptertDns = (b.KryptertDns ?? new()).Select(T),
+                    vakt = _vakt == null ? null : new
+                    {
+                        status = T(_vakt.Status), startet = _vakt.Startet.ToString("HH:mm:ss"), starter = Interlocked.Read(ref _vakt.Starter),
+                        agenter = _vakt.Agenter().Select(a => new { pid = a.Pid, agent = a.Agent }),
+                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = h.Kilde, agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod }),
+                    },
                     kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj), rader = k.Rader?.Select(r => new { t = T(r.Tittel), m = T(r.Meta), u = T(r.Under) }) }),
                     rader = b.Rader.Select(r => new
                     {
@@ -624,7 +648,17 @@ public sealed class Hovedvindu : Form
 
     private void StoppAlleFolg() { foreach (var id in _folg.Keys.ToList()) StoppFolg(id); }
 
-    private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti, _resultat) });
+    // Datagrunnlag lages én gang i bakgrunnen per resultat og språk (ikke på UI-tråden hver gang fanen åpnes)
+    private (object? Resultat, bool Engelsk, string? Sti, Task<string> Json)? _logg;
+    private Task<string> LagLogg()
+    {
+        var (s, e, sti, r) = (_skanner!, _engelsk, _revisjonSti, _resultat);
+        if (_logg is { } l && ReferenceEquals(l.Resultat, r) && l.Engelsk == e && l.Sti == sti) return l.Json;
+        var t = Task.Run(() => JsonSerializer.Serialize(new { type = "logg", d = Revisjon.Datagrunnlag(s, e, sti, r) }, Json));
+        _logg = (r, e, sti, t);
+        return t;
+    }
+    private async void SendLogg() { try { var j = await LagLogg(); _web.CoreWebView2?.PostWebMessageAsJson(j); } catch (Exception x) { System.Diagnostics.Debug.WriteLine($"Datagrunnlag: {x.Message}"); } }
 
     private void Lagre()
     {

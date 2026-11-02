@@ -41,6 +41,25 @@ jobs:
           $treff | ForEach-Object { "::notice title=Prosesser::$($_.Path):$($_.LineNumber)" }
           if ($treff.Count -ne 2) { "::error title=Prosesser::Forventet 2 steder som starter prosesser, fant $($treff.Count)"; exit 1 }
 
+      # Vakt mot en falsk AI-agent: en kopi av cmd.exe i en sti som ligner Claude Code åpner en falsk nøkkelfil,
+      # starter kodet PowerShell som slår opp webhook.site. Alt i RUNNER_TEMP, ingenting sendes andre steder.
+      - name: Vakttest (falsk AI-agent)
+        shell: pwsh
+        run: |
+          $d = Join-Path $env:RUNNER_TEMP 'vakttest'
+          $agent = Join-Path $d 'node_modules\@anthropic-ai\claude-code\claude.exe'
+          New-Item -ItemType Directory -Force (Split-Path $agent), (Join-Path $d '.aws') | Out-Null
+          Copy-Item "$env:WINDIR\System32\cmd.exe" $agent
+          Set-Content (Join-Path $d '.aws\credentials') '[kontroll]'
+          $v = Start-Process dotnet -ArgumentList "run --project src/AISkanner.Cli -c Release --no-build -- --vakttest `"$d\klar.txt`"" -PassThru -NoNewWindow -RedirectStandardOutput vakt.txt
+          for ($i = 0; $i -lt 120 -and -not (Test-Path "$d\klar.txt"); $i++) { Start-Sleep -Milliseconds 500 }
+          Start-Sleep 2
+          $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('Resolve-DnsName webhook.site -ErrorAction SilentlyContinue | Out-Null'))
+          Start-Process $agent -ArgumentList "/c type `"$d\.aws\credentials`" & powershell -NoProfile -w hidden -enc $enc" -Wait -NoNewWindow
+          $v.WaitForExit()
+          Get-Content vakt.txt
+          if ($v.ExitCode -ne 0) { "::error title=Vakttest::Vakt så ikke alt den falske agenten gjorde"; exit 1 }
+
       - name: Selvtest (godkjentlista kan ikke lures)
         run: dotnet run --project src/AISkanner.Cli -c Release --no-build -- --selvtest
 

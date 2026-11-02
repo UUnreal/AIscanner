@@ -37,9 +37,15 @@ public static class Rapport
                                : "Datamengde: ikke målt (krever at programmet kjøres som administrator).");
         if (skanner != null && skanner.Tider.TryGetValue("Totalt", out var totalt))
         {
-            var treg = skanner.Tider.Where(t => t.Key != "Totalt").OrderByDescending(t => t.Value).Take(3)
-                              .Select(t => $"{t.Key} {t.Value.TotalSeconds:0.0} s");
+            List<KeyValuePair<string, TimeSpan>> tider;
+            lock (skanner.Tider) tider = skanner.Tider.Where(t => t.Key != "Totalt").OrderByDescending(t => t.Value).ToList();
+            bool Del(string k) => k.StartsWith("Windows-historikk: ", StringComparison.Ordinal);
+            var treg = tider.Where(t => !Del(t.Key)).Take(3).Select(t => $"{t.Key} {t.Value.TotalSeconds:0.0} s");
             L($"Søketid: {totalt.TotalSeconds:0.0} sekunder (tregest: {string.Join(", ", treg)}).");
+            // Tid per sjekk (sjekkene går samtidig, så summen er større enn søketiden), og Windows-historikken delt opp
+            L($"Tid per sjekk: {string.Join(" · ", tider.Where(t => !Del(t.Key)).Select(t => $"{t.Key} {t.Value.TotalMilliseconds:0} ms"))}.");
+            var hist = tider.Where(t => Del(t.Key)).ToList();
+            if (hist.Count > 0) L($"Windows-historikk delt opp: {string.Join(" · ", hist.Select(t => $"{t.Key.Substring(19)} {t.Value.TotalMilliseconds:0} ms"))}.");
         }
         if (skanner != null)
             L($"YARA-regler for AI-modeller: {skanner.Yara.Regler.Count} regler ({(skanner.Yara.Kilde == "innebygd" ? "innebygde" : skanner.Yara.Kilde)}).");

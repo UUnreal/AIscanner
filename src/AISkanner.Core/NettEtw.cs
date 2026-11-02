@@ -19,22 +19,18 @@ public sealed class NettEtw : IDisposable
         public long Ut, Inn, Datagram; public DateTime Forst, Sist;
     }
 
-    private const string Navn = "AISkanner-Nettverk";
     private static readonly Guid KernelNetwork = new("7DD42A49-5329-4832-8DFD-43D979153A88");
     private const ulong IPv4 = 0x10, IPv6 = 0x20;
 
     private readonly Dictionary<(int, IPAddress, int), Strom> _strommer = new();
     private readonly HashSet<IPAddress> _egne;
-    private readonly EventRecordCallback _tilbake;
-    private ulong _okt, _spor;
-    private Thread? _trad;
+    private EtwOkt? _okt;
     public string Status { get; private set; }
     public long Hendelser;
     public bool Virker { get; private set; }
 
     private NettEtw()
     {
-        _tilbake = Hendelse;
         _egne = EgneAdresser();
         Status = "ikke startet";
     }
@@ -42,19 +38,10 @@ public sealed class NettEtw : IDisposable
     /// <summary>Starter lesingen. Uten administrator: null og en grunn.</summary>
     public static NettEtw? Start(out string grunn)
     {
-        grunn = "";
-        if (!Plattform.ErWindows) { grunn = "bare på Windows"; return null; }
-        if (!Nettverk.ErAdmin()) { grunn = "krever administrator (Windows gir bare administrator tilgang til nettverkshendelsene)"; return null; }
         var e = new NettEtw();
-        try
-        {
-            var feil = e.Apne();
-            if (feil != 0) { grunn = $"Windows-feil {feil} da hendelsesøkten skulle startes"; e.Dispose(); return null; }
-        }
-        catch (Exception x) when (x is DllNotFoundException or EntryPointNotFoundException or MarshalDirectiveException)
-        {
-            grunn = x.GetType().Name; e.Dispose(); return null;
-        }
+        e._okt = EtwOkt.Start("AISkanner-Nettverk", new[] { (KernelNetwork, IPv4 | IPv6) }, (_, id) => id is 42 or 43 or 58 or 59,
+            h => { Interlocked.Increment(ref e.Hendelser); e.Legg(h.Id, h.Data, DateTime.Now); }, out grunn);
+        if (e._okt == null) return null;
         e.Virker = true;
         e.Status = "lest i sanntid";
         return e;
@@ -121,106 +108,5 @@ public sealed class NettEtw : IDisposable
         return s;
     }
 
-    private void Hendelse(IntPtr rec)
-    {
-        try
-        {
-            int id = (ushort)Marshal.ReadInt16(rec, 40);
-            if (id is not (42 or 43 or 58 or 59)) return;
-            Interlocked.Increment(ref Hendelser);
-            int lengde = (ushort)Marshal.ReadInt16(rec, 86);
-            var data = Marshal.ReadIntPtr(rec, 96);
-            if (lengde <= 0 || lengde > 256 || data == IntPtr.Zero) return;
-            var b = new byte[lengde];
-            Marshal.Copy(data, b, 0, lengde);
-            Legg(id, b, DateTime.Now);
-        }
-        catch (Exception x) when (x is AccessViolationException or ArgumentException) { }
-    }
-
-    // ---------- ETW ----------
-    private int Apne()
-    {
-        var props = Egenskaper(out var str);
-        try
-        {
-            int r = StartTraceW(out _okt, Navn, props);
-            if (r == 183)   // en gammel økt med samme navn (programmet ble stoppet brått): stopp den og start på nytt
-            {
-                ControlTraceW(0, Navn, props, 1);
-                Marshal.FreeHGlobal(props);
-                props = Egenskaper(out str);
-                r = StartTraceW(out _okt, Navn, props);
-            }
-            if (r != 0) return r;
-        }
-        finally { Marshal.FreeHGlobal(props); }
-        var g = KernelNetwork;
-        int e = EnableTraceEx2(_okt, ref g, 1, 4, IPv4 | IPv6, 0, 0, IntPtr.Zero);
-        if (e != 0) { Stopp(); return e; }
-        var logg = new EVENT_TRACE_LOGFILE { LoggerName = Navn, ProcessTraceMode = 0x100 | 0x10000000, EventRecordCallback = _tilbake };
-        _spor = OpenTraceW(ref logg);
-        if (_spor == ulong.MaxValue) { var f = Marshal.GetLastWin32Error(); Stopp(); return f == 0 ? -1 : f; }
-        _trad = new Thread(() => { try { ProcessTrace(new[] { _spor }, 1, IntPtr.Zero, IntPtr.Zero); } catch { } }) { IsBackground = true, Name = Navn };
-        _trad.Start();
-        return 0;
-    }
-
-    // EVENT_TRACE_PROPERTIES (120 byte på x64) med navnet på økten etter
-    private static IntPtr Egenskaper(out int str)
-    {
-        const int hode = 120;
-        str = hode + (Navn.Length + 1) * 2 + 1024 * 2;
-        var p = Marshal.AllocHGlobal(str);
-        for (int i = 0; i < str; i++) Marshal.WriteByte(p, i, 0);
-        Marshal.WriteInt32(p, 0, str);              // Wnode.BufferSize
-        Marshal.WriteInt32(p, 40, 1);               // Wnode.ClientContext: QPC
-        Marshal.WriteInt32(p, 44, 0x00020000);      // Wnode.Flags: WNODE_FLAG_TRACED_GUID
-        Marshal.WriteInt32(p, 48, 64);              // BufferSize (kB)
-        Marshal.WriteInt32(p, 64, 0x100);           // LogFileMode: EVENT_TRACE_REAL_TIME_MODE
-        Marshal.WriteInt32(p, 68, 1);               // FlushTimer: 1 s
-        Marshal.WriteInt32(p, 116, hode);           // LoggerNameOffset
-        return p;
-    }
-
-    private void Stopp()
-    {
-        if (_okt == 0) return;
-        var props = Egenskaper(out _);
-        try { ControlTraceW(_okt, null, props, 1); } finally { Marshal.FreeHGlobal(props); }
-        _okt = 0;
-    }
-
-    public void Dispose()
-    {
-        Stopp();
-        if (_spor != 0 && _spor != ulong.MaxValue) { CloseTrace(_spor); _spor = 0; }
-        Virker = false;
-    }
-
-    private delegate void EventRecordCallback(IntPtr rec);
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct EVENT_TRACE_LOGFILE
-    {
-        public string? LogFileName;
-        public string? LoggerName;
-        public long CurrentTime;
-        public uint BuffersRead;
-        public uint ProcessTraceMode;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 88)] public byte[] CurrentEvent;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 280)] public byte[] LogfileHeader;
-        public IntPtr BufferCallback;
-        public uint BufferSize, Filled, EventsLost;
-        public EventRecordCallback EventRecordCallback;
-        public uint IsKernelTrace;
-        public IntPtr Context;
-    }
-
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int StartTraceW(out ulong okt, string navn, IntPtr egenskaper);
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int ControlTraceW(ulong okt, string? navn, IntPtr egenskaper, uint kode);
-    [DllImport("advapi32.dll")] private static extern int EnableTraceEx2(ulong okt, ref Guid kilde, uint kode, byte niva, ulong noen, ulong alle, uint frist, IntPtr param);
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern ulong OpenTraceW(ref EVENT_TRACE_LOGFILE logg);
-    [DllImport("advapi32.dll")] private static extern int ProcessTrace(ulong[] spor, uint antall, IntPtr start, IntPtr slutt);
-    [DllImport("advapi32.dll")] private static extern int CloseTrace(ulong spor);
+    public void Dispose() { _okt?.Dispose(); _okt = null; Virker = false; }
 }

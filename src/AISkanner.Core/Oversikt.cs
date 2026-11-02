@@ -49,6 +49,7 @@ public static class Oversikt
         }
 
         if (f.Sist != null && (DateTime.Now - f.Sist.Value).TotalMinutes < 2) return "Kjører nå";
+        if (f.Type == "Fra Windows") return "Fra Windows";
         return f.Kategori switch
         {
             var k when k.StartsWith("Skygge-AI (agent)") => "AI-agent",

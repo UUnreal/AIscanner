@@ -81,10 +81,13 @@
   /* «Hva søkes?»: alt som ikke trengs for å trykke Søk, samlet på ett ark */
   .om { position: fixed; inset: 0; background: rgba(0,0,0,.28); display: none; align-items: center; justify-content: center; z-index: 10; padding: 24px; }
   .om.apen { display: flex; }
-  .omKort { background: var(--kort); border-radius: var(--r2); box-shadow: 0 12px 40px rgba(0,0,0,.25); width: min(560px, 100%); padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+  .omKort { background: var(--kort); border-radius: var(--r2); box-shadow: 0 12px 40px rgba(0,0,0,.25); width: min(640px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
   .omKort header { display: flex; justify-content: space-between; align-items: center; }
   .omKort h2 { font: var(--t20); }
-  .omKort p { color: var(--dempet); }
+  .omKort p, .omTekst li { color: var(--dempet); }
+  .omTekst h3 { font: var(--t14); font-weight: 600; margin: 14px 0 6px; color: var(--tekst); }
+  .omTekst ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+  .omTekst small { font: var(--t12); color: var(--dempet); user-select: text; word-break: break-all; }
   .omKort b { color: var(--tekst); font-weight: 600; }
   .omRad { display: flex; justify-content: space-between; align-items: center; gap: 16px; background: var(--flate); border-radius: var(--r1); padding: 10px 14px; }
   .omRad small { display: block; font: var(--t12); color: var(--dempet); }
@@ -117,6 +120,9 @@
   .ringBoks .prosent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: var(--t28); font-family: var(--visFont); font-variant-numeric: tabular-nums; }
   .sokTittel { font: var(--t20); }
   .fremdrift { color: var(--dempet); font-variant-numeric: tabular-nums; min-height: 20px; }
+  .stegNa { list-style: none; margin: 8px auto 0; padding: 0; width: min(420px, 90vw); font: var(--t12); text-align: left; }
+  .stegNa li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+  .stegNa span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ---------- Resultat: alt på én skjerm, ingen scrolling ---------- */
   #resultat { padding: 24px 32px 14px; gap: 16px; max-width: 1280px; width: 100%; margin: 0 auto; }
@@ -435,19 +441,18 @@
     <span><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg><i data-en="Never reads passwords">Leser aldri passord</i></span>
     <span><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg><i data-en="No AI inside">Ingen AI i programmet</i></span>
     <span id="revStatus"></span>
-    <button id="omKnapp" data-en="What is scanned?">Hva søkes?</button>
+    <button id="omKnapp" data-en="About">Om</button>
   </div>
+</section>
+
   <div class="om" id="om" role="dialog" aria-modal="true" aria-labelledby="omTittel">
     <div class="omKort">
-      <header><h2 id="omTittel" data-en="What is scanned">Hva søkes</h2><button class="lukk" id="omLukk" title="Lukk / Close"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></header>
-      <p data-en="AI programs and models, AI from vendors, the AI APIs in Chrome and Edge, YARA rules for dangerous AI models, the browser history (analysed on the PC, never saved) and known vulnerabilities (only product names such as «ollama» are looked up in NVD).">AI-programmer og modeller, AI fra leverandører, AI-API-ene i Chrome og Edge, YARA-regler for farlige AI-modeller, nettleserhistorikken (analyseres på PC-en og lagres aldri) og kjente sikkerhetshull (bare produktnavn som «ollama» slås opp i NVD).</p>
-      <p data-en="&lt;b&gt;As user:&lt;/b&gt; fast, no approval. Does not see how much data AI sends, or programs running as administrator. &lt;b&gt;As admin:&lt;/b&gt; measures the data each AI sends and sees every running program. Windows asks for approval first."><b>Som bruker:</b> rask, uten godkjenning. Ser ikke hvor mye data AI sender, eller programmer som kjører som administrator. <b>Som admin:</b> måler dataene hver AI sender og ser alle programmer som kjører. Windows ber om godkjenning først.</p>
+      <header><h2 id="omTittel" data-en="About AI Scanner">Om AI-skanneren</h2><button class="lukk" id="omLukk" title="Lukk / Close"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></header>
+      <div class="omTekst" id="omTekst"></div>
       <div class="omRad" id="revisjon"><div><b data-en="Audit trail">Revisjonslogg</b><small id="revTekst"></small></div>
         <div class="bryter" role="group" aria-label="Revisjonslogg / Audit trail"><button data-r="nei" data-en="No">Nei</button><button data-r="ja" data-en="Yes">Ja</button></div></div>
     </div>
   </div>
-</section>
-
 <section id="soker" class="side">
   <div class="ringBoks"><svg class="ring" viewBox="0 0 100 100"><circle class="spor" cx="50" cy="50" r="44"/><circle class="bue" id="ringBue" cx="50" cy="50" r="44"/></svg><div class="prosent" id="ringProsent" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0 %</div></div>
   <div class="sokTittel" data-en="Looking for AI…">Søker etter AI…</div>
@@ -458,6 +463,7 @@
   <div class="topp">
     <div class="toppRad"><h1 id="hodeTittel"></h1>
       <div class="knapper">
+        <button class="knapp tonal" id="omKnapp2"><span data-en="About">Om</span></button>
         <button class="knapp tonal" id="igjen"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M12.5 1.8v2.8H9.7"/></svg><span data-en="Scan again">Søk igjen</span></button>
         <button class="knapp primar" id="lagre"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8.5M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span data-en="Save report">Lagre rapport</span></button>
       </div></div>
@@ -821,7 +827,8 @@ function tegnNett() {
     + forelder(pi);
   const apne = (nett.lyttere || []).filter(l => l.apen).length;
   const nf = [["forb", L("Forbindelser", "Connections"), nett.rader.length], ["lytt", L("Lyttende AI-porter", "Listening AI ports"), (nett.lyttere || []).length, apne],
-    ["udp", "UDP", nett.etw ? (nett.udpTyper || []).reduce((a, x) => a + x.n, 0) : null], ["dg", L("Datagrunnlag", "Data basis"), (nett.kilder || []).length]];
+    ["udp", "UDP", nett.etw ? (nett.udpTyper || []).reduce((a, x) => a + x.n, 0) : null],
+    ["vakt", L("AI-agenter", "AI agents"), nett.vakt ? nett.vakt.hendelser.length : null, nett.vakt && nett.vakt.hendelser.some(h => h.rod)], ["dg", L("Datagrunnlag", "Data basis"), (nett.kilder || []).length]];
   const faner = `<div class="bryter nettFaner">${nf.map(f => `<button data-nf="${f[0]}" class="${nettFane === f[0] ? "valgt" : ""}">${f[1]}${f[2] != null ? ` <span class="ant${f[3] ? " fare" : ""}">${tall(f[2])}</span>` : ""}</button>`).join("")}</div>`;
   const linje = (tittel, meta, under, fare) => `<li class="sted"><div><div class="l1"><b>${esc(tittel)}</b>${meta ? `<small>${esc(meta)}</small>` : ""}</div><div class="l2${fare ? " fareTekst" : ""}">${esc(under || "")}</div></div></li>`;
   let innhold;
@@ -834,6 +841,15 @@ function tegnNett() {
     : `<ul>${(nett.udpTyper || []).length ? nett.udpTyper.map(u => linje(u.hva, `${tall(u.n)} ${u.n === 1 ? L("strøm", "stream") : L("strømmer", "streams")} · ${tall(u.programmer)} ${u.programmer === 1 ? L("program", "program") : L("programmer", "programs")}`, nett.admin ? `${L("Sendt", "Sent")} ${fart(u.ut)} · ${L("Mottatt", "Received")} ${fart(u.inn)}` : "")).join("")
       : `<li class="mer">${L("Ingen UDP-trafikk til andre maskiner siste 10 sekunder.", "No UDP traffic to other machines in the last 10 seconds.")}</li>`}`
       + (nett.kryptertDns || []).map(x => linje(x, L("kryptert DNS", "encrypted DNS"), L("Navnene som slås opp slik, kommer ikke i DNS-bufferen", "Names looked up this way do not reach the DNS cache"))).join("") + `</ul>`;
+  else if (nettFane === "vakt") {
+    // Vakt: hva AI-agentene og programmene de starter gjør, live. Bare navn på programmer, filer og adresser, aldri innhold.
+    const v = nett.vakt;
+    innhold = !v ? `<ul><li class="mer">${L("Vakt starter med første søk.", "The watch starts with the first scan.")}</li></ul>`
+      : `<ul>${linje(L(`Vakt siden ${v.startet}`, `Watching since ${v.startet}`), `${tall(v.agenter.length)} ${L("agenter", "agents")} · ${tall(v.starter)} ${L("programmer startet av dem", "programs they started")}`, v.status)}`
+        + v.agenter.map(a => linje(a.agent, `PID ${a.pid}`, L("AI-agent som følges", "AI agent being watched"))).join("")
+        + (v.hendelser.length ? v.hendelser.map(h => linje(`${h.tid} · ${h.agent || L("ukjent program", "unknown program")} · ${h.regel}`, h.kilde, `${h.program} (PID ${h.pid})${h.hva ? " · " + h.hva : ""}`, h.rod)).join("")
+          : `<li class="mer">${L("Ingenting kjent fra angrep sett så langt.", "Nothing known from attacks seen so far.")}</li>`) + `</ul>`;
+  }
   else if (nettFane === "dg" && nettDg != null && (nett.kilder || [])[nettDg]) {
     // Radene bak tallet: program og PID, adresse og port, navn, land og eier (OSINT). Bare i minnet.
     const k = nett.kilder[nettDg], r = k.rader || [];
@@ -1323,9 +1339,12 @@ function motta(m) {
   else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "prosessinfo") { nettProsess[m.pid] = m; if (nettApen) tegnNett(); }
   else if (m.type === "prosent") settProsent(m.p);
-  else if (m.type === "fremdrift" && m.fullt) {
-    const min = Math.floor(m.sekunder / 60), sek = m.sekunder % 60;
-    $("fremdrift").textContent = `${L("Fullt søk", "Full scan")} · ${tall(m.mapper)} ${L("mapper", "folders")} · ${min ? `${min} min ` : ""}${sek} s`;
+  else if (m.type === "fremdrift") {
+    // Hva søket gjør nå: sjekkene som går, med det hver har lest så langt, og hvor mange som er ferdige
+    const min = Math.floor(m.sekunder / 60), sek = m.sekunder % 60, steg = m.steg || [], ferdig = steg.filter(x => x.s === 2).length;
+    const gar = steg.filter(x => x.s === 1).sort((a, b) => b.n - a.n);
+    $("fremdrift").innerHTML = `<div>${m.fullt ? `${L("Fullt søk", "Full scan")} · ${tall(m.mapper)} ${L("mapper", "folders")} · ` : ""}${tall(ferdig)} ${L("av", "of")} ${tall(steg.length)} ${L("sjekker ferdige", "checks done")} · ${min ? `${min} min ` : ""}${sek} s</div>`
+      + `<ul class="stegNa">${gar.slice(0, 6).map(x => `<li><span>${esc(x.navn)}</span><b>${tall(x.n)}</b></li>`).join("")}</ul>`;
   }
   else if (m.type === "lytter") { lytterIgjen = m.igjen; if (info && info.lytter) tegnBunn(); }
   else if (m.type === "logg") { logg = m.d; if (dataApen) tegnData(); }
@@ -1376,8 +1395,52 @@ function tegnModus() {
 document.querySelectorAll("#revisjon button").forEach(b => b.onclick = () => { revisjon = b.dataset.r === "ja"; tegnModus(); });
 document.querySelectorAll("#omfang button").forEach(b => b.onclick = () => { fullt = b.dataset.o === "fullt"; tegnModus(); });
 // «Hva søkes?»: forklaringen og revisjonsloggen, utenfor veien til Søk
-const apneOm = pa => { $("om").classList.toggle("apen", pa); if (pa) $("omLukk").focus(); };
+// Om: hva skanneren er bygget på, hvordan den finner AI og hvilke regelsett og data den bruker, med kilder. Statisk, offline.
+function omTekst() {
+  const kilde = u => `<br><small>${esc(u)}</small>`;
+  const del = (tittel, rader) => `<h3>${tittel}</h3><ul>${rader.map(r => `<li>${r}</li>`).join("")}</ul>`;
+  return `<p>${L("AI-skanneren finner AI på denne PC-en med faste regler. Det er ingen AI i programmet. Den bare leser, endrer ingenting og lagrer ingenting uten at du ber om det.",
+      "AI Scanner finds AI on this PC with fixed rules. There is no AI in the program. It only reads, changes nothing and saves nothing unless you ask.")}</p>`
+    + del(L("Bygget på", "Built on"), [
+      L("C# og .NET Framework 4.8 (følger med Windows), én exe under 10 MB.", "C# and .NET Framework 4.8 (ships with Windows), one exe under 10 MB."),
+      L("Microsoft Edge WebView2 for vinduet.", "Microsoft Edge WebView2 for the window.") + kilde("https://learn.microsoft.com/microsoft-edge/webview2/"),
+      L("Åpen kildekode (MIT).", "Open source (MIT)."),
+    ])
+    + del(L("Slik finner den AI", "How it finds AI"), [
+      L("<b>Programmer og prosesser:</b> kjente AI-produkter på navn, sti og kommandolinje (bare for tolkere, AI-funn og programmer en AI-agent starter), og AI-motorer i programmappene (ONNX Runtime, llama.cpp, PyTorch, OpenVINO m.fl.).",
+        "<b>Programs and processes:</b> known AI products by name, path and command line (only interpreters, AI findings and programs an AI agent starts), and AI engines in program folders (ONNX Runtime, llama.cpp, PyTorch, OpenVINO etc.)."),
+      L("<b>Modellfiler:</b> filformatet kjennes igjen på de første bytene (GGUF, safetensors, PyTorch, ONNX, Keras, TFLite), også uten riktig filendelse. YARA-regler finner farlige modeller.",
+        "<b>Model files:</b> the format is recognised from the first bytes (GGUF, safetensors, PyTorch, ONNX, Keras, TFLite), even without the right extension. YARA rules find dangerous models."),
+      L("<b>Nettlesere:</b> AI-nettsteder fra bruksspor og historikk (analysert på PC-en), AI-utvidelser, innebygde modeller (Gemini Nano, Edge) og AI-API-er.",
+        "<b>Browsers:</b> AI sites from engagement data and history (analysed on the PC), AI extensions, built-in models (Gemini Nano, Edge) and AI APIs."),
+      L("<b>AI-agenter:</b> MCP-oppsett, hooks, ferdigheter og instruksjonsfiler sammenlignes med mønstre fra kjente angrep. Vakt følger agentene live mens vinduet er åpent.",
+        "<b>AI agents:</b> MCP config, hooks, skills and instruction files are compared with patterns from known attacks. Vakt watches the agents live while the window is open."),
+      L("<b>Windows' egne spor:</b> registeret, Prefetch, BAM, Amcache, TaskCache, SRUM og hendelseslogger (som administrator).",
+        "<b>Windows' own traces:</b> the registry, Prefetch, BAM, Amcache, TaskCache, SRUM and event logs (as administrator)."),
+      L("<b>Nettverk:</b> TCP-tabellen, DNS-bufferen og Windows' nettverkshendelser: hvilket program som snakker med hvilken AI-tjeneste, land og eier. Aldri innhold.",
+        "<b>Network:</b> the TCP table, the DNS cache and Windows' network events: which program talks to which AI service, country and owner. Never content."),
+    ])
+    + del(L("Regelsett og data, med kilder", "Rule sets and data, with sources"), [
+      L("Egen regelfil (regler.json): kjente AI-produkter, nettsteder, tjenester og modellfamilier. Hver regel har en kilde.", "Own rule file (regler.json): known AI products, sites, services and model families. Every rule has a source."),
+      L("YARA: egen motor i C# (uten libyara) med egne regler for AI-modeller.", "YARA: own engine in C# (no libyara) with own rules for AI models.") + kilde("https://virustotal.github.io/yara/"),
+      L("ATR (Agent Threat Rules): mønstre for angrep på AI-agenter.", "ATR (Agent Threat Rules): patterns for attacks on AI agents.") + kilde("https://github.com/Agent-Threat-Rule/agent-threat-rules"),
+      L("SigmaHQ: regler for mistenkelige kommandoer i Windows.", "SigmaHQ: rules for suspicious commands on Windows.") + kilde("https://github.com/SigmaHQ/sigma"),
+      L("MITRE ATLAS: hver angrepsregel viser teknikk-ID.", "MITRE ATLAS: every attack rule shows its technique ID.") + kilde("https://atlas.mitre.org/"),
+      L("OWASP Top 10 for LLM og agenter: brukt for å finne hull i dekningen.", "OWASP Top 10 for LLM and agents: used to find gaps in coverage.") + kilde("https://genai.owasp.org/"),
+      L("IP til land: DB-IP Lite (CC BY 4.0), innebygd.", "IP to country: DB-IP Lite (CC BY 4.0), built in.") + kilde("https://db-ip.com/db/lite.php"),
+      L("IP til eier (ASN): ip-location-db (DB-IP og RouteViews, CC BY 4.0), innebygd.", "IP to owner (ASN): ip-location-db (DB-IP and RouteViews, CC BY 4.0), built in.") + kilde("https://github.com/sapics/ip-location-db"),
+      L("Kjente sikkerhetshull: NVD (bare produktnavnet sendes).", "Known vulnerabilities: NVD (only the product name is sent).") + kilde("https://nvd.nist.gov/"),
+    ])
+    + del(L("Personvern", "Privacy"), [
+      L("Leser aldri passord, informasjonskapsler, skjemadata, nøkkelverdier, innholdet i AI-samtaler eller minnet til andre programmer.", "Never reads passwords, cookies, form data, key values, the content of AI chats or the memory of other programs."),
+      L("Sender bare: navnene på kjente AI-tjenester i DNS, og produktnavn til NVD. Aldri PC-navn, brukernavn, stier eller funn.", "Sends only: the names of known AI services in DNS, and product names to NVD. Never PC name, user name, paths or findings."),
+      L("<b>Som bruker:</b> rask, uten godkjenning. <b>Som admin:</b> måler datamengde, ser alle programmer og Windows' historikk. Windows ber om godkjenning først.",
+        "<b>As user:</b> fast, no approval. <b>As admin:</b> measures data volume, sees every program and Windows' history. Windows asks for approval first."),
+    ]);
+}
+const apneOm = pa => { if (pa) $("omTekst").innerHTML = omTekst(); $("om").classList.toggle("apen", pa); if (pa) $("omLukk").focus(); };
 $("omKnapp").onclick = () => apneOm(true);
+$("omKnapp2").onclick = () => apneOm(true);
 $("omLukk").onclick = () => apneOm(false);
 $("om").onclick = e => { if (e.target === $("om")) apneOm(false); };
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("om").classList.contains("apen")) apneOm(false); });

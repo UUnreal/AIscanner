@@ -211,13 +211,23 @@ Ikke dekket ennå: SRUM, MFT og filene inne i WSL. Er WSL installert, står det 
 
 ### Kommandolinjer
 
-Kommandolinjer leses bare for tolkere og for programmer som allerede er AI-funn. Python.exe sier ingenting om hva som
+Kommandolinjer leses bare for tolkere, for programmer som allerede er AI-funn, og (i Vakt) for programmer en AI-agent starter. Python.exe sier ingenting om hva som
 kjører; skriptet gjør det. Linjen leses fra Windows (ikke fra prosessminnet), sammenlignes med reglene og kastes. Det som
 vises, er regelen som slo til og skriptfila. IT kan slå det av med `"lesKommandolinjer": false` i `regler.json`, eller
 med `HKLM\SOFTWARE\Policies\AISkanner` `LesKommandolinjer` = 0 (DWORD, kan rulles ut med Intune). Da står det som
 «blokkert av IT» i datagrunnlaget, og hendelsesloggene leses uten kommandolinjen.
 Agentøkter kan inneholde personopplysninger. Bare tider og treff leses, men på jobb-PC bør bruken avklares
 (e-postforskriften kan gjelde når agenten har lest e-post). Slå av med `--uten-agentlogger`.
+
+### Angrep på AI-agenter
+
+Ferdigheter (`SKILL.md` under `.claude`, `.agents`, `.gemini`, `.warp`, `.hermes` m.fl.), instruksjonsfiler og
+MCP-pakker i npx-bufferen, globale npm-pakker og uv-verktøy sammenlignes med mønstre fra ATR (for eksempel skjulte
+beskjeder i HTML-kommentarer, «send data til», «ikke si det til brukeren», kryptomining). Bare regelnavnet og fila
+vises. Installerte AI-verktøy sammenlignes med kjente sikkerhetshull (`saarbareVersjoner` i `regler.json`).
+Adresser for AI-trafikk (`*_BASE_URL` i miljøet, `env` i Claude Codes `settings.json`, `base_url` i Codex
+`config.toml`) som peker til en ukjent vert, vises med vertsnavnet alene, aldri sti eller nøkkel. Windows' egne
+MCP-koblinger (ODR) sjekkes som skrivebeskyttet lesing og står som ikke bekreftet på Windows 26H2.
 
 ### Lyttevindu og «Følg med»
 
@@ -263,6 +273,27 @@ Kontrollen sjekker også reglene for kinesisk AI: vertsnavn for kinesiske AI-net
 i Kina med høy risiko, vanlige kinesiske nettsteder som ikke er AI (baidu.com, qq.com, aliyun.com, tiktok.com …) skal
 ikke treffe, kinesiske AI-programmer og VS Code-utvidelser skal kjennes igjen, og modellarkitekturer skal peke entydig
 på en kinesisk familie. Alt skal være OK; i 2.19.7 er det 104 av 104.
+
+### Vakt (AI-agenter live)
+
+Nettverk → «AI-agenter» følger AI-agentene (Claude Code, Codex, Gemini CLI, Cursor og andre i kategorien
+«Skygge-AI (agent)») og alle programmene de starter, fra første søk til vinduet lukkes. Som administrator brukes én
+sanntidsøkt mot Windows' egne hendelseskilder (`AISkanner-Vakt`: Kernel-Process, Kernel-File, Kernel-Network og
+DNS-Client), uten fil og uten driver. Uten administrator leses bare prosesslista hvert halve sekund, og filer og nett
+står som ikke sett.
+
+Vakt ser når agenten eller noe den startet: lager planlagt oppgave, autostart eller bruker, svekker brannmur eller
+Defender, kjører skjult eller kodet PowerShell, laster ned med Windows-verktøy (certutil, bitsadmin, mshta, regsvr32),
+henter passordlageret, sletter logger eller skyggekopier, sletter alt i en mappe, sender filer ut, kobler et skall til
+nettet, åpner hemmelighetsfiler (SSH, AWS, Kubernetes, Docker, Git, nettleserinnlogging, lommebøker, agentinnlogging),
+slår opp uttakstjenester eller kjente misbruksdomener, kobler et skall til en IP-adresse uten navn, starter minst 150
+programmer på ett minutt, eller endrer agentoppsett og instruksjonsfiler (`settings.json`, `.mcp.json`, `CLAUDE.md`,
+`AGENTS.md`, `SKILL.md` m.fl.). Hver regel har kilde fra ATR, SigmaHQ og MITRE ATLAS. Programmer som har lov å åpne en
+hemmelighet (for eksempel `ssh` og `aws`), og agentens egen innlogging, gir ingen hendelse.
+
+Røde hendelser blir funn («AI-agent gjør noe kjent fra angrep») med regel, program, PID og tid. Kommandolinjen til et
+program agenten starter, leses mens det kjører, sammenlignes med reglene og kastes (samme bryter som Kommandolinjer).
+For filer ses bare navnet på fila som åpnes, aldri innholdet. Ingenting lagres; alt forsvinner når vinduet lukkes.
 
 ## Hva den aldri leser
 
