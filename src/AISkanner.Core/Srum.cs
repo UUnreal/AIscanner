@@ -125,9 +125,14 @@ public sealed partial class Skanner
         {
             if (!program.TryGetValue(app, out var navn)) continue;
             var sti = Dosti(navn, enheter);
-            var exe = Path.GetFileNameWithoutExtension(sti);
+            // SRUM har også appnavn og tjenester med tegn Windows ikke godtar i stier (f.eks. «<»): ikke bruk Path på dem
+            var ugyldig = sti.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
+            var exe = sti.Substring(sti.LastIndexOf('\\') + 1);
+            if (exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) exe = exe.Substring(0, exe.Length - 4);
             if (Nettleserprosesser.ContainsKey(exe) || sti.EndsWith("AISkanner.exe", StringComparison.OrdinalIgnoreCase)) continue;
-            var f = FunnForProsess(exe, sti.Contains('\\') ? sti : null) ?? (FinnRegel(sti) is { } regel ? FraRegel(regel, "Kjørt før", null!) : null);
+            Funn? f;
+            try { f = FunnForProsess(exe, sti.Contains('\\') && !ugyldig ? sti : null) ?? (FinnRegel(sti) is { } regel ? FraRegel(regel, "Kjørt før", null!) : null); }
+            catch (ArgumentException) { feil++; continue; }
             if (f == null) continue;
             f.Detalj($"SRUM (Windows' ressursbruk, {fil}): {sti} sendte {Rapport.Storrelse(ut)} og mottok {Rapport.Storrelse(inn)} siste 30 dager · {Tid(forst)}–{Tid(sist)}");
             f.Merk(Tilstand.BruktFor);
