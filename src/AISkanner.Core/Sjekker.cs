@@ -11,7 +11,7 @@ public sealed partial class Skanner
 {
     public List<Sjekkstatus> Sjekker { get; private set; } = new();
     private readonly List<string> _lytterLinjer = new();
-    private int _apneAiPorter;
+    private int _apneAiPorter, _lyttereLest;
 
     /// <summary>
     /// Lyttende porter som hører til AI-servere (Ollama 11434, LM Studio 1234 …). Blir detalj på funnet for programmet;
@@ -19,7 +19,7 @@ public sealed partial class Skanner
     /// </summary>
     internal void LyttendeAiPorter()
     {
-        lock (_lytterLinjer) { _lytterLinjer.Clear(); _apneAiPorter = 0; }
+        lock (_lytterLinjer) { _lytterLinjer.Clear(); _apneAiPorter = 0; _lyttereLest = 0; }
         if (!Plattform.ErWindows || TestNett != null) return;
         var sett = new Dictionary<(int, int, bool), (List<string> Adr, bool Apen)>();
         foreach (var (l, udp) in TcpTabell.Hent().Select(l => (l, false)).Concat(TcpTabell.UdpLyttere().Select(l => (l, true))))
@@ -31,6 +31,7 @@ public sealed partial class Skanner
             if (!x.Adr.Contains(adr)) x.Adr.Add(adr);
             sett[k] = (x.Adr, x.Apen || NettProtokoll.Apen(l.Adresse));
         }
+        _lyttereLest = sett.Count;
         foreach (var ((pid, port, udp), (adr, apen)) in sett)
         {
             string navn; string? sti;
@@ -47,6 +48,33 @@ public sealed partial class Skanner
             if (apen) f.Advarsel($"AI-serveren lytter på alle nettverkskort (port {port}) og kan nås fra andre maskiner på nettet.");
         }
         Tilgangslogg.Logg("Port", "lyttende porter for AI-servere (TCP og UDP)", Utfall.Lest, $"{_lytterLinjer.Count} AI-porter, {_apneAiPorter} åpne mot nettet");
+    }
+
+    /// <summary>Skjermkort og NPU-er Windows kjenner (driverklassene i registeret): navn, leverandør og driverversjon.</summary>
+    private static IEnumerable<string> Brikker()
+    {
+        var l = new List<string>();
+        foreach (var (klasse, hva) in new[] { ("{4d36e968-e325-11ce-bfc1-08002be10318}", "Skjermkort (GPU)"), ("{f01a9d53-3ff6-48d2-9f97-c8a7004be10c}", "NPU (AI-brikke)") })
+        {
+            var sti = $@"SYSTEM\CurrentControlSet\Control\Class\{klasse}";
+            try
+            {
+                using var rot = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(sti);
+                int n = 0;
+                foreach (var navn in rot?.GetSubKeyNames() ?? Array.Empty<string>())
+                {
+                    if (navn.Length != 4 || !navn.All(char.IsDigit)) continue;
+                    using var k = rot!.OpenSubKey(navn);
+                    if (k?.GetValue("DriverDesc") is not string desc) continue;
+                    n++;
+                    l.Add($"{hva}: {desc} · {k.GetValue("ProviderName")} · driver {k.GetValue("DriverVersion")}");
+                }
+                if (n == 0) l.Add($"{hva}: ingen funnet");
+                Tilgangslogg.Logg("Register", @"HKLM\" + sti, n > 0 ? Utfall.Lest : Utfall.IkkeFunnet, $"{hva}: {n}");
+            }
+            catch (Exception e) when (e is System.Security.SecurityException or UnauthorizedAccessException or IOException) { l.Add($"{hva}: kunne ikke leses ({e.GetType().Name})"); }
+        }
+        return l;
     }
 
     /// <summary>Én linje per sjekk som ellers bare synes i rapporten eller Datagrunnlag: hva den fant, eller at den ikke fant noe.</summary>
@@ -95,7 +123,10 @@ public sealed partial class Skanner
         l.Add(!UdpLest ? new("UDP/QUIC", "krever administrator", -1) : udp > 0 ? new("UDP/QUIC", $"{udp} AI over UDP", 1, ul) : new("UDP/QUIC", "ingen AI over UDP", 0));
         List<string> ll; int lytt; lock (_lytterLinjer) { ll = _lytterLinjer.ToList(); lytt = ll.Count; }
         l.Add(_apneAiPorter > 0 ? new("Lyttende AI-porter", $"{_apneAiPorter} åpen mot nettet", 2, ll)
-            : lytt > 0 ? new("Lyttende AI-porter", $"{lytt} bare på PC-en", 1, ll) : new("Lyttende AI-porter", "ingen", 0));
+            : lytt > 0 ? new("Lyttende AI-porter", $"{lytt} bare på PC-en", 1, ll) : new("Lyttende AI-porter", "ingen", 0, new[] {
+                $"Lest {_lyttereLest} lyttende porter (TCP og UDP) fra Windows' porttabeller. Ingen tilhører et AI-program, og ingen er en standardport for AI.",
+                "Standardporter som sjekkes: " + string.Join(", ", NettProtokoll.AiPorter.Select(x => $"{x.Key} {x.Value.Hva}")),
+                "Vanlige porter (3000, 5000, 8000, 8080, 8888) regnes bare som AI når programmet er et kjent AI-program eller en tolker (python, node …)." }));
         int docker = funn.Count(f => f.Hvor.Contains("Docker"));
         var dl = docker > 0 ? FraFunn(f => f.Hvor.Contains("Docker"), f => f.Detaljer.Take(3)) : Logget("docker_engine");
         l.Add(docker > 0 ? new("Docker", $"{docker} AI-bilde", 1, dl)
@@ -109,7 +140,8 @@ public sealed partial class Skanner
             : Lest(@"\\wsl.localhost") ? new("WSL", "sjekket, ingen AI", 0, wl2) : new("WSL", "ikke installert", 0, wl2));
         bool IGpu(string d) => d.Contains("bruker GPU/NPU");
         int gpu = funn.Count(f => f.Detaljer.Any(IGpu));
-        var gl = Linjer(FraFunn(f => f.Detaljer.Any(IGpu), f => f.Detaljer.Where(IGpu)).Concat(Logget("Ytelsestellere: GPU")));
+        var gl = Linjer(Brikker().Concat(FraFunn(f => f.Detaljer.Any(IGpu), f => f.Detaljer.Where(IGpu))).Concat(Logget("Ytelsestellere: GPU"))
+            .Concat(_aiPid.IsEmpty ? new[] { "Ingen AI-prosess kjørte under søket, så GPU/NPU-bruk ble ikke målt. Bruken måles bare for prosesser som er funnet som AI." } : Array.Empty<string>()));
         l.Add(gpu > 0 ? new("GPU/NPU", $"{gpu} AI bruker GPU nå", 1, gl)
             : logg.Any(t => t.Mal.StartsWith("Ytelsestellere: GPU", StringComparison.Ordinal) && t.Utfall == Utfall.IkkeFunnet) ? new("GPU/NPU", "ingen GPU-tellere", -1, gl)
             : Lest("Ytelsestellere: GPU") ? new("GPU/NPU", "ingen AI bruker GPU nå", 0, gl)

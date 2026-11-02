@@ -29,6 +29,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.48.1] - 2026-11-02
+
+### Rettet
+- SRUM stoppet med «Ugyldige tegn i banen» når id-tabellen hadde appnavn med tegn Windows ikke godtar i stier. Slike navn sjekkes nå uten stifunksjonene, og én dårlig post stopper ikke resten.
+
+### Endret
+- «Lyttende AI-porter» uten funn viser hvor mange porter som ble lest og hvilke standardporter som sjekkes.
+- «GPU/NPU» viser skjermkort og NPU Windows kjenner (navn, leverandør, driverversjon) og sier rett ut når bruken ikke ble målt.
+
 ## [2.48.0] - 2026-11-02
 
 ### Lagt til
