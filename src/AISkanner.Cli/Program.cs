@@ -71,6 +71,7 @@ if (args.Contains("--vakttest"))
     Console.OutputEncoding = System.Text.Encoding.UTF8;
     using var vakt = Vakt.Start(new Skanner(regler), true, Array.Empty<string>());
     Console.WriteLine($"VAKT KLAR: {vakt.Status}");
+    if (Array.IndexOf(args, "--vakttest") + 1 is var kf && kf < args.Length) File.WriteAllText(args[kf], "klar");
     var mal = new[] { ("åpnet AWS-nøkler", "fil"), ("skjult eller kodet PowerShell", "kommando"), ("slår opp en uttakstjeneste", "DNS") };
     var sett = new bool[mal.Length];
     for (var slutt = DateTime.Now.AddSeconds(60); DateTime.Now < slutt && !sett.All(x => x);)
@@ -79,6 +80,8 @@ if (args.Contains("--vakttest"))
         var h = vakt.Hendelser();
         for (int k = 0; k < mal.Length; k++) sett[k] |= h.Any(x => x.Regel.StartsWith(mal[k].Item1, StringComparison.Ordinal) && x.Rod);
     }
+    Console.WriteLine($"  Mottatt: prosess {vakt.Mottatt[0]}, fil {vakt.Mottatt[1]}, nett {vakt.Mottatt[2]}, DNS {vakt.Mottatt[3]} · programstarter fra agenter {vakt.Starter} · siste bilde {vakt.SisteBilde}");
+    foreach (var a in vakt.Agenter()) Console.WriteLine($"  Agent: {a.Agent} (PID {a.Pid})");
     foreach (var h in vakt.Hendelser()) Console.WriteLine($"  {h.Tid:HH:mm:ss} {h.Agent} · {h.Regel} · {h.Program} (PID {h.Pid}) {h.Hva}");
     for (int k = 0; k < mal.Length; k++) Console.WriteLine($"{(sett[k] ? "OK  " : "FEIL")}  Vakt så {mal[k].Item2}: {mal[k].Item1}");
     return sett.All(x => x) ? 0 : 1;

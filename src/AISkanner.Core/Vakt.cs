@@ -202,8 +202,13 @@ public sealed class Vakt : IDisposable
 
     // ---------- Windows' hendelser ----------
 
+    /// <summary>Hendelser mottatt per kilde (prosess, fil, nett, DNS) og siste programbilde, for vakttesten.</summary>
+    public readonly long[] Mottatt = new long[4];
+    public string? SisteBilde;
+
     private void Ta(EtwOkt.Hendelse h)
     {
+        Interlocked.Increment(ref Mottatt[h.Kilde == Prosess ? 0 : h.Kilde == Fil ? 1 : h.Kilde == Nett ? 2 : 3]);
         try
         {
             if (h.Kilde == Prosess) Prosesstart(h);
@@ -222,6 +227,7 @@ public sealed class Vakt : IDisposable
         int pid = BitConverter.ToInt32(d, 0), forelder = BitConverter.ToInt32(d, 12);
         int o = h.Versjon >= 1 ? 24 : 20;
         var bilde = Admintilgang.TilDos(EtwOkt.Tekst(d, ref o));
+        SisteBilde = bilde;
         NyProsess(pid, forelder, bilde, DateTime.Now);
     }
 
