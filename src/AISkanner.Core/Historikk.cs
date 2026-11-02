@@ -23,8 +23,10 @@ public sealed partial class Skanner
             ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
         })
         {
+            var tid = System.Diagnostics.Stopwatch.StartNew();
             try { steg(); }
             catch (Exception e) { Tilgangslogg.Logg("Sjekk", $"Windows-historikk: {navn}", Utfall.Feil, $"Sjekken stoppet: {Tilgangslogg.Beskriv(e)}"); }
+            lock (Tider) Tider[$"Windows-historikk: {navn}"] = tid.Elapsed;
         }
     }
 
