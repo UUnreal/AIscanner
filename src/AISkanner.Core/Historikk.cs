@@ -347,6 +347,8 @@ public sealed partial class Skanner
         {
             if (string.IsNullOrEmpty(exe)) return;
             var prosess = Path.GetFileNameWithoutExtension(exe);
+            // SigmaHQ proc_creation_win_node_new_agent_skills_installed: «npx skills add» legger ferdigheter til AI-agenter
+            if (linjer && linje != null && ErSkillsAdd(linje)) SkillsLagtTil(tid, kilde, konto);
             if (Kommandolinje.ErTolk(prosess))
             {
                 // Tolkere: kommandolinjen vurderes i minnet (samme regler som for prosesser som kjører nå)

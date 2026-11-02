@@ -84,6 +84,7 @@ public sealed partial class Skanner
         _aiPid.Clear();
         while (_prosjektOppsett.TryTake(out _)) { }
         TomMisbruk();
+        TomAngrep();
         lock (Blindsoner) Blindsoner.Clear();
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
@@ -257,8 +258,10 @@ public sealed partial class Skanner
         return Plattform.ErWindows ? s : s.Replace('\\', '/');   // bare for testing utenfor Windows
     }
 
+    // Et ord som starter eller slutter med en skillestrek (\\programs\\kiro\\) er en mappe: da avgjør streken grensen
     private static bool Treffer(string tekst, string ord) =>
-        Regex.IsMatch(tekst, "(?<![a-z0-9])" + Regex.Escape(ord.ToLowerInvariant()) + "(?![a-z0-9])", RegexOptions.IgnoreCase);
+        Regex.IsMatch(tekst, (ord.StartsWith("\\") || ord.StartsWith("/") ? "" : "(?<![a-z0-9])") + Regex.Escape(ord.ToLowerInvariant())
+            + (ord.EndsWith("\\") || ord.EndsWith("/") ? "" : "(?![a-z0-9])"), RegexOptions.IgnoreCase);
 
     internal Produkt? FinnRegel(string? tekst, bool utvidelse = false)
     {

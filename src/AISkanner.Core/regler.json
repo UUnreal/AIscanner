@@ -542,6 +542,92 @@
       "kilde": "https://opencode.ai/docs/config/"
     },
     {
+      "navn": "Warp (terminal med agent)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "\\warp\\warp\\",
+        "\\warp\\tui\\",
+        "warp.dev"
+      ],
+      "mapper": [
+        "%LOCALAPPDATA%\\warp\\Warp",
+        "%USERPROFILE%\\.warp"
+      ],
+      "porter": [],
+      "hvorfor": "Terminal med innebygd AI-agent som kjører kommandoer og kan bruke MCP-servere.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "kilde": "https://docs.warp.dev/terminal/settings/file-locations"
+    },
+    {
+      "navn": "Hermes Agent (Nous Research)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "\\.hermes\\",
+        "hermes-agent"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.hermes"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen. Har eget minne, planlagte jobber og ferdigheter.",
+      "enkelt": "AI-agent i terminalen",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "kilde": "https://hermes-agent.nousresearch.com/docs/user-guide/configuration/"
+    },
+    {
+      "navn": "Foundry Local (Microsoft)",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "foundry local",
+        "\\.foundry\\"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.foundry"
+      ],
+      "porter": [],
+      "hvorfor": "Kjører AI-modeller lokalt på PC-en og gir andre programmer et AI-API.",
+      "enkelt": "Lokal AI-motor",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "kilde": "https://kb.plugable.com/question/3707880 · Microsoft Defender støttematrise for AI-agenter"
+    },
+    {
+      "navn": "OpenClaw",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "openclaw"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.openclaw"
+      ],
+      "porter": [],
+      "hvorfor": "Agent som leser og endrer filer og kjører kommandoer på PC-en med AI i skyen. Kan styres fra chat-apper og installere ferdigheter selv.",
+      "enkelt": "AI-agent som kjører selv",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "kilde": "Microsoft Defender støttematrise for AI-agenter (learn.microsoft.com/defender-endpoint/ai-agent-support-matrix)"
+    },
+    {
+      "navn": "Google Antigravity",
+      "kategori": "Skygge-AI (agent)",
+      "risiko": "rod",
+      "treff": [
+        "antigravity"
+      ],
+      "mapper": [
+        "%USERPROFILE%\\.gemini\\antigravity-cli",
+        "%USERPROFILE%\\.gemini\\antigravity-ide"
+      ],
+      "porter": [],
+      "hvorfor": "Kodeeditor og terminalagent fra Google som leser og endrer prosjektet og bruker MCP-servere.",
+      "enkelt": "AI-kodeeditor med agent",
+      "hvorforEnkelt": "Kan lese filene dine og kjøre kommandoer. Det den ser, sendes til AI-tjenesten.",
+      "kilde": "https://medium.com/google-cloud/configuring-mcp-servers-and-skills-for-antigravity-cli-and-ide-a938c7eebb78 (Windows-sti ikke bekreftet)"
+    },
+    {
       "navn": "Goose (Block)",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
@@ -2771,7 +2857,20 @@
     { "navn": "litellm", "versjoner": ["1.82.7", "1.82.8"], "kilde": "PyPI, kapret utgivelse 2026 (studie AI-misbruk)" },
     { "navn": "claud-code", "versjoner": ["*"], "kilde": "npm, navnetyveri av Claude Code" },
     { "navn": "cloude-code", "versjoner": ["*"], "kilde": "npm, navnetyveri av Claude Code" },
-    { "navn": "amazonwebservices.amazon-q-vscode", "versjoner": ["1.84.0"], "kilde": "AWS-2025-015 (Amazon Q-utvidelse, jul. 2025)" }
+    { "navn": "amazonwebservices.amazon-q-vscode", "versjoner": ["1.84.0"], "kilde": "AWS-2025-015 (Amazon Q-utvidelse, jul. 2025)" },
+    { "navn": "function-color", "versjoner": ["*"], "kilde": "MALFEX (Aviatrix, okt. 2026): AGENTS.md i Nedlastinger installerer pakken · ATLAS AML.T0080" },
+    { "navn": "function-flag", "versjoner": ["*"], "kilde": "MALFEX (Aviatrix, okt. 2026): AGENTS.md i Nedlastinger installerer pakken · ATLAS AML.T0080" },
+    { "navn": "@apexacc/cli", "versjoner": ["*"], "kilde": "Falsk Web3-akselerator (The Hacker News, okt. 2026): legger inn egen MCP-server · ATLAS AML.T0081" },
+    { "navn": "@copilot-mcp/apex", "versjoner": ["*"], "kilde": "Falsk Web3-akselerator (The Hacker News, okt. 2026): legger inn egen MCP-server · ATLAS AML.T0081" }
+  ],
+  "_saarbareVersjoner": "AI-verktøy med kjente sikkerhetshull. Alle versjoner før «retta» er sårbare. Versjonsgrensene er kontrollert mot kilden. Treff vises som «Ukjent AI-spor» (rødt): hullet er kjent, men det er ikke i seg selv et tegn på angrep.",
+  "saarbareVersjoner": [
+    { "navn": "mcp-remote", "type": "npm", "retta": "0.1.16", "hull": "CVE-2025-6514 (kommando kjøres fra en ondsinnet MCP-server)", "kilde": "thehackernews.com/2025/07/critical-mcp-remote-vulnerability.html · ATLAS AML.T0010" },
+    { "navn": "@modelcontextprotocol/inspector", "type": "npm", "retta": "0.14.1", "hull": "CVE-2025-49596 (fjernstyring via nettleseren)", "kilde": "GHSA-7f8r-222p-6f5g · ATLAS AML.T0010" },
+    { "navn": "@modelcontextprotocol/server-filesystem", "type": "npm", "retta": "2025.7.1", "hull": "CVE-2025-53109/CVE-2025-53110 (kommer ut av tillatt mappe)", "kilde": "ATR-2026-02023/02024 · ATLAS AML.T0105" },
+    { "navn": "figma-developer-mcp", "type": "npm", "retta": "0.6.3", "hull": "CVE-2025-53967 (kommando kjøres)", "kilde": "thehackernews.com/2025/10/severe-figma-mcp-vulnerability-lets.html · ATLAS AML.T0010" },
+    { "navn": "@anthropic-ai/claude-code", "type": "npm", "retta": "1.0.87", "hull": "CVE-2025-59536 (hooks kjører før prosjektet er godkjent)", "kilde": "GHSA-ph6w-f82w-28w6 · ATLAS AML.T0142" },
+    { "navn": "fastmcp", "type": "pypi", "retta": "2.13.0", "hull": "CVE-2025-64340 (kommando kjøres via servernavn på Windows)", "kilde": "GHSA-rj5c-58rq-j5g5 · ATLAS AML.T0010" }
   ],
   "_daarligeUtvidelser": "Nettleserutvidelser kjent for å ta ut AI-samtaler. Treff vises som «Ukjent AI-spor» (rødt).",
   "daarligeUtvidelser": [
@@ -2784,7 +2883,9 @@
     { "sti": "%TEMP%\\bw1.js", "kilde": "@bitwarden/cli 2026.4.0" },
     { "sti": "%TEMP%\\bwsetup.js", "kilde": "@bitwarden/cli 2026.4.0" },
     { "sti": "%TEMP%\\thinking_robot_log.txt", "kilde": "AI-skadevare 2025" },
-    { "sti": "%ProgramData%\\info\\info.txt", "kilde": "AI-skadevare 2025" }
+    { "sti": "%ProgramData%\\info\\info.txt", "kilde": "AI-skadevare 2025" },
+    { "sti": "%USERPROFILE%\\.claude\\router_runtime.js", "kilde": "Mini Shai-Hulud/TanStack (SigmaHQ file_event_win_malware_tanstack_supply_chain, socket.dev) · ATLAS AML.T0081" },
+    { "sti": "%USERPROFILE%\\.vscode\\router_runtime.js", "kilde": "Mini Shai-Hulud/TanStack (SigmaHQ file_event_win_malware_tanstack_supply_chain, socket.dev) · ATLAS AML.T0081" }
   ],
   "_iocDomener": "Domener kjent fra AI-misbruk eller falske AI-tjenester. Sjekkes mot DNS-bufferen.",
   "iocDomener": [
@@ -2792,6 +2893,7 @@
     { "domene": "chatsaigpt.com", "kilde": "falsk AI-tjeneste" },
     { "domene": "deepaichats.com", "kilde": "falsk AI-tjeneste" },
     { "domene": "chataigpt.pro", "kilde": "falsk AI-tjeneste" },
-    { "domene": "chatgptsidebar.pro", "kilde": "falsk AI-tjeneste" }
+    { "domene": "chatgptsidebar.pro", "kilde": "falsk AI-tjeneste" },
+    { "domene": "git-tanstack.com", "kilde": "Mini Shai-Hulud/TanStack (SigmaHQ dns_query_win_malware_tanstack_supply_chain_c2)" }
   ]
 }

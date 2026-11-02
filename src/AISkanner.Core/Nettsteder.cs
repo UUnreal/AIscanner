@@ -97,6 +97,9 @@ public sealed partial class Skanner
                     }
                 }
 
+                // Gemini i Chrome («glic»): bare av/på-verdier under glic i profilens innstillinger. Nøkkelnavnene er ikke offisielle.
+                if (nettleser.StartsWith("Chrome", StringComparison.Ordinal)) GlicPa(Path.Combine(profil, "Preferences"), hvor);
+
                 // 2. Nettsteder som har lagret data (bare mappenavn, f.eks. https_chatgpt.com_0.indexeddb.leveldb)
                 foreach (var d in Mapper(Path.Combine(profil, "IndexedDB")))
                 {

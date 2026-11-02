@@ -466,7 +466,7 @@ public sealed partial class Skanner
         }
         var navn = Path.GetFileName(mappe);
         if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
-        if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
+        if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); SjekkNodeModules(mappe); return; }
         if (Fullt && navn is ".git" or ".svn" or ".hg") { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "versjonskontroll (git), ikke AI"); return; }
         if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
         if (!Fullt && navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }

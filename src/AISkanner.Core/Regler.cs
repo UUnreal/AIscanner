@@ -79,6 +79,19 @@ public sealed class DaarligVersjon
     [JsonPropertyName("kilde")] public string? Kilde { get; set; }
 }
 
+/// <summary>AI-verktøy med kjent sikkerhetshull: alle versjoner før <see cref="Retta"/> er sårbare.</summary>
+public sealed class SaarbarVersjon
+{
+    /// <summary>npm- eller PyPI-pakke.</summary>
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    /// <summary>"npm" eller "pypi".</summary>
+    [JsonPropertyName("type")] public string Type { get; set; } = "npm";
+    /// <summary>Første versjon som er retta.</summary>
+    [JsonPropertyName("retta")] public string Retta { get; set; } = "";
+    [JsonPropertyName("hull")] public string Hull { get; set; } = "";
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
 public sealed class DaarligUtvidelse
 {
     [JsonPropertyName("id")] public string Id { get; set; } = "";
@@ -125,6 +138,8 @@ public sealed class Regelsett
     /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
     [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
     [JsonPropertyName("daarligeUtvidelser")] public List<DaarligUtvidelse> DaarligeUtvidelser { get; set; } = new();
+    /// <summary>AI-verktøy med kjente sikkerhetshull før en gitt versjon (CVE/GHSA). Blir «Ukjent AI-spor».</summary>
+    [JsonPropertyName("saarbareVersjoner")] public List<SaarbarVersjon> SaarbareVersjoner { get; set; } = new();
     [JsonPropertyName("iocFiler")] public List<IocFil> IocFiler { get; set; } = new();
     [JsonPropertyName("iocDomener")] public List<IocDomene> IocDomener { get; set; } = new();
     /// <summary>false: IT har slått av lesing av kommandolinjer (tolkere og AI-programmer).</summary>

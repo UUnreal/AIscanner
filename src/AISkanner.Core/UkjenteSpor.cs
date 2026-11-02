@@ -102,6 +102,8 @@ public sealed partial class Skanner
         LesMcpFil(Utvid(@"%APPDATA%\Code - Insiders\User\mcp.json"), "VS Code Insiders", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.codeium\windsurf\mcp_config.json"), "Windsurf", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.lmstudio\mcp.json"), "LM Studio", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.warp\.mcp.json"), "Warp", prosjekt: false);
+        LesMcpFil(Utvid(@"%USERPROFILE%\.gemini\config\mcp_config.json"), "Google Antigravity", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.mcp.json"), "Visual Studio", prosjekt: false);
         LesMcpFil(Utvid(@"%APPDATA%\Zed\settings.json"), "Zed", prosjekt: false);
         LesMcpFil(Utvid(@"%USERPROFILE%\.continue\config.json"), "Continue", prosjekt: false, tillatt: ContinueFil);
