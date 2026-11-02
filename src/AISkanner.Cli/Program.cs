@@ -82,7 +82,13 @@ if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
 var funn = await skanner.KjorAsync(nvd, status, prosent: args.Contains("--prosent") ? new Progress<int>(p => Console.Error.WriteLine($"  {p} %")) : null);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-if (args.Contains("--datagrunnlag")) { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null, funn), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping })); return 0; }
+if (args.Contains("--datagrunnlag"))
+{
+    var dgTid = System.Diagnostics.Stopwatch.StartNew();
+    var dg = System.Text.Json.JsonSerializer.Serialize(Revisjon.Datagrunnlag(skanner, args.Contains("--en"), null, funn), new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+    Console.Error.WriteLine($"  Datagrunnlag: {dgTid.ElapsedMilliseconds} ms, {dg.Length / 1024} kB");
+    Console.WriteLine(dg); return 0;
+}
 // Nettverk (live) i kommandolinjen: tre avlesninger med ett sekunds mellomrom, skrevet som JSON. Ingenting lagres.
 if (args.Contains("--nettverk"))
 {

@@ -14,7 +14,6 @@ namespace AISkanner;
 /// </summary>
 public static class Risikoregler
 {
-    public const string SkyggeDefinisjon = "AI som ikke er lagt inn av Windows, en signert leverandør eller IT.";
 
     /// <summary>Faresignaler som gjør en godkjent AI rød: andre kan bruke den, eller data havner der de ikke bør.</summary>
     private static readonly string[] RodeSignaler =

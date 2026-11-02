@@ -94,9 +94,7 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `leverandorAi` | liste | Navn på AI som leverandører legger inn. |
 | `nettleserInnebygd` | liste | Innebygd AI i nettlesere (Gemini Nano, Edge). |
 | `ukjentUtvidelseOrd` | liste med tekst | Ord i navn eller beskrivelse som gjør en ukjent utvidelse til et AI-funn, for eksempel `gpt` og `copilot`. |
-| `modellfilEndelser` | liste | Filendelser for modellfiler (`.gguf`, `.safetensors` …). |
 | `modellfilMinMB` | tall | Minste størrelse for modellfiler med kjent endelse. Standard 200. |
-| `innebygdMappeOrd` | liste | Ord i mappenavn som peker på innebygde nettlesermodeller. |
 
 ### produkter
 
@@ -169,7 +167,7 @@ på en ekte PC ennå.
 
 ### nettleserInnebygd
 
-Beskriver innebygd AI i en nettleser: `brukerdata` (mappen med brukerdata), `policyNokkel` og `policyVerdi` (policyen
+Beskriver innebygd AI i en nettleser: `policyNokkel` og `policyVerdi` (policyen
 som slår den av) og forklaringstekster.
 
 ### daarligeUtvidelser, iocFiler og iocDomener

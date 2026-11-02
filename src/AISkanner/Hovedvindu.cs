@@ -185,6 +185,7 @@ public sealed class Hovedvindu : Form
         StoppAlleFolg();
         StoppNettverk();
         _vakt?.Dispose(); _vakt = null;
+        if (_vaktStart is { IsCompleted: false } vs) vs.ContinueWith(t => t.Result.Dispose(), TaskContinuationOptions.OnlyOnRanToCompletion);
         base.OnFormClosed(e);
         _web.Dispose();
         // Nettleserdelen bruker et øyeblikk på å avslutte. Prøv i opptil 3 sekunder.
@@ -279,8 +280,11 @@ public sealed class Hovedvindu : Form
             fremdrift.Tick += (_, _) => Send(new { type = "fremdrift", mapper = aktiv.MapperLest, sekunder = (int)klokke.Elapsed.TotalSeconds, fullt = aktiv.Fullt });
             fremdrift.Start();
             // Vakt: følger AI-agentene live fra første søk til vinduet lukkes (bare i minnet)
-            aktiv.Vakt = _vakt ??= await Task.Run(() => Vakt.Start(aktiv, Kommandolinje.Tillatt(_regler, out _), Array.Empty<string>()));
+            // Startes i bakgrunnen, så søket ikke venter på den
+            _vaktStart ??= Task.Run(() => Vakt.Start(aktiv, Kommandolinje.Tillatt(_regler, out _), Array.Empty<string>()));
+            _ = _vaktStart.ContinueWith(t => { if (t.Status == TaskStatus.RanToCompletion) aktiv.Vakt = _vakt = t.Result; }, TaskScheduler.Default);
             _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
+            _ = LagLogg();
             fremdrift.Stop();
             _sekunder = klokke.Elapsed.TotalSeconds;
             _nvdStatus = nvd ? "sjekker" : "av";
@@ -337,6 +341,7 @@ public sealed class Hovedvindu : Form
             var liste = await skanner.FullforLyttingAsync(new Progress<int>(s => { if (_skanner == skanner && !_soker) Send(new { type = "lytter", igjen = s }); }), stopp.Token);
             if (liste == null || _skanner != skanner || _soker) return;
             _resultat = liste;
+            _ = LagLogg();
             if (_revisjon) SkrivRevisjon(null);
             SendResultat(behold: true);
         }
@@ -436,6 +441,8 @@ public sealed class Hovedvindu : Form
     private void VisIUtforsker(string? sti)
     {
         if (string.IsNullOrWhiteSpace(sti)) return;
+        // Bare lokale, hele stier: ingen nettverksstier (\\server lekker innlogging), ingen anførselstegn (ekstra argumenter til Utforsker)
+        if (sti!.Length < 4 || sti.StartsWith(@"\\") || sti.IndexOf('"') >= 0 || !Path.IsPathRooted(sti) || sti[1] != ':') return;
         if (sti != _revisjonSti && !_visbare.Contains(sti!) && !_resultat.Any(f => f.Detaljer.Any(d => d.Contains(sti!)))) return;
         sti = sti!.Trim();
         if (!File.Exists(sti) && !Directory.Exists(sti)) sti = Path.GetDirectoryName(sti);
@@ -550,6 +557,7 @@ public sealed class Hovedvindu : Form
     // «Nettverk»: hvem som snakker med AI-tjenester nå, hvert sekund mens visningen er åpen. Bare i minnet.
     private (Nettverkvisning Visning, System.Windows.Forms.Timer Klokke)? _nettverk;
     private Vakt? _vakt;
+    private Task<Vakt>? _vaktStart;
 
     private void StartNettverk()
     {
@@ -634,7 +642,17 @@ public sealed class Hovedvindu : Form
 
     private void StoppAlleFolg() { foreach (var id in _folg.Keys.ToList()) StoppFolg(id); }
 
-    private void SendLogg() => Send(new { type = "logg", d = Revisjon.Datagrunnlag(_skanner!, _engelsk, _revisjonSti, _resultat) });
+    // Datagrunnlag lages én gang i bakgrunnen per resultat og språk (ikke på UI-tråden hver gang fanen åpnes)
+    private (object? Resultat, bool Engelsk, string? Sti, Task<string> Json)? _logg;
+    private Task<string> LagLogg()
+    {
+        var (s, e, sti, r) = (_skanner!, _engelsk, _revisjonSti, _resultat);
+        if (_logg is { } l && ReferenceEquals(l.Resultat, r) && l.Engelsk == e && l.Sti == sti) return l.Json;
+        var t = Task.Run(() => JsonSerializer.Serialize(new { type = "logg", d = Revisjon.Datagrunnlag(s, e, sti, r) }, Json));
+        _logg = (r, e, sti, t);
+        return t;
+    }
+    private async void SendLogg() { try { var j = await LagLogg(); _web.CoreWebView2?.PostWebMessageAsJson(j); } catch (Exception x) { System.Diagnostics.Debug.WriteLine($"Datagrunnlag: {x.Message}"); } }
 
     private void Lagre()
     {

@@ -29,6 +29,20 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.44.0] - 2026-11-02
+
+### Endret
+- Datagrunnlag lages i bakgrunnen så snart resultatet er klart, og én gang per resultat og språk. Fanen åpnes straks i stedet for å bygge alt på nytt (og på UI-tråden) hver gang.
+- Vakt startes i bakgrunnen, så søket ikke venter på den.
+- `AISkanner.Cli --datagrunnlag` skriver tid og størrelse.
+
+### Fjernet
+- Ubrukte felt i `regler.json` (`modellfilEndelser`, `innebygdMappeOrd`, `brukerdata`) og en ubrukt konstant.
+
+### Sikkerhet
+- «Vis i Utforsker» godtar bare hele, lokale stier: ikke nettverksstier (som kunne sende Windows-innlogging til en annen maskin) og ikke anførselstegn (ekstra argumenter til Utforsker).
+- Regf-leseren (Amcache) prøvd med tilfeldige og ødelagte filer uten krasj eller heng.
+
 ## [2.43.0] - 2026-11-02
 
 ### Lagt til

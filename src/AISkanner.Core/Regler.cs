@@ -63,7 +63,6 @@ public sealed class InnebygdAI
 {
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
     [JsonPropertyName("nettleser")] public string Nettleser { get; set; } = "";
-    [JsonPropertyName("brukerdata")] public string Brukerdata { get; set; } = "";
     [JsonPropertyName("policyNokkel")] public string PolicyNokkel { get; set; } = "";
     [JsonPropertyName("policyVerdi")] public string PolicyVerdi { get; set; } = "";
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
@@ -116,7 +115,6 @@ public sealed class Regelsett
     [JsonPropertyName("versjon")] public string Versjon { get; set; } = "";
     [JsonPropertyName("produkter")] public List<Produkt> Produkter { get; set; } = new();
     [JsonPropertyName("ukjentUtvidelseOrd")] public List<string> UkjentUtvidelseOrd { get; set; } = new();
-    [JsonPropertyName("modellfilEndelser")] public List<string> ModellfilEndelser { get; set; } = new();
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;
     [JsonPropertyName("nettleserInnebygd")] public List<InnebygdAI> NettleserInnebygd { get; set; } = new();
     [JsonPropertyName("aiNettsteder")] public List<AiNettsted> AiNettsteder { get; set; } = new();
@@ -134,7 +132,6 @@ public sealed class Regelsett
     [JsonIgnore] public string? GodkjentKilde { get; set; }
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
-    [JsonPropertyName("innebygdMappeOrd")] public List<string> InnebygdMappeOrd { get; set; } = new();
     /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
     [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
     [JsonPropertyName("daarligeUtvidelser")] public List<DaarligUtvidelse> DaarligeUtvidelser { get; set; } = new();

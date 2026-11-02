@@ -811,18 +811,11 @@
     "openai",
     "anthropic"
   ],
-  "modellfilEndelser": [
-    ".gguf",
-    ".ggml",
-    ".safetensors",
-    ".onnx"
-  ],
   "modellfilMinMB": 200,
   "nettleserInnebygd": [
     {
       "navn": "Gemini Nano i Chrome",
-      "nettleser": "Chrome",
-      "brukerdata": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+      "nettleser": "Chrome", 
       "policyNokkel": "SOFTWARE\\Policies\\Google\\Chrome",
       "policyVerdi": "GenAILocalFoundationalModelSettings",
       "hvorfor": "Chrome har lastet ned en lokal språkmodell (flere GB). Nettsider og utvidelser kan bruke den via Chromes AI-API-er uten at IT ser det. Data blir på maskinen, men modellen er ikke styrt av bedriften. Kan slås av med policyen GenAILocalFoundationalModelSettings = 1.",
@@ -831,8 +824,7 @@
     },
     {
       "navn": "AI innebygd i Edge",
-      "nettleser": "Edge",
-      "brukerdata": "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data",
+      "nettleser": "Edge", 
       "policyNokkel": "SOFTWARE\\Policies\\Microsoft\\Edge",
       "policyVerdi": "GenAILocalFoundationalModelSettings",
       "hvorfor": "Edge har lastet ned en lokal språkmodell. Nettsider og utvidelser kan bruke den via nettleserens AI-API-er. Ikke styrt av bedriften med mindre policy er satt.",
@@ -1107,12 +1099,6 @@
       "hva": "AI-funksjoner (AI Prompt Builder)",
       "bekreftet": false
     }
-  ],
-  "innebygdMappeOrd": [
-    "OnDeviceModel",
-    "OnDeviceLLM",
-    "EdgeLLM",
-    "GenAI"
   ],
   "aiNettsteder": [
     {
