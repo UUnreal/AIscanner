@@ -29,6 +29,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.47.1] - 2026-11-02
+
+### Endret
+- Windows-historikk: regelen for et program slås opp én gang, ikke for hver hendelse i Security-loggen (hendelseslogger brukte opptil fristen på 30 s i fullt søk).
+
+### Rettet
+- CoPilotLibraryBroker (Windows App SDK) var fortsatt rødt: Windows-filer i SystemApps og WinSxS er katalogsignert og har verken utgiver i filinfo eller innebygd signatur. Uten utgiver regnes de nå som del av Windows (mappene kan bare Windows selv skrive i).
+- Vakttesten venter på at Vakt er klar og skriver hvor mange hendelser den fikk per kilde.
+
 ## [2.47.0] - 2026-11-02
 
 ### Lagt til

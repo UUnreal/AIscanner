@@ -447,7 +447,8 @@ public sealed partial class Skanner
             if (BareGrafikkMotor(motorer)) continue;
             var exe = Filer(mappe).FirstOrDefault(x => x.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
             // Windows' egne filer (WinSxS, System32, DriverStore, Installer) er del av Windows: ett grønt funn med mappene
-            if (ErSystemmappe(mappe) && (exe == null || Utgiver(exe).Inneholder("Microsoft")))
+            // Uten utgiver i filinfo eller innebygd signatur er Windows-filer katalogsignert; mappene kan bare TrustedInstaller skrive i
+            if (ErSystemmappe(mappe) && (exe == null || Utgiver(exe) is var wu && (wu == "" || wu.Inneholder("Microsoft"))))
             {
                 var w = LeggTil("AI-motorer i Windows' egne filer", "Lokal AI", Risiko.Gronn,
                     "AI-biblioteker som følger med Windows (Windows ML, ONNX Runtime, DirectML). Del av Windows, ikke et eget program.", "AI-motor", null);
