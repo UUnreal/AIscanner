@@ -1593,3 +1593,22 @@ bare denne PC-en|this PC only
 ~^(\d+) forbindelser$|$1 connections
 ~^(\d+) strømmer$|$1 streams
 ~^(\d+) andre navn$|$1 other names
+
+# ---------- AI-modeller som nettsider kjører i nettleseren (2.49) ----------
+Ser etter AI-modeller som nettsider kjører i nettleseren...|Looking for AI models that websites run in the browser...
+Ser etter AI-modeller som nettsider kjører i nettleseren|Looking for AI models that websites run in the browser
+AI-modell kjører i nettleseren|AI model runs in the browser
+Språkmodell kjører i nettleseren|Language model runs in the browser
+Lokal AI (modell i nettleseren)|Local AI (model in the browser)
+AI i nettsider|AI in websites
+ingen modeller i nettleserne|no models in the browsers
+nettsted kjører AI-modell|website runs an AI model
+Modellfil|Model file
+Nettsted|Website
+modellfiler|model files
+bibliotek|library
+lagret i|stored in
+~^(.+) brukte ikke GPU til beregning under søket \(ikke bekreftet at modellen kjører nå\)\.$|$1 did not use the GPU for compute during the scan (not confirmed that the model runs now).
+~^(.+) bruker GPU til beregning nå: (\d+) % \(PID ([\d, ]+)\)\. Hvilken fane kan ikke ses, så det er ikke bekreftet at det er denne modellen\.$|$1 uses the GPU for compute now: $2 % (PID $3). The tab cannot be seen, so it is not confirmed that it is this model.
+~^GPU-bruk for (.+) ble ikke målt \(ikke bekreftet om modellen kjører nå\)\.$|GPU use for $1 was not measured (not confirmed whether the model runs now).
+~^Nettstedet (\S+) har lastet ned en AI-modell som kjører på PC-en inne i (.+) \((.+)\)\. Ingenting er installert, så IT ser det ikke som et program\.$|The website $1 has downloaded an AI model that runs on the PC inside $2 ($3). Nothing is installed, so IT does not see it as a program.

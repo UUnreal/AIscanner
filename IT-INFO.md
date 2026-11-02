@@ -103,6 +103,7 @@ stiene til profilene leses. Thunderbird tas ikke med.
 | `Preferences` | Bare bruksscore per nettsted (`site_engagement`) |
 | `History`, `places.sqlite` | Se under |
 | `IndexedDB`, Firefox `storage\default` | Mappenavn og størrelse, for modeller lagret av nettsider |
+| `Service Worker\CacheStorage`, `WebStorage` (med `QuotaManager`), `File System`, IndexedDB-blobber, Firefox `caches.sqlite` | Nettstedet, størrelse, dato og filhodet til filer over 1 MB. Adressen i filhodet beholdes bare når den er en modellfil (WebLLM, ONNX, GGUF, TFLite, safetensors); andre adresser forkastes straks. Aldri sideinnhold, samtaler eller skjemadata |
 | Modellmapper i brukerdata | Mappenavn, størrelse og dato, for eksempel `OptGuideOnDeviceModel` (Gemini Nano), `EdgeLLMOnDeviceModel`, `TranslateKit`, `screen_ai`, `SODA` |
 | Versjonsmappe under `Application` | Nettleserversjon, for AI-API-status |
 | `prefs.js` (Firefox og varianter) | Bare `browser.ml.enable`, `browser.ml.chat.enabled` og `browser.ml.chat.provider` (hvilken AI-chatbot sidefeltet bruker) |

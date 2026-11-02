@@ -146,6 +146,9 @@ public sealed partial class Skanner
             : logg.Any(t => t.Mal.StartsWith("Ytelsestellere: GPU", StringComparison.Ordinal) && t.Utfall == Utfall.IkkeFunnet) ? new("GPU/NPU", "ingen GPU-tellere", -1, gl)
             : Lest("Ytelsestellere: GPU") ? new("GPU/NPU", "ingen AI bruker GPU nå", 0, gl)
             : _aiPid.IsEmpty ? new("GPU/NPU", "ingen AI-prosess kjørte", 0, gl) : new("GPU/NPU", "ikke målt", -1, gl));
+        List<string> nl; lock (_nettsideLinjer) nl = _nettsideLinjer.ToList();
+        l.Add(nl.Count > 0 ? new("AI i nettsider", $"{nl.Count} nettsted kjører AI-modell", 2, nl)
+            : Lest("nettleserlagring") ? new("AI i nettsider", "ingen modeller i nettleserne", 0, Logget("nettleserlagring")) : new("AI i nettsider", "ikke lest", -1));
         Sjekker = l;
     }
 }
