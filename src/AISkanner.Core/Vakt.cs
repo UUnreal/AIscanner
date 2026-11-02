@@ -224,11 +224,27 @@ public sealed class Vakt : IDisposable
     {
         var d = h.Data;
         if (d.Length < 24) return;
-        int pid = BitConverter.ToInt32(d, 0), forelder = BitConverter.ToInt32(d, 12);
-        int o = h.Versjon >= 1 ? 24 : 20;
+        // Feltene har flyttet seg mellom versjoner (v3 har sekvensnumre foran). Programbildet finnes ved å lete etter
+        // «\Device\» i UTF-16; forelderen tas fra Windows' prosessliste mens programmet kjører, ellers fra feltet.
+        int pid = BitConverter.ToInt32(d, 0);
+        int o = FinnTekst(d, @"\Device\");
+        if (o < 0) return;
         var bilde = Admintilgang.TilDos(EtwOkt.Tekst(d, ref o));
+        int forelder = Prosesstre.Liste().TryGetValue(pid, out var p) ? p.Forelder : BitConverter.ToInt32(d, h.Versjon >= 3 ? 20 : 12);
         SisteBilde = bilde;
         NyProsess(pid, forelder, bilde, DateTime.Now);
+    }
+
+    internal static int FinnTekst(byte[] d, string tekst)
+    {
+        var b = System.Text.Encoding.Unicode.GetBytes(tekst);
+        for (int i = 0; i + b.Length <= d.Length; i += 2)
+        {
+            int j = 0;
+            while (j < b.Length && d[i + j] == b[j]) j++;
+            if (j == b.Length) return i;
+        }
+        return -1;
     }
 
     // Kernel-File 12/30: Irp, FileObject (pekere), IssuingThreadId, CreateOptions, CreateAttributes, ShareAccess, FileName

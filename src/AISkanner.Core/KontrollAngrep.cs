@@ -126,8 +126,8 @@ public sealed partial class Skanner
         byte[] U(string t) => Encoding.Unicode.GetBytes(t + "\0");
         byte[] Start(int pid, string bilde) => BitConverter.GetBytes(pid).Concat(new byte[8]).Concat(BitConverter.GetBytes(1000)).Concat(new byte[8]).Concat(U(bilde)).ToArray();
         EtwOkt.Hendelse H(int id, int pid, byte[] d, int versjon = 0) => new(Guid.Empty, id, versjon, pid, false, d);
-        v.Prosesstart(H(1, 1000, Start(1001, @"C:\Windows\System32\curl.exe"), 1));
-        v.Prosesstart(H(1, 1000, Start(1002, @"C:\Program Files\Amazon\AWSCLIV2\aws.exe"), 1));
+        v.Prosesstart(H(1, 1000, Start(1001, @"\Device\HarddiskVolume3\Windows\System32\curl.exe"), 1));
+        v.Prosesstart(H(1, 1000, Start(1002, @"\Device\HarddiskVolume3\Program Files\Amazon\AWSCLIV2\aws.exe"), 1));
         Sjekk(v.Agenter().Any(a => a.Pid == 1000 && a.Agent == "Claude Code") && Interlocked.Read(ref v.Starter) == 2, "agenten og programmene den startet ble ikke fulgt");
         byte[] Fil(string sti) => new byte[20].Concat(BitConverter.GetBytes(1 << 24)).Concat(new byte[8]).Concat(U(sti)).ToArray();
         v.Filapning(H(12, 1001, Fil(@"C:\Users\a\.aws\credentials")));

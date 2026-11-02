@@ -29,6 +29,11 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.47.2] - 2026-11-02
+
+### Rettet
+- Vakt leste programbildet fra feil sted i prosesshendelsene på nyere Windows (versjon 3 har flere felt foran). Programbildet finnes nå ved å lete etter «\Device\», og forelderen tas fra Windows' prosessliste. Uten dette kjente Vakt ikke igjen noen AI-agent som startet etter at den var slått på (vakttesten i CI fant feilen).
+
 ## [2.47.1] - 2026-11-02
 
 ### Endret
