@@ -29,6 +29,14 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.48.0] - 2026-11-02
+
+### Lagt til
+- Knappene under «Sjekket» i Funn kan trykkes. Det sjekken bygger på vises under: hver tjeneste og driver endret siste 7 dager (tid, navn, firma, programsti), AI-programmer over UDP med adresser, lyttende AI-porter, SRUM-status og AI-programmenes nettbruk, BIOS-linjen, Docker, WSL og GPU. Kommandolinjer vises aldri.
+
+### Rettet
+- SRUM: alle feil ved åpning og lesing av databasen gir nå grunnen (feiltype, Windows-feilkode og melding) i «Sjekket» og i rapporten. Før kunne en uventet feil gi bare «ikke lest».
+
 ## [2.47.2] - 2026-11-02
 
 ### Rettet

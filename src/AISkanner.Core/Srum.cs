@@ -24,8 +24,18 @@ public sealed partial class Skanner
         var fil = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\sru\SRUDB.dat");
         if (!File.Exists(fil)) { Tilgangslogg.Logg("Fil", fil, Utfall.IkkeFunnet, "SRUM finnes ikke"); return; }
         if (!Nettverk.ErAdmin()) { Tilgangslogg.Logg("Fil", fil, Utfall.Nektet, "SRUM krever administrator"); return; }
-        using var s = Admintilgang.AapneLes(fil, 1 << 16);
-        LesSrum(s, fil);
+        // Alle feil gir en grunn i rapporten og i «Sjekket», aldri bare «ikke lest»
+        try
+        {
+            using var s = Admintilgang.AapneLes(fil, 1 << 16);
+            LesSrum(s, fil);
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            var kode = e is IOException io ? $" (Windows-feil {io.HResult & 0xFFFF})" : "";
+            SrumStatus = $"SRUM: kunne ikke leses: {e.GetType().Name}{kode}: {e.Message} [{e.StackTrace?.Split('\n').FirstOrDefault()?.Trim()}]";
+            Tilgangslogg.Logg("Fil", fil, Utfall.Feil, SrumStatus);
+        }
     }
 
     internal void LesSrum(Stream s, string fil)

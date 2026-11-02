@@ -152,6 +152,9 @@
   .sjTittel { color: var(--dempet); font-weight: 600; margin-right: 2px; }
   .sj { display: inline-flex; align-items: center; gap: 5px; background: var(--fyll); border-radius: 999px; padding: 3px 10px; color: var(--dempet); white-space: nowrap; }
   .sj b { color: var(--tekst); font-weight: 600; }
+  button.sj { border: 0; font: inherit; cursor: pointer; } button.sj:hover, button.sj.apen { box-shadow: inset 0 0 0 1px var(--bla); } button.sj:focus-visible { outline: 2px solid var(--bla); outline-offset: 1px; }
+  .sjekkDetalj { margin: 6px 0 2px; padding: 10px 12px; background: var(--fyll); border-radius: 12px; font: var(--t12); max-height: 320px; overflow: auto; }
+  .sjekkDetalj b { display: block; margin-bottom: 6px; } .sjekkDetalj ul { margin: 0; padding-left: 18px; } .sjekkDetalj li { margin: 2px 0; overflow-wrap: anywhere; color: var(--dempet); }
   .sj i { width: 7px; height: 7px; border-radius: 50%; background: var(--gronn); flex: none; }
   .sj.n1 i { background: var(--bla); } .sj.n2 i { background: var(--rod); } .sj.n2 { color: var(--rod-tekst); } .sj.nx i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--dempet); }
   .fordeling #landValg, .fordeling #azValg { margin-left: 4px; color: var(--dempet); } .fordeling #landValg.valgt, .fordeling #azValg.valgt { color: var(--tekst); }
@@ -472,6 +475,7 @@
     <div class="fanerad"><div class="segment" role="group" aria-label="Visning / View"><button id="funnKnapp" class="paa" data-en="Findings">Funn</button><button id="nettKnapp" data-en="Network">Nettverk</button><button id="dataKnapp" data-en="Data basis">Datagrunnlag</button></div>
       <span class="kjort" id="kjort"></span></div>
     <div class="sjekkStripe" id="sjekkStripe"></div>
+    <div class="sjekkDetalj" id="sjekkDetalj" hidden></div>
   </div>
   <div class="hoved" id="hoved">
     <div class="panel" id="listePanel">
@@ -613,8 +617,10 @@ function tegnFordeling() {
   if (az) az.onclick = () => { sortering = sortering === "navn" ? "risiko" : "navn"; side = 0; lukkArk(); tegnFordeling(); tegnListe(); };
   $("kjort").textContent = info.kjort ? L("Søket kjørt ", "Scan run ") + info.kjort : "";
   // Hver sjekk som ellers bare står i rapporten: hva den fant, eller at den ikke fant noe
-  $("sjekkStripe").innerHTML = (info.sjekker || []).length
-    ? `<span class="sjTittel">${L("Sjekket", "Checked")}</span>` + info.sjekker.map(s => `<span class="sj n${s.niva < 0 ? "x" : s.niva}" title="${esc(s.navn + ": " + s.tekst)}"><i></i><b>${esc(s.navn)}</b> ${esc(s.tekst)}</span>`).join("") : "";
+  sjekkListe = info.sjekker || [];
+  $("sjekkStripe").innerHTML = sjekkListe.length
+    ? `<span class="sjTittel">${L("Sjekket", "Checked")}</span>` + sjekkListe.map((s, i) => `<button type="button" class="sj n${s.niva < 0 ? "x" : s.niva}${i === sjekkApen ? " apen" : ""}" data-sj="${i}" aria-expanded="${i === sjekkApen}" title="${esc(s.navn + ": " + s.tekst)}"><i></i><b>${esc(s.navn)}</b> ${esc(s.tekst)}</button>`).join("") : "";
+  visSjekk();
 }
 
 function tegnBunn() {
@@ -907,6 +913,19 @@ function apneArk(f) { stoppNett(); dataApen = false; merkMeny(); valgt = f; visA
 function lukkArk() { stoppNett(); const var_ = valgt; valgt = null; dataApen = false; merkMeny(); visArk(""); if (var_ && $("resultat").classList.contains("aktiv")) tegnListe(); }
 
 // ---------- Utviklermodus: hva søket leste, hvorfor, og hva som stoppet det ----------
+// Trykk på en sjekk i «Sjekket»: det den bygger på vises under
+let sjekkListe = [], sjekkApen = -1;
+function visSjekk() {
+  const s = sjekkListe[sjekkApen], d = $("sjekkDetalj");
+  d.hidden = !s;
+  if (s) d.innerHTML = `<b>${esc(s.navn)}: ${esc(s.tekst)}</b>` + ((s.linjer || []).length ? `<ul>${s.linjer.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<span>${L("Ingen flere detaljer fra denne sjekken.", "No further details from this check.")}</span>`);
+}
+$("sjekkStripe").addEventListener("click", e => {
+  const b = e.target.closest("[data-sj]"); if (!b) return;
+  const i = +b.dataset.sj; sjekkApen = sjekkApen === i ? -1 : i;
+  document.querySelectorAll("#sjekkStripe [data-sj]").forEach(x => { const a = +x.dataset.sj === sjekkApen; x.classList.toggle("apen", a); x.setAttribute("aria-expanded", a); });
+  visSjekk();
+});
 let dataApen = false, logg = null, fane = "oversikt", dataSide = 0, filter = null, sjekkFilter = null;
 // Alt søket rørte: enkeltoppføringer (med tid) pluss steder fra kartet som bare ble talt. Hvert tall i Datagrunnlag åpner denne lista.
 const DG_MANGLER = ["blokkert", "nektet", "laast", "tidsgrense", "feil"];
