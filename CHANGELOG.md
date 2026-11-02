@@ -29,6 +29,11 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.46.2] - 2026-11-02
+
+### Endret
+- `CHANGELOG.md` (alle endringer siden v0.1) ligger nå i zip-fila ved siden av programmet.
+
 ## [2.46.1] - 2026-11-02
 
 ### Rettet
