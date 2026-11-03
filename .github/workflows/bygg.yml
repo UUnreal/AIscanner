@@ -146,7 +146,8 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -e
-          v="${TAG#v}"
+          v="${TAG#v}"; v="${v#.}"   # v2.49.0 og v.2.49.0 gir begge 2.49.0
+          [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Taggen må hete vX.Y.Z, ikke $TAG"; exit 1; }
           test -f publish/AISkanner.exe || { echo "::error::AISkanner.exe mangler"; exit 1; }
           test -f publish/SHA256.txt || { echo "::error::SHA256.txt mangler"; exit 1; }
           if find publish -name '*.config' | grep -q .; then echo "::error::.config-fil i mappa"; exit 1; fi
