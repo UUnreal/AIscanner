@@ -24,6 +24,7 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
+- Versjonstagger (`vX.Y.Z`) lager en GitHub-utgivelse med zip-fila, `AISkanner.exe`, `SHA256.txt` og `CHANGELOG.md`.
 - `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
   navn eller domener i filstier.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
