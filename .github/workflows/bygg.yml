@@ -155,5 +155,11 @@ jobs:
           (cd publish && zip -qr "../AI-skanner-$v.zip" .)
           awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ {if (p) exit} p' CHANGELOG.md > notater.md
           printf '\n---\nLast ned **AI-skanner-%s.zip**, pakk ut og kjør AISkanner.exe. Exe-fila trenger de andre filene i zip-fila ved siden av seg.\n' "$v" >> notater.md
-          gh release create "$TAG" "AI-skanner-$v.zip" publish/AISkanner.exe publish/SHA256.txt CHANGELOG.md \
-            --title "AI-skanner $v" --notes-file notater.md
+          filer=("AI-skanner-$v.zip" publish/AISkanner.exe publish/SHA256.txt CHANGELOG.md)
+          # Laget på nettsiden («Draft a new release») først? Da fylles den bare med filene og teksten.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${filer[@]}" --clobber
+            gh release edit "$TAG" --title "AI-skanner $v" --notes-file notater.md
+          else
+            gh release create "$TAG" "${filer[@]}" --title "AI-skanner $v" --notes-file notater.md
+          fi
