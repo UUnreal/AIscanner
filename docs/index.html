@@ -8,24 +8,26 @@
 <style>
 :root {
   --bg: #f3f3f5; --kort: #fff; --tekst: #1b1b1f; --dempet: #5e5e68; --linje: rgba(20,20,40,.08);
-  --bla: #0a5fc0; --rod: #d14b41; --gul: #c98a17; --gronn: #2f9a5a;
+  --bla: #0a5fc0; --knapp: #0a5fc0; --rod: #d14b41; --gul: #c98a17; --gronn: #2f9a5a;
   --skygge: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
   --font: "Segoe UI Variable Text", "Segoe UI", -apple-system, "SF Pro Text", system-ui, sans-serif;
   --vis: "Segoe UI Variable Display", "Segoe UI", -apple-system, "SF Pro Display", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root {
   --bg: #161618; --kort: #202024; --tekst: #ececf0; --dempet: #a3a3ad; --linje: rgba(255,255,255,.07);
-  --bla: #5aa2f0; --rod: #e0675d; --gul: #d6a24a; --gronn: #5fb37c; --skygge: none;
+  --bla: #5aa2f0; --knapp: #1f6bc4; --rod: #e0675d; --gul: #d6a24a; --gronn: #5fb37c; --skygge: none;
 } }
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--bg); color: var(--tekst); font: 16px/24px var(--font); -webkit-font-smoothing: antialiased; }
 .inn { max-width: 960px; margin: 0 auto; padding: 0 16px; }
-nav { display: flex; justify-content: space-between; align-items: center; height: 56px; font-weight: 600; }
-nav button { font: 14px var(--font); color: var(--bla); background: none; border: 0; cursor: pointer; padding: 0; margin-left: 16px; }
+nav { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; align-items: center; min-height: 56px; padding: 8px 0; font-weight: 600; }
+:focus-visible { outline: 3px solid var(--bla); outline-offset: 2px; border-radius: 4px; }
+#dok:focus { outline: none; }
+nav button { font: 14px var(--font); color: var(--bla); background: none; border: 0; cursor: pointer; padding: 8px 0; margin-left: 16px; }
 header { text-align: center; padding: 72px 0 56px; }
 h1 { font: 600 48px/56px var(--vis); letter-spacing: -.025em; text-wrap: balance; }
 .under { font-size: 20px; line-height: 28px; color: var(--dempet); max-width: 600px; margin: 16px auto 32px; text-wrap: balance; }
-.knapp { display: inline-block; background: var(--bla); color: #fff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px; }
+.knapp { display: inline-block; background: var(--knapp); color: #fff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px; }
 .fakta { margin-top: 16px; font-size: 14px; color: var(--dempet); }
 .prikker { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
 .prikker i { width: 12px; height: 12px; border-radius: 50%; }
@@ -39,7 +41,8 @@ h2 { font: 600 28px/36px var(--vis); letter-spacing: -.015em; margin: 56px 0 20p
 .gratis p { color: var(--dempet); max-width: 560px; margin: 8px auto 24px; }
 footer { padding: 48px 0; font-size: 13px; color: var(--dempet); text-align: center; }
 footer a { color: var(--bla); }
-.lenker a { color: var(--bla); text-decoration: none; font: 14px var(--font); margin-left: 16px; }
+.lenker a { color: var(--bla); text-decoration: none; font: 14px var(--font); margin-left: 16px; padding: 8px 0; display: inline-block; }
+.lenker a:first-child { margin-left: 0; }
 .dok { display: none; max-width: 760px; margin: 0 auto; padding: 24px 0 48px; overflow-wrap: anywhere; }
 body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
 .dok h1 { font-size: 36px; line-height: 44px; margin: 16px 0; } .dok h2 { margin: 40px 0 12px; font-size: 24px; line-height: 32px; } .dok h3 { margin: 24px 0 8px; font: 600 18px/24px var(--vis); }
@@ -55,11 +58,12 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
 <body>
 <div class="inn">
 <nav><a href="#" style="color:inherit;text-decoration:none">AI-skanner</a><span class="lenker"><a href="#hva-den-leser"><span class="no">Hva den leser</span><span class="en">What it reads</span></a><a href="#endringer"><span class="no">Endringer</span><span class="en">Changelog</span></a><button onclick="sett(document.documentElement.lang=='no'?'en':'no')"><span class="no">English</span><span class="en">Norsk</span></button></span></nav>
-<div class="dok"><p class="en">This page is in Norwegian only for now.</p><div id="dok"><p>…</p></div></div>
+<main>
+<div class="dok"><p class="en">This page is in Norwegian only for now.</p><div id="dok" tabindex="-1" aria-live="polite"><p>…</p></div></div>
 <div class="forside">
 
 <header>
-  <div class="prikker"><i style="background:var(--rod)"></i><i style="background:var(--gul)"></i><i style="background:var(--gronn)"></i></div>
+  <div class="prikker" aria-hidden="true"><i style="background:var(--rod)"></i><i style="background:var(--gul)"></i><i style="background:var(--gronn)"></i></div>
   <h1 class="no">Se all AI på PC-en</h1>
   <h1 class="en">See all AI on your PC</h1>
   <p class="under no">Finner AI-agenter, lokale modeller og skygge-AI på en Windows-PC, og sorterer dem etter risiko. Én knapp.</p>
@@ -108,6 +112,7 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
 </div>
 
 </div>
+</main>
 <footer>
   <p class="no">Ikke signert ennå: Windows kan vise en advarsel. Velg «Mer info» og «Kjør likevel». På jobb-PC, spør IT først.<br>Et tomt resultat betyr ikke at PC-en er fri for AI. · <a href="https://github.com/UUnreal/AIscanner">Kildekode</a></p>
   <p class="en">Not signed yet: Windows may show a warning. Choose «More info» and «Run anyway». On a work PC, ask IT first.<br>An empty result does not mean the PC is free of AI. · <a href="https://github.com/UUnreal/AIscanner">Source code</a></p>
@@ -122,7 +127,7 @@ sett(l || (/^(nb|nn|no)/i.test(navigator.language) ? 'no' : 'en'));
 <script>
 // Henter dokumentene fra repoet, så siden alltid viser det som står i main.
 var kilde = 'https://raw.githubusercontent.com/UUnreal/AIscanner/main/', sider = {
-  'hva-den-leser': ['IT-INFO.md', '## Hva den leser', '## Datagrunnlag', ''],
+  'hva-den-leser': ['IT-INFO.md', '## Hva den leser', '## Datagrunnlag', '', 1],
   'endringer': ['CHANGELOG.md', '## [Ikke utgitt]', '\n[', '# Endringer\n\n']
 };
 function vis() {
@@ -132,7 +137,8 @@ function vis() {
   el.innerHTML = '<p>…</p>';
   fetch(kilde + d[0]).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (t) {
     var a = t.indexOf(d[1]), b = t.indexOf(d[2], a + 1);
-    el.innerHTML = marked.parse(d[3] + t.slice(a < 0 ? 0 : a, b < 0 ? undefined : b).replace(/^## \[(.+?)\]/gm, '## $1'));
+    el.innerHTML = marked.parse(d[3] + t.slice(a < 0 ? 0 : a, b < 0 ? undefined : b).replace(/^## \[(.+?)\]/gm, '## $1').replace(d[4] ? /^#(#+) /gm : /^$/, '$1 '));
+    el.focus({ preventScroll: true });
   }).catch(function () { el.innerHTML = '<p>Kunne ikke hente <a href="https://github.com/UUnreal/AIscanner/blob/main/' + d[0] + '">' + d[0] + '</a>.</p>'; });
 }
 addEventListener('hashchange', vis); vis();
