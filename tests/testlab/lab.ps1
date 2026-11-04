@@ -43,7 +43,9 @@ function Notér($navn, $sok, $hva, $kina = ($navn -match $kinaMonster -and $navn
 Steg 'Ollama (offisiell installasjon) + modeller'
 $env:OLLAMA_KEEP_ALIVE = '60m'
 Invoke-WebRequest https://ollama.com/download/OllamaSetup.exe -OutFile "$Ut\OllamaSetup.exe"
-Start-Process "$Ut\OllamaSetup.exe" -ArgumentList '/VERYSILENT', '/NORESTART', '/SUPPRESSMSGBOXES' -Wait
+# Ikke -Wait: i PowerShell 7 venter den også på barneprosesser, og installasjonen starter Ollama-appen som aldri avslutter
+$inst = Start-Process "$Ut\OllamaSetup.exe" -ArgumentList '/VERYSILENT', '/NORESTART', '/SUPPRESSMSGBOXES' -PassThru
+if (-not $inst.WaitForExit(600000)) { '::warning::Ollama-installasjonen brukte over 10 min' }
 $ollama = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
 if (-not (Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue)) { Start-Process $ollama serve -WindowStyle Hidden; Start-Sleep 5 }
 Notér 'Ollama' @('Ollama') 'program + server på 11434'
