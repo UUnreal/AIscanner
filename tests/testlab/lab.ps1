@@ -36,7 +36,7 @@ Steg 'Skann ren maskin (fasit: ingen AI installert av laben)'; $ren = Skann ren;
 
 # ---------- Installer ekte AI ----------
 $installert = [System.Collections.Generic.List[object]]::new()
-$ruMonster = 'gigachat|ai-sage|ai-forever|yandex|t-tech|t-lite|cotype|mtsair|vikhr|ruadapt|deepvk|rubert|rugpt|fred-t5'
+$ruMonster = 'gigachat|ai-sage|ai-forever|yandex|t-tech|t-lite|cotype|mtsair|vikhr|ruadapt|rugpt|fred-t5'
 $kinaMonster = 'qwen|deepseek|glm|baichuan|internlm|minicpm|openbmb|01-ai|hunyuan|ernie|minimax|kimi|moonshot|stepfun|baai|thenlper|alibaba|thudm|bge-|gte-'
 function Notér($navn, $sok, $hva, $kina = ($navn -match $kinaMonster -and $navn -notmatch $ruMonster), $ru = ($navn -match $ruMonster)) { $installert.Add([pscustomobject]@{ Navn = $navn; Sok = @($sok); Hva = $hva; Kina = [bool]$kina; Russland = [bool]$ru }) }
 
