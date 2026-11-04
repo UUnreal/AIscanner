@@ -40,8 +40,9 @@ Funnet av testlaben: en ren Windows-maskin hos GitHub med ekte Ollama, llama.cpp
 
 ### Rettet
 - Hugging Face-modeller ble ikke funnet når lageret bruker symlenker (Windows med utviklermodus eller administrator):
-  `snapshots\<rev>\fil` peker til `blobs\<sha>`. Nå leses målet under lenkens navn, så modellen får repo, filnavn og
-  opphav, og blob-mappa telles ikke en gang til. Før dette ble bare 2 av rundt 30 slike modeller vist, og da som et sha-navn.
+  `snapshots\<rev>\fil` peker til `blobs\<sha>`, og i nyere huggingface_hub videre til et felles `hub\blobs\xx\<sha>`.
+  Nå følges kjeden under lenkens navn, så modellen får repo, filnavn og opphav, og blob-mappene telles ikke en gang til
+  (før ble noen av dem vist som et sha-navn).
 - Pickle skrevet med `BINUNICODE` i stedet for `SHORT_BINUNICODE` (samme `os.system`-kall) slapp gjennom YARA-regelen.
 - Pickle i protokoll 0 og 1 (uten `0x80`-hode) med endelsen `.pkl`/`.pickle` ble aldri sjekket.
 

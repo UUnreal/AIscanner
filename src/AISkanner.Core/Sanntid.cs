@@ -530,8 +530,8 @@ public sealed partial class Skanner
                     else SjekkLenke(e);
                     continue;
                 }
-                if (e is DirectoryInfo hb && hb.Name == "blobs" && Path.GetFileName(mappe).StartsWith("models--", StringComparison.OrdinalIgnoreCase)
-                    && Directory.Exists(Path.Combine(mappe, "snapshots")))
+                if (e is DirectoryInfo hb && hb.Name == "blobs" && (Path.GetFileName(mappe).StartsWith("models--", StringComparison.OrdinalIgnoreCase)
+                    ? Directory.Exists(Path.Combine(mappe, "snapshots")) : Directory.EnumerateDirectories(mappe, "models--*").Any()))
                 { Tilgangslogg.TellMappe(hb.FullName, Utfall.HoppetOver, detalj: "Hugging Face-blobber leses via navnene i snapshots"); continue; }
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
                 else if (e is FileInfo fil)
@@ -679,18 +679,27 @@ public sealed partial class Skanner
         ".exe", ".msi", ".dll", ".txt", ".log", ".pdf", ".docx", ".xlsx", ".pptx", ".vhdx", ".pst", ".ost",
     };
 
-    /// <summary>Målet til en symlenke i Hugging Face-lageret (models--…\snapshots\…), bare når det er en blob i samme modellmappe.</summary>
+    /// <summary>Målet til en symlenke i Hugging Face-lageret (models--…\snapshots\…). Nyere huggingface_hub lenker blobben videre til
+    /// hub\blobs\xx\&lt;sha&gt;, så kjeden følges noen ledd, men bare innenfor modellmappa eller hub-mappas felles blobs.</summary>
     private static FileInfo? HfMal(string sti)
     {
-        var m = Regex.Match(sti, @"^(.*[\\/]models--[^\\/]+)[\\/]snapshots[\\/]", RegexOptions.IgnoreCase);
-        if (!m.Success || Reparse.Mal(sti) is not { Length: > 0 } mal) return null;
+        var m = Regex.Match(sti, @"^((.*)[\\/]models--[^\\/]+)[\\/]snapshots[\\/]", RegexOptions.IgnoreCase);
+        if (!m.Success) return null;
+        var lov = new[] { Path.Combine(m.Groups[1].Value, "blobs"), Path.Combine(m.Groups[2].Value, "blobs") };
         try
         {
-            var full = Path.GetFullPath(Path.IsPathRooted(mal) ? mal : Path.Combine(Path.GetDirectoryName(sti)!, mal));
-            var blobber = Path.Combine(m.Groups[1].Value, "blobs") + Path.DirectorySeparatorChar;
-            return full.StartsWith(blobber, StringComparison.OrdinalIgnoreCase) && File.Exists(full) ? new FileInfo(full) : null;
+            for (int i = 0; i < 4; i++)
+            {
+                if (Reparse.Mal(sti) is not { Length: > 0 } mal) return null;
+                sti = Path.GetFullPath(Path.IsPathRooted(mal) ? mal : Path.Combine(Path.GetDirectoryName(sti)!, mal));
+                if (!lov.Any(b => sti.StartsWith(b + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))) return null;
+                var fi = new FileInfo(sti);
+                if (!fi.Exists) return null;
+                if ((fi.Attributes & FileAttributes.ReparsePoint) == 0) return fi;
+            }
         }
-        catch { return null; }
+        catch { }
+        return null;
     }
 
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde, long? malLengde = null)

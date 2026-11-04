@@ -302,15 +302,21 @@ public sealed partial class Skanner
         Sjekk(funn != null && funn.Risiko == Risiko.Rod && funn.Advarsler.Any(a => a.StartsWith("Forkledd")), "modell med endelsen .mp4 ble ikke merket som forkledd og rød");
         Sjekk(funn?.Versjon == "2.5", "modellfunnet viser ikke versjonen fra fila");
 
-        // Testlab-funn: Hugging Face med symlenker (snapshots -> blobs) ga ingen modeller. Målet leses under lenkens navn, blobben én gang.
+        // Testlab-funn: Hugging Face med symlenker ga ingen modeller. Nyere huggingface_hub: snapshots\fil -> blobs\sha -> hub\blobs\aa\sha.
+        // Målet leses under lenkens navn, og ingen av blobbene telles som egne modeller.
         var hf = Path.Combine(rot, "hf", "models--Qwen--Qwen2.5-0.5B-Instruct-GGUF");
         Directory.CreateDirectory(Path.Combine(hf, "blobs")); Directory.CreateDirectory(Path.Combine(hf, "snapshots", "abc"));
-        var blobSti = Path.Combine(hf, "blobs", new string('a', 64));
-        File.WriteAllBytes(blobSti, gguf.ToArray());
+        Directory.CreateDirectory(Path.Combine(rot, "hf", "blobs", "aa"));
+        File.WriteAllBytes(Path.Combine(rot, "hf", "blobs", "aa", new string('a', 64)), gguf.ToArray());
         bool lenke = false;
 #if NET6_0_OR_GREATER
         // Symlenker krever utviklermodus eller administrator på Windows; uten det hoppes sjekken over
-        try { File.CreateSymbolicLink(Path.Combine(hf, "snapshots", "abc", "qwen.gguf"), Path.Combine("..", "..", "blobs", new string('a', 64))); lenke = true; } catch { }
+        try
+        {
+            File.CreateSymbolicLink(Path.Combine(hf, "blobs", new string('a', 64)), Path.Combine("..", "..", "blobs", "aa", new string('a', 64)));
+            File.CreateSymbolicLink(Path.Combine(hf, "snapshots", "abc", "qwen.gguf"), Path.Combine("..", "..", "blobs", new string('a', 64))); lenke = true;
+        }
+        catch { }
 #endif
         if (lenke)
         {
