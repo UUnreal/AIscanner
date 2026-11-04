@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-skanner</title>
+<meta name="description" content="Gratis program som finner AI på en Windows-PC. Leser bare, lagrer ingenting. Free tool that finds AI on a Windows PC. Read-only, stores nothing.">
+<style>
+:root {
+  --bg: #f3f3f5; --kort: #fff; --tekst: #1b1b1f; --dempet: #5e5e68; --linje: rgba(20,20,40,.08);
+  --bla: #0a5fc0; --rod: #d14b41; --gul: #c98a17; --gronn: #2f9a5a;
+  --skygge: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+  --font: "Segoe UI Variable Text", "Segoe UI", -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --vis: "Segoe UI Variable Display", "Segoe UI", -apple-system, "SF Pro Display", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #161618; --kort: #202024; --tekst: #ececf0; --dempet: #a3a3ad; --linje: rgba(255,255,255,.07);
+  --bla: #5aa2f0; --rod: #e0675d; --gul: #d6a24a; --gronn: #5fb37c; --skygge: none;
+} }
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--tekst); font: 16px/24px var(--font); -webkit-font-smoothing: antialiased; }
+.inn { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+nav { display: flex; justify-content: space-between; align-items: center; height: 56px; font-weight: 600; }
+nav button { font: 14px var(--font); color: var(--bla); background: none; border: 0; cursor: pointer; padding: 8px; }
+header { text-align: center; padding: 72px 0 56px; }
+h1 { font: 600 48px/56px var(--vis); letter-spacing: -.025em; text-wrap: balance; }
+.under { font-size: 20px; line-height: 28px; color: var(--dempet); max-width: 600px; margin: 16px auto 32px; text-wrap: balance; }
+.knapp { display: inline-block; background: var(--bla); color: #fff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px; }
+.fakta { margin-top: 16px; font-size: 14px; color: var(--dempet); }
+.prikker { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+.prikker i { width: 12px; height: 12px; border-radius: 50%; }
+h2 { font: 600 28px/36px var(--vis); letter-spacing: -.015em; margin: 56px 0 20px; }
+.rutenett { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.fire { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.kort { background: var(--kort); border-radius: 14px; padding: 24px; box-shadow: var(--skygge); border: 1px solid var(--linje); }
+.kort h3 { font: 600 18px/24px var(--vis); margin-bottom: 8px; }
+.kort p { color: var(--dempet); font-size: 15px; }
+.gratis { text-align: center; padding: 48px 24px; margin-top: 56px; }
+.gratis p { color: var(--dempet); max-width: 560px; margin: 8px auto 24px; }
+footer { padding: 48px 0; font-size: 13px; color: var(--dempet); text-align: center; }
+footer a { color: var(--bla); }
+[lang="en"] .no, [lang="no"] .en { display: none; }
+@media (max-width: 600px) { h1 { font-size: 36px; line-height: 44px; } header { padding: 40px 0; } }
+</style>
+</head>
+<body>
+<div class="inn">
+<nav><span>AI-skanner</span><button onclick="sett(document.documentElement.lang=='no'?'en':'no')"><span class="no">English</span><span class="en">Norsk</span></button></nav>
+
+<header>
+  <div class="prikker"><i style="background:var(--rod)"></i><i style="background:var(--gul)"></i><i style="background:var(--gronn)"></i></div>
+  <h1 class="no">Se all AI på PC-en</h1>
+  <h1 class="en">See all AI on your PC</h1>
+  <p class="under no">Finner AI-agenter, lokale modeller og skygge-AI på en Windows-PC, og sorterer dem etter risiko. Én knapp.</p>
+  <p class="under en">Finds AI agents, local models and shadow AI on a Windows PC, and sorts them by risk. One button.</p>
+  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest"><span class="no">Last ned gratis</span><span class="en">Download free</span></a>
+  <p class="fakta no">Windows 10 og 11 · Ingen installasjon · Åpen kildekode (MIT)</p>
+  <p class="fakta en">Windows 10 and 11 · No install · Open source (MIT)</p>
+</header>
+
+<h2 class="no">Hva den søker etter</h2>
+<h2 class="en">What it looks for</h2>
+<div class="rutenett">
+  <div class="kort no"><h3>Lokal AI</h3><p>Modellfiler (GGUF, safetensors, PyTorch, ONNX m.fl.), også uten navn. AI-servere som Ollama og LM Studio. Programmer med AI-motor.</p></div>
+  <div class="kort en"><h3>Local AI</h3><p>Model files (GGUF, safetensors, PyTorch, ONNX and more), even unnamed ones. AI servers like Ollama and LM Studio. Programs with an AI engine.</p></div>
+  <div class="kort no"><h3>Nettleser</h3><p>AI-nettsteder som er brukt, AI-utvidelser og modeller i nettleseren som Gemini Nano. Bare AI-domener, aldri fulle adresser.</p></div>
+  <div class="kort en"><h3>Browser</h3><p>AI websites that have been used, AI extensions and in-browser models like Gemini Nano. AI domains only, never full addresses.</p></div>
+  <div class="kort no"><h3>Skjult på PC</h3><p>AI-agenter og kodeverktøy, AI fra leverandører, AI-nøkler (aldri verdien), registeret og programmer som sender data til AI-tjenester.</p></div>
+  <div class="kort en"><h3>Hidden on the PC</h3><p>AI agents and coding tools, vendor-installed AI, AI keys (never the value), the registry and programs that send data to AI services.</p></div>
+  <div class="kort no"><h3>Angrepsspor</h3><p>MCP-servere, «godkjenn alt» i agenter, farlige modellfiler, kjente dårlige pakker og mønstre fra kjente angrep på AI-agenter.</p></div>
+  <div class="kort en"><h3>Attack traces</h3><p>MCP servers, «approve all» in agents, dangerous model files, known bad packages and patterns from known attacks on AI agents.</p></div>
+  <div class="kort no"><h3>Vakt</h3><p>Følger AI-agentene live mens vinduet er åpent, og varsler når de gjør noe kjent fra angrep. Regler fra ATR, SigmaHQ og MITRE ATLAS.</p></div>
+  <div class="kort en"><h3>Watch</h3><p>Follows AI agents live while the window is open and flags actions known from attacks. Rules from ATR, SigmaHQ and MITRE ATLAS.</p></div>
+  <div class="kort no"><h3>Hvor data går</h3><p>Hvilke land og tjenester AI-programmene er koblet til akkurat nå, og hvem som står bak modellen. Kinesisk og russisk AI merkes.</p></div>
+  <div class="kort en"><h3>Where data goes</h3><p>Which countries and services AI programs are connected to right now, and who is behind each model. Chinese and Russian AI is flagged.</p></div>
+</div>
+
+<h2 class="no">Personvern</h2>
+<h2 class="en">Privacy</h2>
+<div class="rutenett fire">
+  <div class="kort no"><h3>Leser bare</h3><p>Endrer, sletter og installerer ingenting. Kjører som vanlig bruker.</p></div>
+  <div class="kort en"><h3>Read-only</h3><p>Changes, deletes and installs nothing. Runs as a normal user.</p></div>
+  <div class="kort no"><h3>Lagrer ingenting</h3><p>Ingenting blir igjen etter søket, bare rapporten du selv velger å lagre.</p></div>
+  <div class="kort en"><h3>Stores nothing</h3><p>Nothing is left after the scan, only the report you choose to save.</p></div>
+  <div class="kort no"><h3>Åpner aldri det private</h3><p>Aldri passord, informasjonskapsler, skjemadata, nøkkelverdier eller samtaler med AI.</p></div>
+  <div class="kort en"><h3>Never opens private data</h3><p>Never passwords, cookies, form data, key values or AI chats.</p></div>
+  <div class="kort no"><h3>Ingen AI inni</h3><p>Faste, åpne regler med kilde. Samme PC gir samme svar. Ingen konto, ingen sky.</p></div>
+  <div class="kort en"><h3>No AI inside</h3><p>Fixed, open rules with sources. Same PC, same answer. No account, no cloud.</p></div>
+</div>
+
+<div class="kort gratis">
+  <h2 class="no" style="margin:0">Gratis for alle</h2>
+  <h2 class="en" style="margin:0">Free for everyone</h2>
+  <p class="no">For privatpersoner, skoler, kommuner og bedrifter. Ingen konto, ingen lisens å kjøpe. Kildekoden er åpen under MIT.</p>
+  <p class="en">For individuals, schools, municipalities and businesses. No account, no licence to buy. The source code is open under MIT.</p>
+  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest"><span class="no">Last ned</span><span class="en">Download</span></a>
+</div>
+
+<footer>
+  <p class="no">Ikke signert ennå: Windows kan vise en advarsel. Velg «Mer info» og «Kjør likevel». På jobb-PC, spør IT først.<br>Et tomt resultat betyr ikke at PC-en er fri for AI. · <a href="https://github.com/UUnreal/AIscanner">Kildekode</a></p>
+  <p class="en">Not signed yet: Windows may show a warning. Choose «More info» and «Run anyway». On a work PC, ask IT first.<br>An empty result does not mean the PC is free of AI. · <a href="https://github.com/UUnreal/AIscanner">Source code</a></p>
+</footer>
+</div>
+<script>
+function sett(l) { document.documentElement.lang = l; try { localStorage.sprak = l; } catch (e) {} }
+var l; try { l = localStorage.sprak; } catch (e) {}
+sett(l || (/^(nb|nn|no)/i.test(navigator.language) ? 'no' : 'en'));
+</script>
+</body>
+</html>
