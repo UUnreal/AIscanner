@@ -17,13 +17,13 @@ står i [SECURITY.md](SECURITY.md).
 
 | | |
 |---|---|
-| Program | `AISkanner.exe`, .NET Framework 4.8 (følger med Windows 10 og 11). Hele mappa er rundt 3,7 MB. |
+| Program | `AISkanner.exe`, .NET Framework 4.8 (følger med Windows 10 og 11). Én fil, rundt 8 MB. |
 | Rettigheter | `asInvoker`. Ber aldri om administrator ved oppstart. |
 | Vindu | Microsoft Edge WebView2, som nye Outlook og Teams. Starter egne `msedgewebview2.exe`-prosesser. |
 | Side | Bygget inn i programmet. Laster ingenting fra nett, kan ikke navigere bort, ingen utviklerverktøy. |
-| Utpakking | Ingen. Programmet er ikke komprimert og pakker ingenting ut til `%TEMP%`. |
+| Utpakking | Bibliotekene (AISkanner.Core, WebView2, System.*) ligger inne i `AISkanner.exe` og lastes fra minnet. Ingen komprimering. Bare Microsofts `WebView2Loader.dll` (166 KB) må ligge på disk: den skrives til vindusmappa `%LOCALAPPDATA%\AISkanner\Vindu-<pid>`, som slettes ved neste start. Ingenting skrives til `%TEMP%`. |
 | Skript | Starter ingen skript, kommandolinjer eller PowerShell. Programmet starter bare `%WINDIR%\explorer.exe` når brukeren trykker «Vis», og seg selv på nytt når brukeren velger å søke som administrator. |
-| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. DLL-ene ligger ved siden av programmet. Det finnes ingen `AISkanner.exe.config` (fra 2.28.1): programmet godtar selv nyere versjoner av sine egne biblioteker i samme mappe, med samme navn og nøkkel, og lastetesten i byggeløypa kjører programmet fra en mappe merket «fra Internett». Stopper programmet med en feil, vises den i en melding som kan kopieres med Ctrl+C. |
+| DLL-er | Arbeidsmappa er tatt ut av DLL-søket (fra 2.11). Systembiblioteker lastes fra System32. DLL-ene ligger inne i programmet (fra 2.52.2). Det finnes ingen `AISkanner.exe.config` (fra 2.28.1): programmet godtar selv nyere versjoner av sine egne biblioteker i samme mappe, med samme navn og nøkkel, og lastetesten i byggeløypa kjører programmet fra en mappe merket «fra Internett». Stopper programmet med en feil, vises den i en melding som kan kopieres med Ctrl+C. |
 
 ## Hva den leser
 

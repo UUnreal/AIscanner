@@ -30,6 +30,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.2] - 2026-11-04
+
+### Endret
+- Én fil: `AISkanner.exe` er hele programmet og kan lastes ned og kjøres alene, uten zip. Bibliotekene ligger inne
+  i exe-fila og lastes fra minnet. Microsofts `WebView2Loader.dll` skrives til vindusmappa
+  (`%LOCALAPPDATA%\AISkanner\Vindu-<pid>`), som slettes ved neste start. Zip-fila finnes fortsatt, med de valgfrie
+  filene (`ai-modeller.yar`, `godkjent-ai.txt`, `Kontroller-alarmene.cmd`). Ikke testet med vindu på Windows ennå;
+  lastetesten i byggeløypa kjører exe-fila alene fra en mappe merket «fra Internett».
+
 ## [2.52.1] - 2026-11-04
 
 Funnet av testlaben: en ren Windows-maskin hos GitHub med ekte Ollama, llama.cpp og modeller fra Hugging Face.

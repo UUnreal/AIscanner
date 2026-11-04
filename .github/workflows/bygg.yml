@@ -79,6 +79,9 @@ jobs:
           if ($config.Count -gt 0) { Write-Error "Ingen .config i mappa: $($config.Name -join ', ')"; exit 1 }
           if (@(Get-ChildItem publish -File -Filter 'AISkanner*' | Where-Object { $_.Name -notin 'AISkanner.exe','AISkanner.Core.dll' }).Count -gt 0) { Write-Error "Bare AISkanner.exe og AISkanner.Core.dll kan hete AISkanner"; exit 1 }
           if (-not (Test-Path publish/LES-MEG-FORST.txt)) { Write-Error "Mangler LES-MEG-FORST.txt"; exit 1 }
+          # Én fil: alle bibliotekene skal ligge inne i AISkanner.exe
+          $dll = @(Get-ChildItem publish -Recurse -File -Filter *.dll)
+          if ($dll.Count -gt 0) { Write-Error "DLL-er ved siden av exe-fila: $($dll.Name -join ', ')"; exit 1 }
 
       # Programmet slik brukeren får det: filene merkes «fra Internett» som etter nedlasting av zip, så lastes
       # bibliotekene og alle alarmene kjøres i AISkanner.exe selv (.NET Framework 4.8), uten vindu.
@@ -155,7 +158,7 @@ jobs:
           cp CHANGELOG.md publish/
           (cd publish && zip -qr "../AI-skanner-$v.zip" .)
           awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ {if (p) exit} p' CHANGELOG.md > notater.md
-          printf '\n---\nLast ned **AI-skanner-%s.zip**, pakk ut og kjør AISkanner.exe. Exe-fila trenger de andre filene i zip-fila ved siden av seg.\n' "$v" >> notater.md
+          printf '\n---\nLast ned **AISkanner.exe** og kjør den. Den er hele programmet. AI-skanner-%s.zip har i tillegg de valgfrie filene.\n' "$v" >> notater.md
           filer=("AI-skanner-$v.zip" publish/AISkanner.exe publish/SHA256.txt CHANGELOG.md)
           # Laget på nettsiden («Draft a new release») først? Da fylles den bare med filene og teksten.
           if gh release view "$TAG" >/dev/null 2>&1; then

@@ -94,7 +94,7 @@ fila, kan regne ut ny sum.
 |---|---|
 | Kjører alltid som vanlig bruker (`asInvoker`). Administrator bare for måling av datamengde, etter UAC-spørsmål. | `app.manifest`, `Hovedvindu.cs` |
 | Prosesser åpnes med `PROCESS_QUERY_LIMITED_INFORMATION`. Minne leses aldri. | `ProsessSti.cs` |
-| Pakker seg ikke ut, er ikke komprimert og starter ingen skript. | `AISkanner.csproj` |
+| Er ikke komprimert og starter ingen skript. Bibliotekene lastes fra minnet; bare `WebView2Loader.dll` skrives til vindusmappa, som slettes. | `AISkanner.csproj`, `Program.cs` |
 | Historikk åpnes skrivebeskyttet og `immutable` med Windows' egen `winsqlite3.dll`. Fila kopieres aldri. | `WinSqlite.cs`, `Nettsteder.cs` |
 | WebView2-siden er bygget inn og kan ikke navigere bort. Mappen per kjøring slettes når programmet lukkes. | `Hovedvindu.cs` |
 | «Vis» åpner bare stier som finnes og står i et funn, med full sti til Utforsker. | `Hovedvindu.cs` |

@@ -33,6 +33,8 @@ h1 { font: 600 48px/56px var(--vis); letter-spacing: -.025em; text-wrap: balance
 .prikker i { width: 12px; height: 12px; border-radius: 50%; }
 h2 { font: 600 28px/36px var(--vis); letter-spacing: -.015em; margin: 56px 0 20px; }
 .rutenett { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.demo { margin: 0 0 8px; } .demo img { width: 100%; height: auto; border-radius: 14px; box-shadow: var(--skygge); border: 1px solid var(--linje); display: block; }
+.demo figcaption { font-size: 14px; color: var(--dempet); text-align: center; margin-top: 12px; }
 .fire { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .kort { background: var(--kort); border-radius: 14px; padding: 24px; box-shadow: var(--skygge); border: 1px solid var(--linje); }
 .kort h3 { font: 600 18px/24px var(--vis); margin-bottom: 8px; }
@@ -68,10 +70,15 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
   <h1 class="en">See all AI on your PC</h1>
   <p class="under no">Finner AI-agenter, lokale modeller og skygge-AI på en Windows-PC, og sorterer dem etter risiko. Én knapp.</p>
   <p class="under en">Finds AI agents, local models and shadow AI on a Windows PC, and sorts them by risk. One button.</p>
-  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest"><span class="no">Last ned gratis</span><span class="en">Download free</span></a>
-  <p class="fakta no">Windows 10 og 11 · Ingen installasjon · Åpen kildekode (MIT)</p>
-  <p class="fakta en">Windows 10 and 11 · No install · Open source (MIT)</p>
+  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest/download/AISkanner.exe"><span class="no">Last ned gratis</span><span class="en">Download free</span></a>
+  <p class="fakta no">Windows 10 og 11 · Én fil, ingen installasjon · Åpen kildekode (MIT)</p>
+  <p class="fakta en">Windows 10 and 11 · One file, no install · Open source (MIT)</p>
 </header>
+
+<figure class="demo">
+  <picture><source srcset="demo-mork.png" media="(prefers-color-scheme: dark)"><img src="demo-lys.png" width="1650" height="1290" loading="lazy" alt="Skjermbilde av AI-skanner: funn sortert etter risiko, med navn, type og land. / Screenshot of AI-skanner: findings sorted by risk."></picture>
+  <figcaption><span class="no">Eksempel med oppdiktede funn. Trykk på et funn for å se hvor det ligger og hvor det sender data.</span><span class="en">Example with made-up findings. Tap a finding to see where it is and where it sends data.</span></figcaption>
+</figure>
 
 <h2 class="no">Hva den søker etter</h2>
 <h2 class="en">What it looks for</h2>
@@ -108,7 +115,7 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
   <h2 class="en" style="margin:0">Free for everyone</h2>
   <p class="no">For privatpersoner, skoler, kommuner og bedrifter. Ingen konto, ingen lisens å kjøpe. Kildekoden er åpen under MIT.</p>
   <p class="en">For individuals, schools, municipalities and businesses. No account, no licence to buy. The source code is open under MIT.</p>
-  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest"><span class="no">Last ned</span><span class="en">Download</span></a>
+  <a class="knapp" href="https://github.com/UUnreal/AIscanner/releases/latest/download/AISkanner.exe"><span class="no">Last ned</span><span class="en">Download</span></a>
 </div>
 
 </div>

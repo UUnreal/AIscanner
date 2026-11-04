@@ -50,9 +50,22 @@
     <ProjectReference Include="..\AISkanner.Core\AISkanner.Core.csproj" />
   </ItemGroup>
 
-  <!-- WPF-delen av WebView2 brukes ikke -->
+  <!--
+    Én fil: alle bibliotekene (AISkanner.Core, WebView2, System.*) bakes inn i AISkanner.exe som ressurser og lastes
+    fra minnet (Program.AnnenVersjon). WebView2Loader.dll er Microsofts egen lille lasterfil og må ligge på disk;
+    den skrives til vindusmappa som slettes (Program.Laster). Ingen komprimering. WPF-delen av WebView2 brukes ikke.
+  -->
+  <Target Name="BakInn" AfterTargets="ResolveReferences" BeforeTargets="PrepareResources">
+    <ItemGroup>
+      <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.dll' And '%(Filename)' != 'Microsoft.Web.WebView2.Wpf'" LogicalName="lib.%(Filename).dll" />
+      <EmbeddedResource Include="$(NuGetPackageRoot)microsoft.web.webview2/1.0.2903.40/runtimes/win-x64/native/WebView2Loader.dll" LogicalName="lib.native.WebView2Loader.dll" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(NuGetPackageRoot)microsoft.web.webview2/1.0.2903.40/runtimes/win-x64/native/WebView2Loader.dll')" Text="Fant ikke WebView2Loader.dll" />
+  </Target>
   <Target Name="FjernUbrukt" AfterTargets="Publish">
-    <Delete Files="$(PublishDir)Microsoft.Web.WebView2.Wpf.dll" />
+    <ItemGroup><Innbakt Include="$(PublishDir)*.dll;$(PublishDir)runtimes/**" /></ItemGroup>
+    <Delete Files="@(Innbakt)" />
+    <RemoveDir Directories="$(PublishDir)runtimes" />
     <Delete Files="$(PublishDir)AISkanner.exe.config" />
   </Target>
 

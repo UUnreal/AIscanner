@@ -2,7 +2,7 @@ AI-SKANNER
 
 Start programmet: dobbeltklikk AISkanner.exe (Type: Program / Application).
 
-Pakk ut hele mappa før du starter. Programmet virker ikke rett fra zip-fila.
+AISkanner.exe er hele programmet og virker alene. De andre filene her er valgfrie.
 
 Virker alarmene? Dobbeltklikk Kontroller-alarmene.cmd. Den lager falske spor i en midlertidig mappe,
 sjekker at hver alarm slår ut, sletter mappa og viser OK eller FEIL. Ingenting lagres.
@@ -10,4 +10,4 @@ sjekker at hver alarm slår ut, sletter mappa og viser OK eller FEIL. Ingenting 
 Feil? Programmet viser en melding. Trykk Ctrl+C i meldingen for å kopiere teksten.
 
 English: double-click AISkanner.exe (Type: Application).
-Extract the whole zip first. Kontroller-alarmene.cmd checks that every alarm triggers (add --en for English).
+AISkanner.exe is the whole program and runs on its own. Kontroller-alarmene.cmd checks that every alarm triggers (add --en for English).
