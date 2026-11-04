@@ -522,7 +522,17 @@ public sealed partial class Skanner
                         try { if (sf.Length >= 50L * 1024 * 1024) lock (ff) ff.SkyModeller.Add((sf.FullName, sf.Length)); } catch { }
                     continue;
                 }
-                if ((a & FileAttributes.ReparsePoint) != 0) { SjekkLenke(e); continue; }
+                if ((a & FileAttributes.ReparsePoint) != 0)
+                {
+                    // Hugging Face-lageret med symlenker (utviklermodus eller administrator): snapshots\<rev>\fil -> ..\..\blobs\<sha>.
+                    // Målet leses under lenkens navn, så modellen får repo og filnavn. Blob-mappa hoppes over (se under).
+                    if (e is FileInfo lf && HfMal(lf.FullName) is { } blob) { filer++; SjekkFil(lf, mappe, ff, minLengde, blob.Length); }
+                    else SjekkLenke(e);
+                    continue;
+                }
+                if (e is DirectoryInfo hb && hb.Name == "blobs" && Path.GetFileName(mappe).StartsWith("models--", StringComparison.OrdinalIgnoreCase)
+                    && Directory.Exists(Path.Combine(mappe, "snapshots")))
+                { Tilgangslogg.TellMappe(hb.FullName, Utfall.HoppetOver, detalj: "Hugging Face-blobber leses via navnene i snapshots"); continue; }
                 if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
                 else if (e is FileInfo fil)
                 {
@@ -669,7 +679,21 @@ public sealed partial class Skanner
         ".exe", ".msi", ".dll", ".txt", ".log", ".pdf", ".docx", ".xlsx", ".pptx", ".vhdx", ".pst", ".ost",
     };
 
-    private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde)
+    /// <summary>Målet til en symlenke i Hugging Face-lageret (models--…\snapshots\…), bare når det er en blob i samme modellmappe.</summary>
+    private static FileInfo? HfMal(string sti)
+    {
+        var m = Regex.Match(sti, @"^(.*[\\/]models--[^\\/]+)[\\/]snapshots[\\/]", RegexOptions.IgnoreCase);
+        if (!m.Success || Reparse.Mal(sti) is not { Length: > 0 } mal) return null;
+        try
+        {
+            var full = Path.GetFullPath(Path.IsPathRooted(mal) ? mal : Path.Combine(Path.GetDirectoryName(sti)!, mal));
+            var blobber = Path.Combine(m.Groups[1].Value, "blobs") + Path.DirectorySeparatorChar;
+            return full.StartsWith(blobber, StringComparison.OrdinalIgnoreCase) && File.Exists(full) ? new FileInfo(full) : null;
+        }
+        catch { return null; }
+    }
+
+    private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde, long? malLengde = null)
     {
         if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
         SjekkAgentfil(fil);
@@ -688,9 +712,9 @@ public sealed partial class Skanner
             return;
         }
         long lengde;
-        try { lengde = fil.Length; } catch { return; }
+        try { lengde = malLengde ?? fil.Length; } catch { return; }
         bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
-        if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff); return; }
+        if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff, lengde); return; }
         // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
         if (!Fullt && ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
         var modell = ModellFormat.Gjenkjenn(fil.FullName);

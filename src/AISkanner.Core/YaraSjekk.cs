@@ -15,11 +15,9 @@ public sealed partial class Skanner
     };
 
     /// <summary>Små filer som kan være modeller med skjult kode. Store modeller sjekkes i LeggTilModell.</summary>
-    private void SjekkLitenModell(FileInfo fil, FilFunn ff)
+    private void SjekkLitenModell(FileInfo fil, FilFunn ff, long lengde)
     {
         if (!PickleEndelser.Contains(fil.Extension)) return;
-        long lengde;
-        try { lengde = fil.Length; } catch { return; }
         if (lengde < 16 || lengde > 200L * 1024 * 1024) return;
         try
         {
@@ -29,7 +27,9 @@ public sealed partial class Skanner
                 Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName);
                 if (s.Read(hode, 0, 8) < 8) return;
             }
-            bool pickle = hode[0] == 0x80 && hode[1] is >= 2 and <= 5;
+            // Protokoll 2-5 har hode (0x80). Protokoll 0-1 har ikke: de starter med en opkode, som GLOBAL «c» eller MARK «(».
+            bool pickle = (hode[0] == 0x80 && hode[1] is >= 2 and <= 5)
+                || (fil.Extension.Equals(".pkl", StringComparison.OrdinalIgnoreCase) || fil.Extension.Equals(".pickle", StringComparison.OrdinalIgnoreCase)) && hode[0] is (byte)'c' or (byte)'(' or (byte)']' or (byte)'}';
             bool zip = hode[0] == 0x50 && hode[1] == 0x4B && hode[2] == 3 && hode[3] == 4;
             bool hdf5 = hode[0] == 0x89 && hode[1] == 0x48 && hode[2] == 0x44 && hode[3] == 0x46;
             bool npy = hode[0] == 0x93 && hode[1] == (byte)'N';

@@ -60,6 +60,9 @@ public sealed partial class Skanner
         Sjekk(Farlig(p4), "pickle (protokoll 4) med shutil.rmtree ble ikke funnet");
         Sjekk(Farlig(p2), "pickle (protokoll 2) med operator.attrgetter ble ikke funnet");
         Sjekk(!Farlig(vanlig), "vanlig ordliste med ordene sys, open og shutil ble regnet som farlig");
+        // Testlab-funn: STACK_GLOBAL med BINUNICODE (X + lengde) i stedet for SHORT_BINUNICODE slapp gjennom
+        var xos = B("80 04 58 02 00 00 00").Concat(Tekst("os")).Concat(B("58 06 00 00 00")).Concat(Tekst("system")).Concat(B("93 2E")).ToArray();
+        Sjekk(s.Yara.Sjekk(xos, null, xos.Length, bareOndsinnede: true).Any(r => r.Navn == "AI_Pickle_kjorer_kommando"), "pickle med os.system skrevet som BINUNICODE ble ikke funnet");
 
         // Versjoner: tall for tall, og forhåndsversjoner er lavere
         Sjekk(SammenlignVersjon("0.1.15", "0.1.16") < 0 && SammenlignVersjon("0.1.16", "0.1.16") == 0 && SammenlignVersjon("0.2.0", "0.1.16") > 0

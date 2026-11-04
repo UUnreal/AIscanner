@@ -24,13 +24,26 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
-- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
-  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
 - Versjonstagger (`vX.Y.Z`) lager en GitHub-utgivelse med zip-fila, `AISkanner.exe`, `SHA256.txt` og `CHANGELOG.md`.
 - `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
   navn eller domener i filstier.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
+
+## [2.52.1] - 2026-11-04
+
+Funnet av testlaben: en ren Windows-maskin hos GitHub med ekte Ollama, llama.cpp og modeller fra Hugging Face.
+
+### Lagt til
+- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
+  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
+
+### Rettet
+- Hugging Face-modeller ble ikke funnet når lageret bruker symlenker (Windows med utviklermodus eller administrator):
+  `snapshots\<rev>\fil` peker til `blobs\<sha>`. Nå leses målet under lenkens navn, så modellen får repo, filnavn og
+  opphav, og blob-mappa telles ikke en gang til. Før dette ble bare 2 av rundt 30 slike modeller vist, og da som et sha-navn.
+- Pickle skrevet med `BINUNICODE` i stedet for `SHORT_BINUNICODE` (samme `os.system`-kall) slapp gjennom YARA-regelen.
+- Pickle i protokoll 0 og 1 (uten `0x80`-hode) med endelsen `.pkl`/`.pickle` ble aldri sjekket.
 
 ## [2.52.0] - 2026-11-04
 

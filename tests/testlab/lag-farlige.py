@@ -45,7 +45,8 @@ def gstr(s):
 mal = "{{ ''.__class__.__mro__[1].__subclasses__() }}"
 kv = [("general.architecture", "llama"), ("general.name", "testlab-ondsinnet-mal"), ("tokenizer.chat_template", mal)]
 data = b"GGUF" + struct.pack("<IQQ", 3, 0, len(kv)) + b"".join(gstr(k) + struct.pack("<I", 8) + gstr(v) for k, v in kv)
-skriv("ondsinnet-mal.gguf", data + b"\0" * 4096, "rod", "GGUF-chat-mal med __subclasses__ (CVE-2024-34359)")
+# Ekte angrepsmodeller er hele modeller: fyll ut til 25 MB så fila ser ut som en modell, ikke en testbit
+skriv("ondsinnet-mal.gguf", data + b"\0" * (25 * 1024 * 1024), "rod", "GGUF-chat-mal med __subclasses__ (CVE-2024-34359)")
 # Kontroller: ufarlig pickle skal IKKE være «farlig»
 skriv("ufarlig-ordereddict.pkl", b"\x80\x02" + glob("collections", "OrderedDict") + b")R.", "ikke-farlig", "ufarlig pickle (kontroll)")
 json.dump(fasit, open(os.path.join(ut, "..", "farlige-fasit.json"), "w"), indent=1)

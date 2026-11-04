@@ -301,6 +301,23 @@ public sealed partial class Skanner
         var funn = sk._funn.Values.FirstOrDefault(f => f.Navn.Contains("Testmodell"));
         Sjekk(funn != null && funn.Risiko == Risiko.Rod && funn.Advarsler.Any(a => a.StartsWith("Forkledd")), "modell med endelsen .mp4 ble ikke merket som forkledd og rød");
         Sjekk(funn?.Versjon == "2.5", "modellfunnet viser ikke versjonen fra fila");
+
+        // Testlab-funn: Hugging Face med symlenker (snapshots -> blobs) ga ingen modeller. Målet leses under lenkens navn, blobben én gang.
+        var hf = Path.Combine(rot, "hf", "models--Qwen--Qwen2.5-0.5B-Instruct-GGUF");
+        Directory.CreateDirectory(Path.Combine(hf, "blobs")); Directory.CreateDirectory(Path.Combine(hf, "snapshots", "abc"));
+        var blobSti = Path.Combine(hf, "blobs", new string('a', 64));
+        File.WriteAllBytes(blobSti, gguf.ToArray());
+        bool lenke = false;
+#if NET6_0_OR_GREATER
+        // Symlenker krever utviklermodus eller administrator på Windows; uten det hoppes sjekken over
+        try { File.CreateSymbolicLink(Path.Combine(hf, "snapshots", "abc", "qwen.gguf"), Path.Combine("..", "..", "blobs", new string('a', 64))); lenke = true; } catch { }
+#endif
+        if (lenke)
+        {
+            var ffHf = new FilFunn();
+            new Skanner(regler).Gaa(Path.Combine(rot, "hf"), 6, ffHf, new HashSet<string>(), 0, Stopwatch.StartNew());
+            Sjekk(ffHf.Modeller.Count == 1 && ffHf.Modeller[0].Sti.EndsWith("qwen.gguf"), $"Hugging Face-modell bak symlenke ble ikke funnet én gang under navnet sitt ({ffHf.Modeller.Count} funn)");
+        }
         return (ok, alle);
     }
 

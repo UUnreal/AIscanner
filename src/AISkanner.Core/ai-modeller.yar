@@ -123,11 +123,18 @@ rule AI_Pickle_kjorer_kommando : ondsinnet
         $s3 = { 8C 05 70 6F 73 69 78 94 8C 06 73 79 73 74 65 6D }
         $s4 = { 8C 02 6E 74 94 8C 06 73 79 73 74 65 6D }
         $s5 = { 8C 0A 73 75 62 70 72 6F 63 65 73 73 }
+        // Protokoll 4-5 med BINUNICODE (X + 4 byte lengde) i stedet for SHORT_BINUNICODE: samme kall, annen skrivemåte
+        $u1 = { 58 02 00 00 00 6F 73 58 06 00 00 00 73 79 73 74 65 6D }
+        $u2 = { 58 02 00 00 00 6F 73 94 58 06 00 00 00 73 79 73 74 65 6D }
+        $u3 = { 58 05 00 00 00 70 6F 73 69 78 58 06 00 00 00 73 79 73 74 65 6D }
+        $u5 = { 58 02 00 00 00 6E 74 58 06 00 00 00 73 79 73 74 65 6D }
+        $u6 = { 58 02 00 00 00 6E 74 94 58 06 00 00 00 73 79 73 74 65 6D }
+        $u4 = { 58 0A 00 00 00 73 75 62 70 72 6F 63 65 73 73 }
         $b1 = { 8C 08 62 75 69 6C 74 69 6E 73 }
         $e1 = { 8C 04 65 78 65 63 }
         $e2 = { 8C 04 65 76 61 6C }
     condition:
-        any of ($g*) or any of ($s*) or ($b1 and any of ($e*))
+        any of ($g*) or any of ($s*) or any of ($u*) or ($b1 and any of ($e*))
 }
 
 rule AI_Pickle_nettverk : ondsinnet
