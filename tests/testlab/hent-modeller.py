@@ -19,7 +19,7 @@ for land, orger in (("RU", RU_ORG), ("CN", CN_ORG)):
             mod = list(api.list_models(author=o, limit=5000))
             telling[o] = {"land": land, "modeller": len(mod), "nedlastinger30d": sum(m.downloads or 0 for m in mod)}
         except Exception as e: telling[o] = {"land": land, "feil": str(e)[:80]}
-for navn, sok in (("RU-avledede (navn)", "vikhr"), ("RU-avledede (navn)", "saiga"), ("RU-avledede (navn)", "gigachat"), ("RU-avledede (navn)", "yandexgpt"), ("CN-avledede (navn)", "qwen"), ("CN-avledede (navn)", "deepseek")):
+for navn, sok in (("RU-avledede (navn)", "vikhr"), ("RU-avledede (navn)", "gigachat"), ("RU-avledede (navn)", "yandexgpt"), ("CN-avledede (navn)", "qwen"), ("CN-avledede (navn)", "deepseek")):
     try: telling[f"søk:{sok}"] = {"land": navn[:2], "modeller": sum(1 for _ in api.list_models(search=sok, limit=200000))}
     except Exception as e: telling[f"søk:{sok}"] = {"land": navn[:2], "feil": str(e)[:80]}
 json.dump(telling, open(os.path.join(os.path.dirname(ut), "opphav-telling.json"), "w"), indent=1)
