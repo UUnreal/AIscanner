@@ -125,6 +125,9 @@ public sealed partial class Skanner
         foreach (var f in regler.Modellfamilier.Where(f => f.Land == "RU"))
             Sjekk(f.Kilde?.Contains("https://") == true, $"russisk modellfamilie {f.Navn} mangler kilde");
         Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, null, null, false), @"C:\m\saiga_nemo_12b.Q4_K_M.gguf", regler, null).NavneFamilie?.Land == null, "Saiga merkes Russland uten kilde på opphavsland");
+        // Testlab-funn: BAAI/bge var umerket, og Pythia (GPT-NeoX, ordforråd 50 304) ble kalt Allen AI fordi OLMo 1 lånte samme ordforråd
+        Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("Hugging Face", null, "bert", null, false), @"C:\m\model.safetensors", regler, "BAAI/bge-small-en-v1.5").NavneFamilie is { Land: "CN", Utgiver: "BAAI" }, "BAAI/bge merkes ikke Kina");
+        Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("Hugging Face", null, "gpt_neox", null, false) { Vokab = 50304 }, @"C:\m\model.safetensors", regler, "EleutherAI/pythia-14m").Familie?.Utgiver != "Allen AI", "Pythia kalles Allen AI");
         return (ok, alle);
     }
 

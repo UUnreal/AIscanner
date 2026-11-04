@@ -143,7 +143,8 @@ L ""; L "## Farlige testmodeller"
 L ""; L "| | Fil | Angrep | Forventet | Skanneren |"; L "|---|---|---|---|---|"
 $farligOk = 0
 foreach ($f in $farlige) {
-  $hit = $funnTekst | Where-Object { $_.T.IndexOf($f.navn, [StringComparison]::OrdinalIgnoreCase) -ge 0 } | Select-Object -First 1
+  # Stien, ikke bare filnavnet: pytorch_model.bin finnes også i ekte Hugging Face-modeller
+  $hit = $funnTekst | Where-Object { $_.T.IndexOf("lab-farlige\$($f.navn)", [StringComparison]::OrdinalIgnoreCase) -ge 0 } | Select-Object -First 1
   # Bare advarsler og begrunnelse teller, ikke filnavnet (som selv inneholder «ondsinnet»)
   $grunn = (@($hit.F.advarsler) + @($hit.F.merknader) + @($hit.F.risikoGrunn) + @($hit.F.hvorfor) + @($hit.F.navn -replace [regex]::Escape($f.navn), '') -replace 'testlab-ondsinnet-mal', '') -join ' '
   $rod = $hit -and $hit.F.risiko -eq 'rod' -and $grunn -match 'Farlig|kjører kommandoer|kjøre kode|Lambda|CVE|Python-internals'
@@ -158,7 +159,7 @@ L "Alt her er enten ekte AI som GitHub har på maskinen, eller falske funn. Hver
 foreach ($f in $ren.funn) { L "- **$($f.risiko)** $($f.navn) · $($f.type) · $((@($f.hvor) + @($f.detaljer) | Select-Object -First 2) -join ' · ')" }
 
 L ""; L "## Funn som bare kom etter laben, men ikke er i fasit (nye spor eller falske funn)"
-$kjent = $installert | ForEach-Object Sok
+$kjent = @($installert | ForEach-Object Sok) + 'lab-farlige\'
 $renNavn = @($ren.funn | ForEach-Object navn)
 foreach ($x in $funnTekst | Where-Object { $_.F.navn -notin $renNavn }) { $t = $x.T; if (-not ($kjent | Where-Object { $t.IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0 })) { L "- **$($x.F.risiko)** $($x.F.navn) · $($x.F.type)" } }
 [IO.File]::WriteAllText("$Ut\rapport.md", $r.ToString())

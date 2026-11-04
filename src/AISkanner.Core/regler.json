@@ -2286,6 +2286,7 @@
   ],
   "_modellfamilier": "Modellfamilier gjenkjennes på arkitektur og størrelsen på ordforrådet (vokab), som følger modellen selv om filen får nytt navn eller finjusteres. 'ord' er tekst i modellnavnet. deltVokab: vokabstørrelsen brukes av mange familier og teller mindre.",
   "modellfamilier": [
+    {"navn": "BGE", "utgiver": "BAAI", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["baai/", "baai_", "bge-m3", "bge-small", "bge-base", "bge-large", "bge-reranker"], "kilde": "BGE-modellene publiseres av BAAI https://huggingface.co/BAAI (Beijing Academy of Artificial Intelligence, Beijing, Kina https://www.baai.ac.cn/en/). Bygger på BERT-arkitektur og BERT-ordforråd, så de kjennes bare på navn."},
     {"navn": "GigaChat", "utgiver": "Sber", "land": "RU", "arkitekturer": ["deepseek", "deepseek2", "deepseek_v3", "deepseekv3"], "vokab": [128256], "kreverVokab": true, "ord": ["gigachat", "ai-sage/"], "kilde": "Innhold: DeepSeek-arkitektur med ordforråd 128 256 (DeepSeek selv bruker 129 280 eller 102 400). GigaChat 3/3.1: model_type deepseek_v3, vocab_size 128256 https://huggingface.co/ai-sage/GigaChat3.1-10B-A1.8B/raw/main/config.json, GGUF-arkitektur deepseek2 https://huggingface.co/ubergarm/GigaChat3-10B-A1.8B-GGUF. GigaChat-20B-A3B: model_type deepseek, vocab_size 128256 https://huggingface.co/ai-sage/GigaChat-20B-A3B-instruct-bf16/raw/6ea8554fb20b4df7108bddcdf7ab35dc203a5ed8/config.json. Sber: «лаборатория Sber AI … обученных с нуля на собственных датасетах Сбера» https://serverflow.ru/blog/stati/obzor-gigachat3-lokalnaya-llm-ot-sbera-na-vashem-zheleze/"},
     {"navn": "Sber AI (ai-forever)", "utgiver": "Sber (SaluteDevices)", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["rugpt", "fred-t5", "ai-forever/", "sberbank-ai/"], "kilde": "Forfattere: «SaluteDevices, Russia», modellene ligger på hf.co/ai-forever https://arxiv.org/html/2309.10931v1. ruGPT-3.5 lagt ut av Sber https://habr.com/en/companies/sberdevices/articles/746736. Gammelt navn sberbank-ai/rugpt3large_based_on_gpt2 https://github.com/jlguge/ru-gpts"},
     {"navn": "YandexGPT", "utgiver": "Yandex", "land": "RU", "arkitekturer": ["llama"], "vokab": [129024], "kreverVokab": true, "ord": ["yandexgpt", "yandex/"], "kilde": "Innhold: Llama-arkitektur med Yandex' eget ordforråd 129 024. model_type llama, vocab_size 129024 https://huggingface.co/yandex/YandexGPT-5-Lite-8B-instruct/raw/main/config.json og https://huggingface.co/yandex/YandexGPT-5-Lite-8B-pretrain/raw/main/config.json. Utgitt av Yandex: https://huggingface.co/yandex/YandexGPT-5-Lite-8B-instruct"},
@@ -2612,6 +2613,7 @@
       "navn": "OLMo",
       "utgiver": "Allen AI",
       "land": "US",
+      "deltVokab": true,
       "arkitekturer": [
         "olmo",
         "olmo2",
