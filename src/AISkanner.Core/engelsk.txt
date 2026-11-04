@@ -1612,3 +1612,43 @@ lagret i|stored in
 ~^(.+) bruker GPU til beregning nå: (\d+) % \(PID ([\d, ]+)\)\. Hvilken fane kan ikke ses, så det er ikke bekreftet at det er denne modellen\.$|$1 uses the GPU for compute now: $2 % (PID $3). The tab cannot be seen, so it is not confirmed that it is this model.
 ~^GPU-bruk for (.+) ble ikke målt \(ikke bekreftet om modellen kjører nå\)\.$|GPU use for $1 was not measured (not confirmed whether the model runs now).
 ~^Nettstedet (\S+) har lastet ned en AI-modell som kjører på PC-en inne i (.+) \((.+)\)\. Ingenting er installert, så IT ser det ikke som et program\.$|The website $1 has downloaded an AI model that runs on the PC inside $2 ($3). Nothing is installed, so IT does not see it as a program.
+Nedlastet fra:|Downloaded from:
+lenket fra|linked from
+(Windows' nedlastingsmerke, Zone.Identifier)|(Windows mark of the web, Zone.Identifier)
+Internett (adressen er ikke lagret)|the Internet (address not stored)
+lokalt nett (adressen er ikke lagret)|local network (address not stored)
+denne PC-en (adressen er ikke lagret)|this PC (address not stored)
+klarert nettsted (adressen er ikke lagret)|trusted site (address not stored)
+blokkert nettsted (adressen er ikke lagret)|blocked site (address not stored)
+ukjent sone (adressen er ikke lagret)|unknown zone (address not stored)
+Lastet ned fra en IP-adresse uten domenenavn.|Downloaded from an IP address without a domain name.
+Lastet ned uten kryptering (http), så fila kan ha blitt byttet underveis.|Downloaded without encryption (http), so the file may have been swapped on the way.
+Personvernloggen:|Privacy log:
+personvernloggen i Windows|the Windows privacy log
+Windows' personvernlogg|Windows privacy log
+brukte mikrofonen sist|last used the microphone
+brukte kameraet sist|last used the camera
+brukte skjermopptak sist|last used screen capture
+bruker mikrofonen nå|is using the microphone now
+bruker kameraet nå|is using the camera now
+bruker skjermopptak nå|is using screen capture now
+Har tatt opp skjermen ifølge Windows' personvernlogg. Det AI-en ser, kan sendes videre.|Has captured the screen according to the Windows privacy log. What the AI sees can be sent on.
+startet fra Start eller Utforsker|started from Start or Explorer
+UserAssist i Windows|UserAssist in Windows
+Installasjonsloggen:|Installation log:
+installasjonsloggen i Windows|the Windows installation log
+installert|installed
+fjernet|removed
+Installert før, nå fjernet.|Installed before, now removed.
+Nedlastingskilde|Download source
+Mikrofon, kamera, skjerm|Microphone, camera, screen
+Installasjonslogg|Installation log
+AI-modell med nedlastingsmerke|AI model with mark of the web
+ingen AI-modell har nedlastingsmerke|no AI model has a mark of the web
+ingen AI-modell å sjekke|no AI model to check
+AI har brukt dem|AI has used them
+AI startet før|AI started before
+AI installert eller fjernet|AI installed or removed
+lest, ingen AI siste 12 måneder|read, no AI in the last 12 months
+lest, ingen AI|read, no AI
+siste 12 måneder|last 12 months

@@ -52,6 +52,7 @@ public sealed partial class Skanner
             f.Sterkt();
             f.LeggTilModeller(1);
             f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
+            Nedlastingskilde(f, sti);
             foreach (var r in treff) f.Detalj($"YARA: {r.Navn} · {r.Beskrivelse}");
             if (ErRisikabelPlass(sti)) f.Advarsel("Ligger i en nedlastings- eller midlertidig mappe.");
         }

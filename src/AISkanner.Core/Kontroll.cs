@@ -701,7 +701,10 @@ public sealed partial class Skanner
             var (prOk, prAlle) = ProtokollKontroll(regler, sb);
             ok += prOk;
             sb.AppendLine($"{(prOk == prAlle ? "OK  " : "FEIL")}  Nettverk og protokoller: {prOk} av {prAlle} riktige (UDP-strømmer fra Windows' hendelser, QUIC/STUN/DNS, DoH/DoT, lyttende AI-porter på 0.0.0.0, datagrunnlag)");
-            int alle = Kontrollspor.Length + 4 + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
+            var (ksOk, ksAlle) = KildesporKontroll(s, sb);
+            ok += ksOk;
+            sb.AppendLine($"{(ksOk == ksAlle ? "OK  " : "FEIL")}  Windows' egne spor: {ksOk} av {ksAlle} riktige (nedlastingsmerke uten ? og #, UserAssist, personvernloggen, installasjonsloggen, vanlige programmer ikke)");
+            int alle = Kontrollspor.Length + 4 + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");
