@@ -36,7 +36,8 @@ Steg 'Skann ren maskin (fasit: ingen AI installert av laben)'; $ren = Skann ren;
 
 # ---------- Installer ekte AI ----------
 $installert = [System.Collections.Generic.List[object]]::new()
-function Notér($navn, $sok, $hva) { $installert.Add([pscustomobject]@{ Navn = $navn; Sok = @($sok); Hva = $hva }) }
+$kinaMonster = 'qwen|deepseek|glm|baichuan|internlm|minicpm|openbmb|01-ai|hunyuan|ernie|minimax|kimi|moonshot|stepfun|baai|thenlper|alibaba|thudm|bge-|gte-'
+function Notér($navn, $sok, $hva, $kina = ($navn -match $kinaMonster)) { $installert.Add([pscustomobject]@{ Navn = $navn; Sok = @($sok); Hva = $hva; Kina = [bool]$kina }) }
 
 Steg 'Ollama (offisiell installasjon) + modeller'
 $env:OLLAMA_KEEP_ALIVE = '60m'
@@ -45,7 +46,7 @@ Start-Process "$Ut\OllamaSetup.exe" -ArgumentList '/VERYSILENT', '/NORESTART', '
 $ollama = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
 if (-not (Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue)) { Start-Process $ollama serve -WindowStyle Hidden; Start-Sleep 5 }
 Notér 'Ollama' @('Ollama') 'program + server på 11434'
-foreach ($m in 'all-minilm:22m', 'smollm2:135m', 'gemma3:270m', 'qwen2.5:0.5b', 'qwen3:0.6b', 'llama3.2:1b', 'nomic-embed-text', 'granite-embedding:30m', 'snowflake-arctic-embed:22m', 'deepseek-r1:1.5b', 'tinyllama', 'paraphrase-multilingual') {
+foreach ($m in 'all-minilm:22m', 'smollm2:135m', 'gemma3:270m', 'qwen2.5:0.5b', 'qwen3:0.6b', 'llama3.2:1b', 'nomic-embed-text', 'granite-embedding:30m', 'snowflake-arctic-embed:22m', 'deepseek-r1:1.5b', 'qwen2.5-coder:0.5b', 'deepseek-coder:1.3b', 'qwen3-embedding:0.6b') {
   & $ollama pull $m 2>&1 | Select-Object -Last 1
   if ($LASTEXITCODE -eq 0) { Notér "Ollama-modell $m" @($m, ($m -replace ':latest$')) 'Ollama-modell' }
 }
@@ -58,7 +59,7 @@ python -m pip install -q huggingface_hub transformers torch --index-url https://
 python -m pip install -q openai anthropic langchain-core llama-index-core ollama mcp
 python tests/testlab/hent-modeller.py $Hf $MaksMb "$Ut\hf-fasit.json"
 $hfFasit = Get-Content "$Ut\hf-fasit.json" -Raw | ConvertFrom-Json
-foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', '))" }
+foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', ')) $($h.arkitektur)" $h.kina }
 foreach ($p in 'openai', 'anthropic', 'langchain-core', 'llama-index-core', 'ollama', 'mcp', 'transformers', 'torch') { Notér "Python-pakke $p" @($p) 'AI-bibliotek i Python' }
 Ferdig
 
@@ -73,6 +74,11 @@ foreach ($g in $gguf) {
   Set-Content $mal -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3`r`nReferrerUrl=https://huggingface.co/`r`nHostUrl=https://huggingface.co/models/$($g.Name)"
   Notér "Løs GGUF $($g.Name)" @($g.Name) 'GGUF i Nedlastinger med nedlastingsmerke'
 }
+# Kinesisk modell med nytt navn: skal kjennes igjen fra innholdet (GGUF-metadata), ikke filnavnet
+$qwen = Get-ChildItem "$env:USERPROFILE\.cache\huggingface\hub" -Recurse -Filter *.gguf | Where-Object FullName -match 'qwen|deepseek' | Sort-Object Length | Select-Object -First 1
+if ($qwen) { New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\prosjekt" | Out-Null; Copy-Item $qwen.FullName "$env:USERPROFILE\Documents\prosjekt\notater-final.dat"; Copy-Item $qwen.FullName "$dl\assistent.gguf"
+  Notér "Omdøpt kinesisk GGUF ($($qwen.Name) → assistent.gguf)" @('assistent.gguf') 'kinesisk modell med nøytralt navn' $true
+  Notér "Forkledd kinesisk GGUF ($($qwen.Name) → notater-final.dat)" @('notater-final.dat') 'kinesisk modell med feil filendelse' $true }
 $server = Get-ChildItem "$env:USERPROFILE\llama.cpp" -Recurse -Filter llama-server.exe | Select-Object -First 1
 if ($server -and $gguf) { Start-Process $server.FullName -ArgumentList '-m', "`"$(Join-Path $dl $gguf[0].Name)`"", '--host', '0.0.0.0', '--port', '8080' -WindowStyle Hidden; Notér 'llama.cpp-server' @('llama.cpp', 'llama-server') 'server på 0.0.0.0:8080' }
 Ferdig
@@ -105,13 +111,18 @@ L "# Testlab $(Get-Date -Format 'yyyy-MM-dd HH:mm') · $(git rev-parse --short H
 L ""
 $treff = foreach ($i in $installert) {
   $hit = $funnTekst | Where-Object { $t = $_.T; @($i.Sok | Where-Object { $t.IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0 }).Count } | Select-Object -First 1
-  [pscustomobject]@{ Navn = $i.Navn; Hva = $i.Hva; Funnet = [bool]$hit; Risiko = $hit.F.risiko; Som = $hit.F.navn; Land = $hit.F.kommerFraLand; Fra = $hit.F.kommerFra }
+  [pscustomobject]@{ Navn = $i.Navn; Hva = $i.Hva; Kina = $i.Kina; KinaMerket = [bool]($hit -and ($hit.F.kommerFraLand -eq 'CN' -or $hit.T -match 'Kina')); Funnet = [bool]$hit; Risiko = $hit.F.risiko; Som = $hit.F.navn; Land = $hit.F.kommerFraLand; Fra = $hit.F.kommerFra }
 }
 $ok = @($treff | Where-Object Funnet).Count
 L "## Funnet: $ok av $($installert.Count) ting laben installerte"
 L ""; L "| | Installert | Hva | Skanneren kalte det | Risiko | Kommer fra |"; L "|---|---|---|---|---|---|"
 foreach ($t in $treff | Sort-Object Funnet, Navn) { L "| $(if ($t.Funnet) { '✅' } else { '❌' }) | $($t.Navn) | $($t.Hva) | $($t.Som) | $($t.Risiko) | $($t.Fra) $($t.Land) |" }
 
+$kina = @($treff | Where-Object Kina)
+$kinaFunnet = @($kina | Where-Object Funnet); $kinaMerket = @($kina | Where-Object { $_.Funnet -and $_.KinaMerket })
+L ""; L "## Kinesiske modeller: $($kinaFunnet.Count) av $($kina.Count) funnet, $($kinaMerket.Count) merket Kina"
+L ""; L "| | Modell | Funnet som | Risiko | Merket Kina |"; L "|---|---|---|---|---|"
+foreach ($t in $kina | Sort-Object Funnet, Navn) { L "| $(if ($t.Funnet -and $t.KinaMerket) { '✅' } elseif ($t.Funnet) { '⚠️' } else { '❌' }) | $($t.Navn) | $($t.Som) | $($t.Risiko) | $(if ($t.KinaMerket) { 'ja' } else { 'nei' }) |" }
 L ""; L "## Farlige testmodeller"
 L ""; L "| | Fil | Angrep | Forventet | Skanneren |"; L "|---|---|---|---|---|"
 $farligOk = 0
