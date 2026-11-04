@@ -107,6 +107,14 @@ public sealed partial class Skanner
             var fam = regler.Modellfamilier.Where(f => f.Arkitekturer.Any(x => ModellGjenkjenning.Norm(x) == ModellGjenkjenning.Norm(ark))).ToList();
             Sjekk(fam.Count == 1 && fam[0].Land == "CN", $"modellarkitektur {ark} peker ikke entydig på en kinesisk familie");
         }
+        // Russiske finjusteringer bygger ofte på Qwen/Llama: navnet eller organisasjonen avslører dem, også uten innhold
+        foreach (var (sti, kilde, utgiver) in new[] { (@"C:\m\model.gguf", "Vikhrmodels/Vikhr-Qwen-2.5-1.5B-Instruct", "Vikhrmodels"), (@"C:\m\T-pro-it-2.0-Q4_K_M.gguf", null, "T-Bank"),
+                     (@"C:\m\x.safetensors", "ai-sage/GigaChat-20B-A3B-instruct", "Sber"), (@"C:\m\x.gguf", "yandex/YandexGPT-5-Lite-8B-instruct", "Yandex") })
+        {
+            var id = ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, null, null, false), sti, regler, kilde);
+            Sjekk(id.NavneFamilie is { Land: "RU" } nf && nf.Utgiver == utgiver, $"{kilde ?? sti} gjenkjennes ikke som russisk modell fra {utgiver}");
+        }
+        Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, null, null, false), @"C:\m\gpt-lite-v2.gguf", regler, null).NavneFamilie?.Land != "RU", "gpt-lite ble feilaktig russisk (T-lite)");
         return (ok, alle);
     }
 

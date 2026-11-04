@@ -6,7 +6,24 @@ from huggingface_hub import HfApi, hf_hub_download
 
 antall, maks_mb, ut = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
 # Kinesiske modeller prioriteres (Jørund: kritiske). De får større filer (én liten kvantisering) innenfor et samlet budsjett.
-KINA_MB, KINA_BUDSJETT = 700, 4500
+# Russiske modeller (Jørund: samme behandling). Mange er finjusterte Qwen/Llama, så org og navn er beviset.
+KINA_MB, KINA_BUDSJETT = 700, 5000
+RUSSLAND = re.compile(r"gigachat|ai-sage|ai-forever|sberbank-ai|yandex|t-tech|t-lite|t-pro|cotype|mtsair|vikhr|saiga|ilyagusev|ruadapt|refalmachine|deepvk|cointegrated|rugpt|fred-t5", re.I)
+RU_ORG = ["ai-sage", "ai-forever", "sberbank-ai", "yandex", "t-tech", "MTSAIR", "Vikhrmodels", "IlyaGusev", "RefalMachine", "deepvk", "cointegrated", "AnatoliiPotapov"]
+CN_ORG = ["Qwen", "deepseek-ai", "THUDM", "zai-org", "01-ai", "baichuan-inc", "internlm", "openbmb", "MiniMaxAI", "moonshotai", "tencent", "baidu", "BAAI", "stepfun-ai", "Alibaba-NLP", "ByteDance-Seed", "inclusionAI", "rednote-hilab", "XiaomiMiMo"]
+# Ekte tall: antall offentlige modeller per organisasjon, og hvor mange som bygger på dem (finjusteringer, kvantiseringer)
+telling = {}
+for land, orger in (("RU", RU_ORG), ("CN", CN_ORG)):
+    for o in orger:
+        try:
+            mod = list(api.list_models(author=o, limit=5000))
+            telling[o] = {"land": land, "modeller": len(mod), "nedlastinger30d": sum(m.downloads or 0 for m in mod)}
+        except Exception as e: telling[o] = {"land": land, "feil": str(e)[:80]}
+for navn, sok in (("RU-avledede (navn)", "vikhr"), ("RU-avledede (navn)", "saiga"), ("RU-avledede (navn)", "gigachat"), ("RU-avledede (navn)", "yandexgpt"), ("CN-avledede (navn)", "qwen"), ("CN-avledede (navn)", "deepseek")):
+    try: telling[f"søk:{sok}"] = {"land": navn[:2], "modeller": sum(1 for _ in api.list_models(search=sok, limit=200000))}
+    except Exception as e: telling[f"søk:{sok}"] = {"land": navn[:2], "feil": str(e)[:80]}
+json.dump(telling, open(os.path.join(os.path.dirname(ut), "opphav-telling.json"), "w"), indent=1)
+print(json.dumps(telling, indent=1))
 KINA = re.compile(r"qwen|deepseek|glm|chatglm|baichuan|internlm|minicpm|openbmb|yi-|01-ai|hunyuan|tencent|ernie|baidu|minimax|kimi|moonshot|stepfun|baai|thenlper|alibaba|thudm|zai-org|bge-|gte-|iic/|xverse|skywork|seed-", re.I)
 api = HfApi()
 VEKTER = (".safetensors", ".gguf", ".onnx", ".bin", ".pt", ".pth", ".h5", ".keras", ".tflite", ".ckpt", ".msgpack")
@@ -17,6 +34,10 @@ kina = ["Qwen/Qwen2.5-0.5B-Instruct-GGUF", "Qwen/Qwen3-0.6B-GGUF", "Qwen/Qwen2.5
         "openbmb/MiniCPM-S-1B-sft-gguf", "Qwen/Qwen2.5-Math-1.5B-Instruct", "deepseek-ai/deepseek-coder-1.3b-instruct",
         "trl-internal-testing/tiny-Qwen2ForCausalLM-2.5", "trl-internal-testing/tiny-Qwen3ForCausalLM", "trl-internal-testing/tiny-DeepseekV3ForCausalLM",
         "trl-internal-testing/tiny-Qwen2VLForConditionalGeneration", "trl-internal-testing/tiny-GlmForCausalLM"]
+kina += ["Vikhrmodels/Vikhr-Qwen-2.5-0.5b-Instruct", "Vikhrmodels/Vikhr-Qwen-2.5-1.5B-Instruct-GGUF", "Vikhrmodels/Vikhr-Llama-3.2-1B-Instruct",
+         "MTSAIR/Cotype-Nano", "MTSAIR/Cotype-Nano-GGUF", "ai-forever/rugpt3small_based_on_gpt2", "ai-forever/FRED-T5-large",
+         "cointegrated/rubert-tiny2", "deepvk/USER-base", "IlyaGusev/saiga_llama3_8b_gguf", "t-tech/T-lite-it-1.0-Q8_0-GGUF",
+         "yandex/YandexGPT-5-Lite-8B-instruct-GGUF", "ai-sage/GigaChat-20B-A3B-instruct-v1.5-GGUF", "RefalMachine/ruadapt_qwen2.5_1.5B_ext_u48_full_lr5e4_peft_mlp_32_32_bs256"]
 kina += [m.id for m in api.list_models(search="tiny-random", author="hf-internal-testing", limit=1000) if KINA.search(m.id)]
 kjente = ["HuggingFaceTB/SmolLM2-135M-Instruct", "HuggingFaceTB/SmolLM2-135M-Instruct-GGUF" , "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
           "Qwen/Qwen3-0.6B-GGUF", "unsloth/gemma-3-270m-it-GGUF", "bartowski/SmolLM2-135M-Instruct-GGUF", "ggml-org/models",
@@ -55,7 +76,7 @@ for repo in kina + kjente + testmodeller:
         try: arkitektur = ",".join(json.load(open(hf_hub_download(repo, "config.json"))).get("architectures") or [])
         except Exception: pass
         fasit.append({"repo": repo, "forfatter": repo.split("/")[0], "filer": [s.rfilename for s in valgt.values()],
-                      "formater": sorted(valgt), "arkitektur": arkitektur, "kina": bool(KINA.search(repo + " " + arkitektur)), "mb": round(mb, 1), "lisens": (info.card_data or {}).get("license") if info.card_data else None,
+                      "formater": sorted(valgt), "arkitektur": arkitektur, "kina": bool(KINA.search(repo + " " + arkitektur)) and not RUSSLAND.search(repo), "russland": bool(RUSSLAND.search(repo)), "mb": round(mb, 1), "lisens": (info.card_data or {}).get("license") if info.card_data else None,
                       "lastetNed": info.downloads, "flaggetAvHf": getattr(info, "security_repo_status", None)})
         print(f"{len(fasit):3} {repo}: {', '.join(sorted(valgt))} ({mb:.1f} MB)")
     except Exception as e:

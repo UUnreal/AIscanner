@@ -88,7 +88,7 @@ internal static class ModellGjenkjenning
         if (beste != null && !vokabTreff && regler.Modellfamilier.Count(f => f.Arkitekturer.Any(x => Norm(x) == Norm(ark))) > 1) beste = null;
 
         // Familien navnet peker på
-        var navn = string.Join(" ", new[] { m.Navn, kildenavn, configNavn, m.BaseModell, Path.GetFileNameWithoutExtension(sti) }.Where(x => x != null)).ToLowerInvariant();
+        var navn = string.Join(" ", new[] { m.Navn, kildenavn, configNavn, m.BaseModell, m.Organisasjon, Path.GetFileNameWithoutExtension(sti) }.Where(x => x != null)).ToLowerInvariant();
         // Navnet kan peke på en annen familie enn innholdet (DeepSeek-R1-Distill-Qwen er DeepSeek-trent, men bygget på Qwen)
         var iNavnet = regler.Modellfamilier.Where(f => f.Ord.Any(o => navn.Contains(o.ToLowerInvariant()))).ToList();
         var navneFamilie = iNavnet.FirstOrDefault(f => f != beste) ?? iNavnet.FirstOrDefault();

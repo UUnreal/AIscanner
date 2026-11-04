@@ -2286,6 +2286,14 @@
   ],
   "_modellfamilier": "Modellfamilier gjenkjennes på arkitektur og størrelsen på ordforrådet (vokab), som følger modellen selv om filen får nytt navn eller finjusteres. 'ord' er tekst i modellnavnet. deltVokab: vokabstørrelsen brukes av mange familier og teller mindre.",
   "modellfamilier": [
+    {"navn": "GigaChat", "utgiver": "Sber", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["gigachat", "ai-sage/", "sberbank-ai/"]},
+    {"navn": "ruGPT / FRED-T5 (Sber)", "utgiver": "Sber", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["rugpt", "fred-t5", "ai-forever/"]},
+    {"navn": "YandexGPT", "utgiver": "Yandex", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["yandexgpt", "yandex/"]},
+    {"navn": "T-lite / T-pro", "utgiver": "T-Bank", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["t-lite-it", "t-lite-instruct", "t-pro-it", "t-tech/"]},
+    {"navn": "Cotype", "utgiver": "MTS", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["cotype", "mtsair/"]},
+    {"navn": "Vikhr", "utgiver": "Vikhrmodels", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["vikhr"]},
+    {"navn": "Saiga", "utgiver": "Ilya Gusev", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["saiga", "ilyagusev/"]},
+    {"navn": "RuAdapt", "utgiver": "RefalMachine", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["ruadapt", "refalmachine/"]},
     {
       "navn": "Llama 3",
       "utgiver": "Meta",

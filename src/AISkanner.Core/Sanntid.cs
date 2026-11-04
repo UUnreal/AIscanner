@@ -819,7 +819,9 @@ public sealed partial class Skanner
             }
         }
         YaraPaModell(sti, f);
-        if (id.NavneFamilie?.Land == "CN" || id.Familie?.Land == "CN") f.Merknad($"Laget av {(id.NavneFamilie?.Land == "CN" ? id.NavneFamilie : id.Familie)!.Utgiver} i Kina. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
+        // Modeller fra høyrisikoland (Kina, Russland …): navnet (finjusteringen) teller før innholdet (grunnmodellen)
+        if (new[] { id.NavneFamilie, id.Familie }.FirstOrDefault(x => x?.Land is { } l && _regler.HoyrisikoLand.Contains(l)) is { } hf)
+            f.Merknad($"Laget av {hf.Utgiver} i {IpLand.Navn(hf.Land!)}. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
     }
 
     /// <summary>Gir generiske filnavn ("model", "pytorch_model-00001-of-00004") et bedre navn fra mappene rundt.</summary>

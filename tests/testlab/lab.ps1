@@ -36,8 +36,9 @@ Steg 'Skann ren maskin (fasit: ingen AI installert av laben)'; $ren = Skann ren;
 
 # ---------- Installer ekte AI ----------
 $installert = [System.Collections.Generic.List[object]]::new()
+$ruMonster = 'gigachat|ai-sage|ai-forever|yandex|t-tech|t-lite|cotype|mtsair|vikhr|saiga|ruadapt|deepvk|rubert|rugpt|fred-t5'
 $kinaMonster = 'qwen|deepseek|glm|baichuan|internlm|minicpm|openbmb|01-ai|hunyuan|ernie|minimax|kimi|moonshot|stepfun|baai|thenlper|alibaba|thudm|bge-|gte-'
-function Notér($navn, $sok, $hva, $kina = ($navn -match $kinaMonster)) { $installert.Add([pscustomobject]@{ Navn = $navn; Sok = @($sok); Hva = $hva; Kina = [bool]$kina }) }
+function Notér($navn, $sok, $hva, $kina = ($navn -match $kinaMonster -and $navn -notmatch $ruMonster), $ru = ($navn -match $ruMonster)) { $installert.Add([pscustomobject]@{ Navn = $navn; Sok = @($sok); Hva = $hva; Kina = [bool]$kina; Russland = [bool]$ru }) }
 
 Steg 'Ollama (offisiell installasjon) + modeller'
 $env:OLLAMA_KEEP_ALIVE = '60m'
@@ -59,7 +60,7 @@ python -m pip install -q huggingface_hub transformers torch --index-url https://
 python -m pip install -q openai anthropic langchain-core llama-index-core ollama mcp
 python tests/testlab/hent-modeller.py $Hf $MaksMb "$Ut\hf-fasit.json"
 $hfFasit = Get-Content "$Ut\hf-fasit.json" -Raw | ConvertFrom-Json
-foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', ')) $($h.arkitektur)" $h.kina }
+foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', ')) $($h.arkitektur)" $h.kina $h.russland }
 foreach ($p in 'openai', 'anthropic', 'langchain-core', 'llama-index-core', 'ollama', 'mcp', 'transformers', 'torch') { Notér "Python-pakke $p" @($p) 'AI-bibliotek i Python' }
 Ferdig
 
@@ -111,7 +112,7 @@ L "# Testlab $(Get-Date -Format 'yyyy-MM-dd HH:mm') · $(git rev-parse --short H
 L ""
 $treff = foreach ($i in $installert) {
   $hit = $funnTekst | Where-Object { $t = $_.T; @($i.Sok | Where-Object { $t.IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0 }).Count } | Select-Object -First 1
-  [pscustomobject]@{ Navn = $i.Navn; Hva = $i.Hva; Kina = $i.Kina; KinaMerket = [bool]($hit -and ($hit.F.kommerFraLand -eq 'CN' -or $hit.T -match 'Kina')); Funnet = [bool]$hit; Risiko = $hit.F.risiko; Som = $hit.F.navn; Land = $hit.F.kommerFraLand; Fra = $hit.F.kommerFra }
+  [pscustomobject]@{ Navn = $i.Navn; Hva = $i.Hva; Kina = $i.Kina; Russland = $i.Russland; KinaMerket = [bool]($hit -and ($hit.F.kommerFraLand -eq 'CN' -or $hit.T -match 'Kina')); RuMerket = [bool]($hit -and ($hit.F.kommerFraLand -eq 'RU' -or $hit.T -match 'Russland')); Funnet = [bool]$hit; Risiko = $hit.F.risiko; Som = $hit.F.navn; Land = $hit.F.kommerFraLand; Fra = $hit.F.kommerFra }
 }
 $ok = @($treff | Where-Object Funnet).Count
 L "## Funnet: $ok av $($installert.Count) ting laben installerte"
@@ -123,6 +124,14 @@ $kinaFunnet = @($kina | Where-Object Funnet); $kinaMerket = @($kina | Where-Obje
 L ""; L "## Kinesiske modeller: $($kinaFunnet.Count) av $($kina.Count) funnet, $($kinaMerket.Count) merket Kina"
 L ""; L "| | Modell | Funnet som | Risiko | Merket Kina |"; L "|---|---|---|---|---|"
 foreach ($t in $kina | Sort-Object Funnet, Navn) { L "| $(if ($t.Funnet -and $t.KinaMerket) { '✅' } elseif ($t.Funnet) { '⚠️' } else { '❌' }) | $($t.Navn) | $($t.Som) | $($t.Risiko) | $(if ($t.KinaMerket) { 'ja' } else { 'nei' }) |" }
+$ru = @($treff | Where-Object Russland)
+L ""; L "## Russiske modeller: $(@($ru | Where-Object Funnet).Count) av $($ru.Count) funnet, $(@($ru | Where-Object RuMerket).Count) merket Russland"
+L ""; L "| | Modell | Funnet som | Risiko | Merket Russland |"; L "|---|---|---|---|---|"
+foreach ($t in $ru | Sort-Object Funnet, Navn) { L "| $(if ($t.Funnet -and $t.RuMerket) { '✅' } elseif ($t.Funnet) { '⚠️' } else { '❌' }) | $($t.Navn) | $($t.Som) | $($t.Risiko) | $(if ($t.RuMerket) { 'ja' } else { 'nei' }) |" }
+if (Test-Path "$Ut\opphav-telling.json") {
+  L ""; L "## Hvor mange modeller finnes (Hugging Face-API, nå)"; L ""; L "| Organisasjon / søk | Land | Modeller | Nedlastinger siste 30 d |"; L "|---|---|---|---|"
+  (Get-Content "$Ut\opphav-telling.json" -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { L "| $($_.Name) | $($_.Value.land) | $($_.Value.modeller)$($_.Value.feil) | $($_.Value.nedlastinger30d) |" }
+}
 L ""; L "## Farlige testmodeller"
 L ""; L "| | Fil | Angrep | Forventet | Skanneren |"; L "|---|---|---|---|---|"
 $farligOk = 0
