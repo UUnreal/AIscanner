@@ -21,6 +21,7 @@ public sealed partial class Skanner
         foreach (var (navn, steg) in new (string, Action)[]
         {
             ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
+            ("Personvernlogg", Personvernlogg), ("UserAssist", UserAssist), ("Installasjonslogg", Installasjonslogg),
         })
         {
             var tid = System.Diagnostics.Stopwatch.StartNew();
@@ -286,6 +287,8 @@ public sealed partial class Skanner
     [DllImport("wevtapi.dll")]
     private static extern bool EvtClose(IntPtr h);
 
+    private static readonly Regex HendelseDataUtenNavn = new(@"<Data>([^<]*)</Data>", RegexOptions.Compiled);
+    private static readonly Regex HendelseId = new(@"<EventID[^>]*>(\d+)</EventID>", RegexOptions.Compiled);
     private static readonly Regex HendelseData = new(@"<Data Name=['""](\w+)['""]>([^<]*)</Data>", RegexOptions.Compiled);
     private static readonly Regex HendelseTid = new(@"SystemTime=['""]([^'""]+)['""]", RegexOptions.Compiled);
 
@@ -318,6 +321,11 @@ public sealed partial class Skanner
                         var xml = new string(buf, 0, Math.Max(0, brukt / 2 - 1));
                         var felt = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         foreach (Match m in HendelseData.Matches(xml)) felt[m.Groups[1].Value] = WebUtility.HtmlDecode(m.Groups[2].Value);
+                        // Eldre hendelser (f.eks. MsiInstaller) har felt uten navn: _0, _1 … i rekkefølge
+                        int nr = 0;
+                        foreach (Match m in HendelseDataUtenNavn.Matches(xml)) felt["_" + nr++] = WebUtility.HtmlDecode(m.Groups[1].Value);
+                        var id = HendelseId.Match(xml);
+                        if (id.Success) felt["_id"] = id.Groups[1].Value;
                         var pid = Regex.Match(xml, @"<Execution ProcessID=['""](\d+)");
                         if (pid.Success) felt["_pid"] = pid.Groups[1].Value;
                         var tm = HendelseTid.Match(xml);
@@ -335,6 +343,7 @@ public sealed partial class Skanner
     private static string? Felt(Dictionary<string, string> d, string navn) => d.TryGetValue(navn, out var v) ? v : null;
 
     private const string Siste30Dager = "TimeCreated[timediff(@SystemTime) <= 2592000000]";
+    private const string SisteAar = "TimeCreated[timediff(@SystemTime) <= 31536000000]";
 
     private void Hendelseslogger()
     {
@@ -408,7 +417,7 @@ public sealed partial class Skanner
         }
     }
 
-    private void Logglest(string logg, string sporring, string hva, int maks, TimeSpan frist, Action<Dictionary<string, string>, DateTime> hver)
+    private void Logglest(string logg, string sporring, string hva, int maks, TimeSpan frist, Action<Dictionary<string, string>, DateTime> hver, string periode = "siste 30 dager")
     {
         var lest = Hendelser(logg, sporring, maks, frist, hver, out var feil);
         if (lest == null)
@@ -416,7 +425,7 @@ public sealed partial class Skanner
                 feil is 5 ? "krever administrator" : feil is 15007 or 2 ? "loggen finnes ikke på denne PC-en (ikke installert)" : $"Windows-feil {feil}");
         else
             Tilgangslogg.Logg("Hendelseslogg", logg, Utfall.Lest,
-                lest == 0 ? $"{hva}: ingen hendelser siste 30 dager (loggen er av eller tom)" : $"{hva}: {lest} hendelser siste 30 dager{(lest >= maks ? $", de {maks} nyeste" : "")}; bare programnavn, tid og AI-navn brukes");
+                lest == 0 ? $"{hva}: ingen hendelser {periode} (loggen er av eller tom)" : $"{hva}: {lest} hendelser {periode}{(lest >= maks ? $", de {maks} nyeste" : "")}; bare programnavn, tid og AI-navn brukes");
     }
 
     /// <summary>

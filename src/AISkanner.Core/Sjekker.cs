@@ -82,7 +82,7 @@ public sealed partial class Skanner
     {
         if (!Plattform.ErWindows)
         {
-            Sjekker = new[] { "BIOS (WPBT)", "SRUM", "UDP/QUIC", "Lyttende AI-porter", "Docker", "WSL", "GPU/NPU" }.Select(n => new Sjekkstatus(n, "bare Windows", -1)).ToList();
+            Sjekker = new[] { "BIOS (WPBT)", "SRUM", "UDP/QUIC", "Lyttende AI-porter", "Docker", "WSL", "GPU/NPU", "Nedlastingskilde", "Mikrofon, kamera, skjerm", "UserAssist", "Installasjonslogg" }.Select(n => new Sjekkstatus(n, "bare Windows", -1)).ToList();
             return;
         }
         var l = new List<Sjekkstatus>();
@@ -146,6 +146,25 @@ public sealed partial class Skanner
             : logg.Any(t => t.Mal.StartsWith("Ytelsestellere: GPU", StringComparison.Ordinal) && t.Utfall == Utfall.IkkeFunnet) ? new("GPU/NPU", "ingen GPU-tellere", -1, gl)
             : Lest("Ytelsestellere: GPU") ? new("GPU/NPU", "ingen AI bruker GPU nå", 0, gl)
             : _aiPid.IsEmpty ? new("GPU/NPU", "ingen AI-prosess kjørte", 0, gl) : new("GPU/NPU", "ikke målt", -1, gl));
+        // Spor Windows fører av seg selv (Kildespor.cs): hver knapp viser linjene fra funnene, ellers hva som ble lest
+        void Kildespor(string navn, string prefiks, string mal, string fant, string ingen, string ikkeLest)
+        {
+            bool Har(string d) => d.StartsWith(prefiks, StringComparison.Ordinal);
+            int n = funn.Count(f => f.Detaljer.Any(Har));
+            var linjer = Linjer(FraFunn(f => f.Detaljer.Any(Har), f => f.Detaljer.Where(Har)).Concat(Logget(mal)));
+            l.Add(n > 0 ? new(navn, $"{n} {fant}", 1, linjer) : Lest(mal) ? new(navn, ingen, 0, linjer) : new(navn, ikkeLest, -1, linjer));
+        }
+        {
+            bool Har(string d) => d.StartsWith("Nedlastet fra:", StringComparison.Ordinal);
+            int n = funn.Count(f => f.Detaljer.Any(Har)), modeller = funn.Count(f => f.Kategori == "Lokal AI (modell)");
+            var linjer = Linjer(FraFunn(f => f.Detaljer.Any(Har), f => f.Detaljer.Where(Har)));
+            l.Add(n > 0 ? new("Nedlastingskilde", $"{n} AI-modell med nedlastingsmerke", 1, linjer)
+                : modeller > 0 ? new("Nedlastingskilde", "ingen AI-modell har nedlastingsmerke", 0, new[] { $"Sjekket Zone.Identifier på {modeller} AI-modellfunn. Ingen var merket som lastet ned fra nettet (laget på PC-en, hentet av et program som Ollama, eller merket fjernet)." })
+                : new("Nedlastingskilde", "ingen AI-modell å sjekke", 0));
+        }
+        Kildespor("Mikrofon, kamera, skjerm", "Personvernloggen:", "CapabilityAccessManager", "AI har brukt dem", "lest, ingen AI", "ikke lest");
+        Kildespor("UserAssist", "UserAssist:", "UserAssist", "AI startet før", "lest, ingen AI", "ikke lest");
+        Kildespor("Installasjonslogg", "Installasjonsloggen:", "Application", "AI installert eller fjernet", "lest, ingen AI siste 12 måneder", "ikke lest");
         List<string> nl; lock (_nettsideLinjer) nl = _nettsideLinjer.ToList();
         l.Add(nl.Count > 0 ? new("AI i nettsider", $"{nl.Count} nettsted kjører AI-modell", 2, nl)
             : Lest("nettleserlagring") ? new("AI i nettsider", "ingen modeller i nettleserne", 0, Logget("nettleserlagring")) : new("AI i nettsider", "ikke lest", -1));
