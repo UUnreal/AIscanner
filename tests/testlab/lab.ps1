@@ -107,6 +107,8 @@ $farlige = Get-Content "$dl\farlige-fasit.json" -Raw | ConvertFrom-Json
 Ferdig
 
 Start-Sleep 20
+# Hvordan Hugging Face la filene (symlenke, hardlenke eller kopi) i én fullt nedlastet modell
+Get-ChildItem "$env:USERPROFILE\.cache\huggingface\hub\models--Qwen--Qwen2.5-0.5B-Instruct-GGUF" -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object { "HF-LAGRING $($_.FullName.Substring($env:USERPROFILE.Length)) | $($_.Attributes) | $($_.LinkType) | $($_.LinkTarget) | $(if (-not $_.PSIsContainer) { $_.Length })" }
 Steg 'Øyeblikksbilde etter'; $etter = Bilde; Ferdig
 Steg 'Skann maskinen med AI'; $med = Skann med; Ferdig
 
