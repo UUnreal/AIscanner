@@ -49,7 +49,7 @@ if (-not $inst.WaitForExit(600000)) { '::warning::Ollama-installasjonen brukte o
 $ollama = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
 if (-not (Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue)) { Start-Process $ollama serve -WindowStyle Hidden; Start-Sleep 5 }
 Notér 'Ollama' @('Ollama') 'program + server på 11434'
-foreach ($m in 'all-minilm:22m', 'smollm2:135m', 'gemma3:270m', 'qwen2.5:0.5b', 'qwen3:0.6b', 'llama3.2:1b', 'nomic-embed-text', 'granite-embedding:30m', 'snowflake-arctic-embed:22m', 'deepseek-r1:1.5b', 'qwen2.5-coder:0.5b', 'deepseek-coder:1.3b', 'qwen3-embedding:0.6b') {
+foreach ($m in 'all-minilm:22m', 'smollm2:135m', 'gemma3:270m', 'qwen2.5:0.5b', 'qwen3:0.6b', 'llama3.2:1b', 'nomic-embed-text', 'granite-embedding:30m', 'snowflake-arctic-embed:22m', 'deepseek-r1:1.5b', 'qwen2.5-coder:0.5b', 'qwen3-embedding:0.6b') {
   & $ollama pull $m 2>&1 | Select-Object -Last 1
   if ($LASTEXITCODE -eq 0) { Notér "Ollama-modell $m" @($m, ($m -replace ':latest$')) 'Ollama-modell' }
 }
@@ -68,8 +68,9 @@ Ferdig
 
 Steg 'llama.cpp server + løse GGUF-filer i Nedlastinger (merket «fra Internett»)'
 $dl = "$env:USERPROFILE\Downloads"; New-Item -ItemType Directory -Force $dl | Out-Null
-$rel = Invoke-RestMethod https://api.github.com/repos/ggml-org/llama.cpp/releases/latest -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
-$zip = $rel.assets | Where-Object name -match 'bin-win-cpu-x64\.zip$' | Select-Object -First 1
+$rel = Invoke-RestMethod 'https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=10' -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
+$zip = $rel.assets | Where-Object name -match 'win.*cpu.*x64.*\.zip$' | Select-Object -First 1
+if (-not $zip) { "::warning::Fant ikke llama.cpp for Windows: $(($rel | Select-Object -First 1).assets.name -join ', ')" }
 Invoke-WebRequest $zip.browser_download_url -OutFile "$Ut\llama.zip"; Expand-Archive "$Ut\llama.zip" "$env:USERPROFILE\llama.cpp" -Force
 $gguf = Get-ChildItem "$env:USERPROFILE\.cache\huggingface\hub" -Recurse -Filter *.gguf | Sort-Object Length | Select-Object -First 3
 foreach ($g in $gguf) {
@@ -166,5 +167,7 @@ foreach ($k in $etter.Keys) {
 Get-Content "$Ut\rapport.md" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 "## Spor (antall nye per kilde)" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 Select-String -Path "$Ut\spor.txt" -Pattern '^## ' | ForEach-Object { "- $($_.Line.TrimStart('# '))" } | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-Get-Content "$Ut\rapport.md" | Select-Object -First 8
+# Hele rapporten og de første sporene i loggen (artefakter kan ikke alltid lastes ned)
+Get-Content "$Ut\rapport.md"
+$etter.Keys | ForEach-Object { $k = $_; $ny = @(Compare-Object @($for[$k] | Where-Object { $_ }) @($etter[$k] | Where-Object { $_ }) | Where-Object SideIndicator -eq '=>' | ForEach-Object InputObject); "SPOR $k ($($ny.Count))"; $ny | Where-Object { $_ -notmatch '\\(pip|npm-cache|_cacache|__pycache__|site-packages|node_modules)\\' } | Select-Object -First 25 | ForEach-Object { "  $_" } }
 exit 0
