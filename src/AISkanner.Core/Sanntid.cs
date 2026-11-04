@@ -772,6 +772,7 @@ public sealed partial class Skanner
         if (rev.Success) f.SettVersjon("revisjon " + rev.Groups[1].Value.Substring(0, 7), "Hugging Face-lageret");
 
         f.Tidspunkt(opprettet < endret ? opprettet : endret, endret);
+        Nedlastingskilde(f, sti);
         var info = new List<string>();
         var fam = id.Familie ?? id.NavneFamilie;
         // Kommer fra: navnet i filen (DeepSeek) veier tyngre enn arkitekturen den bygger på (Qwen)

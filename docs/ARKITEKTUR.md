@@ -55,6 +55,7 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `UkjenteSpor.cs` | Ukjente AI-spor: MCP-oppsett med tilgangskart (`McpTilganger`), «godkjenn alt», serverlogger, agentøkter (bare metadata), skript med AI-nøkkel, dårlige pakkeversjoner. Alle røde. |
 | `Kommandolinje.cs`, `Tolkere.cs` | Kommandolinjen til tolkere og AI-funn: skript, modul, pakke, modellfil og risikoflagg. Skriptfila sjekkes for AI-biblioteker. Argumentene vises aldri. |
 | `Historikk.cs`, `Hive.cs` | Windows-historikk som admin: Prefetch, BAM, Amcache (egen leser for registerfiler), TaskCache, hendelse 4688, Sysmon og DNS-loggen. Samme leser tar andre brukeres `NTUSER.DAT` (`Skanner.AndreBrukeresRegisterfiler`). |
+| `Kildespor.cs` | Spor Windows fører uten admin: nedlastingsmerke (`Zone.Identifier`) på modellfiler, personvernloggen (`ConsentStore`), UserAssist og installasjonsloggen (MsiInstaller 1033/1034). |
 | `ModellFormat.cs` | Kjenner igjen modellformater på de første bytene, og leser GGUF- og safetensors-hodet. |
 | `ModellGjenkjenning.cs` | Modellfamilie fra arkitektur og ordforråd, modell-ID (SHA-256 eller fingeravtrykk), Ollama-navn. |
 | `Leverandor.cs` | AI lagt inn av leverandører i AppData, ProgramData, Program Files, WindowsApps og SystemApps. |

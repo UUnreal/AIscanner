@@ -30,6 +30,20 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.50.0] - 2026-11-04
+
+### Lagt til
+- Fire spor Windows fører av seg selv, uten administrator og uten at noe må slås på (`Kildespor.cs`). Bare programmer en AI-regel kjenner igjen blir funn; resten telles og vises aldri.
+  - **Nedlastingsmerke** (`Zone.Identifier`) på AI-modellfiler: hvor modellen ble lastet ned fra og siden som lenket til den. Alt etter `?` og `#` fjernes, fordi nedlastingslenker ofte har signaturer der. IP-adresse uten domenenavn eller ukryptert `http` gir advarsel. Kilde: [Digital Detective](https://www.digital-detective.net/forensic-analysis-of-zone-identifier-stream/), [Wikipedia: Mark of the Web](https://en.wikipedia.org/wiki/Mark_of_the_Web).
+  - **Personvernloggen** for mikrofon, kamera og skjermopptak (`CapabilityAccessManager\ConsentStore`, HKCU og HKLM): når et AI-program sist brukte dem, eller at det bruker dem nå. Skjermopptak gir advarsel. Avslører møteopptakere og agenter som ser på skjermen. Kilde: [Velociraptor Windows.Registry.CapabilityAccessManager](https://docs.velociraptor.app/exchange/artifacts/pages/windows.registry.capabilityaccessmanager).
+  - **UserAssist**: AI-programmer startet fra Start, oppgavelinjen eller Utforsker, med antall og siste gang. Står igjen etter avinstallering. Kilde: [winreg-artifacts userassist.rs](https://docs.rs/winreg-artifacts/0.2.2/src/winreg_artifacts/userassist.rs.html).
+  - **Installasjonsloggen** (Windows Installer 1033 og 1034, siste 12 måneder): AI-programmer installert og fjernet, med versjon og utgiver. Fanger AI som er prøvd og slettet. Kilde: [Microsoft: Event Logging (Windows Installer)](https://learn.microsoft.com/en-us/windows/win32/msi/event-logging).
+- Fire nye knapper under «Sjekket»: Nedlastingskilde, Mikrofon/kamera/skjerm, UserAssist og Installasjonslogg. Hver viser linjene funnet bygger på, eller hva som ble lest.
+- Kontroll «Windows' egne spor»: tolkingen av alle fire kildene prøves med lagde eksempler, og vanlige programmer (Notisblokk, Bilder) skal ikke treffe.
+
+### Endret
+- Hendelsesloggleseren leser også felt uten navn og hendelses-ID, slik eldre logger som MsiInstaller skriver dem.
+
 ## [2.49.0] - 2026-11-02
 
 ### Lagt til
