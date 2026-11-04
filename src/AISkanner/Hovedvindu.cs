@@ -78,6 +78,7 @@ public sealed class Hovedvindu : Form
             // Rester etter tidligere kjøringer slettes i bakgrunnen; det kan være mange filer og skal ikke holde igjen vinduet
             _ = Task.Run(() => RyddVindusdata(alle: true));
             var data = Path.Combine(Rot, $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}");
+            Program.Laster(data);
             var miljo = await CoreWebView2Environment.CreateAsync(null, data);
             await _web.EnsureCoreWebView2Async(miljo);
         }

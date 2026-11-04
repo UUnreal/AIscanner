@@ -50,15 +50,15 @@ For hver AI viser skanneren:
 
 ## Kom i gang
 
-1. Last ned zip-fila og pakk den ut til en mappe.
-2. Start `AISkanner.exe`. Programmet trenger ikke installasjon eller administrator.
+1. Last ned `AISkanner.exe`. Det er én fil, ingen zip å pakke ut.
+2. Start den. Programmet trenger ikke installasjon eller administrator.
 3. Trykk den runde knappen i midten for å søke som bruker, eller ringen rundt for å søke som administrator.
    Som administrator får du også datamengde og programmer som kjører som administrator, men Windows ber om godkjenning.
    Søket starter. Filgjennomgangen stopper etter 45 sekunder uansett.
 4. Trykk på en AI for å se detaljer. **Lagre rapport** lagrer en tekstfil (.txt) som åpnes i Notisblokk.
 
 Krav: .NET Framework 4.8 og Microsoft Edge WebView2 Runtime. Begge følger med Windows 10 og 11.
-Hele mappa er rundt 3,7 MB.
+Programmet er én fil på rundt 8 MB.
 
 Programmet er ikke signert ennå, så Windows SmartScreen viser en advarsel. Trykk «Mer info» og «Kjør likevel».
 På en jobb-PC må du spørre IT først (se [IT-INFO.md](IT-INFO.md)).
@@ -81,7 +81,8 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
 
 - **Leser bare.** Programmet endrer, sletter og installerer ingenting. Det kjører som vanlig bruker (`asInvoker`).
   Bare søk som administrator ber om det, og bare når du velger det.
-- **Starter ingen skript eller kommandolinjer**, og pakker seg ikke ut til `%TEMP%`.
+- **Starter ingen skript eller kommandolinjer.** Bibliotekene ligger inne i exe-fila og lastes fra minnet. Bare Microsofts
+  `WebView2Loader.dll` skrives til vindusmappa, som slettes. Ingenting skrives til `%TEMP%`.
 - **Åpner aldri** passord, informasjonskapsler, `Web Data`, lommebøker i nettleseren eller verdien av API-nøkler.
   Det håndheves i koden (`Skanner.LovligeFiler`).
 - **Nettleserhistorikken** leses direkte og skrivebeskyttet, og fila kopieres aldri. Bare AI-domener, antall besøk

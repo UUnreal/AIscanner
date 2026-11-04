@@ -47,7 +47,8 @@ public static class Revisjon
         var exe = Assembly.GetEntryAssembly()?.Location;
         if (string.IsNullOrEmpty(exe)) exe = Environment.GetCommandLineArgs()[0];
         liste.Add(new Kilde("Program", exe!, Fil(exe!)));
-        liste.Add(new Kilde("Kjerne", typeof(Revisjon).Assembly.Location, Fil(typeof(Revisjon).Assembly.Location)));
+        var kjerne = typeof(Revisjon).Assembly.Location;
+        liste.Add(string.IsNullOrEmpty(kjerne) ? new Kilde("Kjerne", "innebygd i AISkanner.exe", null) : new Kilde("Kjerne", kjerne, Fil(kjerne)));
         var r = s.Regelsett;
         liste.Add(r.Kilde == "innebygd" ? new Kilde("regler.json", "innebygd", Ressurs("AISkanner.regler.json")) : new Kilde("regler.json", r.Kilde, Fil(r.Kilde)));
         var y = s.Yara;

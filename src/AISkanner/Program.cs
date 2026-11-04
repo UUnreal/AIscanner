@@ -31,6 +31,24 @@ internal static class Program
     /// </summary>
     static Program() => AppDomain.CurrentDomain.AssemblyResolve += AnnenVersjon;
 
+    private static readonly Dictionary<string, Assembly> Innbakt = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// WebView2Loader.dll (Microsofts lasterfil, 166 KB) kan ikke lastes fra minnet. Den ligger inne i AISkanner.exe og
+    /// skrives til vindusmappa (%LOCALAPPDATA%\AISkanner\Vindu-pid), som slettes ved neste start. Ligger den ved siden
+    /// av programmet (gammel zip-mappe), brukes den.
+    /// </summary>
+    internal static void Laster(string mappe)
+    {
+        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "runtimes", "win-x64", "native", "WebView2Loader.dll"))) return;
+        using var r = typeof(Program).Assembly.GetManifestResourceStream("lib.native.WebView2Loader.dll");
+        if (r == null) return;
+        Directory.CreateDirectory(mappe);
+        var sti = Path.Combine(mappe, "WebView2Loader.dll");
+        using (var f = new FileStream(sti, FileMode.Create, FileAccess.Write, FileShare.Read)) r.CopyTo(f);
+        Microsoft.Web.WebView2.Core.CoreWebView2Environment.SetLoaderDllFolderPath(mappe);
+    }
+
     internal static readonly List<string> Omdirigert = new();
     [ThreadStatic] private static bool _iGang;
 
@@ -42,6 +60,17 @@ internal static class Program
             _iGang = true;
             var spurt = new AssemblyName(e.Name);
             if (string.IsNullOrEmpty(spurt.Name) || spurt.Name!.IndexOfAny(new[] { '\\', '/', ':' }) >= 0) return null;
+            // Bakt inn i AISkanner.exe (én fil): lastes fra minnet, aldri fra disk
+            lock (Innbakt)
+            {
+                if (Innbakt.TryGetValue(spurt.Name, out var kjent)) return kjent;
+                using var r = typeof(Program).Assembly.GetManifestResourceStream("lib." + spurt.Name + ".dll");
+                if (r != null)
+                {
+                    var ms = new MemoryStream(); r.CopyTo(ms);
+                    return Innbakt[spurt.Name] = Assembly.Load(ms.ToArray());
+                }
+            }
             var sti = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, spurt.Name + ".dll");
             if (!File.Exists(sti)) return null;
             var finnes = AssemblyName.GetAssemblyName(sti);
@@ -164,7 +193,9 @@ internal static class Program
                 }
             }
 
-            // WebView2: begge DLL-ene og WebView2Loader.dll (runtimes\win-x64\native) lastes
+            // WebView2: begge DLL-ene (fra minnet) og WebView2Loader.dll (skrevet til en mappe som slettes) lastes
+            var lastermappe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AISkanner", $"Vindu-{System.Diagnostics.Process.GetCurrentProcess().Id}");
+            Laster(lastermappe);
             using (var vindu = new Microsoft.Web.WebView2.WinForms.WebView2()) { }
             try { Console.WriteLine("WebView2: " + Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString()); }
             catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException) { Console.WriteLine("WebView2: lasteren virker, Edge WebView2 Runtime er ikke installert"); }
