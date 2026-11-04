@@ -58,14 +58,14 @@ foreach ($m in 'smollm2:135m', 'llama3.2:1b') { Invoke-RestMethod http://127.0.0
 Ferdig
 
 Steg 'Hugging Face: mange ekte modeller'
-python -m pip install -q huggingface_hub transformers torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
+python -m pip install -q requests huggingface_hub transformers torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
 # AI-pakker i et prosjekt med eget Python-miljø i brukerens mappe, slik utviklere har dem
 python -m venv "$env:USERPROFILE\prosjekt-ai\.venv"
 & "$env:USERPROFILE\prosjekt-ai\.venv\Scripts\python.exe" -m pip install -q openai anthropic langchain-core llama-index-core ollama mcp
 python tests/testlab/hent-modeller.py $Hf $MaksMb "$Ut\hf-fasit.json"
 $hfFasit = Get-Content "$Ut\hf-fasit.json" -Raw | ConvertFrom-Json
 foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', ')) $($h.arkitektur)" $h.kina $h.russland }
-foreach ($p in 'openai', 'anthropic', 'langchain-core', 'llama-index-core', 'mcp') { Notér "Python-pakke $p (venv)" @($p) 'AI-bibliotek i prosjekt-venv' }
+Notér 'Python-miljø med AI-pakker (prosjekt-ai\.venv: openai, anthropic, langchain, llama-index, mcp)' @('prosjekt-ai') 'AI-biblioteker i prosjekt-venv'
 Ferdig
 
 Steg 'llama.cpp server + løse GGUF-filer i Nedlastinger (merket «fra Internett»)'
@@ -144,7 +144,9 @@ L ""; L "| | Fil | Angrep | Forventet | Skanneren |"; L "|---|---|---|---|---|"
 $farligOk = 0
 foreach ($f in $farlige) {
   $hit = $funnTekst | Where-Object { $_.T.IndexOf($f.navn, [StringComparison]::OrdinalIgnoreCase) -ge 0 } | Select-Object -First 1
-  $rod = $hit -and $hit.F.risiko -eq 'rod' -and $hit.T -match 'farlig|ondsinnet|kjører kode|kjorer|Lambda|CVE'
+  # Bare advarsler og begrunnelse teller, ikke filnavnet (som selv inneholder «ondsinnet»)
+  $grunn = (@($hit.F.advarsler) + @($hit.F.merknader) + @($hit.F.risikoGrunn) + @($hit.F.hvorfor) + @($hit.F.navn -replace [regex]::Escape($f.navn), '') -replace 'testlab-ondsinnet-mal', '') -join ' '
+  $rod = $hit -and $hit.F.risiko -eq 'rod' -and $grunn -match 'Farlig|kjører kommandoer|kjøre kode|Lambda|CVE|Python-internals'
   $riktig = if ($f.forventet -eq 'rod') { $rod } else { -not $rod }
   if ($riktig) { $farligOk++ }
   L "| $(if ($riktig) { '✅' } else { '❌' }) | $($f.navn) | $($f.hva) | $($f.forventet) | $(if ($hit) { "$($hit.F.risiko): $($hit.F.navn)" } else { 'ikke funnet' }) |"
