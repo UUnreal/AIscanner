@@ -30,7 +30,15 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
-## [2.52.2] - 2026-11-04
+## [2.52.3] - 2026-11-04
+
+### Endret
+- Samme program som 2.52.2. Taggen `v2.52.2` ble laget før endringene var i main, så den utgivelsen fikk ingen filer.
+  2.52.3 er den første utgivelsen med `AISkanner.exe` som én fil.
+- Hjemmesiden: skjermbilde øverst tilpasset PC og mobil, live demo av programmets vindu med oppdiktede funn, og
+  kontaktinfo nederst.
+
+## [2.52.2] - 2026-11-04 (ikke utgitt)
 
 ### Endret
 - Én fil: `AISkanner.exe` er hele programmet og kan lastes ned og kjøres alene, uten zip. Bibliotekene ligger inne
