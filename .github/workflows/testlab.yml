@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+# Ny kjøring stopper den forrige på samme gren (sparer Windows-minutter)
+concurrency:
+  group: testlab-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lab:
     runs-on: windows-latest
