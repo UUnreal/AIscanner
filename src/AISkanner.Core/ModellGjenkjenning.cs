@@ -80,12 +80,13 @@ internal static class ModellGjenkjenning
         {
             bool a = ark != null && f.Arkitekturer.Any(x => Norm(x) == Norm(ark));
             bool v = vokab != null && f.Vokab.Contains(vokab.Value);
+            if (f.KreverVokab && !(a && v)) continue;
             int score = (a ? 2 : 0) + (v ? (f.DeltVokab ? 1 : 2) : 0);
             if (score > besteScore) { beste = f; besteScore = score; arkTreff = a; vokabTreff = v; }
         }
         if (besteScore < 2) beste = null;
         // Bare arkitekturen, og flere familier bruker den (f.eks. "llama"): for svakt til å sette navn
-        if (beste != null && !vokabTreff && regler.Modellfamilier.Count(f => f.Arkitekturer.Any(x => Norm(x) == Norm(ark))) > 1) beste = null;
+        if (beste != null && !vokabTreff && regler.Modellfamilier.Count(f => !f.KreverVokab && f.Arkitekturer.Any(x => Norm(x) == Norm(ark))) > 1) beste = null;
 
         // Familien navnet peker på
         var navn = string.Join(" ", new[] { m.Navn, kildenavn, configNavn, m.BaseModell, m.Organisasjon, Path.GetFileNameWithoutExtension(sti) }.Where(x => x != null)).ToLowerInvariant();

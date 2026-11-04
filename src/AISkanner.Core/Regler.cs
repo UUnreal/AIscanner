@@ -45,6 +45,10 @@ public sealed class ModellFamilie
     [JsonPropertyName("deltVokab")] public bool DeltVokab { get; set; }
     [JsonPropertyName("ord")] public List<string> Ord { get; set; } = new();
     [JsonPropertyName("type")] public string? Type { get; set; }
+    /// <summary>Arkitekturen deles med en annen familie: teller bare sammen med ordforrådet (GigaChat bruker DeepSeek-arkitektur).</summary>
+    [JsonPropertyName("kreverVokab")] public bool KreverVokab { get; set; }
+    /// <summary>Offentlige kilder for opphav og kjennetegn. Vises i detaljene.</summary>
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
 }
 
 /// <summary>AI som leverandører legger inn i egne programmer. Gir bare navn: funnet gjøres på innholdet.</summary>

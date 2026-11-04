@@ -91,6 +91,7 @@ public static class Rapport
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
+            if (Rammeverk.For(f) is { Count: > 0 } rv) L($"  Kjent risiko: {string.Join(" · ", rv)}");
             // Hvert land med grunnlaget: sett i en forbindelse under søket, eller bare landet til leverandøren
             foreach (var k in Risikoregler.SenderTil(f))
                 L(f.Trafikk.Any(m => m.Land == k || m.EierLand == k)
@@ -170,6 +171,7 @@ public static class Rapport
             // Aldri hele adresser eller sidetitler: de leses aldri inn i minnet som funn.
             forst = f.Forst, sist = f.Sist,
             advarsler = f.Advarsler,
+            rammeverk = Rammeverk.For(f),
             hvor = f.Hvor,
             merknader = f.Merknader,
             detaljer = f.Detaljer,

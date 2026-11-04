@@ -93,7 +93,7 @@ public sealed partial class Skanner
     private static (int Ok, int Alle) KinaKontroll(Skanner s, Regelsett regler, StringBuilder sb)
     {
         int ok = 0, alle = 0;
-        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Kina: {hva}"); }
+        void Sjekk(bool riktig, string hva) { alle++; if (riktig) ok++; else sb.AppendLine($"FEIL  Kina/Russland: {hva}"); }
         foreach (var v in KinaVerter)
             Sjekk(s.Tjeneste(v) is { Land: "CN" } t && RisikoTekst.Fra(t.Risiko) == Risiko.Rod, $"{v} gjenkjennes ikke som AI i Kina");
         foreach (var v in IkkeAiVerter)
@@ -104,7 +104,7 @@ public sealed partial class Skanner
             Sjekk(s.FinnRegel(tekst) == null, $"{tekst} er ikke AI, men ble gjenkjent som {s.FinnRegel(tekst)?.Navn}");
         foreach (var ark in KinaArkitekturer)
         {
-            var fam = regler.Modellfamilier.Where(f => f.Arkitekturer.Any(x => ModellGjenkjenning.Norm(x) == ModellGjenkjenning.Norm(ark))).ToList();
+            var fam = regler.Modellfamilier.Where(f => !f.KreverVokab && f.Arkitekturer.Any(x => ModellGjenkjenning.Norm(x) == ModellGjenkjenning.Norm(ark))).ToList();
             Sjekk(fam.Count == 1 && fam[0].Land == "CN", $"modellarkitektur {ark} peker ikke entydig på en kinesisk familie");
         }
         // Russiske finjusteringer bygger ofte på Qwen/Llama: navnet eller organisasjonen avslører dem, også uten innhold
@@ -115,6 +115,16 @@ public sealed partial class Skanner
             Sjekk(id.NavneFamilie is { Land: "RU" } nf && nf.Utgiver == utgiver, $"{kilde ?? sti} gjenkjennes ikke som russisk modell fra {utgiver}");
         }
         Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, null, null, false), @"C:\m\gpt-lite-v2.gguf", regler, null).NavneFamilie?.Land != "RU", "gpt-lite ble feilaktig russisk (T-lite)");
+        // Innholdet alene (omdøpt fil uten navn): arkitektur + ordforråd fra config.json til Yandex og Sber
+        foreach (var (ark, vokab, navn) in new[] { ("llama", 129024, "YandexGPT"), ("deepseek2", 128256, "GigaChat"), ("deepseek", 128256, "GigaChat"),
+                     ("deepseek2", 129280, "DeepSeek"), ("llama", 128256, "Llama 3"), ("qwen3", 151936, "Qwen") })
+        {
+            var id = ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, ark, null, false) { Vokab = vokab }, @"C:\m\x.gguf", regler, null);
+            Sjekk(id.Familie?.Navn == navn && id.Sikkerhet == "sikker", $"{ark} med ordforråd {vokab} gjenkjennes ikke sikkert som {navn} (ble {id.Familie?.Navn ?? "ukjent"})");
+        }
+        foreach (var f in regler.Modellfamilier.Where(f => f.Land == "RU"))
+            Sjekk(f.Kilde?.Contains("https://") == true, $"russisk modellfamilie {f.Navn} mangler kilde");
+        Sjekk(ModellGjenkjenning.Finn(new ModellFormat.Modell("GGUF", null, null, null, false), @"C:\m\saiga_nemo_12b.Q4_K_M.gguf", regler, null).NavneFamilie?.Land == null, "Saiga merkes Russland uten kilde på opphavsland");
         return (ok, alle);
     }
 
@@ -675,7 +685,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(tilKina ? "OK  " : "FEIL")}  Nett: AI-program som sender til DeepSeek blir rødt med «Sender data til … Kina»");
             var (kinaOk, kinaAlle) = KinaKontroll(s, regler, sb);
             ok += kinaOk;
-            sb.AppendLine($"{(kinaOk == kinaAlle ? "OK  " : "FEIL")}  Kinesisk AI: {kinaOk} av {kinaAlle} regler riktige (nettsteder, API-er, programmer, modellfamilier og navn som ikke skal treffe)");
+            sb.AppendLine($"{(kinaOk == kinaAlle ? "OK  " : "FEIL")}  Kinesisk og russisk AI: {kinaOk} av {kinaAlle} regler riktige (nettsteder, API-er, programmer, modellfamilier, innhold uten navn, kilder og navn som ikke skal treffe)");
             // Tallene øverst: hvert funn i nøyaktig én art og én risikogruppe, og begge summerer til antall rader
             var tf = Oversikt.Telling(funn);
             bool stemmer = tf.Totalt == funn.Count && tf.Hoy + tf.Middels + tf.Lav + tf.Ukjent == funn.Count;
@@ -712,7 +722,10 @@ public sealed partial class Skanner
             var (ksOk, ksAlle) = KildesporKontroll(s, sb);
             ok += ksOk;
             sb.AppendLine($"{(ksOk == ksAlle ? "OK  " : "FEIL")}  Windows' egne spor: {ksOk} av {ksAlle} riktige (nedlastingsmerke uten ? og #, UserAssist, personvernloggen, installasjonsloggen, vanlige programmer ikke)");
-            int alle = Kontrollspor.Length + 4 + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
+            var (rvOk, rvAlle) = RammeverkKontroll(sb);
+            ok += rvOk;
+            sb.AppendLine($"{(rvOk == rvAlle ? "OK  " : "FEIL")}  Kjent risiko (OWASP, MITRE ATLAS): {rvOk} av {rvAlle} riktige (advarsler, Vakt live, ATLAS fra reglene uten dobbel, vanlige funn uten merke)");
+            int alle = Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

@@ -24,20 +24,52 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
+- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
+  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
 - Versjonstagger (`vX.Y.Z`) lager en GitHub-utgivelse med zip-fila, `AISkanner.exe`, `SHA256.txt` og `CHANGELOG.md`.
 - `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
   navn eller domener i filstier.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.0] - 2026-11-04
+
+### Lagt til
+- **Kjent risiko** på hvert funn som svarer til en kjent risiko: OWASP Top 10 for LLM (2025), OWASP Top 10 for Agentic Applications (2026) og MITRE ATLAS. Vises som én linje øverst i funnet, med fullt navn når musa holdes over, og i rapporten. Merket kommer bare fra det funnet viser (advarslene og linjene med kilde), aldri fra navnet på produktet. ATLAS-ID-ene hentes fra angrepsreglene (ATR, SigmaHQ). Funn uten slikt grunnlag får ikke merke. Kilder: [OWASP LLM Top 10](https://genai.owasp.org/llm-top-10/), [OWASP Agentic Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), [MITRE ATLAS](https://atlas.mitre.org/).
+- Vakt viser OWASP-koden live ved siden av ATR- og ATLAS-kilden for hver hendelse.
+- Kontroll «Kjent risiko»: riktige merker for kjente advarsler og Vakt-linjer, og ingen merker på vanlige funn.
+
+### Endret
+- Om-teksten sier at funnene viser OWASP og ATLAS, og har en ny del «Det ingen PC kan se» (kryptert innhold, skyen, forgiftede vekter, tillit mellom agenter og mennesker).
+
 ## [2.51.0] - 2026-11-04
 
 ### Lagt til
-- Russiske AI-modeller kjennes igjen på navn og Hugging Face-organisasjon (GigaChat og ruGPT fra Sber, YandexGPT,
-  T-lite/T-pro fra T-Bank, Cotype fra MTS, Vikhr, Saiga, RuAdapt), også når de er bygget på Qwen eller Llama.
-  Modellen får merknaden «Laget av … i Russland», som kinesiske modeller får for Kina. GGUF-feltet `general.organization` teller også.
-- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
-  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
+- Russiske AI-modeller kjennes igjen, også når de er bygget på Qwen, Llama eller DeepSeek. Hver regel har offentlige
+  kilder i `regler.json` (felt `kilde`), og kilden vises i detaljene til funnet. Modellen får merknaden
+  «Laget av … i Russland», som kinesiske modeller får for Kina.
+  - På innholdet, også når fila er omdøpt og navnet mangler (arkitektur + ordforråd fra modellens egen `config.json`):
+    YandexGPT = Llama-arkitektur med ordforråd 129 024 (yandex/YandexGPT-5-Lite-8B-instruct og -pretrain).
+    GigaChat = DeepSeek-arkitektur med ordforråd 128 256 (ai-sage/GigaChat3.1-10B-A1.8B, ai-sage/GigaChat-20B-A3B).
+    DeepSeek selv bruker 129 280 eller 102 400, så DeepSeek og Llama 3 gjenkjennes som før.
+  - På navn og Hugging Face-organisasjon (filnavn, GGUF `general.name`/`general.organization`/`general.base_model`,
+    Hugging Face-lagerets mappenavn og Ollama-manifester): GigaChat (ai-sage, Sber), Sber AI (ai-forever og gammelt
+    navn sberbank-ai: ruGPT, FRED-T5, ruBERT), T-lite/T-pro (t-tech, T-Bank), Cotype (MTSAIR, MTS/MWS AI),
+    Vikhr (ITMO/HSE), RuAdapt (MGU).
+- Ny regelegenskap `kreverVokab`: arkitekturen teller bare sammen med ordforrådet, for familier som låner en annen
+  families arkitektur.
+- `--kontroll` prøver at omdøpte YandexGPT- og GigaChat-filer kjennes igjen på innholdet, at DeepSeek, Llama 3 og
+  Qwen ikke påvirkes, og at hver russisk familie har en kilde.
+
+### Endret
+- Saiga (IlyaGusev) vises som russiskspråklig modell, men merkes ikke Russland: ingen kilde oppgir opphavsland
+  eller organisasjon.
+
+### Ikke bekreftet
+- T-pro 2.0 (ordforråd 151 668) og RuAdapt (145 152) har eget ordforråd, men det er ikke vist at ingen andre modeller
+  bruker samme størrelse. De kjennes derfor bare igjen på navn og organisasjon, ikke på innholdet alene.
+- Antall ord i GGUF-filer forutsetter at fila er laget med llama.cpp sitt vanlige konverteringsverktøy, som fyller
+  opp til `vocab_size`. Prøves i testlaben.
 
 ## [2.50.0] - 2026-11-04
 

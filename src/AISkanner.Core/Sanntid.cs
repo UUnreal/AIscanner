@@ -790,6 +790,7 @@ public sealed partial class Skanner
         f.Detalj(fam != null
             ? $"Gjenkjent som: {id.FamilieTekst} ({id.Sikkerhet}){(id.Bevis.Count > 0 ? ": " + string.Join(", ", id.Bevis) : "")}"
             : $"Familie ukjent{(id.Bevis.Count > 0 ? ": " + string.Join(", ", id.Bevis) : "")}");
+        foreach (var k in new[] { id.NavneFamilie, id.Familie }.Where(x => x?.Kilde != null).Select(x => x!.Kilde).Distinct()) f.Detalj($"Kilde for gjenkjenningen: {k}");
         if (m.Type != null && m.Type != "språkmodell") f.Detalj($"Type: {m.Type}");
         if (id.Sha256 != null) f.Detalj($"Modell-ID (SHA-256, lik på alle PC-er): {id.Sha256}");
         else if (id.Fingeravtrykk != null) f.Detalj($"Modell-ID (fingeravtrykk, likt på alle PC-er): {id.Fingeravtrykk}");
