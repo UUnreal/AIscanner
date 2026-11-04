@@ -1,0 +1,48 @@
+name: Testlab
+
+# Ren Windows-maskin får ekte AI og mange ekte modeller installert, skanneren kjøres før og etter.
+# Startes for hånd (Actions → Testlab → Run workflow), hver mandag, og når laben selv endres.
+on:
+  workflow_dispatch:
+    inputs:
+      modeller: { description: 'Antall Hugging Face-modeller', default: '100' }
+      maks_mb: { description: 'Største vektfil per modell (MB)', default: '60' }
+  schedule:
+    - cron: '0 4 * * 1'
+  pull_request:
+    paths: ['tests/testlab/**', '.github/workflows/testlab.yml']
+
+permissions:
+  contents: read
+
+# Ny kjøring stopper den forrige på samme gren (sparer Windows-minutter)
+concurrency:
+  group: testlab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lab:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with: { dotnet-version: '8.0.x' }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - name: Bygg
+        run: dotnet build src/AISkanner.Cli -c Release
+      - name: Kjør laben
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HF_HUB_DISABLE_PROGRESS_BARS: '1'
+        run: ./tests/testlab/lab.ps1 -Hf ${{ inputs.modeller || '100' }} -MaksMb ${{ inputs.maks_mb || '60' }}
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: testlab
+          path: |
+            ${{ runner.temp }}/lab/*.md
+            ${{ runner.temp }}/lab/*.txt
+            ${{ runner.temp }}/lab/*.json

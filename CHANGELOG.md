@@ -30,6 +30,24 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.1] - 2026-11-04
+
+Funnet av testlaben: en ren Windows-maskin hos GitHub med ekte Ollama, llama.cpp og modeller fra Hugging Face.
+
+### Lagt til
+- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
+  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
+
+### Rettet
+- Hugging Face-modeller ble ikke funnet når lageret bruker symlenker (Windows med utviklermodus eller administrator):
+  `snapshots\<rev>\fil` peker til `blobs\<sha>`, og i nyere huggingface_hub videre til et felles `hub\blobs\xx\<sha>`.
+  Nå følges kjeden under lenkens navn, så modellen får repo, filnavn og opphav, og blob-mappene telles ikke en gang til
+  (før ble noen av dem vist som et sha-navn).
+- BAAI-modellene (bge) fra Beijing ble ikke merket Kina. De kjennes nå på navnet, med kilde.
+- Pythia (EleutherAI) ble kalt Allen AI fordi OLMo 1 bruker samme ordforråd (50 304). Ordforrådet teller nå som delt.
+- Pickle skrevet med `BINUNICODE` i stedet for `SHORT_BINUNICODE` (samme `os.system`-kall) slapp gjennom YARA-regelen.
+- Pickle i protokoll 0 og 1 (uten `0x80`-hode) med endelsen `.pkl`/`.pickle` ble aldri sjekket.
+
 ## [2.52.0] - 2026-11-04
 
 ### Lagt til

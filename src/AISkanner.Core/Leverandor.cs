@@ -270,7 +270,7 @@ public sealed partial class Skanner
             return;
         }
         long lengde = fil.Length;
-        if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) SjekkLitenModell(fil, ff);
+        if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) SjekkLitenModell(fil, ff, lengde);
         if (lengde < 1024 * 1024) return;
         string? format = null;
         if (InnebygdeFormater.TryGetValue(ext, out var kjent)) format = kjent;
