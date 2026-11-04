@@ -30,6 +30,16 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.0] - 2026-11-04
+
+### Lagt til
+- **Kjent risiko** på hvert funn som svarer til en kjent risiko: OWASP Top 10 for LLM (2025), OWASP Top 10 for Agentic Applications (2026) og MITRE ATLAS. Vises som én linje øverst i funnet, med fullt navn når musa holdes over, og i rapporten. Merket kommer bare fra det funnet viser (advarslene og linjene med kilde), aldri fra navnet på produktet. ATLAS-ID-ene hentes fra angrepsreglene (ATR, SigmaHQ). Funn uten slikt grunnlag får ikke merke. Kilder: [OWASP LLM Top 10](https://genai.owasp.org/llm-top-10/), [OWASP Agentic Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), [MITRE ATLAS](https://atlas.mitre.org/).
+- Vakt viser OWASP-koden live ved siden av ATR- og ATLAS-kilden for hver hendelse.
+- Kontroll «Kjent risiko»: riktige merker for kjente advarsler og Vakt-linjer, og ingen merker på vanlige funn.
+
+### Endret
+- Om-teksten sier at funnene viser OWASP og ATLAS, og har en ny del «Det ingen PC kan se» (kryptert innhold, skyen, forgiftede vekter, tillit mellom agenter og mennesker).
+
 ## [2.51.0] - 2026-11-04
 
 ### Lagt til

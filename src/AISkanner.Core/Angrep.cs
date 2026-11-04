@@ -313,7 +313,7 @@ public sealed partial class Skanner
             foreach (var h in g.Take(30))
             {
                 f.Tidspunkt(h.Tid, h.Tid);
-                f.Detalj($"{h.Tid:HH:mm:ss} · {h.Regel} · Program: {h.Program} (PID {h.Pid}){(h.Hva != null ? " · " + h.Hva : "")} · Regel: {h.Kilde} · Kilde: {(v.Etw ? "Windows' hendelser i sanntid" : "prosesslista")}");
+                f.Detalj($"{h.Tid:HH:mm:ss} · {h.Regel} · Program: {h.Program} (PID {h.Pid}){(h.Hva != null ? " · " + h.Hva : "")} · Regel: {Rammeverk.MedOwasp(h.Regel, h.Kilde)} · Kilde: {(v.Etw ? "Windows' hendelser i sanntid" : "prosesslista")}");
             }
         }
     }
