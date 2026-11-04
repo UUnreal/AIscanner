@@ -8,8 +8,8 @@ antall, maks_mb, ut = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
 # Kinesiske modeller prioriteres (Jørund: kritiske). De får større filer (én liten kvantisering) innenfor et samlet budsjett.
 # Russiske modeller (Jørund: samme behandling). Mange er finjusterte Qwen/Llama, så org og navn er beviset.
 KINA_MB, KINA_BUDSJETT = 700, 5000
-RUSSLAND = re.compile(r"gigachat|ai-sage|ai-forever|sberbank-ai|yandex|t-tech|t-lite|t-pro|cotype|mtsair|vikhr|saiga|ilyagusev|ruadapt|refalmachine|deepvk|cointegrated|rugpt|fred-t5", re.I)
-RU_ORG = ["ai-sage", "ai-forever", "sberbank-ai", "yandex", "t-tech", "MTSAIR", "Vikhrmodels", "IlyaGusev", "RefalMachine", "deepvk", "cointegrated", "AnatoliiPotapov"]
+RUSSLAND = re.compile(r"gigachat|ai-sage|ai-forever|sberbank-ai|yandex|t-tech|t-lite|t-pro|cotype|mtsair|vikhr|ruadapt|refalmachine|deepvk|cointegrated|rugpt|fred-t5", re.I)
+RU_ORG = ["ai-sage", "ai-forever", "sberbank-ai", "yandex", "t-tech", "MTSAIR", "Vikhrmodels", "RefalMachine", "deepvk", "cointegrated", "AnatoliiPotapov"]
 CN_ORG = ["Qwen", "deepseek-ai", "THUDM", "zai-org", "01-ai", "baichuan-inc", "internlm", "openbmb", "MiniMaxAI", "moonshotai", "tencent", "baidu", "BAAI", "stepfun-ai", "Alibaba-NLP", "ByteDance-Seed", "inclusionAI", "rednote-hilab", "XiaomiMiMo"]
 # Ekte tall: antall offentlige modeller per organisasjon, og hvor mange som bygger på dem (finjusteringer, kvantiseringer)
 telling = {}
