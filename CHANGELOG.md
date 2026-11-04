@@ -24,16 +24,20 @@ Kategoriene er:
 ## [Ikke utgitt]
 
 ### Lagt til
-- Russiske AI-modeller kjennes igjen på navn og Hugging Face-organisasjon (GigaChat og ruGPT fra Sber, YandexGPT,
-  T-lite/T-pro fra T-Bank, Cotype fra MTS, Vikhr, Saiga, RuAdapt), også når de er bygget på Qwen eller Llama.
-  Modellen får merknaden «Laget av … i Russland», som kinesiske modeller får for Kina. GGUF-feltet `general.organization` teller også.
-- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
-  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
 - Versjonstagger (`vX.Y.Z`) lager en GitHub-utgivelse med zip-fila, `AISkanner.exe`, `SHA256.txt` og `CHANGELOG.md`.
 - `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
   navn eller domener i filstier.
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
+
+## [2.51.0] - 2026-11-04
+
+### Lagt til
+- Russiske AI-modeller kjennes igjen på navn og Hugging Face-organisasjon (GigaChat og ruGPT fra Sber, YandexGPT,
+  T-lite/T-pro fra T-Bank, Cotype fra MTS, Vikhr, Saiga, RuAdapt), også når de er bygget på Qwen eller Llama.
+  Modellen får merknaden «Laget av … i Russland», som kinesiske modeller får for Kina. GGUF-feltet `general.organization` teller også.
+- Testlab (`.github/workflows/testlab.yml`): en ren Windows-maskin får ekte AI og mange ekte modeller installert, og
+  skanneren måles mot fasit, med egne tabeller for kinesiske og russiske modeller og alle nye spor.
 
 ## [2.50.0] - 2026-11-04
 
