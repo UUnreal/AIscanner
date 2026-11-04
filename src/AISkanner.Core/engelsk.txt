@@ -1654,3 +1654,5 @@ AI installert eller fjernet|AI installed or removed
 lest, ingen AI siste 12 måneder|read, no AI in the last 12 months
 lest, ingen AI|read, no AI
 siste 12 måneder|last 12 months
+Kjent risiko:|Known risk:
+Kjent risiko|Known risk

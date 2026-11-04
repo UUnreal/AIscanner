@@ -1268,7 +1268,8 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
       : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "Nobody")}</div><div class="liten">${L("Kjører bare på PC-en", "Runs only on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
     d.innerHTML = `<button class="lukk hjorne" id="tilbake" title="${esc(L("Lukk (Esc)", "Close (Esc)"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button><div class="dTopp"><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>
       <div class="dMeta"><span class="merke"><span class="prikk ${f.risiko}"></span>${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div>
-      <div class="dMeta"><span>${esc([(f.tilstander || []).join(", "), f.treffsikkerhet ? L(`treffsikkerhet ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "spor" : "uavhengige spor"})`, `confidence ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "trace" : "independent traces"})`) : "", f.godkjenning || ""].filter(Boolean).join(" · "))}</span></div></div>
+      <div class="dMeta"><span>${esc([(f.tilstander || []).join(", "), f.treffsikkerhet ? L(`treffsikkerhet ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "spor" : "uavhengige spor"})`, `confidence ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "trace" : "independent traces"})`) : "", f.godkjenning || ""].filter(Boolean).join(" · "))}</span></div>
+      ${f.rammeverk ? `<div class="dMeta"><span title="${esc(f.rammeverk.alle.join("\n"))}">${L("Kjent risiko", "Known risk")}: ${esc(f.rammeverk.kort)}</span></div>` : ""}</div>
       <div class="flyt">
         <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
         <div class="pil2">${PIL}</div>
@@ -1444,11 +1445,16 @@ function omTekst() {
       L("YARA: egen motor i C# (uten libyara) med egne regler for AI-modeller.", "YARA: own engine in C# (no libyara) with own rules for AI models.") + kilde("https://virustotal.github.io/yara/"),
       L("ATR (Agent Threat Rules): mønstre for angrep på AI-agenter.", "ATR (Agent Threat Rules): patterns for attacks on AI agents.") + kilde("https://github.com/Agent-Threat-Rule/agent-threat-rules"),
       L("SigmaHQ: regler for mistenkelige kommandoer i Windows.", "SigmaHQ: rules for suspicious commands on Windows.") + kilde("https://github.com/SigmaHQ/sigma"),
-      L("MITRE ATLAS: hver angrepsregel viser teknikk-ID.", "MITRE ATLAS: every attack rule shows its technique ID.") + kilde("https://atlas.mitre.org/"),
-      L("OWASP Top 10 for LLM og agenter: brukt for å finne hull i dekningen.", "OWASP Top 10 for LLM and agents: used to find gaps in coverage.") + kilde("https://genai.owasp.org/"),
+      L("MITRE ATLAS: hver angrepsregel har teknikk-ID, og funnet viser den under «Kjent risiko».", "MITRE ATLAS: every attack rule has a technique ID, and the finding shows it under «Known risk».") + kilde("https://atlas.mitre.org/"),
+      L("OWASP Top 10 for LLM (2025) og for agenter (2026): funnet viser hvilken risiko det svarer til, også live i Vakt. Merket kommer fra det funnet viser, aldri fra navnet på produktet.", "OWASP Top 10 for LLM (2025) and for agents (2026): the finding shows which risk it matches, also live in Vakt. The tag comes from what the finding shows, never from the product name.") + kilde("https://genai.owasp.org/"),
       L("IP til land: DB-IP Lite (CC BY 4.0), innebygd.", "IP to country: DB-IP Lite (CC BY 4.0), built in.") + kilde("https://db-ip.com/db/lite.php"),
       L("IP til eier (ASN): ip-location-db (DB-IP og RouteViews, CC BY 4.0), innebygd.", "IP to owner (ASN): ip-location-db (DB-IP and RouteViews, CC BY 4.0), built in.") + kilde("https://github.com/sapics/ip-location-db"),
       L("Kjente sikkerhetshull: NVD (bare produktnavnet sendes).", "Known vulnerabilities: NVD (only the product name is sent).") + kilde("https://nvd.nist.gov/"),
+    ])
+    + del(L("Det ingen PC kan se", "What no PC can see"), [
+      L("Innholdet i kryptert trafikk (det AI-en får og svarer).", "The content of encrypted traffic (what the AI receives and answers)."),
+      L("Det som skjer i skyen: systemprompter, misbruk av stjålne nøkler, innlogging mellom MCP og tjenester.", "What happens in the cloud: system prompts, misuse of stolen keys, sign-in between MCP and services."),
+      L("Forgiftede modellvekter, og tillit og logikk mellom agenter og mennesker (OWASP LLM04 delvis, LLM07, LLM09, ASI08, ASI09).", "Poisoned model weights, and trust and logic between agents and people (OWASP LLM04 partly, LLM07, LLM09, ASI08, ASI09)."),
     ])
     + del(L("Personvern", "Privacy"), [
       L("Leser aldri passord, informasjonskapsler, skjemadata, nøkkelverdier, innholdet i AI-samtaler eller minnet til andre programmer.", "Never reads passwords, cookies, form data, key values, the content of AI chats or the memory of other programs."),

@@ -413,6 +413,8 @@ public sealed class Hovedvindu : Form
                 lokasjon = T(Oversikt.Lokasjon(f)),
                 type = T(f.Type),
                 grunn = T(f.RisikoGrunn),
+                // Kjent risiko (OWASP, MITRE ATLAS) ut fra det funnet viser. Kodene er like på norsk og engelsk
+                rammeverk = Rammeverk.For(f) is { Count: > 0 } rv ? new { kort = Rammeverk.Kort(rv), alle = rv } : null,
                 kommerFra = f.OpprinnelseLand == null ? null : T(IpLand.Navn(f.OpprinnelseLand)),
                 selskap = T(f.Opprinnelse),
                 kommerFraFarlig = f.OpprinnelseLand != null && farlige.Contains(f.OpprinnelseLand),
@@ -593,7 +595,7 @@ public sealed class Hovedvindu : Form
                     {
                         status = T(_vakt.Status), startet = _vakt.Startet.ToString("HH:mm:ss"), starter = Interlocked.Read(ref _vakt.Starter),
                         agenter = _vakt.Agenter().Select(a => new { pid = a.Pid, agent = a.Agent }),
-                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = h.Kilde, agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod }),
+                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = Rammeverk.MedOwasp(h.Regel, h.Kilde), agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod }),
                     },
                     kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj), rader = k.Rader?.Select(r => new { t = T(r.Tittel), m = T(r.Meta), u = T(r.Under) }) }),
                     rader = b.Rader.Select(r => new
