@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-skanner – demo</title>
+<meta name="color-scheme" content="light dark">
+<style>iframe{position:fixed;inset:0;width:100%;height:100%;border:0}body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;background:#f3f3f5;color:#1d1d1f}@media(prefers-color-scheme:dark){body{background:#161618;color:#f5f5f7}}</style>
+</head>
+<body>
+<main><p>Laster demoen … / Loading the demo …</p><noscript>Demoen trenger JavaScript. / The demo needs JavaScript.</noscript></main>
+<script>
+(function () {
+// Demo: henter programmets eget vindu fra main og kjører det med oppdiktede funn. Ingenting leses fra din PC.
+var D = [
+ ["DeepSeek-R1 (GGUF-modell)","DeepSeek-R1","rod","lokal","Lokal modell","Local model","Nedlastinger","Downloads",[{land:"Kina",en:"China",farlig:true}],"Kinesisk modell lastet ned av brukeren.","Chinese model downloaded by the user."],
+ ["Claude Code","","rod","skjult","AI-agent","AI agent","Brukermappe","User folder",[{land:"USA",sett:true}],"Agent med «godkjenn alt» slått på.","Agent with “approve everything” turned on."],
+ ["chatgpt.com","","rod","nettleser","AI-nettsted","AI website","Chrome","Chrome",[{land:"USA"}]],
+ ["Ollama","","rod","lokal","Lokal AI-server","Local AI server","Programfiler","Program Files",null],
+ ["Ukjent modellfil (safetensors)","Ukjent modellfil","ukjent","lokal","Modell uten kjent familie","Model with no known family","D:\\Prosjekt","D:\\Project",null],
+ ["Gemini Nano","","gul","skjult","Nettlesermodell","Browser model","Chrome","Chrome",null],
+ ["Copilot i Windows","","gul","skjult","Fra Microsoft","From Microsoft","Windows","Windows",[{land:"USA"}]],
+ ["NVIDIA Broadcast","","gronn","skjult","Fra leverandør","From vendor","Programfiler","Program Files",null]];
+// Hvem som lager det: land og selskap
+var K = [["Kina","China","DeepSeek"],["USA","USA","Anthropic"],["USA","USA","OpenAI"],["USA","USA","Ollama"],null,["USA","USA","Google"],["USA","USA","Microsoft"],["USA","USA","NVIDIA"]];
+function lag(en) {
+  return D.map(function (d, i) {
+    var f = { id: i + 1, navn: en ? d[0].replace("Ukjent modellfil", "Unknown model file").replace("-modell", " model").replace("Copilot i Windows", "Copilot in Windows") : d[0],
+      risiko: d[2], gruppe: d[3], type: d[en ? 5 : 4], lokasjon: d[en ? 7 : 6] };
+    if (d[1]) f.kortnavn = en ? d[1].replace("Ukjent modellfil", "Unknown model file") : d[1];
+    if (i == 3) f.versjon = "0.12.3";
+    if (i == 2) f.sist = en ? "today" : "i dag";
+    if (d[8]) f.senderTil = d[8].map(function (s) { return { land: en && s.en ? s.en : s.land, farlig: s.farlig, sett: s.sett }; }); else f.lokalt = true;
+    if (d[9]) f.kort = d[en ? 10 : 9];
+    if (K[i]) { f.kommerFra = K[i][en ? 1 : 0]; f.selskap = K[i][2]; f.kommerFraFarlig = !i; }
+    return f;
+  });
+}
+var inn = '<script>window.DEMO=' + JSON.stringify(lag()) + ';window.DEMO_EN=' + JSON.stringify(lag(1)) + ';window.DEMOINFO={sekunder:38};<\/script>'
+  + '<style>.fanerad .segment,#maal,#lagre,#sokAdmin,.fordeling b{display:none!important}'
+  + '#demoMerke{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:99;display:flex;gap:12px;align-items:center;padding:8px 8px 8px 16px;border-radius:999px;background:rgba(29,29,31,.88);color:#fff;font:500 14px/20px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}'
+  + '#demoMerke a{color:#fff;background:#0a5fc0;border-radius:999px;padding:6px 14px;text-decoration:none;font-weight:600}#demoMerke a:focus-visible{outline:2px solid #fff;outline-offset:2px}</style>';
+var merke = '<div id="demoMerke" role="note"><span>' + (/^(nb|nn|no)\b/i.test(navigator.language || "") ? 'Demo med oppdiktede funn' : 'Demo with made-up findings') + '</span><a href="./">' + (/^(nb|nn|no)\b/i.test(navigator.language || "") ? 'Tilbake' : 'Back') + '</a></div>';
+// Antall funn vises ikke på nettsiden: overskriften og gruppetellingene tas bort
+var fjern = '<script>new MutationObserver(function(){var h=document.querySelector(".topp h1"),t=document.documentElement.lang==="en"?"AI on this PC":"AI på denne PC-en";if(h&&/\\d/.test(h.textContent))h.textContent=t;document.querySelectorAll(".gruppe").forEach(function(g){var n=g.lastChild;if(n&&n.nodeType===3&&/ · \\d+$/.test(n.textContent))n.textContent=n.textContent.replace(/ · \\d+$/,"")})}).observe(document.body,{childList:true,subtree:true,characterData:true});<\/script>';
+fetch("https://raw.githubusercontent.com/UUnreal/AIscanner/main/src/AISkanner/ui/index.html").then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (h) {
+  var f = document.createElement("iframe"); f.title = "AI-skanner demo"; f.srcdoc = h.replace(/<head>/i, "<head>" + inn).replace(/<\/body>/i, merke + fjern + "</body>");
+  document.body.replaceChildren(f); f.onload = function () { f.focus(); };
+}).catch(function () { document.querySelector("main").innerHTML = '<p>Fikk ikke hentet demoen. / Could not load the demo. <a href="./">Tilbake / Back</a></p>'; });
+})();
+</script>
+</body>
+</html>
