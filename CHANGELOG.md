@@ -30,6 +30,35 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.51.0] - 2026-11-04
+
+### Lagt til
+- Russiske AI-modeller kjennes igjen, også når de er bygget på Qwen, Llama eller DeepSeek. Hver regel har offentlige
+  kilder i `regler.json` (felt `kilde`), og kilden vises i detaljene til funnet. Modellen får merknaden
+  «Laget av … i Russland», som kinesiske modeller får for Kina.
+  - På innholdet, også når fila er omdøpt og navnet mangler (arkitektur + ordforråd fra modellens egen `config.json`):
+    YandexGPT = Llama-arkitektur med ordforråd 129 024 (yandex/YandexGPT-5-Lite-8B-instruct og -pretrain).
+    GigaChat = DeepSeek-arkitektur med ordforråd 128 256 (ai-sage/GigaChat3.1-10B-A1.8B, ai-sage/GigaChat-20B-A3B).
+    DeepSeek selv bruker 129 280 eller 102 400, så DeepSeek og Llama 3 gjenkjennes som før.
+  - På navn og Hugging Face-organisasjon (filnavn, GGUF `general.name`/`general.organization`/`general.base_model`,
+    Hugging Face-lagerets mappenavn og Ollama-manifester): GigaChat (ai-sage, Sber), Sber AI (ai-forever og gammelt
+    navn sberbank-ai: ruGPT, FRED-T5, ruBERT), T-lite/T-pro (t-tech, T-Bank), Cotype (MTSAIR, MTS/MWS AI),
+    Vikhr (ITMO/HSE), RuAdapt (MGU).
+- Ny regelegenskap `kreverVokab`: arkitekturen teller bare sammen med ordforrådet, for familier som låner en annen
+  families arkitektur.
+- `--kontroll` prøver at omdøpte YandexGPT- og GigaChat-filer kjennes igjen på innholdet, at DeepSeek, Llama 3 og
+  Qwen ikke påvirkes, og at hver russisk familie har en kilde.
+
+### Endret
+- Saiga (IlyaGusev) vises som russiskspråklig modell, men merkes ikke Russland: ingen kilde oppgir opphavsland
+  eller organisasjon.
+
+### Ikke bekreftet
+- T-pro 2.0 (ordforråd 151 668) og RuAdapt (145 152) har eget ordforråd, men det er ikke vist at ingen andre modeller
+  bruker samme størrelse. De kjennes derfor bare igjen på navn og organisasjon, ikke på innholdet alene.
+- Antall ord i GGUF-filer forutsetter at fila er laget med llama.cpp sitt vanlige konverteringsverktøy, som fyller
+  opp til `vocab_size`. Prøves i testlaben.
+
 ## [2.50.0] - 2026-11-04
 
 ### Lagt til
