@@ -158,7 +158,9 @@ public sealed class Funn
     {
         lock (this)
         {
-            forst ??= sist;
+            // Et tidspunkt alene (f.eks. når noe ble lagt inn) er både første og siste spor, så «først» aldri kommer etter «sist»
+            forst ??= sist; sist ??= forst;
+            if (forst != null && sist < forst) sist = forst;   // fil endret før den ble lagt inn (kopiert med gammel dato)
             if (forst != null && (Forst == null || forst < Forst)) Forst = forst;
             if (sist != null && (Sist == null || sist > Sist)) Sist = sist;
         }

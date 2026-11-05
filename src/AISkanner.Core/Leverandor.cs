@@ -51,6 +51,10 @@ public sealed partial class Skanner
     private static string[] KjenteLeverandorer => _kjenteLeverandorer ??=
         KjenteUtgivere.Concat(new[] { "Lenovo", "Dell", "HP", "Hewlett", "ASUS", "ASUSTeK", "Logitech", "Grammarly", "Acer", "Micro-Star", "Samsung", "Realtek" }).ToArray();
     private static string[]? _kjenteLeverandorer;
+    /// <summary>«Utgiver: X · signatur» med en kjent leverandør: bekreftet med gyldig signatur, ikke bare filinfo.</summary>
+    internal static bool SignertAvKjent(string detalj) =>
+        detalj.StartsWith("Utgiver: ", StringComparison.Ordinal) && detalj.EndsWith(" · signatur", StringComparison.Ordinal)
+        && KjenteLeverandorer.Any(k => detalj.Substring(9, detalj.Length - 9 - 11).Inneholder(k));
 
     private sealed class AppAi
     {
@@ -320,17 +324,26 @@ public sealed partial class Skanner
 
         // Hvem står bak: 1) gyldig signatur, 2) pakkemanifest i en beskyttet mappe, 3) kjent mappe fra regelfila, 4) filinfo
         string? produkt = null, utgiver = null, kilde = null;
-        string? exe = null;
+        string? exe = null, signert = null;
         try
         {
             // Største exe, men ikke installasjons- og oppdateringsprogrammer: i Edge WebView2 er Installer\setup.exe
             // størst, og da het funnet «Microsoft Edge Installer» i stedet for WebView2
-            exe = Plattform.Filer(rot, "*.exe", 3).Take(200)
+            var exer = Plattform.Filer(rot, "*.exe", 3).Take(200)
                 .OrderBy(f => Installasjonsprogram.IsMatch(f.FullName.Substring(rot.Length)) ? 1 : 0).ThenByDescending(f => f.Length)
-                .Select(f => f.FullName).FirstOrDefault();
+                .Select(f => f.FullName).Take(5).ToList();
+            exe = exer.FirstOrDefault();
+            // Programmer fra andre har ofte med Microsofts egne hjelpefiler (createdump.exe, .NET): da er det leverandørens
+            // egen signatur som teller. Bare Microsoft-signerte filer i mappa betyr at programmet er fra Microsoft.
+            foreach (var x in exer)
+            {
+                var u = Signatur.Utgiver(x);
+                if (u == null) continue;
+                if (signert == null) { signert = u; exe = x; }
+                if (!u.Inneholder("Microsoft")) { signert = u; exe = x; break; }
+            }
         }
         catch { }
-        var signert = exe != null ? Signatur.Utgiver(exe) : null;
         if (signert == null) foreach (var m in app.MotorFiler.Take(3)) if ((signert = Signatur.Utgiver(m)) != null) break;
         if (signert != null) { utgiver = signert; kilde = "signatur"; }
         if (app.Beskyttet && Pakkeinfo(rot) is { } pk)

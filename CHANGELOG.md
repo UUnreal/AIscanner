@@ -34,6 +34,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.6] - 2026-11-05
+
+Rettet etter rapporten fra første kjøring av 2.52.5 på Windows (som administrator, Windows 11).
+
+### Rettet
+- Lenovo AI Now ble rød som skygge-AI selv om den er signert av Lenovo. AI-apper som er bekreftet med signatur fra en
+  kjent leverandør (PC-produsenter, Microsoft, Adobe m.fl.) regnes nå som «Fra leverandør» og beholder risikoen fra
+  regelen.
+- En Lenovo-mappe med AI-modeller ble merket «Fra Microsoft» fordi den største exe-fila var en hjelpefil fra
+  Microsoft. Nå teller leverandørens egen signatur når mappa har den.
+- SRUM viste tidsrommet 2009–2096 og «ingen AI» selv om programnavnene ikke kunne leses. Tider før 2015 eller fram i
+  tid regnes nå som feiltolkede poster, og uten programnavn står SRUM som «ikke bekreftet».
+- «Først» kunne komme etter «sist» når filer var kopiert inn med en eldre endringsdato.
+- Samme adresse kunne stå to ganger under «Adresse nå».
+- Påstander uten belegg er tatt bort: utvidelser med AI-adresser i koden er ikke lenger «laget for å snakke med
+  AI-tjenester», og Microsoft 365 Copilot er ikke lenger «dekket av bedriftens avtale» (det er ikke sjekket).
+
 ## [2.52.5] - 2026-11-05
 
 Sikkerhetsgjennomgang av hele prosjektet: programmet, byggeløypa og nettsiden. Ikke testet med vindu på Windows ennå;
