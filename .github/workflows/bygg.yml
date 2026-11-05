@@ -174,8 +174,8 @@ jobs:
           npx playwright install --with-deps chromium >/dev/null
           node tests/xss/xss.js src/AISkanner/ui/index.html
 
-  # Versjonstag (vX.Y.Z) → GitHub Release med zip-fila brukeren laster ned, pluss AISkanner.exe,
-  # SHA256.txt og CHANGELOG.md hver for seg. Kjører bare når hele bygg-jobben over er grønn.
+  # Versjonstag (vX.Y.Z) → GitHub Release med bare AISkanner.exe (hele programmet) og SHA256.txt til kontroll,
+  # og endringene som tekst. Kjører bare når bygg- og sikkerhetsjobben er grønne.
   utgivelse:
     needs: [bygg, sikkerhet]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -203,11 +203,9 @@ jobs:
           test -f publish/SHA256.txt || { echo "::error::SHA256.txt mangler"; exit 1; }
           if find publish -name '*.config' | grep -q .; then echo "::error::.config-fil i mappa"; exit 1; fi
           grep -q "^## \[$v\]" CHANGELOG.md || { echo "::error::CHANGELOG.md har ingen seksjon for $v"; exit 1; }
-          cp CHANGELOG.md publish/
-          (cd publish && zip -qr "../AI-skanner-$v.zip" .)
           awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ {if (p) exit} p' CHANGELOG.md > notater.md
-          printf '\n---\nLast ned **AISkanner.exe** og kjør den. Den er hele programmet. AI-skanner-%s.zip har i tillegg de valgfrie filene.\n' "$v" >> notater.md
-          filer=("AI-skanner-$v.zip" publish/AISkanner.exe publish/SHA256.txt CHANGELOG.md)
+          printf '\n---\nLast ned **AISkanner.exe** og kjør den. Den er hele programmet.\n' >> notater.md
+          filer=(publish/AISkanner.exe publish/SHA256.txt)
           # Laget på nettsiden («Draft a new release») først? Da fylles den bare med filene og teksten.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${filer[@]}" --clobber

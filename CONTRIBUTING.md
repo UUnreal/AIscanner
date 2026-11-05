@@ -99,8 +99,8 @@ Endringer bare i `regler.json` eller `ai-modeller.yar` (nye produkter, nettstede
 2b. Kjør `AISkanner.exe --kontroll` på en ekte Windows-PC. Alle linjer skal være OK. Ny alarm = ny linje i `Kontroll.cs`.
 3. Oppdater versjonen og [Status](README.md#status)-tabellen i [README.md](README.md).
 4. Merk utgivelsen, for eksempel `git tag v2.13.1 && git push origin v2.13.1`.
-5. Byggeløypa bygger, kjører alle testene og lager GitHub-utgivelsen selv: `AI-skanner-X.Y.Z.zip`, `AISkanner.exe`,
-   `SHA256.txt` og `CHANGELOG.md`. Den stopper hvis exe-fila mangler, en `.config` finnes eller CHANGELOG mangler versjonen.
+5. Byggeløypa bygger, kjører alle testene og lager GitHub-utgivelsen selv: bare `AISkanner.exe` og `SHA256.txt`,
+   med endringene fra CHANGELOG som tekst. Den stopper hvis exe-fila mangler, en `.config` finnes eller CHANGELOG mangler versjonen.
 6. Når SignPath er godkjent, signeres utgivelsen etter manuell godkjenning, se [CODE_SIGNING.md](CODE_SIGNING.md).
 
 ## Lisens
