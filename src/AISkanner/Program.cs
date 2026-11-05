@@ -1,12 +1,15 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+// P/Invoke til Windows-biblioteker søker bare i System32, ikke i mappa programmet ligger i
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+
 namespace AISkanner.App;
 
 internal static class Program
 {
-    // Programmappa + System32 + brukermapper, men IKKE arbeidsmappa.
-    private const uint LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x00001000;
+    // Bare System32: verken programmappa (nedlastingsmappa) eller arbeidsmappa.
+    private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool SetDefaultDllDirectories(uint flags);
@@ -24,68 +27,86 @@ internal static class Program
     }
 
     /// <summary>
-    /// Ingen AISkanner.exe.config i mappa (med skjulte filendelser ser den ut som en ekstra AISkanner.exe). Den
-    /// trengtes bare for å si at en annen versjon av et bibliotek ved siden av programmet er greit. Det gjør vi her:
-    /// spør .NET etter en versjon som ikke ligger der, lastes den som ligger ved siden av programmet. Lastes med
-    /// Assembly.Load (vanlig lasting fra programmappa), ikke LoadFrom, som .NET nekter for filer fra en nedlastet zip.
+    /// Ingen AISkanner.exe.config i mappa (med skjulte filendelser ser den ut som en ekstra AISkanner.exe). Alle
+    /// bibliotekene ligger inne i AISkanner.exe og lastes fra minnet når .NET spør etter dem, uansett versjon (det
+    /// .config-fila gjorde med bindingRedirect). Biblioteker som ligger ved siden av programmet brukes aldri: en falsk
+    /// DLL i nedlastingsmappa kan ikke kapre programmet.
     /// </summary>
-    static Program() => AppDomain.CurrentDomain.AssemblyResolve += AnnenVersjon;
-
-    private static readonly Dictionary<string, Assembly> Innbakt = new(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// WebView2Loader.dll (Microsofts lasterfil, 166 KB) kan ikke lastes fra minnet. Den ligger inne i AISkanner.exe og
-    /// skrives til vindusmappa (%LOCALAPPDATA%\AISkanner\Vindu-pid), som slettes ved neste start. Ligger den ved siden
-    /// av programmet (gammel zip-mappe), brukes den.
-    /// </summary>
-    internal static void Laster(string mappe)
+    static Program()
     {
-        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "runtimes", "win-x64", "native", "WebView2Loader.dll"))) return;
-        using var r = typeof(Program).Assembly.GetManifestResourceStream("lib.native.WebView2Loader.dll");
-        if (r == null) return;
-        Directory.CreateDirectory(mappe);
-        var sti = Path.Combine(mappe, "WebView2Loader.dll");
-        using (var f = new FileStream(sti, FileMode.Create, FileAccess.Write, FileShare.Read)) r.CopyTo(f);
-        Microsoft.Web.WebView2.Core.CoreWebView2Environment.SetLoaderDllFolderPath(mappe);
+#if !DEBUG
+        // .NET laster en DLL ved siden av programmet før den innebygde. Ligger det en med samme navn der (en falsk DLL i
+        // nedlastingsmappa, eller rester av en gammel zip-mappe), starter ikke programmet.
+        var mappe = AppDomain.CurrentDomain.BaseDirectory;
+        var funnet = typeof(Program).Assembly.GetManifestResourceNames()
+            .Where(n => n.StartsWith("lib.", StringComparison.Ordinal) && !n.StartsWith("lib.native.", StringComparison.Ordinal))
+            .Select(n => n.Substring(4)).Where(n => File.Exists(Path.Combine(mappe, n))).ToList();
+        if (funnet.Count > 0)
+        {
+            MessageBox.Show("AI-skanner starter ikke fordi disse filene ligger ved siden av AISkanner.exe og kunne blitt kjørt i stedet for programmets egne:\r\n\r\n" +
+                string.Join("\r\n", funnet) + "\r\n\r\nFlytt AISkanner.exe til en tom mappe, eller slett filene.\r\nMappe: " + mappe,
+                "AI-skanner", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Environment.Exit(3);
+        }
+#endif
+        AppDomain.CurrentDomain.AssemblyResolve += AnnenVersjon;
     }
 
+    private static readonly Dictionary<string, Assembly> Innbakt = new(StringComparer.OrdinalIgnoreCase);
     internal static readonly List<string> Omdirigert = new();
-    [ThreadStatic] private static bool _iGang;
 
     private static Assembly? AnnenVersjon(object? _, ResolveEventArgs e)
     {
-        if (_iGang) { lock (Omdirigert) Omdirigert.Add($"(inni) {e.Name}"); return null; }
         try
         {
-            _iGang = true;
-            var spurt = new AssemblyName(e.Name);
-            if (string.IsNullOrEmpty(spurt.Name) || spurt.Name!.IndexOfAny(new[] { '\\', '/', ':' }) >= 0) return null;
-            // Bakt inn i AISkanner.exe (én fil): lastes fra minnet, aldri fra disk
+            var navn = new AssemblyName(e.Name).Name;
+            if (string.IsNullOrEmpty(navn) || navn!.IndexOfAny(new[] { '\\', '/', ':' }) >= 0) return null;
             lock (Innbakt)
             {
-                if (Innbakt.TryGetValue(spurt.Name, out var kjent)) return kjent;
-                using var r = typeof(Program).Assembly.GetManifestResourceStream("lib." + spurt.Name + ".dll");
-                if (r != null)
-                {
-                    var ms = new MemoryStream(); r.CopyTo(ms);
-                    return Innbakt[spurt.Name] = Assembly.Load(ms.ToArray());
-                }
+                if (Innbakt.TryGetValue(navn, out var kjent)) return kjent;
+                using var r = typeof(Program).Assembly.GetManifestResourceStream("lib." + navn + ".dll");
+                if (r == null) return null;
+                var ms = new MemoryStream(); r.CopyTo(ms);
+                return Innbakt[navn] = Assembly.Load(ms.ToArray());
             }
-            var sti = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, spurt.Name + ".dll");
-            if (!File.Exists(sti)) return null;
-            var finnes = AssemblyName.GetAssemblyName(sti);
-            // Bare samme bibliotek fra samme utgiver (samme navn og nøkkel), og bare når versjonen er en annen
-            var (a, b) = (spurt.GetPublicKeyToken(), finnes.GetPublicKeyToken());
-            if (a != null && a.Length > 0 && (b == null || !a.SequenceEqual(b))) return null;
-            if (spurt.Version != null && spurt.Version == finnes.Version) return null;
-            // Bare navnet som tekst: et AssemblyName fra fila har også CodeBase, og da kan .NET laste som LoadFrom
-            var lastet = Assembly.Load(finnes.FullName);
-            lock (Omdirigert) Omdirigert.Add($"{spurt.Name} {spurt.Version} -> {finnes.Version}");
-            return lastet;
         }
         catch (Exception x) { lock (Omdirigert) Omdirigert.Add($"{e.Name}: {x.GetType().Name}: {x.Message}"); return null; }
-        finally { _iGang = false; }
     }
+
+    // Holdes åpen så lenge programmet kjører: ingen kan bytte ut WebView2Loader.dll etter at den er sjekket
+    private static FileStream? _laster;
+
+    /// <summary>
+    /// WebView2Loader.dll (Microsofts lasterfil, 166 KB) kan ikke lastes fra minnet. Den ligger inne i AISkanner.exe og
+    /// skrives til en ny mappe med tilfeldig navn inne i vindusmappa (%LOCALAPPDATA%\AISkanner\Vindu-pid), som slettes
+    /// ved neste start. Fila sjekkes byte for byte og holdes låst mot endring og sletting, så et program som kjører som
+    /// vanlig bruker ikke kan bytte den ut og få den kjørt når AI-skanneren kjører som administrator.
+    /// </summary>
+    internal static void Laster(string vindu)
+    {
+        using var r = typeof(Program).Assembly.GetManifestResourceStream("lib.native.WebView2Loader.dll");
+        if (r == null) return;
+        var dll = new byte[r.Length];
+        for (int n = 0, i; n < dll.Length; n += i) if ((i = r.Read(dll, n, dll.Length - n)) == 0) throw new EndOfStreamException();
+        // Ny mappe med tilfeldig navn, og fila må være ny: ingen kan legge en DLL der på forhånd
+        var mappe = Path.Combine(vindu, Path.GetRandomFileName());
+        Directory.CreateDirectory(mappe);
+        var sti = Path.Combine(mappe, "WebView2Loader.dll");
+        using (var f = new FileStream(sti, FileMode.CreateNew, FileAccess.Write, FileShare.None)) f.Write(dll, 0, dll.Length);
+        _laster = new FileStream(sti, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var lest = new byte[dll.Length + 1];
+        int antall = 0;
+        for (int i; antall < lest.Length && (i = _laster.Read(lest, antall, lest.Length - antall)) > 0;) antall += i;
+        if (antall != dll.Length || !dll.SequenceEqual(lest.Take(antall))) throw new IOException("WebView2Loader.dll ble endret etter at den ble skrevet.");
+        // Lastes fra den ekte stien til fila som er sjekket og låst, ikke via en mappe noen kan ha byttet med en lenke
+        var ekte = new System.Text.StringBuilder(1024);
+        var lengde = GetFinalPathNameByHandleW(_laster.SafeFileHandle, ekte, (uint)ekte.Capacity, 0);
+        if (lengde == 0 || lengde >= ekte.Capacity || ekte.ToString().StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)) throw new IOException("Fant ikke stien til WebView2Loader.dll.");
+        Microsoft.Web.WebView2.Core.CoreWebView2Environment.SetLoaderDllFolderPath(Path.GetDirectoryName(ekte.ToString().Replace(@"\\?\", ""))!);
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetFinalPathNameByHandleW(Microsoft.Win32.SafeHandles.SafeFileHandle fil, System.Text.StringBuilder sti, uint lengde, uint flagg);
 
     [STAThread]
     private static void Main(string[] args)
@@ -98,10 +119,10 @@ internal static class Program
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
         Application.ThreadException += (_, e) => VisFeil(e.Exception);
 
-        // Sikkerhet: systembiblioteker (winsqlite3, iphlpapi, wintrust, dnsapi) lastes bare fra System32 og
-        // programmappa, aldri fra arbeidsmappa. Hindrer DLL-kapring der en falsk DLL i mappa programmet startes
-        // fra blir kjørt. (WebView2Loader.dll ligger lovlig i programmappa, så den søkes fortsatt.)
-        try { SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); } catch { }
+        // Sikkerhet: systembiblioteker (winsqlite3, iphlpapi, wintrust, dnsapi) lastes bare fra System32, aldri fra
+        // programmappa eller arbeidsmappa. Hindrer DLL-kapring der en falsk DLL i nedlastingsmappa blir kjørt.
+        // WebView2Loader.dll lastes med full sti (Laster), så den trenger ikke søk.
+        try { SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32); } catch { }
         try { SetDllDirectory(""); } catch { }   // ta arbeidsmappa helt ut av søket (eldre Windows uten kallet over)
 
         // Sikkerhet: en ondsinnet YARA-regel (ai-modeller.yar ved siden av programmet) kan ikke henge

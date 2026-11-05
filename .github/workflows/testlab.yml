@@ -25,10 +25,11 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false }
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with: { dotnet-version: '8.0.x' }
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with: { python-version: '3.12' }
       - name: Bygg
         run: dotnet build src/AISkanner.Cli -c Release
@@ -37,8 +38,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HF_HUB_DISABLE_PROGRESS_BARS: '1'
-        run: ./tests/testlab/lab.ps1 -Hf ${{ inputs.modeller || '100' }} -MaksMb ${{ inputs.maks_mb || '60' }}
-      - uses: actions/upload-artifact@v6
+          # Inndata går via miljøvariabler og må være tall, så de aldri kan bli kode i skriptet
+          MODELLER: ${{ inputs.modeller || '100' }}
+          MAKS_MB: ${{ inputs.maks_mb || '60' }}
+        run: |
+          if ($env:MODELLER -notmatch '^\d{1,4}$' -or $env:MAKS_MB -notmatch '^\d{1,5}$') { "::error::modeller og maks_mb må være tall"; exit 1 }
+          ./tests/testlab/lab.ps1 -Hf ([int]$env:MODELLER) -MaksMb ([int]$env:MAKS_MB)
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: testlab

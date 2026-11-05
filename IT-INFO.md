@@ -421,7 +421,8 @@ Ikke testet på Windows ennå.
 - **Ukjent AI og skygge-AI er alltid røde.** Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør
   eller IT: AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt inn selv
   og AI-nøkler.
-- **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet, med ett navn eller domene per linje,
+- **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet (utenfor brukerens profil, for eksempel
+  under Program Files; i Nedlastinger og på skrivebordet leses den ikke), med ett navn eller domene per linje,
   eller bruk `godkjentAi` i `regler.json`. Bruk eksakte produktnavn og offisielle domener (se
   [SECURITY.md](SECURITY.md#kjente-svakheter)).
 - **Godkjenning overstyrer aldri faresignaler.** En godkjent AI som er åpen mot nettverket eller sender til et

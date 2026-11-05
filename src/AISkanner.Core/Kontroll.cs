@@ -456,7 +456,7 @@ public sealed partial class Skanner
         var f6 = s.OppsettKommando($"\"{vbs}\"", "Oppstart (slått av)", "Oppstart: Skjult");
         Sjekk(f6 != null && f6.Navn == "Skript med AI som starter av seg selv: skjult.vbs" && !f6.Tilstander.HasFlag(Tilstand.SattOpp), "VBScript med AI i en oppstart som er slått av ble feil");
         var env = Path.Combine(rot, "tolk", ".env");
-        File.WriteAllText(env, "OPENAI_API_KEY=sk-proj-hemmelig123hemmelig123\nANTHROPIC_API_KEY=\n# GEMINI_API_KEY=x\nexport HF_TOKEN=\"hf_hemmelig123\"\n");
+        File.WriteAllText(env, "OPENAI_API_KEY=sk-proj-hemmelig123hemmelig123\nANTHROPIC_API_KEY=\n# GEMINI_API_KEY=x\nexport HF_TOKEN=\"hf_hemmelig123\"\n"); // gitleaks:allow (falsk testnøkkel)
         s.EnvNokler(new[] { env });
         var nk = s.FunnHittil().FirstOrDefault(f => f.Navn == "AI-nøkler lagret på PC-en");
         Sjekk(nk != null && nk.Detaljer.Any(d => d.Contains("OPENAI_API_KEY") && d.Contains("HF_TOKEN") && !d.Contains("ANTHROPIC") && !d.Contains("GEMINI"))

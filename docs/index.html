@@ -2,6 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI-skanner</title>
 <meta name="description" content="Gratis program som finner AI på en Windows-PC. Leser bare, lagrer ingenting. Free tool that finds AI on a Windows PC. Read-only, stores nothing.">
@@ -153,7 +154,7 @@ function sett(l, lagre) { document.documentElement.lang = l; if (lagre) try { lo
 var l; try { l = localStorage.sprak; } catch (e) {}
 sett(l || (/^(nb|nn|no)/i.test(navigator.language) ? 'no' : 'en'));
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="marked.min.js"></script>
 <script>
 // Henter dokumentene fra repoet, så siden alltid viser det som står i main.
 var kilde = 'https://raw.githubusercontent.com/UUnreal/AIscanner/main/', sider = {

@@ -13,14 +13,23 @@ jobs:
   bygg:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false }
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '8.0.x'   # SDK-en bygger både .NET Framework 4.8-programmet og testene
 
       - name: Bygg alt
         run: dotnet build AISkanner.sln -c Release
+
+      # Kjente sårbarheter i bibliotekene (NuGets database, også biblioteker som følger med andre): bygget stopper
+      - name: Avhengigheter (kjente sårbarheter)
+        shell: pwsh
+        run: |
+          $ut = @(foreach ($p in 'AISkanner.sln', 'src/AISkanner/AISkanner.csproj') { dotnet list $p package --vulnerable --include-transitive 2>&1 })
+          $ut
+          if ($LASTEXITCODE -ne 0 -or ($ut -match 'has the following vulnerable packages')) { "::error title=Avhengigheter::Sårbart bibliotek, se loggen"; exit 1 }
 
       - name: Røyktest (skanner byggemaskinen og skriver JSON)
         shell: pwsh
@@ -108,7 +117,7 @@ jobs:
         shell: pwsh
         run: Get-ChildItem publish -Recurse -File | Get-FileHash -Algorithm SHA256 | Format-Table Hash, Path -AutoSize | Out-String -Width 400 | Tee-Object publish/SHA256.txt
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         id: last-opp
         with:
           name: AISkanner-usignert
@@ -127,18 +136,57 @@ jobs:
       #     wait-for-completion: true
       #     output-artifact-directory: signert
 
+  # Sikkerhet for hver endring og hver versjon. Feiler noe, blir PR-en rød og ingen utgivelse lages.
+  sikkerhet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false, fetch-depth: 0 }
+
+      # Hemmeligheter (nøkler, passord) i hele historikken. Fila lastes ned med fast versjon og sjekksum.
+      - name: Gitleaks
+        run: |
+          set -e
+          curl -sSfL -o gl.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gl.tgz" | sha256sum -c -
+          tar xzf gl.tgz gitleaks
+          ./gitleaks git --no-banner --redact .
+
+      # Statisk kodeanalyse: C#, arbeidsflytene, JavaScript/HTML og hemmeligheter. Ethvert funn stopper bygget.
+      # Reglene hentes på en fast versjon, så samme kode gir samme svar. Oppdateres ved å bytte commit under.
+      # innerHTML-reglene er av fordi XSS-testen under prøver det samme på ekte: hvert felt får skript som innhold.
+      - name: Semgrep
+        run: |
+          set -e
+          pip install --quiet semgrep==1.183.0
+          git init -q "$RUNNER_TEMP/regler" && cd "$RUNNER_TEMP/regler"
+          git fetch -q --depth 1 https://github.com/semgrep/semgrep-rules 16b9e6d45f10649f6a531ec4838ed9924372c3bc && git checkout -q FETCH_HEAD
+          cd "$GITHUB_WORKSPACE"
+          R="$RUNNER_TEMP/regler"
+          semgrep scan --error --metrics=off --exclude docs/marked.min.js \
+            --config "$R/csharp" --config "$R/yaml/github-actions" --config "$R/html" --config "$R/javascript" --config "$R/generic/secrets" \
+            --exclude-rule "$(echo "$R" | tr / . | sed 's/^\.//').javascript.browser.security.insecure-document-method" \
+            --exclude-rule "$(echo "$R" | tr / . | sed 's/^\.//').html.security.audit.insecure-document-method" .
+
+      - name: XSS-test av programvinduet
+        run: |
+          npm install --no-save --silent playwright@1.63.0
+          npx playwright install --with-deps chromium >/dev/null
+          node tests/xss/xss.js src/AISkanner/ui/index.html
+
   # Versjonstag (vX.Y.Z) → GitHub Release med zip-fila brukeren laster ned, pluss AISkanner.exe,
   # SHA256.txt og CHANGELOG.md hver for seg. Kjører bare når hele bygg-jobben over er grønn.
   utgivelse:
-    needs: bygg
+    needs: [bygg, sikkerhet]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false }
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: AISkanner-usignert
           path: publish
