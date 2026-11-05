@@ -122,6 +122,8 @@ public static class Risikoregler
         if (f.Navn.StartsWith("AI-nøkler")) return "AI-nøkler";
         if (k.StartsWith("Skygge-AI")) return f.Hvor.Any(h => h.Contains("kodeeditor")) ? "AI i kode" : "AI-app";
         if (k.StartsWith("Lokal AI (modell)") || k == "Disk") return "Lokal modell";
+        // AI-app fra PC-produsenten eller en annen kjent leverandør, bekreftet med signatur (f.eks. Lenovo AI Now): ikke skygge-AI
+        if (k.StartsWith("Lokal") && d.Any(Skanner.SignertAvKjent)) return "Fra leverandør";
         if (k.StartsWith("Lokal")) return "Lokal AI-app";
         return "Skygge-AI";
     }

@@ -612,7 +612,7 @@ Google-AI som leser dokumentene dine|Google AI that reads your documents
 Dokumentene du laster opp sendes til Google.|The documents you upload are sent to Google.
 Gratisversjonen av Copilot|The free version of Copilot
 Forbrukerversjonen av Copilot er ikke dekket av bedriftens Microsoft 365-avtale.|The consumer version of Copilot is not covered by the company's Microsoft 365 agreement.
-Dekket av bedriftens Microsoft 365-avtale.|Covered by the company's Microsoft 365 agreement.
+Copilot for jobbkontoer i Microsoft 365. Om bedriftens avtale dekker bruken, er ikke sjekket.|Copilot for work accounts in Microsoft 365. Whether the company's agreement covers the use is not checked.
 Samleside for mange AI-er|One site for many AIs
 Det du skriver sendes videre til flere AI-selskaper.|What you type is passed on to several AI companies.
 AI-figurer å prate med|AI characters to chat with
@@ -1492,7 +1492,7 @@ Beholder kjører nå|Container running now
 Beholderen er åpen mot nettverket (0.0.0.0), ikke bare denne PC-en.|The container is open to the network (0.0.0.0), not just this PC.
 ~^AI-modeller i Linux \(WSL\): (.+)$|AI models in Linux (WSL): $1
 AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Windows ser programmet.|AI models stored in the Linux part of Windows (WSL). They can run without Windows seeing the program.
-Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi vet ikke hva den sender.|The extension is built to talk to AI services: the addresses are in its code. We do not know what it sends.
+Koden i utvidelsen inneholder adresser til AI-tjenester. Vi vet ikke om den bruker dem, eller hva den sender.|The extension's code contains addresses of AI services. We do not know whether it uses them, or what it sends.
 Utvidelse med AI-adresser|Extension with AI addresses
 ~^Koden nevner: (.+)$|The code mentions: $1
 ~^PID (\d+): bruker GPU/NPU til beregning nå: (\d+) %$|PID $1: using GPU/NPU for compute now: $2 %

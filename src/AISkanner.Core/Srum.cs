@@ -15,6 +15,8 @@ public sealed partial class Skanner
     /// <summary>Timer med nettbruk lest fra SRUM, og AI-programmer blant dem (til «Sjekket» i Funn).</summary>
     public int SrumRader { get; private set; } = -1;
     public int SrumAi { get; private set; }
+    /// <summary>Programmer i id-tabellen. Er den tom, kan ingen nettbruk knyttes til et program: da er SRUM ikke bekreftet.</summary>
+    public int SrumProgrammer { get; private set; }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern uint QueryDosDevice(string enhet, StringBuilder mal, int lengde);
@@ -96,7 +98,8 @@ public sealed partial class Skanner
                 // Side for side kan samme post finnes i en gammel kopi av en side: AutoIncId telles én gang
                 if (sideForSide && db.KolonneId(tabell, "AutoIncId") is { } cId && p.Tall(cId) is { } id && !sett.Add(id)) continue;
                 poster++;
-                if (p.Tid(cTid) is not { } t) { utenTid++; continue; }
+                // Tider utenfor SRUM sin levetid (før 2015 eller fram i tid) er feiltolkede poster, ikke ekte timer
+                if (p.Tid(cTid) is not { } t || t.Year < 2015 || t > DateTime.Now.AddDays(1)) { utenTid++; continue; }
                 if (p.Tall(cApp) is not { } app) { utenApp++; continue; }
                 rader++;
                 if (eldst == null || t < eldst) eldst = t;
@@ -140,7 +143,7 @@ public sealed partial class Skanner
             f.Tidspunkt(forst, sist);
             ai++;
         }
-        SrumRader = nett != null ? rader : -1; SrumAi = ai;
+        SrumRader = nett != null ? rader : -1; SrumAi = ai; SrumProgrammer = program.Count;
         SrumStatus = $"SRUM: {rader} {(nett != null ? $"timer med nettbruk av {poster} poster ({(poster == 0 ? db.RotInfo(nett) : sideForSide ? $"lest side for side: treet fra rotside {nett.Rot} var tomt, {db.RotInfo(nett)}" : $"rot side {nett.Rot}")})" : "rader i tilkoblingstabellen (nettbrukstabellen finnes ikke)")} ({(eldst != null ? $"{Tid(eldst)}–{Tid(nyest)}" : "ingen")}), {program.Count} programmer i id-tabellen{(hoppet > 0 ? $", {hoppet} lange eller komprimerte navn ikke lest" : "")}{(utenTid + utenApp > 0 ? $", {utenTid + utenApp} av {poster} rader kunne ikke tolkes (kolonner {Kolonner(tabell!)})" : "")}, {(feil + db.Feil > 0 ? $"{feil + db.Feil} poster kunne ikke tolkes, " : "")}{db.SiderLest} sider ({db.Side / 1024} kB) lest på {klokke.Elapsed.TotalSeconds:0.0} s; {ai} AI-programmer med nettbruk";
         Tilgangslogg.Logg("Fil", fil, Utfall.Lest, SrumStatus + ". Siste timer kan mangle (Windows skriver dem inn senere). Bare programnavn, mengder og tider brukes.");
     }

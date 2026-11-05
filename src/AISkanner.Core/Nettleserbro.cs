@@ -126,7 +126,7 @@ public sealed partial class Skanner
         {
             // Ukjent AI er rødt (skygge-AI) til IT har godkjent den
             f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
-                "Utvidelsen er laget for å snakke med AI-tjenester: adressene står i koden. Vi vet ikke hva den sender.",
+                "Koden i utvidelsen inneholder adresser til AI-tjenester. Vi vet ikke om den bruker dem, eller hva den sender.",
                 $"Utvidelse i {hvor}", $"{hvor}: {mappe}", enkelt: "Utvidelse med AI-adresser");
             f.Svakt();
         }

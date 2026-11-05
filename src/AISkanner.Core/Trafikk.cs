@@ -311,7 +311,7 @@ public sealed partial class Skanner
                 if (!perNavn.TryGetValue(d.Trim('.'), out var ipene)) continue;
                 var ip = ipene[0];
                 var hvor = new[] { IpLand.Finn(ip) is { } k ? IpLand.Navn(k) : null, IpEier.Finn(ip) is { } e ? $"eier {e} (OSINT)" : null }.Where(x => x != null);
-                lock (f) if (f.Oppslag.Count < 2) f.Oppslag.Add($"{d.Trim('.')} → {ip} ({string.Join(", ", hvor)})");
+                lock (f) if (f.Oppslag.Count < 2 && $"{d.Trim('.')} → {ip} ({string.Join(", ", hvor)})" is var o && !f.Oppslag.Contains(o)) f.Oppslag.Add(o);
                 break;
             }
         }

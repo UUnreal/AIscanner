@@ -116,6 +116,7 @@ public sealed partial class Skanner
             : SrumStatus.StartsWith("SRUM: kunne ikke leses", StringComparison.Ordinal) || SrumStatus.StartsWith("SRUM: feil", StringComparison.Ordinal)
                 ? new("SRUM", SrumStatus.Substring(6, Math.Min(SrumStatus.Length - 6, 140)), -1, sl)
             : SrumRader <= 0 ? new("SRUM", "ingen timer kunne leses", -1, sl)
+            : SrumProgrammer == 0 ? new("SRUM", $"{SrumRader} timer lest, men programnavnene kunne ikke leses: ikke bekreftet", -1, sl)
             : SrumAi > 0 ? new("SRUM", $"{SrumAi} AI-program med nettbruk", 1, sl) : new("SRUM", $"{SrumRader} timer lest, ingen AI", 0, sl));
         bool Udp(Mal m) => m.Protokoller.Any(p => p.StartsWith("UDP", StringComparison.Ordinal));
         var ul = FraFunn(f => f.Trafikk.Any(Udp), f => f.Trafikk.Where(Udp).Select(m => $"{m.Adresse}{(m.Tjeneste != null ? " (" + m.Tjeneste + ")" : "")} · {string.Join(", ", m.Protokoller)}"));
