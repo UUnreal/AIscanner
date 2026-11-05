@@ -30,6 +30,35 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.5] - 2026-11-05
+
+Sikkerhetsgjennomgang av hele prosjektet: programmet, byggeløypa og nettsiden. Ikke testet med vindu på Windows ennå;
+lastetesten i byggeløypa kjører exe-fila som administrator fra en mappe merket «fra Internett».
+
+### Sikkerhet
+- DLL-kapring fra nedlastingsmappa: Windows-biblioteker (winsqlite3, iphlpapi, dnsapi, wintrust m.fl.) lastes nå bare
+  fra System32, også når .NET selv leter i programmappa. Før kunne en falsk `iphlpapi.dll` ved siden av
+  `AISkanner.exe` i Nedlastinger bli kjørt.
+- Programmet starter ikke hvis en DLL med samme navn som et av de innebygde bibliotekene ligger ved siden av det
+  (.NET ville lastet den i stedet for den innebygde). Meldingen sier hvilke filer og hva man gjør.
+- Bibliotekene lastes bare fra minnet. Reserveveien som lastet DLL-er og `WebView2Loader.dll` fra mappa ved siden av
+  programmet (gamle zip-mapper) er fjernet.
+- `WebView2Loader.dll` skrives som ny fil i en ny mappe med tilfeldig navn, sjekkes byte for byte og holdes låst mot
+  endring og sletting til programmet lukkes. Før kunne et program som kjører som vanlig bruker bytte fila mellom
+  skriving og lasting, og få den kjørt når AI-skanneren kjører som administrator.
+- Regelfiler ved siden av programmet (`regler.json`, `godkjent-ai.txt`, `blokkert-ai.txt`, `ai-modeller.yar`) leses
+  bare når programmet ligger utenfor brukerens profil, for eksempel under Program Files. I Nedlastinger, på
+  skrivebordet eller i OneDrive brukes de innebygde, så en falsk `godkjent-ai.txt` ikke kan gjøre AI grønn.
+- Nettsiden laster ikke lenger kode fra cdnjs (Markdown-leseren ligger i `docs/`), og begge sidene har
+  Content-Security-Policy. Før kunne en endret fil hos cdnjs ha byttet ut nedlastingslenken.
+- Byggeløypa: alle GitHub Actions er låst til commit, ingen innlogging blir liggende i arbeidsmappa, og inndata til
+  testlaben kan ikke bli kode i skriptet.
+
+### Lagt til
+- Sikkerhetssjekker for hver PR og hver versjon (jobben `sikkerhet`): gitleaks på hele historikken, Semgrep (C#,
+  arbeidsflyter, JavaScript/HTML, hemmeligheter) med fast regelversjon, kjente sårbarheter i alle biblioteker, og en
+  XSS-test som sender HTML og skript i hvert tekstfelt til programvinduet. Feiler én, lages ingen utgivelse.
+
 ## [2.52.4] - 2026-11-04
 
 ### Endret

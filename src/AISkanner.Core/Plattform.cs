@@ -1,4 +1,8 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+// P/Invoke til Windows-biblioteker søker bare i System32, aldri i mappa programmet ligger i (DLL-kapring)
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 
 namespace AISkanner;
 
@@ -10,6 +14,20 @@ internal static class Plattform
 {
     public static readonly bool ErWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
     public static readonly int EgenPid = Process.GetCurrentProcess().Id;
+
+    /// <summary>
+    /// Regelfil ved siden av programmet (regler.json, godkjent-ai.txt, blokkert-ai.txt, ai-modeller.yar), eller null.
+    /// Brukes bare når programmet ligger utenfor brukerens egen profil, for eksempel i Programfiler eller en mappe IT styrer.
+    /// I Nedlastinger, på skrivebordet eller i OneDrive kunne en nettside eller et program lagt en falsk regelfil ved
+    /// siden av og fått AI til å se godkjent ut, eller slått av alarmene. Da brukes de innebygde reglene.
+    /// </summary>
+    public static string? Sidefil(string navn)
+    {
+        var mappe = Path.GetFullPath(AppContext.BaseDirectory);
+        var profil = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (profil.Length > 0 && (mappe.TrimEnd('\\', '/') + Path.DirectorySeparatorChar).StartsWith(Path.GetFullPath(profil).TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return null;
+        return Path.Combine(mappe, navn);
+    }
 
     private static HashSet<int> _egne = new() { EgenPid };
     private static DateTime _egneLest = DateTime.MinValue;

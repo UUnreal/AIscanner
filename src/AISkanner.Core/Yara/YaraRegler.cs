@@ -31,12 +31,12 @@ public sealed class YaraRegler
     private Strengsok? _sok;
     private Strengsok Sok => _sok ??= new Strengsok(Regler.SelectMany(r => r.StrengListe));
 
-    /// <summary>ai-modeller.yar ved siden av programmet hvis den finnes (så bedriften kan legge til egne regler), ellers de innebygde.</summary>
+    /// <summary>ai-modeller.yar ved siden av programmet hvis den finnes (så bedriften kan legge til egne regler), ellers de innebygde. Ikke i brukerens profil, se Plattform.Sidefil.</summary>
     public static YaraRegler Last(string? sti = null)
     {
-        sti ??= Path.Combine(AppContext.BaseDirectory, "ai-modeller.yar");
+        sti ??= Plattform.Sidefil("ai-modeller.yar");
         string? feil = null;
-        if (File.Exists(sti))
+        if (sti != null && File.Exists(sti))
         {
             try { var y = Les(File.ReadAllText(sti)); y.Kilde = sti; return y; }
             catch (Exception e) { feil = $"innebygde, fordi {Path.GetFileName(sti)} har feil: {e.Message}"; }

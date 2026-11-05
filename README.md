@@ -105,7 +105,9 @@ Se [SECURITY.md](SECURITY.md) for trusselmodellen og hvordan du melder fra om s�
 
 ## Tilpasse for en bedrift
 
-Legg filer ved siden av `AISkanner.exe`. Da brukes de i stedet for de innebygde.
+Legg filer ved siden av `AISkanner.exe`. Da brukes de i stedet for de innebygde. Bare når programmet ligger utenfor
+brukerens profil (for eksempel under Program Files): i Nedlastinger, på skrivebordet eller i OneDrive brukes alltid
+de innebygde reglene, så en falsk regelfil som havner der ikke kan gjøre AI grønn.
 
 | Fil | Hva den gjør |
 |---|---|

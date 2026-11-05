@@ -40,7 +40,7 @@ Vedlikeholder: Jørund. Prosjektet har ingen dusørordning (bug bounty).
 |---|---|---|
 | Ondsinnede filer på disken | Modellfil, utvidelsesmanifest eller SQLite-fil laget for å krasje eller lure parseren | Leser bare begrensede deler (64 byte, metadata-hode, 8 MB + 1 MB for YARA, og hele fila bare hvis den er under 64 MB og en regel trenger det), grenser på størrelse og antall, ingen kodekjøring, misformede filer testet (2.11) |
 | Ondsinnet lokalt program | Lytter på en port og svarer med et enormt eller falskt svar | Maks tre `GET` til `127.0.0.1`, kort tidsgrense, maks 4 MB svar, ingen omdirigering, ingen proxy |
-| Filer ved siden av programmet | Falsk DLL, `explorer.exe` eller regelfil i samme mappe eller arbeidsmappa | Arbeidsmappa er tatt ut av DLL-søket, full sti til Utforsker, 2 s tidsgrense på regex (2.11) |
+| Filer ved siden av programmet | Falsk DLL, `explorer.exe` eller regelfil i samme mappe eller arbeidsmappa | Windows-biblioteker bare fra System32, starter ikke hvis en DLL med samme navn som et innebygd bibliotek ligger ved siden av, regelfiler leses ikke i brukerens profil, full sti til Utforsker, 2 s tidsgrense på regex |
 | Navn brukeren styrer | Utvidelse eller mappe som kaller seg det samme som en godkjent AI | Godkjenning bare på navn fra regelsettet og domener fra målte forbindelser (2.13.1) |
 | Innhold i resultatet | Utvidelsesnavn eller modellnavn med HTML eller skript | All tekst fra funn escapes (`esc()` i `index.html`) før den vises. Siden er bygget inn, kan ikke navigere bort eller åpne nye vinduer, og utviklerverktøy og høyreklikkmeny er av |
 | Nettverket | Avlytting av NVD-oppslaget | HTTPS, og bare produktord sendes |
@@ -94,11 +94,13 @@ fila, kan regne ut ny sum.
 |---|---|
 | Kjører alltid som vanlig bruker (`asInvoker`). Administrator bare for måling av datamengde, etter UAC-spørsmål. | `app.manifest`, `Hovedvindu.cs` |
 | Prosesser åpnes med `PROCESS_QUERY_LIMITED_INFORMATION`. Minne leses aldri. | `ProsessSti.cs` |
-| Er ikke komprimert og starter ingen skript. Bibliotekene lastes fra minnet; bare `WebView2Loader.dll` skrives til vindusmappa, som slettes. | `AISkanner.csproj`, `Program.cs` |
+| Er ikke komprimert og starter ingen skript. Bibliotekene lastes fra minnet, aldri fra disk. Bare `WebView2Loader.dll` skrives, som ny fil i en ny mappe med tilfeldig navn i vindusmappa. Fila sjekkes byte for byte og holdes låst mot endring og sletting. | `AISkanner.csproj`, `Program.cs` |
 | Historikk åpnes skrivebeskyttet og `immutable` med Windows' egen `winsqlite3.dll`. Fila kopieres aldri. | `WinSqlite.cs`, `Nettsteder.cs` |
 | WebView2-siden er bygget inn og kan ikke navigere bort. Mappen per kjøring slettes når programmet lukkes. | `Hovedvindu.cs` |
 | «Vis» åpner bare stier som finnes og står i et funn, med full sti til Utforsker. | `Hovedvindu.cs` |
-| Arbeidsmappa er tatt ut av DLL-søket. | `src/AISkanner/Program.cs` |
+| Windows-biblioteker lastes bare fra System32 (`SetDefaultDllDirectories` og `DefaultDllImportSearchPaths`), aldri fra programmappa eller arbeidsmappa. | `src/AISkanner/Program.cs`, `Plattform.cs` |
+| Byggeløypa stopper ved hemmeligheter i historikken (gitleaks), funn fra Semgrep, sårbare biblioteker, XSS i programvinduet og GitHub Actions som ikke er låst til commit. | `bygg.yml`, `tests/xss/xss.js` |
+| Nettsiden laster ingen kode fra andre domener og har Content-Security-Policy. | `docs/` |
 | Svar fra lokale porter er begrenset til 4 MB. | `Sanntid.cs` |
 | Språkkoder fra utvidelser valideres før de brukes i stier. | `Skanner.cs` |
 | Regex har en tidsgrense på 2 sekunder i vinduet, og 1 sekund i godkjentlista (også i kommandolinjen). | `src/AISkanner/Program.cs`, `Risikoregler.cs` |
@@ -120,7 +122,8 @@ Disse er kjent og ikke rettet i 2.13.1.
 3. **Herdingen av DLL-søk og regex-tidsgrense gjelder bare vinduet** (`AISkanner.exe`), ikke `AISkanner.Cli`. Det er
    med vilje. Kommandolinjen er et verktøy for IT og utrulling i kontrollerte miljøer, ikke noe vanlige brukere laster
    ned og starter fra Nedlastinger. Taket på 4 MB for lokale HTTP-svar gjelder begge.
-4. **Regelfiler ved siden av programmet** (`regler.json`, `godkjent-ai.txt`, `ai-modeller.yar`) leses uten signatur.
+4. **Regelfiler ved siden av programmet** (`regler.json`, `godkjent-ai.txt`, `ai-modeller.yar`) leses uten signatur,
+   men bare når programmet ligger utenfor brukerens profil.
    Den som kan skrive i programmappa, kan endre hva som blir rødt og grønt. Det samme gjelder punkt 1.
 5. **P/Invoke-strukturer** for TCP6, DNS-poster og EStats er ikke kontrollert på ekte Windows siden 2.7.
 

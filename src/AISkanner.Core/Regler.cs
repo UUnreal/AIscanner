@@ -157,14 +157,14 @@ public sealed class Regelsett
     };
 
     /// <summary>
-    /// Bruker regler.json ved siden av programmet hvis den finnes (så bedriften kan tilpasse),
-    /// ellers reglene som er bygd inn i programmet.
+    /// Bruker regler.json ved siden av programmet hvis den finnes (så bedriften kan tilpasse), ellers reglene som er
+    /// bygd inn i programmet. Ikke når programmet ligger i brukerens profil (Nedlastinger o.l.), se Plattform.Sidefil.
     /// </summary>
     public static Regelsett Last(string? sti = null)
     {
         Regelsett r;
-        sti ??= Path.Combine(AppContext.BaseDirectory, "regler.json");
-        if (File.Exists(sti))
+        sti ??= Plattform.Sidefil("regler.json");
+        if (sti != null && File.Exists(sti))
         {
             r = JsonSerializer.Deserialize<Regelsett>(File.ReadAllText(sti), Valg) ?? new Regelsett();
             r.Kilde = sti;
@@ -175,8 +175,8 @@ public sealed class Regelsett
                           ?? throw new InvalidOperationException("Mangler innebygde regler.");
             r = JsonSerializer.Deserialize<Regelsett>(s, Valg) ?? new Regelsett();
         }
-        r.LesGodkjentliste(Path.Combine(AppContext.BaseDirectory, "godkjent-ai.txt"));
-        r.LesListe(Path.Combine(AppContext.BaseDirectory, "blokkert-ai.txt"), r.BlokkertAi);
+        if (Plattform.Sidefil("godkjent-ai.txt") is { } godkjent) r.LesGodkjentliste(godkjent);
+        if (Plattform.Sidefil("blokkert-ai.txt") is { } blokkert) r.LesListe(blokkert, r.BlokkertAi);
         return r;
     }
 
