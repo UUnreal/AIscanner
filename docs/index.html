@@ -68,7 +68,7 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
 </style>
 </head>
 <body>
-<nav><div class="inn"><a href="#" style="color:inherit;text-decoration:none">AI-skanner</a><span class="lenker"><a href="#hva-den-leser"><span class="no">Hva den leser</span><span class="en">What it reads</span></a><a href="#endringer"><span class="no">Endringer</span><span class="en">Changelog</span></a><button onclick="sett(document.documentElement.lang=='no'?'en':'no')"><span class="no">English</span><span class="en">Norsk</span></button></span></div></nav>
+<nav><div class="inn"><a href="#" style="color:inherit;text-decoration:none">AI-skanner</a><span class="lenker"><a href="#hva-den-leser"><span class="no">Hva den leser</span><span class="en">What it reads</span></a><a href="#endringer"><span class="no">Endringer</span><span class="en">Changelog</span></a><button onclick="sett(document.documentElement.lang=='no'?'en':'no',1)"><span class="no">English</span><span class="en">Norsk</span></button></span></div></nav>
 <div class="inn">
 <main>
 <div class="dok"><p class="en">This page is in Norwegian only for now.</p><div id="dok" tabindex="-1" aria-live="polite"><p>…</p></div></div>
@@ -85,11 +85,17 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
   <p class="fakta en">Windows 10 and 11 · One file, no install · Open source (MIT)</p>
 </header>
 <figure class="demo">
-  <a href="demo.html" class="demolenke"><picture>
+  <a href="demo.html" class="demolenke no"><picture>
     <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="demo-mobil-mork.webp" width="780" height="1520">
     <source media="(max-width: 600px)" srcset="demo-mobil-lys.webp" width="780" height="1520">
     <source media="(prefers-color-scheme: dark)" srcset="demo-mork.webp" width="2400" height="1560">
-    <img src="demo-lys.webp" width="2400" height="1560" alt="Skjermbilde av AI-skanner: funn sortert etter risiko, med navn, type og land. / Screenshot of AI-skanner: findings sorted by risk.">
+    <img src="demo-lys.webp" width="2400" height="1560" alt="Skjermbilde av AI-skanner: funn sortert etter risiko, med navn, type og land.">
+  </picture></a>
+  <a href="demo.html" class="demolenke en"><picture>
+    <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="demo-en-mobil-mork.webp" width="780" height="1520">
+    <source media="(max-width: 600px)" srcset="demo-en-mobil-lys.webp" width="780" height="1520">
+    <source media="(prefers-color-scheme: dark)" srcset="demo-en-mork.webp" width="2400" height="1560">
+    <img src="demo-en-lys.webp" loading="lazy" width="2400" height="1560" alt="Screenshot of AI-skanner: findings sorted by risk, with name, type and country.">
   </picture></a>
   <figcaption><span class="no">Oppdiktede funn. <a href="demo.html">Prøv demoen</a>: trykk på et funn for å se hvor det ligger og hvor det sender data.</span><span class="en">Made-up findings. <a href="demo.html">Try the demo</a>: tap a finding to see where it is and where it sends data.</span></figcaption>
 </figure>
@@ -142,7 +148,8 @@ body.vis-dok .dok { display: block; } body.vis-dok .forside { display: none; }
 </footer>
 </div>
 <script>
-function sett(l) { document.documentElement.lang = l; try { localStorage.sprak = l; } catch (e) {} }
+// Språket følger PC-en til man velger selv; da huskes valget (også i demoen)
+function sett(l, lagre) { document.documentElement.lang = l; if (lagre) try { localStorage.sprak = l; } catch (e) {} }
 var l; try { l = localStorage.sprak; } catch (e) {}
 sett(l || (/^(nb|nn|no)/i.test(navigator.language) ? 'no' : 'en'));
 </script>
