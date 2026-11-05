@@ -36,13 +36,15 @@ function lag(en) {
     return f;
   });
 }
-var inn = '<script>window.DEMO=' + JSON.stringify(lag()) + ';window.DEMO_EN=' + JSON.stringify(lag(1)) + ';window.DEMOINFO={sekunder:38};<\/script>'
+// Samme språk som valgt på forsiden
+var valgt; try { valgt = localStorage.sprak; } catch (e) {}
+var inn = '<script>' + (valgt ? 'Object.defineProperty(navigator,"language",{get:function(){return "' + (valgt === 'en' ? 'en-GB' : 'nb-NO') + '"}});' : '') + 'window.DEMO=' + JSON.stringify(lag()) + ';window.DEMO_EN=' + JSON.stringify(lag(1)) + ';window.DEMOINFO={sekunder:38};<\/script>'
   + '<style>.fanerad .segment,#maal,#lagre,#sokAdmin,.fordeling b{display:none!important}'
   + '#demoMerke{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:99;display:flex;gap:12px;align-items:center;padding:8px 8px 8px 16px;border-radius:999px;background:rgba(29,29,31,.88);color:#fff;font:500 14px/20px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}'
-  + '#demoMerke a{color:#fff;background:#0a5fc0;border-radius:999px;padding:6px 14px;text-decoration:none;font-weight:600}#demoMerke a:focus-visible{outline:2px solid #fff;outline-offset:2px}</style>';
-var merke = '<div id="demoMerke" role="note"><span>' + (/^(nb|nn|no)\b/i.test(navigator.language || "") ? 'Demo med oppdiktede funn' : 'Demo with made-up findings') + '</span><a href="./">' + (/^(nb|nn|no)\b/i.test(navigator.language || "") ? 'Tilbake' : 'Back') + '</a></div>';
+  + '#demoMerke a{color:#fff;background:#0a5fc0;border-radius:999px;padding:6px 14px;text-decoration:none;font-weight:600}html[lang=en] #demoMerke .no,html:not([lang=en]) #demoMerke .en{display:none}#demoMerke a:focus-visible{outline:2px solid #fff;outline-offset:2px}</style>';
+var merke = '<div id="demoMerke" role="note"><span class="no">Demo med oppdiktede funn</span><span class="en">Demo with made-up findings</span><a href="./"><span class="no">Tilbake</span><span class="en">Back</span></a></div>';
 // Antall funn vises ikke på nettsiden: overskriften og gruppetellingene tas bort
-var fjern = '<script>new MutationObserver(function(){var h=document.querySelector(".topp h1"),t=document.documentElement.lang==="en"?"AI on this PC":"AI på denne PC-en";if(h&&/\\d/.test(h.textContent))h.textContent=t;document.querySelectorAll(".gruppe").forEach(function(g){var n=g.lastChild;if(n&&n.nodeType===3&&/ · \\d+$/.test(n.textContent))n.textContent=n.textContent.replace(/ · \\d+$/,"")})}).observe(document.body,{childList:true,subtree:true,characterData:true});<\/script>';
+var fjern = '<script>new MutationObserver(function(){try{localStorage.sprak=document.documentElement.lang==="en"?"en":"no"}catch(e){}var h=document.querySelector(".topp h1"),t=document.documentElement.lang==="en"?"AI on this PC":"AI på denne PC-en";if(h&&/\\d/.test(h.textContent))h.textContent=t;document.querySelectorAll(".gruppe").forEach(function(g){var n=g.lastChild;if(n&&n.nodeType===3&&/ · \\d+$/.test(n.textContent))n.textContent=n.textContent.replace(/ · \\d+$/,"")})}).observe(document.body,{childList:true,subtree:true,characterData:true});<\/script>';
 fetch("https://raw.githubusercontent.com/UUnreal/AIscanner/main/src/AISkanner/ui/index.html").then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (h) {
   var f = document.createElement("iframe"); f.title = "AI-skanner demo"; f.srcdoc = h.replace(/<head>/i, "<head>" + inn).replace(/<\/body>/i, merke + fjern + "</body>");
   document.body.replaceChildren(f); f.onload = function () { f.focus(); };
