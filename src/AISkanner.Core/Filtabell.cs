@@ -139,7 +139,7 @@ internal static class Filtabell
         if (!Fiks(b, s, str)) return null;
         long basis = (long)(BitConverter.ToUInt64(b, s + 0x20) & 0xFFFFFFFFFFFF);
         if (basis != 0) eier = basis;
-        for (int a = s + BitConverter.ToUInt16(b, s + 0x14); a + 16 <= s + str;)
+        for (int a = s + BitConverter.ToUInt16(b, s + 0x14); a + 8 <= s + str;)
         {
             uint type = BitConverter.ToUInt32(b, a);
             if (type == 0xFFFFFFFF) return false;
@@ -160,7 +160,7 @@ internal static class Filtabell
     private static List<(long, string)> Filnavn(byte[] b, int s, int str)
     {
         var liste = new List<(long, string)>();
-        for (int a = s + BitConverter.ToUInt16(b, s + 0x14); a + 16 <= s + str;)
+        for (int a = s + BitConverter.ToUInt16(b, s + 0x14); a + 8 <= s + str;)
         {
             uint type = BitConverter.ToUInt32(b, a);
             int len = BitConverter.ToInt32(b, a + 4);
