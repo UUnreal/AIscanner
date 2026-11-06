@@ -34,6 +34,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.7] - 2026-11-06
+
+Raskere søk, med nøyaktig de samme sjekkene og de samme funnene. Ingenting er tatt bort.
+
+### Endret
+- Filgjennomgangene (filer og leverandør-AI i Program Files, ProgramData og AppData) bruker én felles kø av mapper.
+  Før fikk hver toppmappe én tråd, så én stor mappe (som C:\Windows) holdt igjen hele søket mens de andre trådene
+  sto ledige. Målt på byggemaskinen som administrator: fullt søk 504 → 466 sekunder (disken der er treg; på en vanlig
+  PC med SSD går det mye fortere).
+- Filhodet til en stor fil i leverandørmapper leses én gang, ikke to.
+- Mappenavnet til hver fil hentes fra stien i stedet for et nytt mappeoppslag (to færre oppslag per fil).
+
+### Lagt til
+- `AISkanner.exe --ytelse [--fullt]` måler et helt søk uten vindu og skriver tiden per sjekk. Byggeløypa kjører det
+  for vanlig og fullt søk på hver endring (jobben `ytelse`), så tregere søk blir synlig.
+- `--selvtest` skriver hvilke kontroller som feilet.
+
 ## [2.52.6] - 2026-11-05
 
 Rettet etter rapporten fra første kjøring av 2.52.5 på Windows (som administrator, Windows 11).

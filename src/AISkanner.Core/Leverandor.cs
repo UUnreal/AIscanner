@@ -241,7 +241,7 @@ public sealed partial class Skanner
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;
-        try { innhold = Profil.Tid("lev: list mappe", () => new DirectoryInfo(mappe).GetFileSystemInfos()); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
+        try { innhold = new DirectoryInfo(mappe).GetFileSystemInfos(); } catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); return; }
         long bytes = 0;
         foreach (var e in innhold) if (e is FileInfo fi) try { bytes += fi.Length; } catch { }
         Tilgangslogg.TellMappe(mappe, Utfall.Lest, innhold.LongCount(e => e is FileInfo), bytes);
@@ -253,7 +253,7 @@ public sealed partial class Skanner
             if ((a & FileAttributes.ReparsePoint) != 0 || (a & Skyfil) != 0) continue;   // aldri last ned skyfiler (OneDrive)
             if (e is DirectoryInfo d) { videre(d.FullName, dybde - 1); continue; }
             if (e is not FileInfo fil) continue;
-            try { Profil.Tid("lev: fil totalt", () => LeverandorFil(fil, innhold, app, ff)); } catch { }
+            try { LeverandorFil(fil, innhold, app, ff); } catch { }
         }
     }
 
@@ -262,7 +262,7 @@ public sealed partial class Skanner
         var ext = fil.Extension;
         if (fil.Name.Equals("app.asar", StringComparison.OrdinalIgnoreCase))
         {
-            if (Profil.Tid("lev: asar", () => AsarPakker(fil.FullName)) is { } asar) lock (app) { foreach (var p in asar.Pakker) app.AiPakker.Add(p); app.AsarFiler.Add(fil.FullName); }
+            if (AsarPakker(fil.FullName) is { } asar) lock (app) { foreach (var p in asar.Pakker) app.AiPakker.Add(p); app.AsarFiler.Add(fil.FullName); }
             return;
         }
         if (ext.Equals(".dll", StringComparison.OrdinalIgnoreCase))
@@ -272,7 +272,7 @@ public sealed partial class Skanner
             return;
         }
         long lengde = fil.Length;
-        if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) Profil.Tid("lev: liten modell", () => SjekkLitenModell(fil, ff, lengde));
+        if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) SjekkLitenModell(fil, ff, lengde);
         if (lengde < 1024 * 1024) return;
         string? format = null;
         ModellFormat.Modell? lest = null;   // filhodet leses bare én gang per fil
@@ -280,13 +280,13 @@ public sealed partial class Skanner
         // OpenVINO: modell.xml (beskrivelse) + modell.bin (vektene)
         else if (ext.Equals(".bin", StringComparison.OrdinalIgnoreCase)
                  && naboer.Any(n => n.Name.Equals(Path.GetFileNameWithoutExtension(fil.Name) + ".xml", StringComparison.OrdinalIgnoreCase))
-                 && Profil.Tid("lev: openvino", () => ErOpenVino(Path.Combine(fil.DirectoryName!, Path.GetFileNameWithoutExtension(fil.Name) + ".xml"))))
+                 && ErOpenVino(Path.Combine(fil.DirectoryName!, Path.GetFileNameWithoutExtension(fil.Name) + ".xml")))
             format = "OpenVINO";
         else if (lengde >= 20 * 1024 * 1024 && Fullt)
-            format = (lest = Profil.Tid("lev: filhode", () => ModellFormat.Gjenkjenn(fil.FullName)))?.Format;
+            format = (lest = ModellFormat.Gjenkjenn(fil.FullName))?.Format;
         else if (lengde >= 20 * 1024 * 1024 && ext.ToLowerInvariant() is not (".zip" or ".7z" or ".rar" or ".cab" or ".iso" or ".mp4" or ".mkv" or ".mov"
                      or ".exe" or ".msi" or ".msix" or ".appx" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png" or ".pak" or ".dat" or ".db" or ".log" or ".edb" or ".etl"))
-            format = (lest = Profil.Tid("lev: filhode", () => ModellFormat.Gjenkjenn(fil.FullName)))?.Format;
+            format = (lest = ModellFormat.Gjenkjenn(fil.FullName))?.Format;
         if (format == null) return;
 
         // Egne modeller (GGUF, safetensors osv.) i brukerens mapper hører til "Lokal AI", ikke til en leverandør

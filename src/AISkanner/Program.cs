@@ -160,12 +160,10 @@ internal static class Program
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static int Ytelse(bool fullt)
     {
-        Profil.Pa = true;
         var sok = new Skanner(Regelsett.Last()) { LytteSekunder = 0, Fullt = fullt };
         Task.Run(() => sok.KjorAsync(false)).GetAwaiter().GetResult();
         foreach (var t in sok.Tider.OrderByDescending(t => t.Value)) Console.WriteLine($"{t.Value.TotalSeconds,7:0.00} s  {t.Key}");
-        foreach (var l in Profil.Linjer()) Console.WriteLine("PROFIL " + l);
-        Console.WriteLine($"PROFIL mapper lest {sok.MapperLest}, filhoder {ModellFormat.Filhoder}");
+        Console.WriteLine($"Mapper gått gjennom: {sok.MapperLest}, filhoder lest: {ModellFormat.Filhoder}");
         return 0;
     }
 

@@ -563,12 +563,11 @@ public sealed partial class Skanner
                 {
                     filer++;
                     try { bytes += fil.Length; } catch { }
-                    Profil.Tid("gaa: fil totalt", () => SjekkFil(fil, mappe, ff, minLengde));
-                    // Som administrator på NTFS sier filtabellen hvilke filer som har en stor skjult strøm; bare de åpnes
-                    if (Fullt) Profil.Tid("gaa: strømmer (ADS)", () => { if (Filtabell.MaaSjekkes(fil.FullName)) SjekkStrommer(fil, ff); });
+                    SjekkFil(fil, mappe, ff, minLengde);
+                    if (Fullt) SjekkStrommer(fil, ff);
                 }
             }
-            Profil.Tid("gaa: TellMappe", () => Tilgangslogg.TellMappe(mappe, Utfall.Lest, filer, bytes));
+            Tilgangslogg.TellMappe(mappe, Utfall.Lest, filer, bytes);
             if (sky > 0) Tilgangslogg.BareKart("Mappe", mappe, Utfall.Lest, $"{sky} skyfiler (OneDrive): navn og størrelse sjekket, innholdet ligger i skyen og lastes aldri ned");
         }
         catch (Exception e) { Tilgangslogg.Feil("Mappe", mappe, e); }
@@ -731,7 +730,7 @@ public sealed partial class Skanner
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde, long? malLengde = null)
     {
         if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
-        Profil.Tid("gaa: agentfil", () => SjekkAgentfil(fil));
+        SjekkAgentfil(fil);
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")
         {
@@ -749,10 +748,10 @@ public sealed partial class Skanner
         long lengde;
         try { lengde = malLengde ?? fil.Length; } catch { return; }
         bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
-        if (lengde < minLengde && !liten) { Profil.Tid("gaa: liten modell", () => SjekkLitenModell(fil, ff, lengde)); return; }
+        if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff, lengde); return; }
         // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
         if (!Fullt && ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
-        var modell = Profil.Tid("gaa: filhode", () => ModellFormat.Gjenkjenn(fil.FullName));
+        var modell = ModellFormat.Gjenkjenn(fil.FullName);
         if (modell != null) lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell));
     }
 

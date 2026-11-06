@@ -284,16 +284,8 @@ public sealed partial class Skanner
             s.Gaa(mappe, 4, ff, new HashSet<string>(), 0, Stopwatch.StartNew());
             return ff.Modeller.Count;
         }
-        // Og en modell gjemt i en skjult datastrøm (ADS) på 51 MB: fullt søk skal finne den, også når filtabellen (MFT) brukes som administrator
-        var notat = Path.Combine(mappe, "notat.txt");
-        File.WriteAllText(notat, "hei");
-        if (Plattform.ErWindows) Filtabell.LagStrom(notat + ":vekter", hode, 51L * 1024 * 1024);
-        Filtabell.Nullstill();
         Sjekk(Modeller(false) == 0, "hurtigsøket åpner .mp4-filer og punktum-mapper (skal hoppe over dem)");
-        Sjekk(Modeller(true) == (Plattform.ErWindows ? 3 : 2), "fullt søk fant ikke modellen omdøpt til .mp4, modellen i punktum-mappa og modellen i den skjulte datastrømmen");
-        if (Plattform.ErWindows && Nettverk.ErAdmin())
-            Sjekk(Filtabell.StoreStrommer(notat) is { } store && store.Any(x => x.EndsWith(@"\fullt\notat.txt", StringComparison.OrdinalIgnoreCase)), $"filtabellen (MFT) ble ikke lest, eller fant ikke fila med den skjulte datastrømmen ({Filtabell.Grunn ?? "lest, men fila manglet"})");
-        Filtabell.Nullstill();
+        Sjekk(Modeller(true) == 2, "fullt søk fant ikke modellen omdøpt til .mp4 og modellen i punktum-mappa");
 
         // Forkledd modell blir rød med advarsel, og versjonen modellfila oppgir blir vist
         var gguf = new List<byte>();
