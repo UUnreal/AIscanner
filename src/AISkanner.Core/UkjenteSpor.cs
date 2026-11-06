@@ -362,7 +362,7 @@ public sealed partial class Skanner
     private void SjekkProsjektOppsett(FileInfo fil)
     {
         var navn = fil.Name;
-        var forelder = fil.Directory?.Name ?? "";
+        var forelder = Path.GetFileName(fil.DirectoryName ?? "");
         bool aktuell = navn.Equals(".mcp.json", StringComparison.OrdinalIgnoreCase)
             || (forelder is ".vscode" or ".cursor" && (navn.Equals("mcp.json", StringComparison.OrdinalIgnoreCase) || navn.Equals("settings.json", StringComparison.OrdinalIgnoreCase)))
             || (forelder == ".claude" && navn.StartsWith("settings", StringComparison.OrdinalIgnoreCase) && navn.EndsWith(".json", StringComparison.OrdinalIgnoreCase));

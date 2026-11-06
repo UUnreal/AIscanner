@@ -186,12 +186,10 @@ public sealed partial class Skanner
                 else jobber.Add((d, d, dybde - 1, beskyttet));
             }
         }
-        Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) }, j =>
-        {
-            var app = new AppAi { Rot = j.AppRot, Beskyttet = j.Beskyttet };
-            LeverandorGaa(j.Mappe, Fullt ? 64 : j.Dybde, app, ff, hopp, frist);
-            if (app.Filer.Count > 0 || app.AiPakker.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) lock (apper) apper[app.Rot] = app;
-        });
+        var start = jobber.Select(j => (j.Mappe, Dybde: Fullt ? 64 : j.Dybde, App: new AppAi { Rot = j.AppRot, Beskyttet = j.Beskyttet })).ToList();
+        MappeKo(start, (j, legg) => LeverandorGaa(j.Mappe, j.Dybde, j.App, ff, hopp, frist, (m, d) => legg((m, d, j.App))));
+        foreach (var app in start.Select(j => j.App))
+            if (app.Filer.Count > 0 || app.AiPakker.Count > 0 || (app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer))) apper[app.Rot] = app;
 
         // Programmer som kjører nå
         var kjorer = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -227,7 +225,7 @@ public sealed partial class Skanner
         }
     }
 
-    private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist)
+    private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist, Action<string, int> videre)
     {
         if (hopp.Contains(mappe)) return;
         if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "dybdegrensen for leverandørmapper er nådd"); return; }
@@ -253,7 +251,7 @@ public sealed partial class Skanner
             FileAttributes a;
             try { a = e.Attributes; } catch { continue; }
             if ((a & FileAttributes.ReparsePoint) != 0 || (a & Skyfil) != 0) continue;   // aldri last ned skyfiler (OneDrive)
-            if (e is DirectoryInfo d) { LeverandorGaa(d.FullName, dybde - 1, app, ff, hopp, frist); continue; }
+            if (e is DirectoryInfo d) { videre(d.FullName, dybde - 1); continue; }
             if (e is not FileInfo fil) continue;
             try { LeverandorFil(fil, innhold, app, ff); } catch { }
         }
@@ -277,6 +275,7 @@ public sealed partial class Skanner
         if (lengde < 20 * 1024 * 1024 && !InnebygdeFormater.ContainsKey(ext)) SjekkLitenModell(fil, ff, lengde);
         if (lengde < 1024 * 1024) return;
         string? format = null;
+        ModellFormat.Modell? lest = null;   // filhodet leses bare én gang per fil
         if (InnebygdeFormater.TryGetValue(ext, out var kjent)) format = kjent;
         // OpenVINO: modell.xml (beskrivelse) + modell.bin (vektene)
         else if (ext.Equals(".bin", StringComparison.OrdinalIgnoreCase)
@@ -284,16 +283,16 @@ public sealed partial class Skanner
                  && ErOpenVino(Path.Combine(fil.DirectoryName!, Path.GetFileNameWithoutExtension(fil.Name) + ".xml")))
             format = "OpenVINO";
         else if (lengde >= 20 * 1024 * 1024 && Fullt)
-            format = ModellFormat.Gjenkjenn(fil.FullName)?.Format;
+            format = (lest = ModellFormat.Gjenkjenn(fil.FullName))?.Format;
         else if (lengde >= 20 * 1024 * 1024 && ext.ToLowerInvariant() is not (".zip" or ".7z" or ".rar" or ".cab" or ".iso" or ".mp4" or ".mkv" or ".mov"
                      or ".exe" or ".msi" or ".msix" or ".appx" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png" or ".pak" or ".dat" or ".db" or ".log" or ".edb" or ".etl"))
-            format = ModellFormat.Gjenkjenn(fil.FullName)?.Format;
+            format = (lest = ModellFormat.Gjenkjenn(fil.FullName))?.Format;
         if (format == null) return;
 
         // Egne modeller (GGUF, safetensors osv.) i brukerens mapper hører til "Lokal AI", ikke til en leverandør
         if (!app.Beskyttet && format is not ("ONNX" or "ONNX Runtime" or "TensorFlow Lite" or "LiteRT-LM" or "Qualcomm SNPE" or "TensorRT" or "ExecuTorch" or "Core ML" or "OpenVINO"))
         {
-            var modell = ModellFormat.Gjenkjenn(fil.FullName);
+            var modell = lest ?? ModellFormat.Gjenkjenn(fil.FullName);
             if (modell != null && lengde >= 100 * 1024 * 1024) { lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell)); return; }
         }
         lock (app) app.Filer.Add((fil.FullName, lengde, format, fil.CreationTime, fil.LastWriteTime));

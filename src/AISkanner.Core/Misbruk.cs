@@ -64,7 +64,7 @@ public sealed partial class Skanner
     internal static string? VektorDb(FileInfo fil)
     {
         var n = fil.Name;
-        var forelder = fil.Directory?.Name ?? "";
+        var forelder = Path.GetFileName(fil.DirectoryName ?? "");
         if (n.Equals("chroma.sqlite3", StringComparison.OrdinalIgnoreCase)) return "Chroma";
         if (fil.Extension.Equals(".faiss", StringComparison.OrdinalIgnoreCase)) return "FAISS";
         if (fil.Extension.Equals(".lance", StringComparison.OrdinalIgnoreCase) && fil.DirectoryName?.IndexOf(".lance", StringComparison.OrdinalIgnoreCase) >= 0) return "LanceDB";
@@ -106,7 +106,7 @@ public sealed partial class Skanner
     private void SjekkAgentfil(FileInfo fil)
     {
         var navn = fil.Name;
-        var forelder = fil.Directory?.Name ?? "";
+        var forelder = Path.GetFileName(fil.DirectoryName ?? "");
         var ext = fil.Extension.ToLowerInvariant();
         // Raskt ut for vanlige filer: bare navn, mapper og endelser vi bryr oss om
         // .env og .env.local osv.: bare navnene på AI-nøkler leses etterpå, aldri verdiene

@@ -421,8 +421,7 @@ public sealed partial class Skanner
                 jobber.Add((d, dybde - 1));
             }
         }
-        Parallel.ForEach(jobber, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(2, Math.Min(8, Environment.ProcessorCount)) },
-            j => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist));
+        MappeKo(jobber, (j, legg) => Gaa(j.Sti, j.Dybde, ff, hopp, minLengde, frist, (m, d) => legg((m, d))));
 
         LeggTilFarlige(ff);
         // AI-oppsett i prosjektmapper (.mcp.json, .vscode\mcp.json, .claude\settings.json) som gjennomgangen fant
@@ -485,7 +484,31 @@ public sealed partial class Skanner
         }
     }
 
-    private void Gaa(string mappe, int dybde, FilFunn ff, HashSet<string> hopp, long minLengde, Stopwatch frist)
+    /// <summary>
+    /// Går gjennom mappetrær med faste lesetråder. Hver mappe er en egen jobb i en felles kø, så én stor mappe (C:\Windows,
+    /// Documents) ikke holder igjen resten: alle trådene jobber til siste mappe er lest. Samme mapper og regler som før.
+    /// </summary>
+    internal static void MappeKo<T>(IEnumerable<T> start, Action<T, Action<T>> gjor)
+    {
+        using var ko = new System.Collections.Concurrent.BlockingCollection<T>(new System.Collections.Concurrent.ConcurrentStack<T>());
+        int igjen = 1;   // holder køen åpen til startmappene er lagt inn
+        Exception? feil = null;
+        void Legg(T x) { Interlocked.Increment(ref igjen); ko.Add(x); }
+        void Ferdig() { if (Interlocked.Decrement(ref igjen) == 0) ko.CompleteAdding(); }
+        foreach (var x in start) Legg(x);
+        Ferdig();
+        Task.WaitAll(Enumerable.Range(0, Math.Max(2, Math.Min(8, Environment.ProcessorCount))).Select(_ => Task.Factory.StartNew(() =>
+        {
+            foreach (var x in ko.GetConsumingEnumerable())
+                try { gjor(x, Legg); }
+                catch (Exception e) { Interlocked.CompareExchange(ref feil, e, null); }
+                finally { Ferdig(); }
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray());
+        // Resten av mappene er gått gjennom; feilen vises som før («Sjekken stoppet»)
+        if (feil != null) throw feil;
+    }
+
+    private void Gaa(string mappe, int dybde, FilFunn ff, HashSet<string> hopp, long minLengde, Stopwatch frist, Action<string, int>? videre = null)
     {
         if (hopp.Contains(mappe)) return;
         if (dybde < 0) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "dybdegrensen for gjennomgangen er nådd"); return; }
@@ -533,7 +556,7 @@ public sealed partial class Skanner
                 if (e is DirectoryInfo hb && hb.Name == "blobs" && (Path.GetFileName(mappe).StartsWith("models--", StringComparison.OrdinalIgnoreCase)
                     ? Directory.Exists(Path.Combine(mappe, "snapshots")) : Directory.EnumerateDirectories(mappe, "models--*").Any()))
                 { Tilgangslogg.TellMappe(hb.FullName, Utfall.HoppetOver, detalj: "Hugging Face-blobber leses via navnene i snapshots"); continue; }
-                if (e is DirectoryInfo d) Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist);
+                if (e is DirectoryInfo d) { if (videre != null) videre(d.FullName, dybde - 1); else Gaa(d.FullName, dybde - 1, ff, hopp, minLengde, frist); }
                 else if (e is FileInfo fil)
                 {
                     filer++;
