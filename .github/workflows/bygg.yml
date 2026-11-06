@@ -136,6 +136,29 @@ jobs:
       #     wait-for-completion: true
       #     output-artifact-directory: signert
 
+  # Hvor lang tid søket tar som administrator (byggemaskinen er admin): vanlig og fullt søk, tid per sjekk som merknad.
+  ytelse:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false }
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with: { dotnet-version: '8.0.x' }
+      - name: Bygg
+        run: dotnet build src/AISkanner.Cli -c Release
+      - name: Mål vanlig og fullt søk
+        shell: pwsh
+        run: |
+          foreach ($m in 'vanlig', 'fullt') {
+            $a = @('run', '--project', 'src/AISkanner.Cli', '-c', 'Release', '--no-build', '--', '--lytt', '0')
+            if ($m -eq 'fullt') { $a += '--fullt' }
+            $t = [Diagnostics.Stopwatch]::StartNew()
+            dotnet @a 2> "tid-$m.txt" | Out-Null
+            "::notice title=Ytelse $m::Hele kjøringen $([math]::Round($t.Elapsed.TotalSeconds, 1)) s"
+            Get-Content "tid-$m.txt" | Where-Object { $_ -match '^\s+[\d.,]+ s  ' } | ForEach-Object { "::notice title=Ytelse $m::$($_.Trim())" }
+          }
+
   # Sikkerhet for hver endring og hver versjon. Feiler noe, blir PR-en rød og ingen utgivelse lages.
   sikkerhet:
     runs-on: ubuntu-latest
