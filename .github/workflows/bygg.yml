@@ -145,20 +145,20 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with: { dotnet-version: '8.0.x' }
-      - name: Bygg
-        run: dotnet build src/AISkanner.Cli -c Release
+      # Det brukeren kjører: AISkanner.exe (.NET Framework 4.8), uten nettverkslytting
+      - name: Bygg programmet
+        run: dotnet publish src/AISkanner -c Release -o publish
       - name: Mål vanlig og fullt søk
         shell: pwsh
         run: |
           foreach ($m in 'vanlig', 'fullt') {
-            $a = @('run', '--project', 'src/AISkanner.Cli', '-c', 'Release', '--no-build', '--', '--lytt', '0', '--profil')
-            if ($m -eq 'fullt') { $a += '--fullt' }
+            $a = @('--ytelse'); if ($m -eq 'fullt') { $a += '--fullt' }
             $t = [Diagnostics.Stopwatch]::StartNew()
-            dotnet @a 2> "tid-$m.txt" | Out-Null
-            "::notice title=Ytelse $m::Hele kjøringen $([math]::Round($t.Elapsed.TotalSeconds, 1)) s"
-            Get-Content "tid-$m.txt" | Where-Object { $_ -match '^\s+[\d.,]+ s  |^PROFIL' } | ForEach-Object { "::notice title=Ytelse $m::$($_.Trim())" }
+            $p = Start-Process publish/AISkanner.exe -ArgumentList $a -Wait -PassThru -NoNewWindow -RedirectStandardOutput "tid-$m.txt" -RedirectStandardError "feil-$m.txt"
+            "::notice title=Ytelse $m::Hele kjøringen $([math]::Round($t.Elapsed.TotalSeconds, 1)) s (kode $($p.ExitCode))"
+            Get-Content "tid-$m.txt", "feil-$m.txt" -ErrorAction SilentlyContinue | Where-Object { $_.Trim() } | ForEach-Object { "::notice title=Ytelse $m::$($_.Trim())" }
+            if ($p.ExitCode -ne 0) { exit 1 }
           }
-          exit 0   # skanningens exit-kode (1/2 = gule/røde funn) er ikke en feil her
 
   # Sikkerhet for hver endring og hver versjon. Feiler noe, blir PR-en rød og ingen utgivelse lages.
   sikkerhet:

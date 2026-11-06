@@ -488,7 +488,7 @@ public sealed partial class Skanner
     /// Går gjennom mappetrær med faste lesetråder. Hver mappe er en egen jobb i en felles kø, så én stor mappe (C:\Windows,
     /// Documents) ikke holder igjen resten: alle trådene jobber til siste mappe er lest. Samme mapper og regler som før.
     /// </summary>
-    private static readonly int Lesere = Math.Max(16, Math.Min(32, Environment.ProcessorCount * 4));
+    private static readonly int Lesere = Math.Max(2, Math.Min(8, Environment.ProcessorCount));
 
     internal static void MappeKo<T>(IEnumerable<T> start, Action<T, Action<T>> gjor)
     {
@@ -499,8 +499,6 @@ public sealed partial class Skanner
         void Ferdig() { if (Interlocked.Decrement(ref igjen) == 0) ko.CompleteAdding(); }
         foreach (var x in start) Legg(x);
         Ferdig();
-        // Mappelisting og filoppslag venter på disken, ikke på prosessoren: mange samtidige lesere holder disken (NVMe og
-        // skydisker) i arbeid. Målt på byggemaskinen: tiden går nesten bare til å vente på disken.
         Task.WaitAll(Enumerable.Range(0, Lesere).Select(_ => Task.Factory.StartNew(() =>
         {
             foreach (var x in ko.GetConsumingEnumerable())
