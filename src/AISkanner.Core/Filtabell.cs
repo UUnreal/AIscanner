@@ -39,11 +39,12 @@ internal static class Filtabell
     private static HashSet<string>? Les(string rot)
     {
         if (!Plattform.ErWindows || !Nettverk.ErAdmin()) return null;
+        Grunn = null;
         var mal = rot + "$MFT";
         try
         {
             var di = new DriveInfo(rot);
-            if (di.DriveType is not (DriveType.Fixed or DriveType.Removable) || di.DriveFormat != "NTFS") return null;
+            if (di.DriveType is not (DriveType.Fixed or DriveType.Removable) || di.DriveFormat != "NTFS") return Nei(mal, $"ikke en lokal NTFS-disk ({di.DriveFormat})");
             using var h = CreateFile(@"\\.\" + rot.Substring(0, 2), GENERIC_READ, 7, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
             if (h.IsInvalid) return Nei(mal, $"disken kunne ikke åpnes (Windows-feil {Marshal.GetLastWin32Error()})");
             var vd = new byte[96];
@@ -101,8 +102,12 @@ internal static class Filtabell
         catch (Exception e) { return Nei(mal, Tilgangslogg.Beskriv(e)); }
     }
 
+    /// <summary>Hvorfor filtabellen sist ikke ble brukt (for kontrollen).</summary>
+    internal static string? Grunn { get; private set; }
+
     private static HashSet<string>? Nei(string mal, string grunn)
     {
+        Grunn = grunn;
         Tilgangslogg.Logg("Fil", mal, Utfall.HoppetOver, $"filtabellen ble ikke brukt ({grunn}); skjulte datastrømmer sjekkes fil for fil");
         return null;
     }

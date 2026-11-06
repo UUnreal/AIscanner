@@ -292,7 +292,7 @@ public sealed partial class Skanner
         Sjekk(Modeller(false) == 0, "hurtigsøket åpner .mp4-filer og punktum-mapper (skal hoppe over dem)");
         Sjekk(Modeller(true) == (Plattform.ErWindows ? 3 : 2), "fullt søk fant ikke modellen omdøpt til .mp4, modellen i punktum-mappa og modellen i den skjulte datastrømmen");
         if (Plattform.ErWindows && Nettverk.ErAdmin())
-            Sjekk(Filtabell.StoreStrommer(notat) is { } store && store.Any(x => x.EndsWith(@"\fullt\notat.txt", StringComparison.OrdinalIgnoreCase)), "filtabellen (MFT) ble ikke lest, eller fant ikke fila med den skjulte datastrømmen");
+            Sjekk(Filtabell.StoreStrommer(notat) is { } store && store.Any(x => x.EndsWith(@"\fullt\notat.txt", StringComparison.OrdinalIgnoreCase)), $"filtabellen (MFT) ble ikke lest, eller fant ikke fila med den skjulte datastrømmen ({Filtabell.Grunn ?? "lest, men fila manglet"})");
         Filtabell.Nullstill();
 
         // Forkledd modell blir rød med advarsel, og versjonen modellfila oppgir blir vist
