@@ -175,7 +175,9 @@ public sealed partial class Skanner
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
         VaktTilFunn();
         SlaSammenSpor();
+        Ordne();
         Risikoregler.Bruk(_funn.Values, _regler);
+        Ordne();
         LagSjekker();
         // Stoppet antivirus noe av det vi leste? Defender skriver det i sin egen logg.
         Tilgangslogg.Sjekk.Value = "Antivirus";
@@ -190,8 +192,10 @@ public sealed partial class Skanner
         Rapporter(helt: true);
         if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
-        return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
+        return Funn.Ordnet(_funn.Values);
     }
+
+    private void Ordne() { foreach (var f in _funn.Values) f.Ordne(); }
 
     /// <summary>Resultatet vises før nettverkslyttingen er ferdig; lyttingen fortsetter og fullføres med FullforLyttingAsync.</summary>
     public bool LyttIBakgrunnen { get; set; }
@@ -244,12 +248,14 @@ public sealed partial class Skanner
                 KortlivedeProsesser(nb);
                 VaktTilFunn();
                 SlaSammenSpor();
+                Ordne();
                 Risikoregler.Bruk(_funn.Values, _regler);
+                Ordne();
                 LagSjekker();
                 Tilgangslogg.Sjekk.Value = null;
                 lock (Tider) Tider["Ser hvor AI sender data"] = Tider.TryGetValue("Ser hvor AI sender data", out var f) ? f + tid.Elapsed : tid.Elapsed;
             }, ct).ConfigureAwait(false);
-            return _funn.Values.OrderBy(f => f.Risiko).ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ToList();
+            return Funn.Ordnet(_funn.Values);
         }
         finally
         {

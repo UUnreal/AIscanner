@@ -71,12 +71,12 @@ public static class Rapport
             L("OVERSIKT");
             Ra(engelsk ? $"{"Risk",-12}{"AI model",-38}{"Location",-26}Key point" : $"{"Risiko",-12}{"AI-modell",-38}{"Lokasjon",-26}Viktigst");
             L(new string('-', 99));
-            foreach (var f in liste.OrderBy(f => f.Risiko))
+            foreach (var f in Funn.Ordnet(liste))
                 Ra($"{T(Merke(f)),-12}{Klipp(T(Oversikt.Navn(f)), 36),-38}{Klipp(T(Oversikt.Lokasjon(f)), 24),-26}{T(Oversikt.Punkt(f))}");
         }
         foreach (var (gruppe, tittel) in Grupper)
         {
-            var del = liste.Where(f => f.Gruppe == gruppe).OrderBy(f => f.Risiko).ToList();
+            var del = Funn.Ordnet(liste.Where(f => f.Gruppe == gruppe));
             L();
             L($"{tittel.ToUpperInvariant()} ({del.Count})");
             L(new string('=', 60));

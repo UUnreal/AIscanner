@@ -34,6 +34,18 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.8] - 2026-11-06
+
+Fast rekkefølge i rapporten. Ingen sjekker er endret, og ingen funn eller spor er tatt bort.
+
+### Endret
+- Funnene står i fast rekkefølge innen rød, gul og grønn: kjente røde først, så ukjente (også røde), deretter navn og sted.
+  Før kunne to funn med samme risiko og navn bytte plass mellom to søk.
+- Sporene under hvert funn («Funnet her») står i fast rekkefølge: det som ligger på disken (program, fil, mappe,
+  kommando) først, så resten etter type og sti. Siden søket går parallelt, kom de før i den rekkefølgen sjekkene ble
+  ferdige, og «Lokasjon» i oversikten kunne derfor variere mellom to søk på samme PC.
+- Har et funn flere enn 500 spor, er det alltid de 500 første i den faste rekkefølgen som blir vist, ikke de som tilfeldigvis ble funnet først.
+
 ## [2.52.7] - 2026-11-06
 
 Raskere søk, med nøyaktig de samme sjekkene og de samme funnene. Ingenting er tatt bort.
