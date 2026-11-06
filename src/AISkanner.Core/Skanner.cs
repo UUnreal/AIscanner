@@ -59,6 +59,7 @@ public sealed partial class Skanner
         Logg = new Tilgangslogg();
         Tilgangslogg.Aktiv = Logg;
         ModellFormat.NullstillTelling();
+        Filtabell.Nullstill();
         // Som administrator: låste mapper og filer leses med lesing for sikkerhetskopi (bare lesing)
         Admintilgang.SlaPa();
         var stegliste = new (string Tekst, Action Gjor)[]

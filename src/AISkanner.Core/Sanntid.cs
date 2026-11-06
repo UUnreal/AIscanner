@@ -564,7 +564,8 @@ public sealed partial class Skanner
                     filer++;
                     try { bytes += fil.Length; } catch { }
                     Profil.Tid("gaa: fil totalt", () => SjekkFil(fil, mappe, ff, minLengde));
-                    if (Fullt) Profil.Tid("gaa: strømmer (ADS)", () => SjekkStrommer(fil, ff));
+                    // Som administrator på NTFS sier filtabellen hvilke filer som har en stor skjult strøm; bare de åpnes
+                    if (Fullt) Profil.Tid("gaa: strømmer (ADS)", () => { if (Filtabell.MaaSjekkes(fil.FullName)) SjekkStrommer(fil, ff); });
                 }
             }
             Profil.Tid("gaa: TellMappe", () => Tilgangslogg.TellMappe(mappe, Utfall.Lest, filer, bytes));
