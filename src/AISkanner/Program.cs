@@ -113,6 +113,7 @@ internal static class Program
     {
         // Byggeløypa: laster bibliotekene og kjører kontrollen uten vindu, i mappa slik brukeren får den
         if (args.Contains("--lastetest")) { Environment.Exit(Lastetest()); return; }
+        if (args.Contains("--ytelse")) { Environment.Exit(Ytelse(args.Contains("--fullt"))); return; }
 
         // Programmet skal aldri forsvinne uten å si hvorfor. Feil vises i en melding som kan kopieres (Ctrl+C).
         AppDomain.CurrentDomain.UnhandledException += (_, e) => VisFeil(e.ExceptionObject as Exception);
@@ -153,6 +154,17 @@ internal static class Program
         MessageBox.Show(tekst + "\r\n" + (engelsk ? "Press Ctrl+C to copy." : "Trykk Ctrl+C for å kopiere."),
             engelsk ? "AI Scanner: alarm check" : "AI-skanner: kontroll av alarmene", MessageBoxButtons.OK,
             feil ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+    }
+
+    /// <summary>Måler et helt søk i .NET Framework 4.8 (det brukeren kjører) og skriver tiden per sjekk. Brukes av CI.</summary>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static int Ytelse(bool fullt)
+    {
+        var sok = new Skanner(Regelsett.Last()) { LytteSekunder = 0, Fullt = fullt };
+        Task.Run(() => sok.KjorAsync(false)).GetAwaiter().GetResult();
+        foreach (var t in sok.Tider.OrderByDescending(t => t.Value)) Console.WriteLine($"{t.Value.TotalSeconds,7:0.00} s  {t.Key}");
+        Console.WriteLine($"Mapper gått gjennom: {sok.MapperLest}, filhoder lest: {ModellFormat.Filhoder}");
+        return 0;
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]

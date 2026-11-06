@@ -296,6 +296,7 @@ static class Selvtest
         Sjekk("misbruk: vanlig claude-kommando er ikke farlig", Skanner.FlaggITekst("claude --version").Count == 0, true);
         var kontroll = Skanner.Kontroll(Regelsett.Last());
         Sjekk("kontroll: alle alarmer slår ut med kjente spor", !kontroll.Contains("FEIL") && kontroll.Contains("alarmer slo ut riktig"), true);
+        foreach (var l in kontroll.Split('\n').Where(l => l.StartsWith("FEIL"))) Console.WriteLine("     " + l.Trim());
         Sjekk("kontroll: midlertidig mappe slettet", kontroll.Contains("Den midlertidige mappa er slettet."), true);
         Sjekk("kart: registernøkkel havner under Registeret", Kart.Plass("Register", @"HKCU\Software\Ollama").StartsWith(@"Registeret\HKCU\"), true);
         Sjekk("kart: fil havner under Disk", Kart.Plass("Fil", @"C:\Users\a\.claude\settings.json") == @"Disk\C:\Users\a\.claude\settings.json", true);
