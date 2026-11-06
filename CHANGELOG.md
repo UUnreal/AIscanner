@@ -28,6 +28,8 @@ Kategoriene er:
   tatt bort; endringene står i teksten på utgivelsen.
 
 ### Lagt til
+- Kodesignering klar: jobben `signering` sender `AISkanner.exe` til SignPath Foundation og sjekker at signaturen er
+  gyldig før utgivelsen lages. Den slås på når prosjektet er godkjent hos SignPath. Til da er utgivelsen usignert.
 - Versjonstagger (`vX.Y.Z`) lager en GitHub-utgivelse.
 - `AISkanner.Cli --selvtest`: sju kontroller av risikologikken, blant annet at godkjentlista ikke kan lures med falske
   navn eller domener i filstier.

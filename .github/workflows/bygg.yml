@@ -12,6 +12,8 @@ permissions:
 jobs:
   bygg:
     runs-on: windows-latest
+    outputs:
+      til-signering: ${{ steps.til-signering.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with: { persist-credentials: false }
@@ -123,18 +125,13 @@ jobs:
           name: AISkanner-usignert
           path: publish/
 
-      # Kodesignering via SignPath Foundation (gratis for åpen kildekode).
-      # Slås på når prosjektet er godkjent og SIGNPATH_API_TOKEN er lagt inn som secret.
-      # - uses: signpath/github-action-submit-signing-request@v1
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   with:
-      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-      #     organization-id: '<fra SignPath>'
-      #     project-slug: 'ai-skanner'
-      #     signing-policy-slug: 'release-signing'
-      #     github-artifact-id: ${{ steps.last-opp.outputs.artifact-id }}
-      #     wait-for-completion: true
-      #     output-artifact-directory: signert
+      # Bare exe-fila sendes til signering (SignPath henter den fra GitHub, med sjekk av at den er bygd her)
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        id: til-signering
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: AISkanner-til-signering
+          path: publish/AISkanner.exe
 
   # Hvor lang tid søket tar som administrator (byggemaskinen er admin): vanlig og fullt søk, tid per sjekk som merknad.
   ytelse:
@@ -198,10 +195,62 @@ jobs:
           npx playwright install --with-deps chromium >/dev/null
           node tests/xss/xss.js src/AISkanner/ui/index.html
 
-  # Versjonstag (vX.Y.Z) → GitHub Release med bare AISkanner.exe (hele programmet) og SHA256.txt til kontroll,
-  # og endringene som tekst. Kjører bare når bygg- og sikkerhetsjobben er grønne.
-  utgivelse:
+  # Kodesignering via SignPath Foundation (gratis for åpen kildekode). Slås på av seg selv når variabelen
+  # SIGNPATH_ORGANIZATION_ID og hemmeligheten SIGNPATH_API_TOKEN (miljøet «signering») finnes. Jørund godkjenner
+  # hver signering hos SignPath. Er signering på, kommer ingen utgivelse uten gyldig signatur fra SignPath Foundation.
+  signering:
     needs: [bygg, sikkerhet]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    environment: signering
+    permissions:
+      actions: read   # SignPath leser byggejobben og exe-fila
+    steps:
+      - name: Signer hos SignPath
+        id: signer
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3.0
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'AIscanner' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ needs.bygg.outputs.til-signering }}
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: ut
+
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        if: steps.signer.outcome == 'skipped'
+        with:
+          name: AISkanner-til-signering
+          path: ut
+
+      - name: Sjekk signatur og lag SHA256.txt
+        shell: pwsh
+        env:
+          SIGNERT: ${{ steps.signer.outcome == 'success' }}
+        run: |
+          $f = Get-ChildItem ut -Recurse -File
+          if ($f.Count -ne 1 -or $f[0].Name -ne 'AISkanner.exe') { "::error::Ventet bare AISkanner.exe, fikk: $($f.Name -join ', ')"; exit 1 }
+          $s = Get-AuthenticodeSignature $f[0].FullName
+          if ($env:SIGNERT -eq 'true') {
+            if ($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'CN=SignPath Foundation') { "::error::Ugyldig signatur: $($s.Status) $($s.SignerCertificate.Subject)"; exit 1 }
+            "::notice title=Signering::Signert av $($s.SignerCertificate.Subject)"
+          } else { "::warning title=Signering::Ikke slått på ennå, utgivelsen blir usignert" }
+          New-Item -ItemType Directory -Force utgivelse | Out-Null
+          Copy-Item $f[0].FullName utgivelse/
+          "$((Get-FileHash utgivelse/AISkanner.exe -Algorithm SHA256).Hash)  AISkanner.exe" | Out-File utgivelse/SHA256.txt -Encoding ascii
+          Get-Content utgivelse/SHA256.txt
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: AISkanner-utgivelse
+          path: utgivelse/
+
+  # Versjonstag (vX.Y.Z) → GitHub Release med bare AISkanner.exe (hele programmet) og SHA256.txt til kontroll,
+  # og endringene som tekst. Kjører bare når bygg, sikkerhet og signering er grønne.
+  utgivelse:
+    needs: [bygg, sikkerhet, signering]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -212,7 +261,7 @@ jobs:
 
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
-          name: AISkanner-usignert
+          name: AISkanner-utgivelse
           path: publish
 
       - name: Lag release
