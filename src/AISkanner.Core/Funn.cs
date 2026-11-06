@@ -146,9 +146,49 @@ public sealed class Funn
     }
 
     public void Merknad(string s) { lock (this) if (!Merknader.Contains(s)) Merknader.Add(s); }
-    public void Detalj(string s) { lock (this) if (!Detaljer.Contains(s) && Detaljer.Count < 500) Detaljer.Add(s); }
+    public void Detalj(string s)
+    {
+        lock (this)
+        {
+            if (Detaljer.Contains(s)) return;
+            if (Detaljer.Count < 500) { Detaljer.Add(s); return; }
+            // Full liste: behold de 500 første i fast rekkefølge, så hvilke som vises ikke avhenger av hvilken sjekk som ble ferdig først
+            if (_sist < 0 || _sist >= Detaljer.Count) _sist = SisteDetalj();
+            if (DetaljRekkefolge.Compare(s, Detaljer[_sist]) >= 0) return;
+            Detaljer[_sist] = s;
+            _sist = SisteDetalj();
+        }
+    }
+
+    private int _sist = -1;
+    private int SisteDetalj()
+    {
+        int maks = 0;
+        for (int i = 1; i < Detaljer.Count; i++) if (DetaljRekkefolge.Compare(Detaljer[i], Detaljer[maks]) > 0) maks = i;
+        return maks;
+    }
+
+    /// <summary>Fast rekkefølge på sporene: det som ligger på disken (program, fil, mappe, kommando) først, så resten etter type og sti.</summary>
+    public static readonly Comparer<string> DetaljRekkefolge = Comparer<string>.Create((a, b) =>
+    {
+        int r = PaDisk(a).CompareTo(PaDisk(b));
+        if (r == 0) r = StringComparer.OrdinalIgnoreCase.Compare(a, b);
+        return r != 0 ? r : string.CompareOrdinal(a, b);
+    });
+    private static int PaDisk(string d) => d.StartsWith("Program:", StringComparison.Ordinal) || d.StartsWith("Fil:", StringComparison.Ordinal)
+        || d.StartsWith("Mappe:", StringComparison.Ordinal) || d.StartsWith("Kommando:", StringComparison.Ordinal) ? 0 : 1;
+
+    /// <summary>Sorterer spor og steder fast, så to søk på samme PC gir samme rapport uansett hvilken sjekk som ble ferdig først.</summary>
+    public void Ordne() { lock (this) { Detaljer.Sort(DetaljRekkefolge); _sist = -1; Hvor.Sort(StringComparer.OrdinalIgnoreCase); } }
+
+    /// <summary>Fast rekkefølge på funnene: rød (kjent før ukjent), gul, grønn, så navn og sted.</summary>
+    public static List<Funn> Ordnet(IEnumerable<Funn> funn) => funn.OrderBy(f => f.Risiko)
+        .ThenBy(f => Oversikt.Risikogruppe(f) == "ukjent" ? 1 : 0)
+        .ThenBy(f => f.Navn, StringComparer.CurrentCultureIgnoreCase).ThenBy(f => Oversikt.Lokasjon(f), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(f => f.Kategori, StringComparer.Ordinal).ToList();
+
     /// <summary>Erstatter en detaljlinje som starter likt, så tall fra en tidligere lesing ikke blir stående ved siden av nye.</summary>
-    public void ErstattDetalj(string start, string s) { lock (this) { Detaljer.RemoveAll(d => d.StartsWith(start, StringComparison.Ordinal)); Detalj(s); } }
+    public void ErstattDetalj(string start, string s) { lock (this) { Detaljer.RemoveAll(d => d.StartsWith(start, StringComparison.Ordinal)); _sist = -1; Detalj(s); } }
 
     /// <summary>Første og siste spor etter bruk, når det finnes (besøk, filer endret, forbindelse nå).</summary>
     public DateTime? Forst { get; set; }

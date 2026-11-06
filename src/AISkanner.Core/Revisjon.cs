@@ -172,7 +172,7 @@ public static class Revisjon
 
         L();
         L($"FUNN ({funn.Count})");
-        foreach (var f in funn.OrderBy(f => f.Risiko))
+        foreach (var f in Funn.Ordnet(funn))
             // Et mulig AI-nettsted heter det samme som domenet. Domener fra nettleseren skal aldri i revisjonsloggen.
             Ra($"{T(Rapport.Merke(f)),-12}{T(f.Privat && f.Navn.StartsWith("Mulig AI-nettsted", StringComparison.Ordinal) ? "Mulig AI-nettsted" : f.Navn)} | {T(f.Type)} | {T(Oversikt.Lokasjon(f))}");
 
