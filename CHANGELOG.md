@@ -41,8 +41,8 @@ Raskere søk, med nøyaktig de samme sjekkene og de samme funnene. Ingenting er 
 ### Endret
 - Filgjennomgangene (filer og leverandør-AI i Program Files, ProgramData og AppData) bruker én felles kø av mapper.
   Før fikk hver toppmappe én tråd, så én stor mappe (som C:\Windows) holdt igjen hele søket mens de andre trådene
-  sto ledige. Målt på byggemaskinen som administrator: fullt søk 504 → 466 sekunder (disken der er treg; på en vanlig
-  PC med SSD går det mye fortere).
+  sto ledige. Byggemaskinen kan ikke vise gevinsten pålitelig: disken der er en treg skydisk, og fullt søk varierte
+  fra 466 til 593 sekunder mellom kjøringer med samme kode. Ikke målt på en vanlig PC ennå.
 - Filhodet til en stor fil i leverandørmapper leses én gang, ikke to.
 - Mappenavnet til hver fil hentes fra stien i stedet for et nytt mappeoppslag (to færre oppslag per fil).
 
