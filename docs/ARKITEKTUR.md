@@ -25,6 +25,7 @@ AISkanner.sln
 ├── src/AISkanner.Core/   Skannemotoren (net48 + net8.0). All logikk ligger her.
 ├── src/AISkanner/        Windows-programmet (net48, WinForms + WebView2). Tynt skall rundt Core.
 │   └── ui/index.html     Hele brukerflaten (HTML, CSS, JS), bygget inn som ressurs.
+│   └── ikon.ico          Programikonet (16–256 px), tegnet fra docs/favicon.svg. Bygget inn i exe og vindu.
 ├── src/AISkanner.Cli/    Kommandolinje (net8.0). JSON/tekst, exit-kode, testverktøy.
 ├── tests/yara/           Testregler og testfiler for YARA-motoren.
 └── verktoy/              Python-skript: IP-landtabell, YARA-sammenligning.

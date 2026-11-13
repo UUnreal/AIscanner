@@ -10,6 +10,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
   Jobben `signering` sjekker at signaturen er gyldig og fra SignPath Foundation før utgivelsen lages.
 - Hver utgivelse må godkjennes manuelt før signering.
 - `main` og versjonstagger er låst: endringer bare via pull request med grønn byggeløype, ingen sletting eller omskriving.
+- GitHub Actions kjører bare GitHubs egne steg og SignPath-steget, alle låst til full commit-SHA.
 - Roller: Forfattere, Gjennomgåere og Godkjennere: Jørund (vedlikeholder).
 - Alle med skrivetilgang må ha tofaktorinnlogging på GitHub.
 

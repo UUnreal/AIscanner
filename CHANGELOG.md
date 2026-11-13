@@ -36,6 +36,14 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.9] - 2026-11-13
+
+Eget ikon. Ingen sjekker er endret.
+
+### Lagt til
+- Ikon (radar) på `AISkanner.exe`, i vinduet og oppgavelinja, og som favicon på nettsiden og demosiden. Ikonet ligger i exe-fila
+  i 16 til 256 piksler (`src/AISkanner/ikon.ico`, tegnet fra `docs/favicon.svg`).
+
 ## [2.52.8] - 2026-11-06
 
 Fast rekkefølge i rapporten. Ingen sjekker er endret, og ingen funn eller spor er tatt bort.
