@@ -41,7 +41,7 @@ Kategoriene er:
 Eget ikon. Ingen sjekker er endret.
 
 ### Lagt til
-- Ikon (radar) på `AISkanner.exe`, i vinduet og oppgavelinja, og som favicon på nettsiden. Ikonet ligger i exe-fila
+- Ikon (radar) på `AISkanner.exe`, i vinduet og oppgavelinja, og som favicon på nettsiden og demosiden. Ikonet ligger i exe-fila
   i 16 til 256 piksler (`src/AISkanner/ikon.ico`, tegnet fra `docs/favicon.svg`).
 
 ## [2.52.8] - 2026-11-06
