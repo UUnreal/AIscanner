@@ -14,6 +14,7 @@
     <RootNamespace>AISkanner.App</RootNamespace>
     <AssemblyName>AISkanner</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>ikon.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
 
     <Product>AI-skanner</Product>
@@ -44,6 +45,7 @@
     <Using Include="System.Windows.Forms" />
     <Using Include="System.Drawing" />
     <EmbeddedResource Include="ui\index.html" LogicalName="AISkanner.ui.index.html" />
+    <EmbeddedResource Include="ikon.ico" LogicalName="AISkanner.ikon.ico" />
   </ItemGroup>
 
   <ItemGroup>

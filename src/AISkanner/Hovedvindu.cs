@@ -46,6 +46,7 @@ public sealed class Hovedvindu : Form
         if (args.Contains("--en")) _engelsk = true;
         else if (args.Contains("--no")) _engelsk = false;
         Text = "AI-skanner";
+        using (var ikon = typeof(Hovedvindu).Assembly.GetManifestResourceStream("AISkanner.ikon.ico")) if (ikon != null) Icon = new Icon(ikon);
         ClientSize = new Size(980, 760);
         MinimumSize = new Size(560, 600);
         StartPosition = FormStartPosition.CenterScreen;
