@@ -1,7 +1,7 @@
 # AI-skanner
 
-**Finner all AI på en Windows-PC, også den du ikke vet om, og viser hvor risikabel den er.**
-*Finds all AI on a Windows PC, including the hidden kind, and shows how risky it is.*
+**Finner AI på en Windows-PC, også den du ikke vet om, og viser hvor risikabel den er.**
+*Finds AI on a Windows PC, including the kind you don’t know about, and shows how risky it is.*
 
 [**⬇ Last ned AISkanner.exe**](https://github.com/UUnreal/AIscanner/releases/latest/download/AISkanner.exe) · [findhiddenai.com](https://findhiddenai.com) · [Prøv demoen](https://findhiddenai.com/demo.html)
 
