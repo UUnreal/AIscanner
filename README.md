@@ -3,6 +3,8 @@
 **Finner AI på en Windows-PC, også den du ikke vet om, og viser hvor risikabel den er.**
 *Finds AI on a Windows PC, including the kind you don’t know about, and shows how risky it is.*
 
+**Bare for Windows 10 og 11.** Virker ikke på Mac, Linux eller mobil. *Windows only.*
+
 [**⬇ Last ned AISkanner.exe**](https://github.com/UUnreal/AIscanner/releases/latest/download/AISkanner.exe) · [findhiddenai.com](https://findhiddenai.com) · [Prøv demoen](https://findhiddenai.com/demo.html)
 
 <picture>
@@ -17,7 +19,7 @@
 - **Ingen AI inni.** Faste, åpne regler. Samme PC gir samme svar.
 - **Åpen kildekode, MIT.** Alle endringer blir gjennomgått og godkjent av vedlikeholderen før de kommer inn.
 - **Sikkerhetstestet** med gitleaks, Semgrep og sårbarhetssjekk av avhengigheter før hver utgivelse.
-- **Én fil, ingen installasjon.** Windows 10 og 11. Ikke kodesignert ennå, så SmartScreen varsler ved første start.
+- **Én fil, ingen installasjon.** Ikke kodesignert ennå, så SmartScreen varsler ved første start.
 
 ## Innhold
 
