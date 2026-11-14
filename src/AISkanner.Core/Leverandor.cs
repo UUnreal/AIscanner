@@ -53,7 +53,7 @@ public sealed partial class Skanner
     private static string[]? _kjenteLeverandorer;
     /// <summary>«Utgiver: X · signatur» med en kjent leverandør: bekreftet med gyldig signatur, ikke bare filinfo.</summary>
     internal static bool SignertAvKjent(string detalj) =>
-        detalj.StartsWith("Utgiver: ", StringComparison.Ordinal) && detalj.EndsWith(" · signatur", StringComparison.Ordinal)
+        detalj.Length >= 20 && detalj.StartsWith("Utgiver: ", StringComparison.Ordinal) && detalj.EndsWith(" · signatur", StringComparison.Ordinal)
         && KjenteLeverandorer.Any(k => detalj.Substring(9, detalj.Length - 9 - 11).Inneholder(k));
 
     private sealed class AppAi

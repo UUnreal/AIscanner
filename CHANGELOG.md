@@ -36,6 +36,23 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.10] - 2026-11-14
+
+Klar for Microsoft Store. Ingen sjekker er endret eller tatt bort.
+
+### Lagt til
+- Microsoft Store-pakke (MSIX) av den samme `AISkanner.exe` (`msix/`). Byggeløypa (jobben `store`) lager pakken,
+  sjekker den med Microsofts egen Windows App Certification Kit, installerer den og kjører lastetesten i den.
+  Pakken som lastes opp i Partner Center er usignert; Microsoft signerer den.
+- Personvernerklæring på findhiddenai.com/personvern.html (Store krever det for skrivebordsprogrammer).
+
+### Rettet
+- Når Windows stopper admin-starten av en annen grunn enn at brukeren sa nei, sier vinduet det, i stedet for
+  «Admin ble ikke godkjent». I Store-utgaven peker meldingen til `AISkanner.exe` for admin-søket.
+
+### Sikkerhet
+- En signatur med tomt utgivernavn kunne krasje vurderingen av leverandør-AI (`SignertAvKjent`). Nå sjekkes lengden først.
+
 ## [2.52.9] - 2026-11-13
 
 Eget ikon. Ingen sjekker er endret.
