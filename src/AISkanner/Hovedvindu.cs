@@ -486,11 +486,24 @@ public sealed class Hovedvindu : Form
             // Venter i bakgrunnen, så vinduet ikke henger. Kommer det nye vinduet aldri (feil ved oppstart), blir dette stående.
             ThreadPool.RegisterWaitForSingleObject(klar, (_, tidenGikk) => { if (!tidenGikk) try { BeginInvoke(new Action(Close)); } catch { } klar.Dispose(); }, null, TimeSpan.FromSeconds(60), true);
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (System.ComponentModel.Win32Exception x)
         {
-            // Brukeren sa nei i Windows sin godkjenning
-            Send(new { type = "feil", tekst = _engelsk ? "Admin was not approved. Scan as user, or try again." : "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen." });
+            // 1223: brukeren sa nei i Windows sin godkjenning. Ellers stoppet Windows selv starten, f.eks. i Store-utgaven (MSIX),
+            // der Windows ikke lar programmet starte seg selv som administrator.
+            Send(new { type = "feil", tekst = x.NativeErrorCode == 1223
+                ? (_engelsk ? "Admin was not approved. Scan as user, or try again." : "Admin ble ikke godkjent. Søk som bruker, eller prøv igjen.")
+                : ErPakke()
+                    ? (_engelsk ? "Windows does not let the Microsoft Store version start as admin. Scan as user, or use AISkanner.exe from findhiddenai.com for the admin scan." : "Windows lar ikke Store-utgaven starte som admin. Søk som bruker, eller bruk AISkanner.exe fra findhiddenai.com til admin-søket.")
+                    : (_engelsk ? "Windows stopped the admin start: " : "Windows stoppet admin-starten: ") + x.Message });
         }
+    }
+
+    // Kjører fra en MSIX-pakke (Microsoft Store)? 15700 = APPMODEL_ERROR_NO_PACKAGE.
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int GetCurrentPackageFullName(ref int lengde, StringBuilder? navn);
+    private static bool ErPakke()
+    {
+        try { int n = 0; return GetCurrentPackageFullName(ref n, null) != 15700; } catch { return false; }
     }
 
     /// <summary>

@@ -133,6 +133,86 @@ jobs:
           name: AISkanner-til-signering
           path: publish/AISkanner.exe
 
+  # Microsoft Store: MSIX-pakke av den samme AISkanner.exe. Pakken sjekkes med Microsofts egen test (Windows App
+  # Certification Kit), installeres og kjører lastetesten som pakke. Pakken som lastes opp i Partner Center er usignert:
+  # Microsoft signerer den. Her signeres bare en testkopi med et engangssertifikat, så Windows vil installere den.
+  store:
+    needs: bygg
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { persist-credentials: false }
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: AISkanner-usignert
+          path: publish
+
+      - name: Lag MSIX
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content src/Directory.Build.props)).Project.PropertyGroup.Version
+          New-Item -ItemType Directory -Force pakke/Assets, store | Out-Null
+          Copy-Item publish/AISkanner.exe pakke/
+          Copy-Item msix/Assets/*.png pakke/Assets/
+          (Get-Content msix/AppxManifest.xml -Raw).Replace('Version="0.0.0.0"', "Version=`"$v.0`"") | Set-Content pakke/AppxManifest.xml -Encoding utf8NoBOM
+          $sdk = Get-Item "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64" | Where-Object { Test-Path (Join-Path $_.FullName makeappx.exe) } |
+            Sort-Object { [version]$_.Parent.Name } -Descending | Select-Object -First 1
+          if (-not $sdk) { "::error title=Store::Fant ikke makeappx.exe (Windows SDK)"; exit 1 }
+          & (Join-Path $sdk.FullName makeappx.exe) pack /d pakke /p "store/AISkanner-$v.msix" /o
+          if ($LASTEXITCODE) { exit 1 }
+          "SDK=$($sdk.FullName)" >> $env:GITHUB_ENV
+          "MSIX=store/AISkanner-$v.msix" >> $env:GITHUB_ENV
+
+      - name: Signer en testkopi
+        shell: pwsh
+        run: |
+          $pub = ([xml](Get-Content msix/AppxManifest.xml)).Package.Identity.Publisher
+          $cert = New-SelfSignedCertificate -Type Custom -Subject $pub -KeyUsage DigitalSignature -CertStoreLocation Cert:\CurrentUser\My -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}')
+          Copy-Item $env:MSIX test.msix
+          & "$env:SDK\signtool.exe" sign /fd SHA256 /sha1 $cert.Thumbprint /s My test.msix
+          if ($LASTEXITCODE) { exit 1 }
+          Export-Certificate -Cert $cert -FilePath test.cer | Out-Null
+          Import-Certificate -FilePath test.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople | Out-Null
+
+      - name: Windows App Certification Kit
+        shell: pwsh
+        run: |
+          $wack = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
+          if (-not (Test-Path $wack)) { "::error title=WACK::appcert.exe finnes ikke på byggemaskinen"; exit 1 }
+          & $wack reset | Out-Null
+          & $wack test -appxpackagepath "$pwd\test.msix" -reportoutputpath "$pwd\store\wack.xml"
+          if (-not (Test-Path store/wack.xml)) { "::error title=WACK::Ingen rapport (kode $LASTEXITCODE)"; exit 1 }
+          [xml]$r = Get-Content store/wack.xml
+          foreach ($t in $r.SelectNodes('//TEST')) {
+            $u = $t.SelectSingleNode('RESULT').InnerText
+            $m = ($t.SelectNodes('.//MESSAGE') | ForEach-Object { $_.TEXT }) -join ' | '
+            "::notice title=WACK $u::$($t.NAME) $m"
+          }
+          "::notice title=WACK::Samlet: $($r.REPORT.OVERALL_RESULT)"
+          if ($r.REPORT.OVERALL_RESULT -ne 'PASS') { "::error title=WACK::Ikke bestått, se merknadene"; exit 1 }
+
+      # Som pakke: WebView2-lasteren skrives til pakkens egen AppData, alle alarmene og et helt søk kjører
+      - name: Installer pakken og kjør lastetesten i den
+        shell: pwsh
+        run: |
+          Add-AppxPackage -Path test.msix
+          $navn = ([xml](Get-Content msix/AppxManifest.xml)).Package.Identity.Name
+          $p = Get-AppxPackage -Name $navn
+          if (-not $p) { "::error title=Store::Pakken ble ikke installert"; exit 1 }
+          "::notice title=Store::Installert $($p.PackageFullName)"
+          $alias = Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\AISkanner.exe'
+          $k = Start-Process $alias -ArgumentList '--lastetest' -Wait -PassThru -NoNewWindow -RedirectStandardOutput pakketest.txt -RedirectStandardError pakketest-feil.txt
+          Get-Content pakketest.txt, pakketest-feil.txt -ErrorAction SilentlyContinue | Select-Object -First 40 | ForEach-Object { if ($_.Trim()) { "::notice title=Pakketest::$_" } }
+          Remove-AppxPackage $p.PackageFullName
+          if ($k.ExitCode -ne 0 -or -not (Select-String -Path pakketest.txt -Pattern 'LASTETEST OK' -Quiet)) { "::error title=Pakketest::Feilet som pakke (kode $($k.ExitCode))"; exit 1 }
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: AISkanner-store
+          path: store/
+
   # Hvor lang tid søket tar som administrator (byggemaskinen er admin): vanlig og fullt søk, tid per sjekk som merknad.
   ytelse:
     runs-on: windows-latest

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personvern · Privacy</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Personvernerklæring for AI-skanner. Privacy policy for AI Scanner.">
+<style>
+:root { --bg: #f3f3f5; --kort: #fff; --tekst: #1b1b1f; --dempet: #5e5e68; --bla: #0a5fc0;
+  --font: "Segoe UI Variable Text", "Segoe UI", -apple-system, "SF Pro Text", system-ui, sans-serif; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161618; --kort: #202024; --tekst: #ececf0; --dempet: #a3a3ad; --bla: #5aa2f0; } }
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--tekst); font: 16px/26px var(--font); }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+section { background: var(--kort); border-radius: 16px; padding: 24px; margin-top: 24px; }
+h1 { font-size: 32px; line-height: 40px; }
+h2 { font-size: 22px; line-height: 30px; margin-bottom: 8px; }
+h3 { font-size: 17px; margin-top: 20px; }
+p, ul { margin-top: 8px; }
+ul { padding-left: 22px; }
+.dempet { color: var(--dempet); }
+a { color: var(--bla); }
+:focus-visible { outline: 3px solid var(--bla); outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Personvern · Privacy</h1>
+<p class="dempet">AI-skanner · Sist endret 14. november 2026 · <a href="#en" lang="en">English below</a> · <a href="./">findhiddenai.com</a></p>
+
+<section aria-labelledby="no">
+<h2 id="no">Personvernerklæring</h2>
+<p>AI-skanner er et gratis program med åpen kildekode som finner AI på en Windows-PC. Det kjører bare på PC-en din. Det finnes ingen konto, ingen sky, ingen analyse og ingen reklame. Utvikleren får aldri se noe fra PC-en din.</p>
+
+<h3>Hva programmet leser på PC-en</h3>
+<p>For å finne AI leser programmet, bare lokalt og bare mens vinduet er åpent:</p>
+<ul>
+<li>navn og stier til programmer, filer og mapper, og filhoder på modellfiler</li>
+<li>prosesser som kjører, og kommandolinjene til AI-programmer (maskert, aldri vist)</li>
+<li>Windows-registeret, Windows' egne logger og brukerspor, og navnet på brukerkontoen og PC-en</li>
+<li>i nettlesere: hvilke AI-nettsteder som er besøkt (domene, antall besøk og tidspunkt), utvidelser og innebygde modeller</li>
+<li>åpne nettverksforbindelser fra AI-programmer (adresse og land), og lokale AI-servere på PC-en selv (127.0.0.1)</li>
+</ul>
+<p>Programmet leser aldri passord, informasjonskapsler, skjemadata, verdier av nøkler, prosessminne eller samtaler med AI.</p>
+
+<h3>Hva som sendes ut</h3>
+<ul>
+<li><b>NVD:</b> for å sjekke kjente sikkerhetshull sendes bare produktnavnet (for eksempel «ollama») over HTTPS til NVD, en tjeneste fra amerikanske NIST. NIST ser IP-adressen din, slik alle nettsteder gjør.</li>
+<li><b>DNS:</b> programmet slår opp adressene til en fast liste med kjente AI-tjenester hos DNS-serveren PC-en bruker. Lista er den samme for alle og sier ingenting om PC-en.</li>
+</ul>
+<p>Ingenting annet sendes. Aldri PC-navn, brukernavn, stier eller funn. Ingen data selges eller deles med noen.</p>
+
+<h3>Hva som lagres</h3>
+<p>Ingenting blir igjen etter søket. Vinduet bruker en midlertidig mappe (i AppData) som slettes når programmet lukkes. Det eneste som lagres, er det du selv velger: en rapport du lagrer, eller revisjonsloggen i Dokumenter\AI-skanner hvis du slår den på. Disse filene er dine og forlater ikke PC-en.</p>
+
+<h3>Dine valg</h3>
+<ul>
+<li>Du velger selv om programmet skal søke, og om det skal søke som bruker eller administrator.</li>
+<li>IT kan slå av NVD-oppslagene og nettleserhistorikken med <code>--uten-nvd</code> og <code>--uten-historikk</code>.</li>
+<li>Du kan slette rapporter og revisjonslogger når du vil. Avinstallering i Windows, eller å slette AISkanner.exe, fjerner programmet helt.</li>
+<li>Alt programmet leser, vises under «Datagrunnlag» i vinduet. Kildekoden er åpen: <a href="https://github.com/UUnreal/AIscanner">github.com/UUnreal/AIscanner</a>.</li>
+</ul>
+
+<h3>Barn</h3>
+<p>Programmet samler ikke inn opplysninger om noen, heller ikke barn.</p>
+
+<h3>Kontakt</h3>
+<p>Jørund · <a href="mailto:heimholt@gmail.com">heimholt@gmail.com</a>. Endres denne erklæringen, står ny dato øverst.</p>
+</section>
+
+<section aria-labelledby="en" lang="en">
+<h2 id="en">Privacy policy</h2>
+<p>AI Scanner is a free, open-source program that finds AI on a Windows PC. It runs only on your PC. There is no account, no cloud, no analytics and no ads. The developer never sees anything from your PC.</p>
+
+<h3>What the program reads on the PC</h3>
+<p>To find AI, the program reads, locally and only while its window is open:</p>
+<ul>
+<li>names and paths of programs, files and folders, and the headers of model files</li>
+<li>running processes, and the command lines of AI programs (masked, never shown)</li>
+<li>the Windows registry, Windows' own logs and usage traces, and the user account and PC name</li>
+<li>in browsers: which AI websites were visited (domain, number of visits and time), extensions and built-in models</li>
+<li>open network connections of AI programs (address and country), and local AI servers on the PC itself (127.0.0.1)</li>
+</ul>
+<p>The program never reads passwords, cookies, form data, key values, process memory or AI chats.</p>
+
+<h3>What is sent out</h3>
+<ul>
+<li><b>NVD:</b> to check known vulnerabilities, only the product name (for example «ollama») is sent over HTTPS to NVD, a service of the US NIST. NIST sees your IP address, as every website does.</li>
+<li><b>DNS:</b> the program looks up the addresses of a fixed list of known AI services with the DNS server the PC uses. The list is the same for everyone and says nothing about the PC.</li>
+</ul>
+<p>Nothing else is sent. Never the PC name, user name, paths or findings. No data is sold or shared with anyone.</p>
+
+<h3>What is stored</h3>
+<p>Nothing is left after the scan. The window uses a temporary folder (in AppData) that is deleted when the program closes. The only things stored are what you choose: a report you save, or the audit log in Documents\AI-skanner if you turn it on. These files are yours and do not leave the PC.</p>
+
+<h3>Your choices</h3>
+<ul>
+<li>You decide whether the program scans, and whether it scans as user or administrator.</li>
+<li>IT can turn off the NVD lookups and browser history with <code>--uten-nvd</code> and <code>--uten-historikk</code>.</li>
+<li>You can delete reports and audit logs at any time. Uninstalling it in Windows, or deleting AISkanner.exe, removes the program completely.</li>
+<li>Everything the program reads is shown under «Data basis» in the window. The source code is open: <a href="https://github.com/UUnreal/AIscanner">github.com/UUnreal/AIscanner</a>.</li>
+</ul>
+
+<h3>Children</h3>
+<p>The program collects no information about anyone, including children.</p>
+
+<h3>Contact</h3>
+<p>Jørund · <a href="mailto:heimholt@gmail.com">heimholt@gmail.com</a>. If this policy changes, the new date is shown at the top.</p>
+</section>
+</main>
+</body>
+</html>
