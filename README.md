@@ -1,15 +1,23 @@
 # AI-skanner
 
-Finner AI på en Windows-PC og sorterer funnene etter risiko: 🔴 høy, 🟡 middels og 🟢 lav.
-Ett vindu, én knapp: **Søk**.
+**Finner all AI på en Windows-PC, også den du ikke vet om, og viser hvor risikabel den er.**
+*Finds all AI on a Windows PC, including the hidden kind, and shows how risky it is.*
 
-AI-skanner kjenner igjen AI på innholdet i filer og på hvordan programmer oppfører seg. Navnelister brukes bare til
-å sette riktig navn på det som allerede er funnet. Ukjent AI og skygge-AI får alltid høy risiko.
+[**⬇ Last ned AISkanner.exe**](https://github.com/UUnreal/AIscanner/releases/latest/download/AISkanner.exe) · [findhiddenai.com](https://findhiddenai.com) · [Prøv demoen](https://findhiddenai.com/demo.html)
 
-- **Versjon:** 2.41.0 (se [CHANGELOG.md](CHANGELOG.md))
-- **Plattform:** Windows 10 og 11, x64
-- **Lisens:** [MIT](LICENSE)
-- **Status:** testversjon, ikke signert. 2.8–2.16 er ikke kjørt på ekte Windows, og alarmene i 2.17 er ikke kontrollert der (se [Status](#status)).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/demo-mork.webp">
+  <img src="docs/demo-lys.webp" alt="Programvinduet til AI-skanner med AI sortert etter høy, ukjent, middels og lav risiko" width="800">
+</picture>
+
+<sub>Programmets eget vindu, vist med eksempeldata.</sub>
+
+- **Leser bare.** Endrer, sletter og installerer ingenting. Lagrer ingenting mellom søk.
+- **Sender ingen persondata.** PC-navn, brukernavn, stier og funn sendes aldri ut.
+- **Ingen AI inni.** Faste, åpne regler. Samme PC gir samme svar.
+- **Åpen kildekode, MIT.** Alle endringer blir gjennomgått og godkjent av vedlikeholderen før de kommer inn.
+- **Sikkerhetstestet** med gitleaks, Semgrep og sårbarhetssjekk av avhengigheter før hver utgivelse.
+- **Én fil, ingen installasjon.** Windows 10 og 11. Ikke kodesignert ennå, så SmartScreen varsler ved første start.
 
 ## Innhold
 
@@ -161,7 +169,7 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 
 - Skanneren finner spor, ikke alt. Et tomt resultat betyr ikke at PC-en er fri for AI.
 - Den skanner bare innlogget bruker.
-- Filene inne i WSL leses ikke. SRUM og MFT leses ikke ennå.
+- Filene inne i WSL leses ikke. MFT leses ikke.
 - Forbindelser vises bare mens programmene er åpne. QUIC/UDP vises ikke.
 - «Sender data til» viser hvor serveren står eller hvor selskapet hører hjemme, ikke nødvendigvis hvor dataene lagres.
 - YARA-motoren mangler modulene `dotnet`, `elf`, `macho`, `magic` og `cuckoo`.
