@@ -57,6 +57,7 @@ Lokal|Local
 Skjult|Hidden
 
 # ---------- Typer ----------
+Ikke godkjent av IT|Not approved by IT
 Godkjent av IT|Approved by IT
 IT-regel|IT rule
 Ukjent AI-nettsted|Unknown AI website

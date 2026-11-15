@@ -371,8 +371,7 @@ public sealed partial class Skanner
         bool bekreftet = kilde is "signatur" or "Windows-pakke" or "mappe beskyttet av Windows";
         bool kjent = bekreftet && utgiver != null && KjenteLeverandorer.Any(k => utgiver.Inneholder(k));
         long storrelse = app.Filer.Sum(f => f.Lengde);
-        bool stor = storrelse >= 500L * 1024 * 1024;
-        var risiko = !kjent ? Risiko.Rod : stor ? Risiko.Gul : Risiko.Gronn;
+        var risiko = kjent ? Risiko.Gronn : Risiko.Rod;
         // Bare modellfiler i nettleserens egen modellstruktur: en kopi av Chrome/Edge sine modeller, ikke et ukjent program
         bool kopi = app.Kopi;
         if (kopi) { risiko = Risiko.Gul; produkt = "Kopi av nettleserens AI-modeller"; frø = null; utgiver = null; kilde = null; exe = null; }

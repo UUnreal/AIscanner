@@ -1816,12 +1816,12 @@
       "kilde": "https://ai.codigital.co.jp/en/tools/vidu-ai/"
     }
   ],
+  "_hoyrisikoLand": "Kilde: USAs liste over «foreign adversaries», 15 CFR 791.4 (https://www.law.cornell.edu/cfr/text/15/791.4): Kina (med Hongkong), Russland, Iran, Nord-Korea, Cuba og Maduro-regimet i Venezuela. Cuba og Venezuela er utelatt fordi ingen kjente AI-tjenester har servere eller eiere der. Hviterussland er fjernet i 2.52.11: ingen kilde.",
   "hoyrisikoLand": [
     "CN",
     "RU",
     "IR",
-    "KP",
-    "BY"
+    "KP"
   ],
   "aiTjenester": [
     {

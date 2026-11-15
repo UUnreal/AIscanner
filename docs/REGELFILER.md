@@ -84,7 +84,7 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `produkter` | liste | Kjente AI-produkter (se under). |
 | `aiNettsteder` | liste | AI-nettsteder som kjennes igjen i nettleserdata. |
 | `aiTjenester` | liste | AI-API-er som programmer snakker med i bakgrunnen, kjent på vertsnavn. |
-| `hoyrisikoLand` | liste med landkoder | Data hit gir alltid rødt. Standard: `CN`, `RU`, `IR`, `KP`, `BY`. |
+| `hoyrisikoLand` | liste med landkoder | Data hit gir alltid rødt. Standard: `CN`, `RU`, `IR`, `KP` (kilde: [15 CFR 791.4](https://www.law.cornell.edu/cfr/text/15/791.4), se `_hoyrisikoLand`). |
 | `godkjentAi` | liste med tekst | Som `godkjent-ai.txt`. |
 | `blokkertAi` | liste med tekst | Som `blokkert-ai.txt`. |
 | `lesKommandolinjer` | true/false | `false` slår av lesing av kommandolinjer for tolkere og AI-funn. Standard er på. |

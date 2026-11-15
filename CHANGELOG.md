@@ -36,6 +36,21 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.11] - 2026-11-15
+
+Fargen sier nå hvor farlig noe er, ikke bare om IT har godkjent det. Ingen sjekker er endret eller tatt bort.
+
+### Endret
+- Skygge-AI (ikke lagt inn av Windows, en signert leverandør eller IT) er ikke lenger alltid rød. Den er aldri
+  grønn. Den er gul, eller rød når søket eller regelen sier rød (for eksempel en agent som kjører kommandoer, eller data
+  til et høyrisikoland) eller når funnet har et rødt faresignal (åpen mot nettverket, forkledd, skjult, base64-kode).
+  Grunnen står som «Ikke godkjent av IT …». Ukjent AI, farlige modellfiler og blokkert AI er fortsatt alltid røde.
+- Leverandør-AI med bekreftet signatur er grønn uansett størrelse. Grensen på 500 MB for gul hadde ingen kilde.
+- `hoyrisikoLand` har nå kilde (USAs liste over «foreign adversaries», 15 CFR 791.4), se `_hoyrisikoLand`.
+
+### Fjernet
+- Hviterussland (`BY`) fra `hoyrisikoLand`: ingen kilde.
+
 ## [2.52.10] - 2026-11-14
 
 Klar for Microsoft Store. Ingen sjekker er endret eller tatt bort.

@@ -244,6 +244,16 @@ static class Selvtest
         Risikoregler.Bruk(new[] { ren }, regelsett);
         Sjekk("godkjent: uten faresignaler er grønn", ren.Risiko == Risiko.Gronn, true);
 
+        // Skygge-AI: aldri grønn, gul uten faresignal, rød med faresignal eller når søket sa rødt
+        Funn Skygge(Risiko r) => new Funn { Navn = "Ollama", Kategori = "Lokal AI", Risiko = r, Hvorfor = "x", Regel = new Produkt { Navn = "Ollama", Kategori = "Lokal AI", Risiko = "gul", Hvorfor = "y" } };
+        var sg = Skygge(Risiko.Gronn); Risikoregler.Bruk(new[] { sg }, new Regelsett());
+        Sjekk("skygge: uten faresignal er gul, aldri grønn", sg.Risiko == Risiko.Gul && sg.Godkjenning == "Ikke vurdert", true);
+        var sa = Skygge(Risiko.Gul); sa.Advarsel("Er åpen mot nettverket. Andre på samme nett kan bruke den uten passord.");
+        Risikoregler.Bruk(new[] { sa }, new Regelsett());
+        Sjekk("skygge: åpen mot nettverket er rød", sa.Risiko == Risiko.Rod && sa.RisikoGrunn!.StartsWith("Ikke godkjent av IT, og:"), true);
+        var sr = Skygge(Risiko.Rod); Risikoregler.Bruk(new[] { sr }, new Regelsett());
+        Sjekk("skygge: rød fra søket forblir rød", sr.Risiko == Risiko.Rod, true);
+
         // Datagrunnlag: feilkoder fra Windows gir riktig utfall (antivirus 225/226 skal aldri se ut som "finnes ikke")
         Sjekk("tilgang: 225 = stoppet av antivirus", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x800700E1))) == Utfall.Blokkert, true);
         Sjekk("tilgang: 226 = stoppet av antivirus", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x800700E2))) == Utfall.Blokkert, true);

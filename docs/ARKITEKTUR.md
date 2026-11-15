@@ -117,7 +117,7 @@ Risikoen settes i to trinn.
 | Funn | Rød | Gul | Grønn |
 |---|---|---|---|
 | Modellfil | Kan kjøre kode, eller ligger på et ukjent sted | Kjent sted og trygt format | |
-| Leverandør-AI | Utgiver ukjent eller ikke bekreftet | Bekreftet, modeller ≥ 500 MB | Bekreftet, under 500 MB |
+| Leverandør-AI | Utgiver ukjent eller ikke bekreftet | | Bekreftet utgiver |
 | AI-motor i prosess | Kjører fra Nedlastinger, eller ukjent | Etter `regler.json` | Kjent, signert utgiver |
 | Python/Node-prosjekt | Agentbibliotek | Andre AI-biblioteker | |
 | Nettlesermodell | | Ukjent modellmappe | Kjent modell (Gemini Nano m.fl.) |
@@ -134,7 +134,7 @@ hvis ikke ukjent og ikke farlig og står på godkjentlista → type «Godkjent a
     nedlastingsmappe, skjult kode, blokkert av IT       → GUL
     ellers                                              → GRØNN
 ellers hvis ukjent                                   → RØD
-ellers hvis skygge-AI (ErSkygge(type))               → RØD
+ellers hvis skygge-AI (ErSkygge(type))               → RØD ved rødt faresignal eller rødt fra trinn 1, ellers GUL
 ellers                                               → beholder risikoen fra trinn 1
 hvis farlig                                          → RØD uansett
 ```
