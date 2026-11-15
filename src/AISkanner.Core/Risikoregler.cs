@@ -5,8 +5,10 @@ namespace AISkanner;
 /// <summary>
 /// Siste steg i søket: hva slags AI hvert funn er, hvor det kommer fra, og den endelige risikoen.
 ///   Ukjent AI = alltid rød.
-///   Skygge-AI = alltid rød. Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør eller IT:
+///   Skygge-AI = aldri grønn. Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør eller IT:
 ///     AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper og modeller brukeren har lagt inn selv.
+///     Gul, eller rød når søket eller regelen sier rød (f.eks. agent som kjører kommandoer, data til et høyrisikoland)
+///     eller funnet har et rødt faresignal. Fargen sier hvor farlig, godkjenningen står for seg.
 ///   Godkjent av IT (godkjentAi i regler.json eller godkjent-ai.txt) = grønn, så lenge den ikke er ukjent eller farlig.
 ///     Godkjenning fjerner bare risikoen ved at AI-en ikke er godkjent. Faresignaler (åpen mot nettverket,
 ///     høyrisikoland, nedlastingsmappe, skjult kode) gjelder fortsatt: rød eller gul med grunnen.
@@ -83,8 +85,13 @@ public static class Risikoregler
             }
             else if (ErSkygge(type))
             {
-                f.Risiko = Risiko.Rod;
-                f.RisikoGrunn = "Skygge-AI: ikke lagt inn av Windows, en signert leverandør eller IT.";
+                // Skygge-AI er ikke godkjent, så aldri grønn. Rød bare med et faresignal eller når søket/regelen sier rød.
+                var signal = f.Advarsler.FirstOrDefault(a => RodeSignaler.Any(s => a.StartsWith(s, StringComparison.Ordinal)));
+                if (signal != null) f.Risiko = Risiko.Rod;
+                else if (f.Risiko == Risiko.Gronn) f.Risiko = Risiko.Gul;
+                f.RisikoGrunn = signal != null ? $"Ikke godkjent av IT, og: {signal}"
+                    : f.Risiko == Risiko.Rod ? $"Ikke godkjent av IT. {f.Kort}".TrimEnd()
+                    : "Skygge-AI: ikke lagt inn av Windows, en signert leverandør eller IT.";
             }
             else f.RisikoGrunn ??= f.Kort;
             // Data til et høyrisikoland er alltid rødt, uansett type

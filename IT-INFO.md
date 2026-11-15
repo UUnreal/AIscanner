@@ -418,9 +418,10 @@ Ikke testet på Windows ennå.
 
 ## Risiko og godkjentliste
 
-- **Ukjent AI og skygge-AI er alltid røde.** Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør
-  eller IT: AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt inn selv
-  og AI-nøkler.
+- **Ukjent AI er alltid rød.** Skygge-AI er aldri grønn. Skygge-AI er AI som ikke er lagt inn av Windows, en signert
+  leverandør eller IT: AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt
+  inn selv og AI-nøkler. Den er gul, eller rød når regelen sier rød (for eksempel en agent som kjører kommandoer)
+  eller funnet har et faresignal (åpen mot nettverket, høyrisikoland, forkledd, skjult kode).
 - **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet (utenfor brukerens profil, for eksempel
   under Program Files; i Nedlastinger og på skrivebordet leses den ikke), med ett navn eller domene per linje,
   eller bruk `godkjentAi` i `regler.json`. Bruk eksakte produktnavn og offisielle domener (se
@@ -428,7 +429,7 @@ Ikke testet på Windows ennå.
 - **Godkjenning overstyrer aldri faresignaler.** En godkjent AI som er åpen mot nettverket eller sender til et
   høyrisikoland, blir rød. En godkjent AI som kjører fra nedlastinger eller en midlertidig mappe, kan kjøre skjult kode
   eller er blokkert av IT, blir gul. Grunnen står som «Godkjent av IT, men: …».
-- Ukjent AI, farlige modellfiler og data til høyrisikoland (`hoyrisikoLand`, standard CN, RU, IR, KP og BY) er
+- Ukjent AI, farlige modellfiler og data til høyrisikoland (`hoyrisikoLand`, standard CN, RU, IR og KP etter [15 CFR 791.4](https://www.law.cornell.edu/cfr/text/15/791.4)) er
   røde uansett hva som står på lista.
 - **Blokkert AI blir rød.** Legg `blokkert-ai.txt` ved siden av programmet (samme format), eller bruk `blokkertAi` i
   `regler.json`. Finnes AI-en likevel, står det «Blokkert av IT, men finnes på PC-en», også om den er godkjent.
