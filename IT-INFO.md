@@ -422,6 +422,8 @@ Ikke testet på Windows ennå.
   leverandør eller IT: AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper, modeller brukeren har lagt
   inn selv og AI-nøkler. Den er gul, eller rød når regelen sier rød (for eksempel en agent som kjører kommandoer)
   eller funnet har et faresignal (åpen mot nettverket, høyrisikoland, forkledd, skjult kode).
+- **AI-modeller laget i et høyrisikoland** (Kina, Russland, Iran, Nord-Korea) er røde, også lokalt og også når de
+  er godkjent av IT.
 - **Godkjent AI blir grønn.** Legg `godkjent-ai.txt` ved siden av programmet (utenfor brukerens profil, for eksempel
   under Program Files; i Nedlastinger og på skrivebordet leses den ikke), med ett navn eller domene per linje,
   eller bruk `godkjentAi` i `regler.json`. Bruk eksakte produktnavn og offisielle domener (se

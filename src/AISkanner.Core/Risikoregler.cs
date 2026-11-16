@@ -32,6 +32,7 @@ public static class Risikoregler
         "Kjører kode som følger med modellen",
         "Koden er gjemt som base64",
         "Blokkert av IT",
+        "Laget av ",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>
