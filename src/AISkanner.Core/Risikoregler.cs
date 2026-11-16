@@ -33,6 +33,8 @@ public static class Risikoregler
         "Koden er gjemt som base64",
         "Blokkert av IT",
         "Laget av ",
+        "Angrepsmodell:",
+        "Angrepsverktøy med AI",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>
@@ -42,6 +44,7 @@ public static class Risikoregler
         "Kan kjøre skjult kode",
         "Ligger i en nedlastings",
         "IT har blokkert modellen",
+        "Sensurfri:",
     };
 
     private static readonly HashSet<string> FraWindows = new(StringComparer.OrdinalIgnoreCase) { "AI-motorer i Windows' egne filer", "Windows Recall", "Microsoft Copilot" };

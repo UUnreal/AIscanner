@@ -212,6 +212,7 @@ public sealed partial class Skanner
     private static readonly Regex FarligKommando = new(@"-enc(odedcommand)?\b|\biex\b|invoke-expression|downloadstring|(curl|wget|irm|iwr|invoke-webrequest|invoke-restmethod)\b[^|]{0,300}\|\s*(sh|bash|iex|pwsh|powershell)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly CultureInfo NbKultur = new("nb-NO");
+    internal static readonly Regex AngrepMcp = new(@"hexstrike|pentestgpt|\bvillager\b|pentest-?agent|cai-framework", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static string SporProsjekt(string sti)
     {
@@ -270,6 +271,9 @@ public sealed partial class Skanner
                     grunner.Add($"kobler til en ukjent tjeneste ({vert})");
             }
             if (DaarligVersjon(hele) is { } d) grunner.Add($"pakkeversjon på lista over kjente dårlige versjoner: {d}");
+            // Angrepsverktøy som gir agenten hundrevis av hackerverktøy. Kilde: Check Point om HexStrike AI
+            // https://blog.checkpoint.com/executive-insights/hexstrike-ai-when-llms-meet-zero-day-exploitation/
+            if (AngrepMcp.IsMatch($"{s.Navn} {hele} {s.Url}")) { f.Risiko = Risiko.Rod; f.Advarsel($"Angrepsverktøy med AI: MCP-server «{s.Navn}» (HexStrike, Villager, PentestGPT eller lignende)."); }
             if (prosjekt) grunner.Add("ligger i en prosjektmappe");
             if (grunner.Count > 0) f.Advarsel($"MCP-server «{s.Navn}» {grunner[0]}.");
             var hva = s.Url != null ? $"fjern: {vert ?? s.Url}" : Kutt($"{Path.GetFileName(s.Kommando ?? "")} {FørsteArgument(s.Argument)}".Trim(), 90);

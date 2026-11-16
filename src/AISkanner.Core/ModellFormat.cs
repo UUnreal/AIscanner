@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -25,6 +26,23 @@ public static class ModellFormat
         public string? Produsent { get; init; }
         /// <summary>Versjonen modellen selv oppgir (GGUF general.version), når den står i fila.</summary>
         public string? Versjon { get; init; }
+        /// <summary>Hvordan modellen er endret (GGUF general.finetune, f.eks. «abliterated» eller «instruct»).</summary>
+        public string? Finjustering { get; init; }
+        /// <summary>Merkelapper i fila (GGUF general.tags).</summary>
+        public IReadOnlyList<string> Merker { get; init; } = Array.Empty<string>();
+        /// <summary>Navnet llama.cpp gir ordforrådet (GGUF tokenizer.ggml.pre, f.eks. «qwen2»). Følger familien selv om fila får nytt navn.</summary>
+        public string? PreTokenizer { get; init; }
+        /// <summary>SHA-256 av hele ordlista (GGUF tokenizer.ggml.tokens). Lik for alle modeller med samme ordforråd.</summary>
+        public string? VokabId { get; init; }
+        public string? Lisens { get; init; }
+        /// <summary>Hvor modellen sier den kommer fra (GGUF general.source.url, general.repo_url …).</summary>
+        public string? KildeUrl { get; init; }
+        /// <summary>Modellen ligger inni en annen fil (llamafile eller zip): navnet på fila inni.</summary>
+        public string? Inni { get; init; }
+        /// <summary>Komprimering av vektene (GPTQ, AWQ, EXL2, MLX …), lest av tensornavn eller metadata.</summary>
+        public string? Kvantisering { get; init; }
+        /// <summary>Antall tensorer (vekter) i en GGUF-fil. 0 = bare ordforråd, ingen modell.</summary>
+        public ulong? Tensorer { get; init; }
     }
 
     private static long _filhoder;
@@ -44,9 +62,24 @@ public static class ModellFormat
             if (n < 16) return null;
             var ext = Path.GetExtension(sti).ToLowerInvariant();
 
-            if (Ascii(hode, 0, 4) == "GGUF") return Gguf(fs);
+            if (Ascii(hode, 0, 4) == "GGUF") return Gguf(fs, 0);
             if (Ascii(hode, 0, 4) is "lmgg" or "fmgg" or "tjgg") return new Modell("GGML", null, null, null, false);
             if (Ascii(hode, 4, 4) == "TFL3") return new Modell("TensorFlow Lite", null, null, null, false);
+            // ONNX Runtime-format: flatbuffer med filmerket «ORTM» på plass 4. Kilde: onnxruntime/core/flatbuffers/schema/ort.fbs (file_identifier)
+            if (Ascii(hode, 4, 4) == "ORTM") return new Modell("ONNX Runtime", null, null, null, false);
+            // ExecuTorch: «ET» og to sifre på plass 4. Kilde: https://docs.pytorch.org/executorch/0.7/pte-file-format.html
+            if (ext == ".pte" && hode[4] == 'E' && hode[5] == 'T' && char.IsDigit((char)hode[6]) && char.IsDigit((char)hode[7])) return new Modell("ExecuTorch", null, null, null, false);
+            // llamafile (og andre «Actually Portable Executable»): starter med MZqFpD, modellen ligger i en zip bakerst i programmet.
+            // Kilde: https://docs.mozilla.ai/llamafile/reference/technical_details og https://justine.lol/ape.html
+            if (Ascii(hode, 0, 6) == "MZqFpD") return ModellIZip(fs, "llamafile", program: true);
+            if (hode[0] == 'P' && hode[1] == 'K' && hode[2] == 3 && hode[3] == 4 && ext == ".zip" && ModellIZip(fs, "zip-fil", program: false) is { } zip) return zip;
+            if (UtenMagi.TryGetValue(ext, out var formatNavn)) return new Modell(formatNavn, null, null, null, false) { Type = "AI-modell (kjent på endelsen)" };
+            if (ext == ".nemo" && fs.Length > 512) { fs.Position = 257; var t = new byte[5]; fs.LesAlt(t); if (Ascii(t, 0, 5) == "ustar") return new Modell("NVIDIA NeMo", null, null, null, true); }
+            if (ext == ".bin" && Nabo(sti, ".xml", "<net ", 300)) return new Modell("OpenVINO", null, null, null, false);
+            // ncnn (Tencent): .param-fila ved siden av starter med tallet 7767517. Kilde: github.com/Tencent/ncnn docs/developer-guide/param-and-model-file-structure.md
+            if (ext == ".bin" && Nabo(sti, ".param", "7767517", 8)) return new Modell("ncnn (Tencent)", null, null, null, false);
+            if (ext == ".weights" && File.Exists(Path.ChangeExtension(sti, ".cfg"))) return new Modell("Darknet (YOLO)", null, null, null, false);
+            fs.Position = n;
 
             // safetensors: 8 byte lengde på JSON-hodet, så '{'
             ulong hodeLengde = BitConverter.ToUInt64(hode, 0);
@@ -71,7 +104,10 @@ public static class ModellFormat
                 return new Modell("PyTorch (pickle)", null, null, null, true);
 
             if (ext == ".onnx" && hode[0] == 0x08) return Onnx(fs);
-            if (ext is ".h5" or ".keras" && Ascii(hode, 1, 3) == "HDF") return new Modell("Keras", null, null, null, false);
+            // ONNX med annen endelse: ir_version (felt 1) og så produsentnavnet (felt 2, merke 0x12) helt først, slik onnx selv skriver fila
+            if (hode[0] == 0x08 && hode[1] is >= 3 and <= 15 && hode[2] == 0x12 && Onnx(fs) is { Produsent: { } p } onnx
+                && System.Text.RegularExpressions.Regex.IsMatch(p, @"^[A-Za-z][\w.\- ]{1,60}$")) return onnx;
+            if (Ascii(hode, 1, 3) == "HDF" && (ext is ".h5" or ".keras" or ".hdf5" || Inneholder(fs, "keras_version", 65536))) return new Modell("Keras", null, null, null, false);
             return null;
         }
         catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
@@ -79,21 +115,173 @@ public static class ModellFormat
 
     private static string Ascii(byte[] b, int fra, int lengde) => Encoding.ASCII.GetString(b, fra, lengde);
 
+    /// <summary>
+    /// Formater uten kjent filmerke. Endelsen brukes bare av disse AI-formatene, og fila må være stor (sjekket før).
+    /// PaddlePaddle (Baidu), MindSpore (Huawei), MNN (Alibaba) og RKNN (Rockchip) er kinesiske rammeverk.
+    /// Kilder: paddlepaddle.org.cn (inference model .pdmodel/.pdiparams), mindspore.cn (MindIR), github.com/alibaba/MNN (schema uten file_identifier),
+    /// github.com/airockchip/rknn-toolkit2, caffe.berkeleyvision.org, developer.apple.com/documentation/coreml.
+    /// </summary>
+    internal static readonly Dictionary<string, string> UtenMagi = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".pdiparams"] = "PaddlePaddle (Baidu)", [".pdmodel"] = "PaddlePaddle (Baidu)", [".mindir"] = "MindSpore (Huawei)",
+        [".mnn"] = "MNN (Alibaba)", [".rknn"] = "RKNN (Rockchip)", [".caffemodel"] = "Caffe", [".mlmodel"] = "Core ML",
+    };
+
+    /// <summary>Formater fra selskaper i Kina. Vises som merknad: formatet sier hvem som laget verktøyet, ikke sikkert hvem som laget modellen.</summary>
+    internal static string? KinesiskFormat(string format) => format switch
+    {
+        "PaddlePaddle (Baidu)" => "Baidu", "MindSpore (Huawei)" => "Huawei", "MNN (Alibaba)" => "Alibaba", "ncnn (Tencent)" => "Tencent", "RKNN (Rockchip)" => "Rockchip",
+        _ => null,
+    };
+
+    /// <summary>Fila med samme navn og en annen endelse finnes og starter med (eller har tidlig) en bestemt tekst.</summary>
+    private static bool Nabo(string sti, string endelse, string tekst, int innen)
+    {
+        try
+        {
+            var nabo = Path.ChangeExtension(sti, endelse);
+            if (!File.Exists(nabo)) return false;
+            using var s = Admintilgang.AapneLes(nabo);
+            var buf = new byte[Math.Min(4096, innen + tekst.Length)];
+            int n = s.Read(buf, 0, buf.Length);
+            return Encoding.ASCII.GetString(buf, 0, n).IndexOf(tekst, StringComparison.Ordinal) is >= 0 and var i && i <= innen;
+        }
+        catch { return false; }
+    }
+
+    private static bool Inneholder(Stream fs, string tekst, int bytes)
+    {
+        fs.Position = 0;
+        var buf = new byte[Math.Min(bytes, (int)Math.Min(fs.Length, int.MaxValue))];
+        int n = fs.Read(buf, 0, buf.Length);
+        return Encoding.ASCII.GetString(buf, 0, n).IndexOf(tekst, StringComparison.Ordinal) >= 0;
+    }
+
+    // ---------- Modell inni en zip (llamafile, .zip) ----------
+    private static readonly string[] ModellEndelserIZip = { ".gguf", ".safetensors", ".onnx", ".pt", ".pth", ".ckpt", ".tflite", ".llamafile", ".bin" };
+
+    /// <summary>
+    /// Leser bare zip-katalogen bakerst i fila (navn og størrelser), aldri innholdet, unntatt GGUF-hodet når modellen ligger ukomprimert.
+    /// Tar med modellfiler på minst 20 MB, eller en .gguf av alle størrelser i en llamafile.
+    /// Kilde for zip-katalogen: PKWARE APPNOTE.TXT 4.3.12–4.3.16 (sentral katalog, ZIP64).
+    /// </summary>
+    private static Modell? ModellIZip(Stream fs, string format, bool program)
+    {
+        var filer = ZipKatalog(fs);
+        var treff = filer.Where(f => ModellEndelserIZip.Any(e => f.Navn.EndsWith(e, StringComparison.OrdinalIgnoreCase))
+                                     && (f.Storrelse >= 20L * 1024 * 1024 || program && f.Navn.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase)))
+                         .OrderByDescending(f => f.Storrelse).FirstOrDefault();
+        if (treff.Navn == null) return null;
+        Modell? inni = null;
+        if (treff.Metode == 0 && treff.Navn.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                fs.Position = treff.Lokal;
+                var lh = new byte[30];
+                fs.LesAlt(lh);
+                if (BitConverter.ToUInt32(lh, 0) == 0x04034b50)
+                {
+                    long data = treff.Lokal + 30 + BitConverter.ToUInt16(lh, 26) + BitConverter.ToUInt16(lh, 28);
+                    fs.Position = data;
+                    var m = new byte[4];
+                    fs.LesAlt(m);
+                    if (Ascii(m, 0, 4) == "GGUF") inni = Gguf(fs, data);
+                }
+            }
+            catch { }
+        }
+        // Navnet inni zip-en kan ha tegn som ikke er lov i stier (.NET Framework kaster da), så stien deles for hånd
+        var filnavn = treff.Navn.Replace('\\', '/').Split('/').Last();
+        int punktum = filnavn.LastIndexOf('.');
+        var navn = Rens(punktum > 0 ? filnavn.Substring(0, punktum) : filnavn);
+        var endelse = punktum > 0 ? filnavn.Substring(punktum + 1).ToUpperInvariant() : "";
+        var slag = program ? "AI-modell og program i én fil" : "AI-modell pakket i en zip-fil";
+        return inni != null
+            ? inni with { Format = $"{format} (GGUF inni)", Navn = inni.Navn ?? navn, KanKjoreKode = program, Inni = Rens(treff.Navn), Type = $"{slag} ({inni.Type})" }
+            : new Modell($"{format} ({Rens(endelse)} inni)", navn, null, null, program) { Inni = Rens(treff.Navn), Type = slag };
+    }
+
+    internal static List<(string Navn, int Metode, long Storrelse, long Lokal)> ZipKatalog(Stream fs)
+    {
+        var liste = new List<(string, int, long, long)>();
+        try
+        {
+            long lengde = fs.Length;
+            int hale = (int)Math.Min(lengde, 65536 + 22);
+            if (hale < 22) return liste;
+            var buf = new byte[hale];
+            fs.Position = lengde - hale;
+            fs.LesAlt(buf);
+            int eocd = -1;
+            for (int i = hale - 22; i >= 0; i--) if (BitConverter.ToUInt32(buf, i) == 0x06054b50) { eocd = i; break; }
+            if (eocd < 0) return liste;
+            long eocdPlass = lengde - hale + eocd;
+            long antall = BitConverter.ToUInt16(buf, eocd + 10), storrelse = BitConverter.ToUInt32(buf, eocd + 12), start = BitConverter.ToUInt32(buf, eocd + 16);
+            long katalogSlutt = eocdPlass;
+            // ZIP64: locator rett før EOCD peker på ZIP64-EOCD (56 byte) med 64-bits tall
+            if (eocd >= 20 && BitConverter.ToUInt32(buf, eocd - 20) == 0x07064b50)
+            {
+                katalogSlutt = eocdPlass - 20 - 56;
+                fs.Position = katalogSlutt;
+                var z = new byte[56];
+                fs.LesAlt(z);
+                if (BitConverter.ToUInt32(z, 0) != 0x06064b50) return liste;
+                antall = (long)BitConverter.ToUInt64(z, 32); storrelse = (long)BitConverter.ToUInt64(z, 40); start = (long)BitConverter.ToUInt64(z, 48);
+            }
+            // En llamafile kan ha programmet foran zip-en: plassene i katalogen regnes da fra der zip-en starter
+            long forskyvning = katalogSlutt - storrelse - start;
+            if (storrelse <= 0 || storrelse > 8 * 1024 * 1024 || forskyvning < 0) return liste;
+            var kat = new byte[storrelse];
+            fs.Position = start + forskyvning;
+            fs.LesAlt(kat);
+            int p = 0;
+            for (long k = 0; k < Math.Min(antall, 5000) && p + 46 <= kat.Length && BitConverter.ToUInt32(kat, p) == 0x02014b50; k++)
+            {
+                int metode = BitConverter.ToUInt16(kat, p + 10);
+                long komp = BitConverter.ToUInt32(kat, p + 20), ukomp = BitConverter.ToUInt32(kat, p + 24), lokal = BitConverter.ToUInt32(kat, p + 42);
+                int nl = BitConverter.ToUInt16(kat, p + 28), el = BitConverter.ToUInt16(kat, p + 30), cl = BitConverter.ToUInt16(kat, p + 32);
+                if (p + 46 + nl + el > kat.Length) break;
+                var navn = Encoding.UTF8.GetString(kat, p + 46, nl);
+                // ZIP64-tillegg (id 1): ukomprimert størrelse, komprimert størrelse og lokal plass, i den rekkefølgen, bare de som er 0xFFFFFFFF
+                for (int e = p + 46 + nl, slutt = e + el; e + 4 <= slutt;)
+                {
+                    int id = BitConverter.ToUInt16(kat, e), len = BitConverter.ToUInt16(kat, e + 2), q = e + 4;
+                    if (id == 1)
+                    {
+                        if (ukomp == 0xFFFFFFFF && q + 8 <= slutt) { ukomp = (long)BitConverter.ToUInt64(kat, q); q += 8; }
+                        if (komp == 0xFFFFFFFF && q + 8 <= slutt) q += 8;
+                        if (lokal == 0xFFFFFFFF && q + 8 <= slutt) lokal = (long)BitConverter.ToUInt64(kat, q);
+                        break;
+                    }
+                    e = q + len;
+                }
+                liste.Add((navn, metode, ukomp, lokal + forskyvning));
+                p += 46 + nl + el + cl;
+            }
+        }
+        catch { }
+        return liste;
+    }
+
     // ---------- GGUF ----------
-    private static Modell Gguf(Stream fs)
+    private static Modell Gguf(Stream fs, long start)
     {
         string? navn = null, arkitektur = null, storrelse = null, basenavn = null, base0 = null, baseOrg = null, org = null, modellVersjon = null;
+        ulong? tensorer = null;
+        string? ggufType = null, finjustering = null, pre = null, lisens = null, url = null, vokabId = null;
+        var merker = new List<string>();
         int? vokab = null, lag = null, bredde = null;
         var tall = new Dictionary<string, long>();
         try
         {
-            fs.Position = 4;
+            fs.Position = start + 4;
             using var r = new BinaryReader(fs, Encoding.UTF8, leaveOpen: true);
             uint versjon = r.ReadUInt32();
             if (versjon < 2) return new Modell("GGUF", null, null, null, false);
-            r.ReadUInt64();                 // antall tensorer
+            tensorer = r.ReadUInt64();      // antall tensorer
             ulong antall = r.ReadUInt64();  // antall metadata-felt
-            for (ulong i = 0; i < antall && i < 4096 && fs.Position < 64 * 1024 * 1024; i++)
+            for (ulong i = 0; i < antall && i < 4096 && fs.Position - start < 64 * 1024 * 1024; i++)
             {
                 var nokkel = Streng(r);
                 uint type = r.ReadUInt32();
@@ -110,6 +298,11 @@ public static class ModellFormat
                         case "general.version": modellVersjon = verdi; break;
                         case "general.base_model.0.name": base0 = verdi; break;
                         case "general.base_model.0.organization": baseOrg = verdi; break;
+                        case "general.type": ggufType = verdi; break;
+                        case "general.finetune": finjustering = verdi; break;
+                        case "general.license": lisens = verdi; break;
+                        case "tokenizer.ggml.pre": pre = verdi; break;
+                        case "general.source.repo_url" or "general.repo_url" or "general.source.url" or "general.base_model.0.repo_url": url ??= verdi; break;
                     }
                 }
                 else if (type == 9 && nokkel == "tokenizer.ggml.tokens")
@@ -117,7 +310,30 @@ public static class ModellFormat
                     uint elementType = r.ReadUInt32();
                     ulong n = r.ReadUInt64();
                     vokab = (int)Math.Min(n, int.MaxValue);
-                    for (ulong k = 0; k < n; k++) HoppOver(r, elementType);
+                    if (elementType == 8)
+                    {
+                        // Ordlista leses uansett for å komme forbi den; SHA-256 av den gir en ID for ordforrådet
+                        using var h = SHA256.Create();
+                        var skille = new byte[] { 0 };
+                        for (ulong k = 0; k < n; k++)
+                        {
+                            ulong l = r.ReadUInt64();
+                            if (l > 1_000_000 || fs.Position - start > 64 * 1024 * 1024) throw new InvalidDataException();
+                            var b = r.ReadBytes((int)l);
+                            h.TransformBlock(b, 0, b.Length, null, 0);
+                            h.TransformBlock(skille, 0, 1, null, 0);
+                        }
+                        h.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+                        vokabId = string.Concat(h.Hash!.Take(8).Select(x => x.ToString("x2")));
+                    }
+                    else for (ulong k = 0; k < n; k++) HoppOver(r, elementType);
+                }
+                else if (type == 9 && nokkel == "general.tags")
+                {
+                    uint elementType = r.ReadUInt32();
+                    ulong n = r.ReadUInt64();
+                    for (ulong k = 0; k < n && fs.Position - start < 64 * 1024 * 1024; k++)
+                        if (elementType == 8 && merker.Count < 50) merker.Add(Streng(r)); else HoppOver(r, elementType);
                 }
                 else if (type is 4 or 5 && (nokkel.EndsWith(".block_count") || nokkel.EndsWith(".embedding_length") || nokkel.EndsWith(".vocab_size")))
                     tall[nokkel.Substring(nokkel.LastIndexOf('.') + 1)] = type == 4 ? r.ReadUInt32() : r.ReadInt32();
@@ -130,14 +346,21 @@ public static class ModellFormat
         if (vokab == null && tall.TryGetValue("vocab_size", out var vs)) vokab = (int)vs;
         var visning = navn ?? basenavn;
         if (visning != null && storrelse != null && !visning.Inneholder(storrelse)) visning += " " + storrelse;
-        var slag = arkitektur is "bert" or "nomic-bert" or "jina-bert-v2" or "xlm-roberta" ? "søkemodell (embedding)"
+        // general.type: model, adapter (LoRA) eller mmproj (bildedel). Kilde: ggml docs/gguf.md og gguf-py constants.py (GGUFType)
+        var slag = ggufType == "adapter" ? "LoRA-tillegg (endrer en annen modell)"
+                 : ggufType == "mmproj" ? "bildedel til en språkmodell (mmproj)"
+                 : arkitektur is "bert" or "nomic-bert" or "jina-bert-v2" or "xlm-roberta" ? "søkemodell (embedding)"
                  : arkitektur is "clip" ? "bildeforståelse (CLIP)" : arkitektur is "whisper" ? "talemodell" : "språkmodell";
         return new Modell("GGUF", visning, arkitektur, null, false)
         {
             Vokab = vokab, Lag = lag, Bredde = bredde, Organisasjon = org, Type = slag, Versjon = modellVersjon,
             BaseModell = base0 == null ? null : baseOrg != null ? $"{baseOrg}/{base0}" : base0,
+            Tensorer = tensorer, Finjustering = Rens(finjustering), Merker = merker, PreTokenizer = Rens(pre), VokabId = vokabId, Lisens = Rens(lisens), KildeUrl = Rens(url),
         };
     }
+
+    /// <summary>Tekst fra fila vises i vinduet og rapporten: kontrolltegn (linjeskift o.l.) blir mellomrom, og lengden kuttes.</summary>
+    private static string? Rens(string? s) => s == null ? null : System.Text.RegularExpressions.Regex.Replace(s.Length > 300 ? s.Substring(0, 300) : s, @"\p{C}", " ").Trim();
 
     private static string Streng(BinaryReader r)
     {
@@ -182,16 +405,24 @@ public static class ModellFormat
         int? vokab = null, bredde = null;
         int maksLag = -1;
         bool lora = false, diffusjon = false, flux = false;
+        string? kvant = null;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
             if (p.Name == "__metadata__")
             {
                 if (p.Value.ValueKind == JsonValueKind.Object)
                     foreach (var m in p.Value.EnumerateObject())
+                    {
                         if (m.Name is "modelspec.title" or "name" or "ss_output_name" && m.Value.ValueKind == JsonValueKind.String) navn ??= m.Value.GetString();
+                        // MLX skriver {"format": "mlx"}. Kilde: github.com/ml-explore/mlx (mx.save_safetensors metadata)
+                        if (m.Name == "format" && m.Value.ValueKind == JsonValueKind.String && m.Value.GetString() == "mlx") kvant ??= "MLX";
+                    }
                 continue;
             }
             if (p.Name.Contains("lora_")) lora = true;
+            // GPTQ og AWQ: qweight/qzeros/scales. EXL2: q_weight, q_invperm. Kilder: AutoGPTQ/AutoAWQ (QuantLinear), turboderp/exllamav2 (ext_q_tensor)
+            if (p.Name.EndsWith(".q_invperm") || p.Name.EndsWith(".q_weight")) kvant ??= "EXL2";
+            else if (p.Name.EndsWith(".qweight")) kvant ??= doc.RootElement.EnumerateObject().Any(x => x.Name.EndsWith(".g_idx")) ? "GPTQ" : "GPTQ eller AWQ";
             if (p.Name.StartsWith("model.diffusion_model.") || p.Name.StartsWith("down_blocks.")) diffusjon = true;
             if (p.Name.StartsWith("double_blocks.") || p.Name.StartsWith("transformer_blocks.") && p.Name.Contains("attn.add_q_proj")) flux = true;
             var lagTreff = LagNr.Match(p.Name);
@@ -213,7 +444,7 @@ public static class ModellFormat
         type = lora ? "LoRA-tillegg (endrer en annen modell)" : flux ? "bildemodell (FLUX)" : diffusjon ? "bildemodell (Stable Diffusion)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
         return new Modell("safetensors", navn, null, parametre > 0 ? parametre : null, false)
         {
-            Vokab = vokab, Bredde = bredde, Lag = maksLag >= 0 ? maksLag + 1 : null, Type = type,
+            Vokab = vokab, Bredde = bredde, Lag = maksLag >= 0 ? maksLag + 1 : null, Type = type, Kvantisering = kvant,
         };
     }
 

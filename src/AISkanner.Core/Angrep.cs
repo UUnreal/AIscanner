@@ -286,7 +286,11 @@ public sealed partial class Skanner
             try
             {
                 if (!File.Exists(m) || new FileInfo(m).Length > 2 * 1024 * 1024) continue;
-                if (File.ReadAllText(m).IndexOf("com.microsoft.windows.ai.mcpServer", StringComparison.OrdinalIgnoreCase) >= 0) linjer.Add($"Fil: {m} · pakken melder seg som MCP-server i Windows");
+                var tekst = File.ReadAllText(m);
+                if (tekst.IndexOf("com.microsoft.windows.ai.mcpServer", StringComparison.OrdinalIgnoreCase) >= 0) linjer.Add($"Fil: {m} · pakken melder seg som MCP-server i Windows");
+                // Apper som bruker Windows' egen språkmodell (Phi Silica) og AI-funksjoner må be om systemAIModels.
+                // Kilde: https://learn.microsoft.com/en-us/windows/ai/apis/get-started (systemai:Capability Name="systemAIModels")
+                if (Regex.IsMatch(tekst, @"Capability\s+Name\s*=\s*""systemAIModels""", RegexOptions.IgnoreCase)) WindowsAiApp(d, m);
             }
             catch { }
         }
@@ -295,6 +299,18 @@ public sealed partial class Skanner
         if (linjer.Any(l => l.EndsWith("tillat alltid"))) f.Advarsel("En AI-agent i Windows har fått «tillat alltid» til et MCP-verktøy.");
         foreach (var l in linjer) f.Detalj(l);
         f.Detalj("Regel: ATLAS AML.T0053 · kartlagt på Insider-bygg (originhq.com/research/msft-odr-mcp), ikke bekreftet på 26H2");
+    }
+
+    private void WindowsAiApp(string pakke, string manifest)
+    {
+        var info = Pakkeinfo(pakke);
+        var utgiver = info?.Utgiver;
+        var visning = info?.Navn ?? Pakkenavn(Path.GetFileName(pakke));
+        var f = LeggTil($"Bruker Windows' egen AI: {Kutt(visning, 50)}", LeverandorKategori, Risiko.Gul,
+            "Appen har bedt om å bruke Windows' egen språkmodell og AI-funksjoner (Phi Silica) på PC-en.", "Windows-app",
+            $"Fil: {manifest} · ber om systemAIModels{(utgiver != null ? " · utgiver " + utgiver : "")}");
+        f.Merk(Tilstand.SattOpp);
+        f.Sterkt();
     }
 
     // ---------- Etter filgjennomgangen ----------

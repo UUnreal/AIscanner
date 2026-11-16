@@ -64,10 +64,21 @@ Alt er bare lesing. Ingenting endres.
   `System32\Tasks` leses; argumentene brukes aldri. Run/RunOnce og avinstallering leses for andre innloggede brukere
   (`HKEY_USERS\<SID>`). Nettverksdisker tas aldri med. Uten admin hoppes mapper uten tilgang over og vises i Datagrunnlag.
 - **Flyttede modellmapper:** `OLLAMA_MODELS`, `HF_HOME`, `HF_HUB_CACHE` og `TRANSFORMERS_CACHE` følges i begge søk.
-  - Filer over 20 MB: de første 64 bytene, for å kjenne igjen modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras).
+  - Filer over 20 MB: de første 64 bytene, for å kjenne igjen modellformater (GGUF, safetensors, PyTorch, ONNX, TFLite, Keras,
+    ONNX Runtime, ExecuTorch, llamafile, NeMo). Formater uten filmerke (PaddlePaddle, MindSpore, MNN, RKNN, Caffe, Core ML)
+    kjennes på endelsen. OpenVINO og ncnn: de første 4 KB av `.xml`/`.param` med samme navn som `.bin`-fila.
+  - `.zip` og `.exe` over 20 MB: zip-katalogen bakerst i fila (bare navn og størrelser), for modeller pakket i zip og
+    llamafile. Ligger en GGUF ukomprimert inni, leses metadata-hodet. Ingenting pakkes ut eller kjøres.
+  - `.safetensors`, `.gguf` og Ollama-lag over 1 MB: samme sjekk, for små LoRA-tillegg.
   - GGUF og safetensors: også metadata-hodet (navn, arkitektur, antall parametre). Selve modellvektene leses ikke.
   - Modell-ID: fra filnavnet når Ollama eller Hugging Face har lagret fila under SHA-256. Ellers et fingeravtrykk av
     størrelse, første MB og siste MB (2 MB lesing per modell). `config.json` og Ollama-manifester leses for navn.
+    I `config.json` også `architectures`, `quantization_config.quant_method` og om `auto_map` finnes. Navnene på
+    `modeling_*.py`, `configuration_*.py` og `tokenization_*.py` ved modellen (aldri innholdet).
+  - Modellkortet (`README.md` ved modellen, maks 256 KB): bare linjene under `tags:` og `base_model:` i hodet mellom `---`.
+  - GGUF: også `general.type`, `general.finetune`, `general.tags`, `general.license`, kilde-URL og `tokenizer.ggml.pre`.
+    Ordlista (`tokenizer.ggml.tokens`) gjøres om til en SHA-256 (ordforråds-ID). Tekst fra fila renses for kontrolltegn.
+  - ModelScope (`.cache\modelscope\hub`) og LM Studio (`.lmstudio\models`): organisasjon og navn fra mappestien.
   - Mappenavn i `site-packages` og `node_modules`, for å finne AI-biblioteker.
   - Filer i OneDrive som bare ligger i skyen, sjekkes på navn og størrelse og lastes aldri ned.
   - **Låste filer** (feil 32/33, for eksempel `WebCacheV01.dat`) leses som administrator rett fra disken: fila åpnes bare
@@ -205,14 +216,15 @@ fil»), fordi endringstider kan forfalskes.
 | Brannmurlogg (admin) | `pfirewall.log` (standard sti og `LogFilePath` fra brannmurregler), siste 16 MB | Bare linjer til adressene kjente AI-tjenester har nå: tid, protokoll, port, PID |
 | GPU/NPU | Ytelsestellere «GPU Engine» (Compute, Cuda), bare for PID-er som er AI-funn | Prosent beregning over ett sekund |
 | Docker | `\\.\pipe\docker_engine`, bare når Docker kjører: `GET /images/json` og `/containers/json` | Bildenavn, størrelse, om beholderen kjører og åpne porter. `~/.docker/config.json` åpnes aldri. |
-| WSL | `Lxss` i registeret; `\\wsl.localhost\<distro>\home\*` bare når Linux kjører | Navn på distribusjoner; antall filer i `.ollama\models\manifests`, `.cache\huggingface\hub`, `.cache\lm-studio\models` |
+| WSL | `Lxss` i registeret; `\\wsl.localhost\<distro>\home\*`, `\root` og `\usr\share\ollama` bare når Linux kjører | Navn på distribusjoner; filer i `.ollama\models`, `.cache\huggingface\hub`, `.cache\lm-studio\models` og `.cache\modelscope\hub` (maks 5000). Filer over 20 MB sjekkes som modeller på Windows (filhode, metadata, fingeravtrykk). |
+| Windows' egen AI | `AppxManifest.xml` i `Program Files\WindowsApps` (leses fra før for MCP) | Om appen ber om `systemAIModels` (Phi Silica og AI-funksjoner i Windows), og appens navn og utgiver |
 | Utvidelsers kode | `*.js` i utvidelsens mappe (maks 200 filer, 2 MB per fil, 4 MB per utvidelse) | Bare adresser til AI-tjenester fra `regler.json`. Teksten beholdes aldri. |
 | Electron-apper | `resources\app.asar` i leverandørmappene | Innholdslista øverst i fila og `package.json`: navn på AI-biblioteker. Koden leses ikke. |
 | Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
 | Kjente filer og domener | `iocFiler` (finnes fila?), `iocDomener` mot DNS-bufferen, `site-packages\*.dist-info` | Navn og versjon |
 | npx-cachen | `%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\*mcp*` (maks 200 filer, 20 s) | Antall skjulte tegn og `<IMPORTANT>`-blokker |
 
-Ikke dekket ennå: SRUM, MFT og filene inne i WSL. Er WSL installert, står det som blindsone i rapporten.
+Ikke dekket ennå: SRUM, MFT og filene inne i WSL når Linux ikke kjører. Da står WSL som blindsone i rapporten.
 
 ### Kommandolinjer
 

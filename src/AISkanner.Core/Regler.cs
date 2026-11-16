@@ -51,6 +51,21 @@ public sealed class ModellFamilie
     [JsonPropertyName("kilde")] public string? Kilde { get; set; }
 }
 
+/// <summary>
+/// Hva en modell er laget for, kjent igjen på navn og merkelapper: angrep (offensive sikkerhetsmodeller og kriminelle modeller),
+/// sensurfri (sikkerhetssperren er fjernet) eller sikkerhet (modeller som vokter AI eller hjelper forsvarere).
+/// Selve vektene kan ikke vise dette uten å laste modellen, så funnet sier at det er navnet som viser det.
+/// </summary>
+public sealed class ModellFormaal
+{
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    /// <summary>"angrep", "sensurfri" eller "sikkerhet".</summary>
+    [JsonPropertyName("kategori")] public string Kategori { get; set; } = "";
+    [JsonPropertyName("utgiver")] public string? Utgiver { get; set; }
+    [JsonPropertyName("ord")] public List<string> Ord { get; set; } = new();
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+}
+
 /// <summary>AI som leverandører legger inn i egne programmer. Gir bare navn: funnet gjøres på innholdet.</summary>
 public sealed class LeverandorAi
 {
@@ -135,6 +150,9 @@ public sealed class Regelsett
     /// <summary>Hvor godkjentlista kom fra, for rapporten.</summary>
     [JsonIgnore] public string? GodkjentKilde { get; set; }
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
+    /// <summary>Ordforrådets navn i llama.cpp (GGUF tokenizer.ggml.pre) -> modellfamilie (navn).</summary>
+    [JsonPropertyName("preTokenizer")] public Dictionary<string, string> PreTokenizer { get; set; } = new();
+    [JsonPropertyName("modellFormaal")] public List<ModellFormaal> ModellFormaal { get; set; } = new();
     [JsonPropertyName("leverandorAi")] public List<LeverandorAi> LeverandorAi { get; set; } = new();
     /// <summary>Pakke- og utvidelsesversjoner som er kjent dårlige (stjal nøkler eller misbrukte AI-agenter). Blir «Ukjent AI-spor».</summary>
     [JsonPropertyName("daarligeVersjoner")] public List<DaarligVersjon> DaarligeVersjoner { get; set; } = new();
