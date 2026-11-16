@@ -36,6 +36,14 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.53.1] - 2026-11-16
+
+### Rettet
+
+- **Microsofts egne apper som bruker Windows' egen AI** (Paint, Bilder, Notisblokk, Utklippsverktøy, Outlook, Xbox m.fl.) vises nå som
+  ett grønt funn med alle appene i, i stedet for ett gult funn per app. Utgiveren er bekreftet av Windows (pakke-ID `8wekyb3d8bbwe`).
+  Apper fra andre utgivere med `systemAIModels` er fortsatt gule, én per app. Funnet på første Windows-rapport fra 2.53.0.
+
 ## [2.53.0] - 2026-11-16
 
 Tetter hullene i modellgjenkjenningen fra gjennomgangen 16. november. Ingen sjekker er tatt bort, og ingenting lagres.

@@ -217,7 +217,7 @@ fil»), fordi endringstider kan forfalskes.
 | GPU/NPU | Ytelsestellere «GPU Engine» (Compute, Cuda), bare for PID-er som er AI-funn | Prosent beregning over ett sekund |
 | Docker | `\\.\pipe\docker_engine`, bare når Docker kjører: `GET /images/json` og `/containers/json` | Bildenavn, størrelse, om beholderen kjører og åpne porter. `~/.docker/config.json` åpnes aldri. |
 | WSL | `Lxss` i registeret; `\\wsl.localhost\<distro>\home\*`, `\root` og `\usr\share\ollama` bare når Linux kjører | Navn på distribusjoner; filer i `.ollama\models`, `.cache\huggingface\hub`, `.cache\lm-studio\models` og `.cache\modelscope\hub` (maks 5000). Filer over 20 MB sjekkes som modeller på Windows (filhode, metadata, fingeravtrykk). |
-| Windows' egen AI | `AppxManifest.xml` i `Program Files\WindowsApps` (leses fra før for MCP) | Om appen ber om `systemAIModels` (Phi Silica og AI-funksjoner i Windows), og appens navn og utgiver |
+| Windows' egen AI | `AppxManifest.xml` i `Program Files\WindowsApps` (leses fra før for MCP) | Om appen ber om `systemAIModels` (Phi Silica og AI-funksjoner i Windows), og appens navn og utgiver. Apper med Microsofts pakke-ID `8wekyb3d8bbwe` samles i ett grønt funn; andre utgivere er gule |
 | Utvidelsers kode | `*.js` i utvidelsens mappe (maks 200 filer, 2 MB per fil, 4 MB per utvidelse) | Bare adresser til AI-tjenester fra `regler.json`. Teksten beholdes aldri. |
 | Electron-apper | `resources\app.asar` i leverandørmappene | Innholdslista øverst i fila og `package.json`: navn på AI-biblioteker. Koden leses ikke. |
 | Utvidelser | `manifest.json` (leses fra før) | Tilgang til AI-chatsider, og ID mot `daarligeUtvidelser` |
