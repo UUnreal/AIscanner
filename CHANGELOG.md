@@ -36,6 +36,48 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.53.0] - 2026-11-16
+
+Tetter hullene i modellgjenkjenningen fra gjennomgangen 16. november. Ingen sjekker er tatt bort, og ingenting lagres.
+
+### Lagt til
+- **Hva modellen er laget for** (`modellFormaal` i `regler.json`, med kilde): angrepsmodeller (WhiteRabbitNeo,
+  DeepHat, WormGPT/FraudGPT/KawaiiGPT-navn) blir røde med «Angrepsmodell:». Sensurfjernede modeller (abliterated,
+  uncensored, Heretic, Dolphin) får advarselen «Sensurfri:». Sikkerhetsmodeller (Llama Guard, Prompt Guard,
+  ShieldGemma, Granite Guardian, Qwen3Guard, Foundation-Sec, Llama-Primus) får en merknad. Kjent på navn,
+  `general.finetune`, `general.tags` og modellkortets `tags`/`base_model`. Vektene kan ikke vise dette uten å laste modellen.
+- **Angrepsverktøy med AI:** Python-pakkene `villager` og `pentestgpt` gjør prosjektet rødt. MCP-servere som HexStrike AI
+  blir røde. Red team-verktøy (`garak`, `pyrit`, `deepteam`, `promptfoo`) får en merknad.
+- **23 nye modellfamilier:** 21 kinesiske (XVERSE, Orion, CodeShell, openPangu, MiMo, Step, Nanbeige, SenseNova,
+  CogVLM/CogVideoX, Skywork, Aquila, TeleChat, LongCat, Wan, Kolors, GTE, CosyVoice/SenseVoice/FunASR, PaddleOCR,
+  Megrez, Youtu, JoyAI) og 2 russiske (Kandinsky, GigaAM). Nye arkitekturnavn for Qwen, DeepSeek, GLM, Kimi, Hunyuan,
+  MiniMax, Ling og dots fra llama.cpp.
+- **Ordforrådets navn** (`tokenizer.ggml.pre`) kjenner igjen familien også når arkitekturen er delt eller fila har nytt
+  navn (`preTokenizer` i `regler.json`, fra llama.cpp). Ordlista får en ordforråds-ID (SHA-256), lik på alle PC-er.
+- **Nye formater:** llamafile (modell og program i én .exe, også i hurtigsøket), modeller pakket i .zip (bare
+  zip-katalogen leses), ONNX Runtime (.ort), ExecuTorch (.pte), ncnn (Tencent), OpenVINO i filgjennomgangen,
+  PaddlePaddle (Baidu), MindSpore (Huawei), MNN (Alibaba), RKNN (Rockchip), Caffe, Core ML, NeMo og Darknet.
+  ONNX og Keras kjennes igjen uten riktig endelse.
+- **Små LoRA-tillegg** (.safetensors, .gguf og Ollama-lag over 1 MB) sjekkes. GGUF `general.type` viser LoRA-tillegg og
+  bildedel (mmproj). Ollama-lag av typen adapter og projector får navn. Lag med systemprompt leses aldri.
+- **Modeller med egen Python-kode** (`auto_map` i `config.json` eller `modeling_*.py` ved siden av) får «Kan kjøre skjult
+  kode». Komprimering (GPTQ, AWQ, EXL2, MLX, `quant_method`) vises.
+- **ModelScope og LM Studio** gir organisasjon og navn, så kinesiske modeller merkes også uten Hugging Face.
+- **WSL:** Ollama som Linux-tjeneste (`/usr/share/ollama/.ollama/models`) og ModelScope. Modellene i WSL kjennes igjen
+  på innholdet, med familie og land, når Linux kjører.
+- **Windows-apper som bruker Windows' egen AI** (`systemAIModels` i AppxManifest, Phi Silica).
+- Docker Model Runner (`docker/model-runner`, `ai/`-bilder), AI-motorene TensorRT, PaddlePaddle, MNN, ncnn og
+  MindSpore Lite, flere Python-pakker (peft, unsloth, bitsandbytes, exllamav2, mlx_lm, optimum, openvino, ultralytics,
+  sglang, tensorrt_llm, litellm m.fl.) og kinesiske pakker (`dashscope`, `zhipuai`, `qianfan`, `modelscope`,
+  `paddle`, `mindspore`), som blir røde med «Laget av … i Kina».
+- Hurtigsøket går gjennom modellmappene `.llama`, `.paddleocr`, `.paddlex`, `.insightface`, `.keras`, `.EasyOCR`,
+  `.u2net`, `.tabby` og `.deepface`.
+- Kontroll: nye sjekker for alt over (`--kontroll`).
+
+### Ikke dekket
+- Programmer som bygger llama.cpp eller candle rett inn i .exe uten egen DLL. Det krever at hele programfila leses.
+- .7z og .rar (navnene er ofte komprimert).
+
 ## [2.52.12] - 2026-11-16
 
 ### Endret

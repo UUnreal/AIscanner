@@ -751,7 +751,10 @@ public sealed partial class Skanner
             var (rvOk, rvAlle) = RammeverkKontroll(sb);
             ok += rvOk;
             sb.AppendLine($"{(rvOk == rvAlle ? "OK  " : "FEIL")}  Kjent risiko (OWASP, MITRE ATLAS): {rvOk} av {rvAlle} riktige (advarsler, Vakt live, ATLAS fra reglene uten dobbel, vanlige funn uten merke)");
-            int alle = Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
+            var (mhOk, mhAlle) = ModellhullKontroll(regler, sb, rot);
+            ok += mhOk;
+            sb.AppendLine($"{(mhOk == mhAlle ? "OK  " : "FEIL")}  Modeller (2.53): {mhOk} av {mhAlle} riktige (angrep, sensurfri, sikkerhetsmodell, ordforrådets navn, llamafile, zip, nye formater, modellkort, egen kode, ModelScope, LoRA, pakker, MCP, Docker)");
+            int alle = mhAlle + Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

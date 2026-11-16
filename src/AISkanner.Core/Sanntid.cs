@@ -26,6 +26,13 @@ public sealed partial class Skanner
         (new(@"^(tvm_runtime|mlc_llm)\.dll$", RegexOptions.IgnoreCase), "MLC/TVM"),
         (new(@"^Qnn(Htp|Cpu)\.dll$", RegexOptions.IgnoreCase), "Qualcomm NPU"),
         (new(@"^cudnn.*\.dll$", RegexOptions.IgnoreCase), "cuDNN"),
+        // Kilder: docs.nvidia.com/deeplearning/tensorrt (nvinfer), paddlepaddle.org.cn (paddle_inference), github.com/alibaba/MNN,
+        // github.com/Tencent/ncnn, mindspore.cn/lite (mindspore-lite.dll)
+        (new(@"^nvinfer(_\d+)?\.dll$", RegexOptions.IgnoreCase), "TensorRT"),
+        (new(@"^paddle_inference(_c)?\.dll$", RegexOptions.IgnoreCase), "PaddlePaddle (Baidu)"),
+        (new(@"^MNN\.dll$", RegexOptions.IgnoreCase), "MNN (Alibaba)"),
+        (new(@"^ncnn\.dll$", RegexOptions.IgnoreCase), "ncnn (Tencent)"),
+        (new(@"^mindspore-lite\.dll$", RegexOptions.IgnoreCase), "MindSpore Lite (Huawei)"),
     };
 
     private static readonly string[] KjenteUtgivere = { "Microsoft", "Google", "Adobe", "NVIDIA", "Intel", "Apple", "Mozilla", "Zoom", "AMD", "Qualcomm" };
@@ -40,6 +47,36 @@ public sealed partial class Skanner
         ["langchain"] = true, ["langchain_core"] = true, ["langgraph"] = true, ["llama_index"] = true, ["autogen"] = true,
         ["autogen_agentchat"] = true, ["crewai"] = true, ["smolagents"] = true, ["haystack"] = true,
         ["interpreter"] = true, ["browser_use"] = true, ["pydantic_ai"] = true, ["agents"] = true,
+        // Finjustering, komprimering og kjøring av modeller
+        ["peft"] = false, ["bitsandbytes"] = false, ["unsloth"] = false, ["gptqmodel"] = false, ["auto_gptq"] = false, ["awq"] = false,
+        ["exllamav2"] = false, ["mlx_lm"] = false, ["optimum"] = false, ["openvino"] = false, ["ultralytics"] = false, ["keras"] = false,
+        ["faster_whisper"] = false, ["whisper"] = false, ["sglang"] = false, ["tensorrt_llm"] = false, ["litellm"] = false, ["dspy"] = false,
+        ["semantic_kernel"] = true,
+        // Kinesiske rammeverk og AI-tjenester (se KinesiskePakker)
+        ["paddle"] = false, ["mindspore"] = false, ["modelscope"] = false, ["dashscope"] = false, ["zhipuai"] = false, ["qianfan"] = false,
+        // Angrep og testing av AI (se AngrepPakker)
+        ["pentestgpt"] = true, ["villager"] = true, ["garak"] = false, ["pyrit"] = false, ["deepteam"] = false,
+    };
+
+    /// <summary>
+    /// AI-verktøy laget for å angripe andre maskiner. Kilder: Villager (kinesisk, på PyPI, bruker DeepSeek)
+    /// https://thehackernews.com/2025/09/ai-powered-villager-pen-testing-tool.html · PentestGPT https://github.com/GreyDGL/PentestGPT
+    /// </summary>
+    internal static readonly Dictionary<string, string> AngrepPakker = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["villager"] = "Villager (Cyberspike, Kina)", ["pentestgpt"] = "PentestGPT",
+    };
+
+    /// <summary>Verktøy for å teste AI mot angrep (red team). Brukes av forsvarere, men kan også brukes til å finne svakheter å utnytte.
+    /// Kilder: github.com/NVIDIA/garak, github.com/Azure/PyRIT, github.com/confident-ai/deepteam</summary>
+    internal static readonly HashSet<string> RedTeamPakker = new(StringComparer.OrdinalIgnoreCase) { "garak", "pyrit", "deepteam", "promptfoo" };
+
+    /// <summary>Pakker fra selskaper i Kina. dashscope, zhipuai og qianfan sender forespørsler til AI-tjenester i Kina.
+    /// Kilder: pypi.org/project/dashscope (Alibaba), pypi.org/project/zhipuai (Zhipu), pypi.org/project/qianfan (Baidu), pypi.org/project/modelscope (Alibaba),
+    /// pypi.org/project/paddlepaddle (Baidu), pypi.org/project/mindspore (Huawei)</summary>
+    internal static readonly Dictionary<string, string> KinesiskePakker = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["dashscope"] = "Alibaba", ["zhipuai"] = "Zhipu AI", ["qianfan"] = "Baidu", ["modelscope"] = "Alibaba", ["paddle"] = "Baidu", ["mindspore"] = "Huawei",
     };
 
     private static readonly Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase)
@@ -49,6 +86,7 @@ public sealed partial class Skanner
         ["onnxruntime-node"] = false, ["node-llama-cpp"] = false, ["ai"] = false, ["@ai-sdk/openai"] = false,
         ["langchain"] = true, ["@langchain/core"] = true, ["@langchain/langgraph"] = true, ["llamaindex"] = true,
         ["@modelcontextprotocol/sdk"] = true, ["@openai/agents"] = true, ["@anthropic-ai/claude-agent-sdk"] = true,
+        ["promptfoo"] = false,
     };
 
     internal static bool ErNokkelNavn(string navn) => NokkelNavn.IsMatch(navn);
@@ -474,14 +512,25 @@ public sealed partial class Skanner
         }
 
         // Python- og Node-miljøer med AI
-        foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer)
+        foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakker, agent, sprak);
+    }
+
+    /// <summary>Python- eller Node-prosjekt med AI. Angrepsverktøy og pakker fra Kina gjør det rødt, red team-verktøy får en merknad.</summary>
+    internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak)
+    {
+        var angrep = pakker.Where(AngrepPakker.ContainsKey).Select(x => AngrepPakker[x]).ToList();
+        var f = LeggTil($"{sprak}-prosjekt med AI: {Prosjektnavn(sti)}", "Skygge-AI (utvikling)", agent || angrep.Count > 0 ? Risiko.Rod : Risiko.Gul,
+            angrep.Count > 0 ? "Angrepsverktøy med AI: lager og kjører angrep mot andre maskiner." : agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
+            sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
+        f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
+        foreach (var a in angrep) f.Advarsel($"Angrepsverktøy med AI: {a}.");
+        foreach (var r in pakker.Where(RedTeamPakker.Contains)) f.Merknad($"Verktøy for å teste AI mot angrep (red team): {r}.");
+        foreach (var k in pakker.Where(KinesiskePakker.ContainsKey))
         {
-            var prosjekt = Prosjektnavn(sti);
-            var f = LeggTil($"{sprak}-prosjekt med AI: {prosjekt}", "Skygge-AI (utvikling)", agent ? Risiko.Rod : Risiko.Gul,
-                agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-                sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
-            f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"Laget av {KinesiskePakker[k]} i Kina (høyrisikoland): pakken {k}{(k is "dashscope" or "zhipuai" or "qianfan" ? " kobler til en AI-tjeneste i Kina" : "")}.");
         }
+        return f;
     }
 
     /// <summary>
@@ -525,7 +574,9 @@ public sealed partial class Skanner
         if (navn is "site-packages" or "dist-packages") { SjekkPip(mappe); Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); SjekkNodeModules(mappe); return; }
         if (Fullt && navn is ".git" or ".svn" or ".hg") { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "versjonskontroll (git), ikke AI"); return; }
-        if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
+        if (!Fullt && navn.StartsWith(".") && navn is not (".ollama" or ".lmstudio" or ".cache" or ".local" or ".venv" or ".env" or ".conda" or ".foundry" or ".aitk" or ".docker" or ".vscode" or ".cursor" or ".claude" or ".gemini" or ".github" or ".codex"
+            // Modellmapper: Metas nedlastinger, PaddleOCR/PaddleX (Baidu), InsightFace, Keras, EasyOCR, rembg (u2net), TabbyML, DeepFace
+            or ".llama" or ".paddleocr" or ".paddlex" or ".insightface" or ".keras" or ".EasyOCR" or ".u2net" or ".tabby" or ".deepface")) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: "mappe som starter med punktum, ikke en kjent AI-mappe"); return; }
         if (!Fullt && navn is "Windows" or "$Recycle.Bin" or "System Volume Information" or "Program Files" or "Program Files (x86)" or "ProgramData") { Tilgangslogg.Logg("Mappe", mappe, Utfall.HoppetOver, "hoppes over av regel (systemmappe eller sjekkes av egen sjekk)"); return; }
 
         IEnumerable<FileSystemInfo> innhold;
@@ -747,11 +798,17 @@ public sealed partial class Skanner
         }
         long lengde;
         try { lengde = malLengde ?? fil.Length; } catch { return; }
-        bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024;
+        // Små filer som likevel er modeller: ONNX/TFLite over 5 MB, og LoRA-tillegg (.safetensors, .gguf, Ollama-lag) over 1 MB.
+        // Et lite tillegg kan gjøre en vanlig modell sensurfri eller ondsinnet.
+        bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024
+                     || (ext is ".safetensors" or ".gguf" || fil.Name.StartsWith("sha256-", StringComparison.OrdinalIgnoreCase)) && lengde > 1024 * 1024;
         if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff, lengde); return; }
         // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
-        if (!Fullt && ext is ".zip" or ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".exe" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
+        // .zip og .exe sjekkes også i hurtigsøket: zip-katalogen (modell pakket i zip) og llamafile (modell og program i én .exe)
+        if (!Fullt && ext is ".7z" or ".rar" or ".iso" or ".mp4" or ".mkv" or ".mov" or ".avi" or ".msi" or ".vhdx" or ".pst" or ".ost" or ".jpg" or ".png") return;
         var modell = ModellFormat.Gjenkjenn(fil.FullName);
+        // Små GGUF-filer uten vekter er bare ordforråd (f.eks. llama.cpp sine testfiler), ikke modeller
+        if (modell is { Format: "GGUF", Tensorer: 0 } && lengde < minLengde && minLengde > 0) return;
         if (modell != null) lock (ff) ff.Modeller.Add((fil.FullName, lengde, modell));
     }
 
@@ -791,6 +848,12 @@ public sealed partial class Skanner
     {
         var hf = Regex.Match(sti, @"models--([^\\/]+?)--([^\\/]+)");
         if (hf.Success) return $"{hf.Groups[1].Value}/{hf.Groups[2].Value}";
+        // ModelScope (Alibabas modellager, ~/.cache/modelscope/hub/[models/]<org>/<navn>) og LM Studio (models/<utgiver>/<repo>)
+        // Kilder: modelscope.cn/docs (MODELSCOPE_CACHE), lmstudio.ai/docs/app/basics/import-model (models/publisher/repo)
+        var ms = Regex.Match(sti, @"[\\/]modelscope[\\/]hub[\\/](?:models[\\/])?([^\\/]+)[\\/]([^\\/]+)[\\/]", RegexOptions.IgnoreCase);
+        if (ms.Success && ms.Groups[1].Value is not ("datasets" or "._____temp")) return $"{ms.Groups[1].Value}/{ms.Groups[2].Value.Replace("___", ".")}";
+        var lm = Regex.Match(sti, @"[\\/](?:\.lmstudio|\.cache[\\/]lm-studio)[\\/]models[\\/]([^\\/]+)[\\/]([^\\/]+)[\\/]", RegexOptions.IgnoreCase);
+        if (lm.Success) return $"{lm.Groups[1].Value}/{lm.Groups[2].Value}";
         var blob = Regex.Match(sti, @"^(.*[\\/]blobs)[\\/]sha256[-:]([0-9a-f]{64})$", RegexOptions.IgnoreCase);
         if (!blob.Success) return null;
         Dictionary<string, string> kart;
@@ -814,7 +877,7 @@ public sealed partial class Skanner
                        ? $"uten navn ({id.FamilieTekst})" : ollamaBlob ? "Ollama-modell" : filnavn);
         bool farligPlass = ErRisikabelPlass(sti);
         // Modeller i kjente programmer (Ollama, LM Studio, GPT4All, Hugging Face-lageret) er gule. Alle andre er ukjente og røde.
-        bool kjentSted = Regex.IsMatch(sti, @"\.ollama|lmstudio|lm-studio|nomic\.ai|huggingface|\.foundry", RegexOptions.IgnoreCase);
+        bool kjentSted = Regex.IsMatch(sti, @"\.ollama|lmstudio|lm-studio|nomic\.ai|huggingface|modelscope|\.foundry", RegexOptions.IgnoreCase);
         var risiko = kjentSted && !m.KanKjoreKode ? Risiko.Gul : Risiko.Rod;
         var hvorfor = m.KanKjoreKode
             ? "AI-modell i et format som kan kjøre skjult kode når den åpnes."
@@ -878,6 +941,27 @@ public sealed partial class Skanner
                 f.Advarsel($"Forkledd: AI-modell ({m.Format}) med endelsen {endelse.ToLowerInvariant()}.");
             }
         }
+        if (m.Inni != null) f.Detalj($"Modellen ligger inni fila: {m.Inni}");
+        if (m.Format.StartsWith("llamafile", StringComparison.Ordinal)) f.Advarsel("Kan kjøre skjult kode: AI-modell og program i én fil (llamafile) som kan startes direkte.");
+        if (id.Kvantisering != null) f.Detalj($"Komprimert med {id.Kvantisering}");
+        if (m.VokabId != null) f.Detalj($"Ordforråds-ID (SHA-256 av ordlista, lik for alle modeller med samme ordforråd): {m.VokabId}");
+        if (m.Lisens != null) f.Detalj($"Lisens i fila: {Kutt(m.Lisens, 60)}");
+        if (m.KildeUrl != null) f.Detalj($"Kilde i fila: {Kutt(m.KildeUrl, 120)}");
+        if (ModellFormat.KinesiskFormat(m.Format) is { } kf) f.Merknad($"Formatet er laget av {kf} i Kina. Modellen kan være laget av andre.");
+        // Egen Python-kode som kjører når modellen lastes med trust_remote_code
+        if (id.EgenKode != null) f.Advarsel($"Kan kjøre skjult kode: modellen har egen Python-kode ({id.EgenKode}) som kjører når den lastes med trust_remote_code.");
+        // Hva modellen er laget for, kjent på navn og merkelapper (vektene kan ikke vise det uten å laste modellen)
+        if (id.Formaal is { } fm)
+        {
+            if (fm.Kategori == "angrep")
+            {
+                f.Risiko = Risiko.Rod;
+                f.Advarsel($"Angrepsmodell: {fm.Navn}. Laget for å lage angrep eller skadevare (kjent på navnet).");
+            }
+            else if (fm.Kategori == "sensurfri") f.Advarsel($"Sensurfri: {fm.Navn}. Sikkerhetssperren er fjernet, så den svarer på alt (kjent på navnet).");
+            else f.Merknad($"Sikkerhetsmodell: {fm.Navn}.");
+            if (fm.Kilde != null) f.Detalj($"Kilde for formålet: {fm.Kilde}");
+        }
         YaraPaModell(sti, f);
         // Modeller fra høyrisikoland (Kina, Russland …) er røde, også lokalt: navnet (finjusteringen) teller før innholdet (grunnmodellen)
         if (new[] { id.NavneFamilie, id.Familie }.FirstOrDefault(x => x?.Land is { } l && _regler.HoyrisikoLand.Contains(l)) is { } hf)
@@ -900,6 +984,7 @@ public sealed partial class Skanner
 
     private static string Mappenavn(string sti)
     {
+        if (sti.StartsWith(@"\\wsl", StringComparison.OrdinalIgnoreCase)) return "i Linux (WSL)";
         if (Regex.IsMatch(sti, @"[\\/](Downloads|Nedlastinger)[\\/]", RegexOptions.IgnoreCase)) return "i Nedlastinger";
         if (Regex.IsMatch(sti, @"[\\/](Desktop|Skrivebord)[\\/]", RegexOptions.IgnoreCase)) return "på skrivebordet";
         if (sti.Inneholder(".ollama")) return "i Ollama";

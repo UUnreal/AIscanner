@@ -216,13 +216,7 @@ public sealed partial class Skanner
         LeggTilFarlige(ff);
         // Modeller fra Hugging Face, LM Studio osv. og Python/Node med AI i AppData
         foreach (var (sti, lengde, m) in ff.Modeller.OrderByDescending(m => m.Lengde)) LeggTilModell(sti, lengde, m);
-        foreach (var (sti, (pakkeliste, agent, sprak)) in ff.Miljoer)
-        {
-            var f = LeggTil($"{sprak}-prosjekt med AI: {Prosjektnavn(sti)}", "Skygge-AI (utvikling)", agent ? Risiko.Rod : Risiko.Gul,
-                agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-                sprak, $"Mappe: {sti} ({string.Join(", ", pakkeliste)})");
-            f.Bruk = $"Bruker {string.Join(", ", pakkeliste.Take(4))}{(pakkeliste.Count > 4 ? " …" : "")}.";
-        }
+        foreach (var (sti, (pakkeliste, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakkeliste, agent, sprak);
     }
 
     private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist, Action<string, int> videre)

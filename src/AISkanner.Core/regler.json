@@ -2346,7 +2346,10 @@
         "qwen25vl",
         "qwen3vl",
         "qwen3next",
-        "qwen3vlmoe"
+        "qwen3vlmoe",
+        "qwen35",
+        "qwen35moe",
+        "qwen4exp"
       ],
       "vokab": [
         151936,
@@ -2369,7 +2372,11 @@
         "deepseek",
         "deepseek2",
         "deepseekv2",
-        "deepseekv3"
+        "deepseekv3",
+        "deepseek2-ocr",
+        "deepseek32",
+        "deepseek4",
+        "deepseek41"
       ],
       "vokab": [
         129280,
@@ -2471,7 +2478,9 @@
         "glm4moe",
         "glm",
         "glm4v",
-        "glm4v_moe"
+        "glm4v_moe",
+        "glm-dsa",
+        "glm5-next"
       ],
       "vokab": [
         151552,
@@ -2503,7 +2512,10 @@
       "land": "CN",
       "arkitekturer": [
         "kimik2",
-        "kimi"
+        "kimi",
+        "kimi-linear",
+        "kimi-k3",
+        "kimi-k31"
       ],
       "vokab": [
         163840
@@ -2672,7 +2684,10 @@
         "hunyuan-moe",
         "hunyuan-dense",
         "hunyuan_v1_moe",
-        "hunyuan_v1_dense"
+        "hunyuan_v1_dense",
+        "hunyuan_vl",
+        "hy_v3",
+        "hy_v4"
       ],
       "vokab": [],
       "ord": [
@@ -2711,7 +2726,9 @@
       "land": "CN",
       "arkitekturer": [
         "minimax-m2",
-        "minimax_m2"
+        "minimax_m2",
+        "minimax-01",
+        "minimax-m3"
       ],
       "vokab": [],
       "ord": [
@@ -2727,7 +2744,8 @@
       "arkitekturer": [
         "bailingmoe",
         "bailingmoe2",
-        "bailing_moe_v2"
+        "bailing_moe_v2",
+        "bailingmoe3"
       ],
       "vokab": [],
       "ord": [
@@ -2744,13 +2762,49 @@
       "utgiver": "rednote (Xiaohongshu)",
       "land": "CN",
       "arkitekturer": [
-        "dots1"
+        "dots1",
+        "dots3note"
       ],
       "vokab": [],
       "ord": [
         "dots.llm"
       ]
-    }
+    },
+    {"navn": "XVERSE", "utgiver": "XVERSE Technology (Shenzhen)", "land": "CN", "arkitekturer": ["xverse"], "vokab": [], "ord": ["xverse"], "kilde": "https://huggingface.co/xverse · arkitektur xverse i llama.cpp https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "Orion", "utgiver": "OrionStar", "land": "CN", "arkitekturer": ["orion"], "vokab": [], "ord": ["orion-14b", "orionstarai/"], "kilde": "https://huggingface.co/OrionStarAI · arkitektur orion i llama.cpp https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "CodeShell", "utgiver": "WisdomShell (Peking-universitetet)", "land": "CN", "arkitekturer": ["codeshell"], "vokab": [], "ord": ["codeshell", "wisdomshell/"], "kilde": "https://huggingface.co/WisdomShell/CodeShell-7B · arkitektur codeshell https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "openPangu", "utgiver": "Huawei", "land": "CN", "arkitekturer": ["pangu-embedded"], "vokab": [], "ord": ["pangu"], "kilde": "Arkitektur pangu-embedded (openPangu-Embedded fra Huawei) https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "MiMo", "utgiver": "Xiaomi", "land": "CN", "arkitekturer": ["mimo2"], "vokab": [], "ord": ["xiaomimimo/", "mimo-7b", "mimo-vl", "mimo-v2", "mimo-audio"], "kilde": "https://huggingface.co/XiaomiMiMo · arkitektur mimo2 https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "Step", "utgiver": "StepFun", "land": "CN", "arkitekturer": ["step35"], "vokab": [], "ord": ["stepfun", "step-audio", "step-video", "step1x", "step3-vl"], "kilde": "https://huggingface.co/stepfun-ai · arkitektur step35 https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "Nanbeige", "utgiver": "Kanzhun (BOSS Zhipin)", "land": "CN", "arkitekturer": ["nanbeige"], "vokab": [], "ord": ["nanbeige"], "kilde": "https://huggingface.co/Nanbeige · arkitektur nanbeige https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "SenseNova", "utgiver": "SenseTime", "land": "CN", "arkitekturer": ["sensenova_u1"], "vokab": [], "ord": ["sensenova"], "kilde": "Arkitektur sensenova_u1 https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py · SenseTime, Shanghai https://www.sensetime.com/en"},
+    {"navn": "CogVLM / CogVideoX / CogView", "utgiver": "Zhipu AI (Z.ai)", "land": "CN", "arkitekturer": ["cogvlm"], "vokab": [], "ord": ["cogvlm", "cogvideo", "cogview", "cogagent", "thudm/", "zai-org/"], "kilde": "https://huggingface.co/zai-org (tidligere THUDM, Tsinghua) · arkitektur cogvlm https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "Skywork", "utgiver": "Kunlun Tech", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["skywork"], "kilde": "https://huggingface.co/Skywork"},
+    {"navn": "Aquila", "utgiver": "BAAI", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["aquila"], "kilde": "https://huggingface.co/BAAI (Beijing Academy of Artificial Intelligence https://www.baai.ac.cn/en/)"},
+    {"navn": "TeleChat", "utgiver": "China Telecom", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["telechat", "tele-ai/"], "kilde": "https://huggingface.co/Tele-AI"},
+    {"navn": "LongCat", "utgiver": "Meituan", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["longcat"], "kilde": "https://huggingface.co/meituan-longcat"},
+    {"navn": "Wan", "utgiver": "Alibaba", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["wan2.1", "wan2.2", "wan2.5", "wan-ai/"], "kilde": "https://huggingface.co/Wan-AI"},
+    {"navn": "Kolors", "utgiver": "Kuaishou", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["kolors", "kwai-kolors/"], "kilde": "https://huggingface.co/Kwai-Kolors"},
+    {"navn": "GTE", "utgiver": "Alibaba", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["gte-qwen", "gte-multilingual", "alibaba-nlp/", "thenlper/"], "kilde": "https://huggingface.co/Alibaba-NLP · https://huggingface.co/thenlper/gte-large (Alibaba DAMO Academy)"},
+    {"navn": "CosyVoice / SenseVoice / FunASR", "utgiver": "Alibaba (Tongyi)", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["cosyvoice", "sensevoice", "funasr", "funaudiollm/", "paraformer"], "kilde": "https://huggingface.co/FunAudioLLM · https://github.com/modelscope/FunASR"},
+    {"navn": "PaddleOCR / PaddlePaddle", "utgiver": "Baidu", "land": "CN", "arkitekturer": ["paddleocr"], "vokab": [], "ord": ["paddleocr", "pp-ocr", "ppocr", "paddlepaddle/", "pp-doclayout"], "kilde": "https://huggingface.co/PaddlePaddle · arkitektur paddleocr https://github.com/ggml-org/llama.cpp/blob/master/gguf-py/gguf/constants.py"},
+    {"navn": "Megrez", "utgiver": "Infinigence AI", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["megrez"], "kilde": "https://huggingface.co/Infinigence/Megrez-3B-Instruct (ordforrådet megrez i llama.cpp convert_hf_to_gguf_update.py)"},
+    {"navn": "Youtu", "utgiver": "Tencent", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["youtu-llm", "youtu-"], "kilde": "https://huggingface.co/tencent/Youtu-LLM-2B"},
+    {"navn": "JoyAI", "utgiver": "JD.com", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["joyai"], "kilde": "https://huggingface.co/jdopensource/JoyAI-LLM-Flash"},
+    {"navn": "Kandinsky", "utgiver": "Sber", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["kandinsky", "kandinskylab/"], "kilde": "Kandinsky 5.0, Sber AI https://arxiv.org/abs/2511.14993 · https://huggingface.co/kandinskylab"},
+    {"navn": "GigaAM", "utgiver": "Sber (SaluteDevices)", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["gigaam"], "kilde": "https://github.com/salute-developers/GigaAM (SaluteDevices, Sber) · https://habr.com/ru/companies/sberdevices/articles/"}
+  ],
+  "_preTokenizer": "Navnet llama.cpp gir ordforrådet i GGUF-fila (tokenizer.ggml.pre), koblet til modellfamilien. Like sterkt som ordforrådets størrelse: følger familien selv om fila får nytt navn. Kilde: https://github.com/ggml-org/llama.cpp/blob/master/convert_hf_to_gguf_update.py (lista models: name og repo).",
+  "preTokenizer": {"qwen2": "Qwen", "qwen35": "Qwen", "deepseek-llm": "DeepSeek", "deepseek-coder": "DeepSeek", "deepseek-v3": "DeepSeek", "chatglm-bpe": "GLM", "glm4": "GLM", "kimi-k2": "Kimi", "hunyuan": "Hunyuan", "hunyuan-dense": "Hunyuan", "hy_v4": "Hunyuan", "bailingmoe": "Ling / Ring", "bailingmoe2": "Ling / Ring", "seed-coder": "Seed-OSS", "minimax-m2": "MiniMax", "megrez": "Megrez", "youtu": "Youtu", "joyai-llm": "JoyAI", "codeshell": "CodeShell", "gigachat": "GigaChat", "minicpm5": "MiniCPM", "llama-bpe": "Llama 3", "llama4": "Llama 3", "llama-spm": "Llama 2 eller eldre Llama-type", "tekken": "Mistral", "pixtral": "Mistral", "gemma": "Gemma", "gemma-2": "Gemma", "phi-3": "Phi", "phi-2": "Phi", "smollm": "SmolLM / StarCoder", "starcoder": "SmolLM / StarCoder", "olmo": "OLMo", "falcon": "Falcon", "falcon3": "Falcon", "falcon-h1": "Falcon", "command-r": "Command R", "bert-bge": "BGE", "bert-bge-large": "BGE"},
+  "_modellFormaal": "Hva modellen er laget for, kjent på navn, finjustering (GGUF general.finetune), merkelapper (general.tags, modellkortets tags) og grunnmodell. angrep = rød, sensurfri = advarsel (gul), sikkerhet = merknad. Vektene kan ikke vise dette uten å laste modellen.",
+  "modellFormaal": [
+    {"navn": "WhiteRabbitNeo (offensiv sikkerhetsmodell)", "kategori": "angrep", "utgiver": "Kindo", "ord": ["whiterabbitneo"], "kilde": "«uncensored … for both offensive and defensive cybersecurity» https://www.securityweek.com/whiterabbitneo-high-powered-potential-of-uncensored-ai-pentesting-for-attackers-and-defenders/ · https://huggingface.co/WhiteRabbitNeo"},
+    {"navn": "DeepHat (offensiv sikkerhetsmodell, tidligere WhiteRabbitNeo)", "kategori": "angrep", "utgiver": "Kindo", "ord": ["deephat"], "kilde": "https://huggingface.co/DeepHat/DeepHat-V1-7B · https://www.deephat.ai"},
+    {"navn": "Kriminell AI-modell (WormGPT, FraudGPT, KawaiiGPT og lignende)", "kategori": "angrep", "ord": ["wormgpt", "fraudgpt", "kawaiigpt", "xanthorox", "ghostgpt", "evilgpt"], "kilde": "Unit 42: «The Dual-Use Dilemma of AI: Malicious LLMs» https://unit42.paloaltonetworks.com/dilemma-of-ai-malicious-llms/"},
+    {"navn": "Sensurfjernet modell (abliterated)", "kategori": "sensurfri", "ord": ["abliterat", "obliterat"], "kilde": "Abliteration fjerner «refusal direction» fra vektene: Arditi m.fl. «Refusal in Language Models Is Mediated by a Single Direction» https://arxiv.org/abs/2406.11717"},
+    {"navn": "Sensurfri modell (uncensored)", "kategori": "sensurfri", "ord": ["uncensored", "decensored", "heretic", "dolphin"], "kilde": "Dolphin: «Dolphin is uncensored» https://huggingface.co/cognitivecomputations/dolphin-2.9-llama3-8b · Heretic: «Remove censorship» https://github.com/p-e-w/heretic"},
+    {"navn": "Sikkerhetsmodell (vokter AI-en)", "kategori": "sikkerhet", "ord": ["llama-guard", "llamaguard", "prompt-guard", "promptguard", "shieldgemma", "granite-guardian", "qwen3guard", "nemoguard", "wildguard"], "kilde": "Vaktmodeller som sorterer farlig innhold inn og ut av en AI: Llama Guard og Prompt Guard (Meta), ShieldGemma (Google), Granite Guardian (IBM), Qwen3Guard (Alibaba), NemoGuard (NVIDIA), WildGuard (Allen AI). Oversikt: https://arxiv.org/html/2511.22047v1"},
+    {"navn": "Sikkerhetsmodell (cybersikkerhet)", "kategori": "sikkerhet", "ord": ["foundation-sec", "fdtn-ai/", "llama-primus", "trend-cybertron/", "lily-cybersecurity", "segolilylabs/"], "kilde": "Cisco Foundation-Sec-8B https://huggingface.co/fdtn-ai/Foundation-Sec-8B · Trend Micro Llama-Primus https://huggingface.co/trend-cybertron/Llama-Primus-Base · «Lily is a cybersecurity assistant» https://huggingface.co/segolilylabs/Lily-Cybersecurity-7B-v0.2"}
   ],
   "godkjentAi": [],
   "_godkjentAi": "AI bedriften har godkjent. Navn som i rapporten (f.eks. \"Microsoft 365 Copilot\") eller domene (f.eks. \"copilot.microsoft.com\"). Blir grønt. IT kan også legge en godkjent-ai.txt ved siden av programmet.",

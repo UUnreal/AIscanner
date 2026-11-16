@@ -21,6 +21,11 @@ public sealed class ModellIdentitet
     public string? Fingeravtrykk { get; init; }
     /// <summary>Navn fra programmet som lastet ned modellen (Ollama-navn eller Hugging Face-navn).</summary>
     public string? Kildenavn { get; init; }
+    /// <summary>Hva modellen er laget for (angrep, sensurfri, sikkerhet), kjent på navn og merkelapper.</summary>
+    public ModellFormaal? Formaal { get; init; }
+    /// <summary>Hvorfor modellen har egen kode som kjører når den lastes (auto_map i config.json, Python-filer ved siden av).</summary>
+    public string? EgenKode { get; init; }
+    public string? Kvantisering { get; init; }
 
     public string? FamilieTekst =>
         Familie == null ? NavneFamilie?.Navn
@@ -54,7 +59,7 @@ internal static class ModellGjenkjenning
         // 2. Supplér med config.json ved siden av (Hugging Face-format)
         string? ark = m.Arkitektur;
         int? vokab = m.Vokab, lag = m.Lag, bredde = m.Bredde;
-        string? configNavn = null;
+        string? configNavn = null, configKlasse = null, kvant = m.Kvantisering, egenKode = null;
         var config = FinnConfig(sti);
         if (config != null)
         {
@@ -68,11 +73,28 @@ internal static class ModellGjenkjenning
                 if (lag == null && r.TryGetProperty("num_hidden_layers", out var nl) && nl.TryGetInt32(out var l)) lag = l;
                 if (bredde == null && r.TryGetProperty("hidden_size", out var hs) && hs.TryGetInt32(out var b)) bredde = b;
                 if (r.TryGetProperty("_name_or_path", out var np) && np.ValueKind == JsonValueKind.String) configNavn = np.GetString();
+                if (r.TryGetProperty("architectures", out var ar) && ar.ValueKind == JsonValueKind.Array && ar.GetArrayLength() > 0 && ar[0].ValueKind == JsonValueKind.String) configKlasse = ar[0].GetString();
+                // quant_method: gptq, awq, exl2, bitsandbytes, fp8 … Kilde: huggingface.co/docs/transformers/main_classes/quantization
+                if (r.TryGetProperty("quantization_config", out var qc) && qc.ValueKind == JsonValueKind.Object && qc.TryGetProperty("quant_method", out var qm) && qm.ValueKind == JsonValueKind.String) kvant ??= qm.GetString()!.ToUpperInvariant();
+                // auto_map: modellen har egen Python-kode som kjøres når den lastes med trust_remote_code=True.
+                // Kilde: https://huggingface.co/docs/transformers/custom_models (auto_map, trust_remote_code)
+                if (r.TryGetProperty("auto_map", out var am) && am.ValueKind == JsonValueKind.Object) egenKode = "auto_map i config.json";
             }
             catch (Exception e) { Tilgangslogg.Feil("Fil", config, e); }
         }
 
-        // 3. Familie fra innholdet
+        // Python-filer med modellkode ved siden av modellen (modeling_*.py, configuration_*.py, tokenization_*.py)
+        if (egenKode == null && config != null)
+            try
+            {
+                var py = Directory.EnumerateFiles(Path.GetDirectoryName(config)!, "*.py").Select(Path.GetFileName).FirstOrDefault(x => Regex.IsMatch(x!, @"^(modeling|configuration|tokenization)_\w+\.py$", RegexOptions.IgnoreCase));
+                if (py != null) egenKode = py;
+            }
+            catch { }
+        var kort = Modellkort(sti);
+
+        // 3. Familie fra innholdet: arkitektur, ordforrådets størrelse og ordforrådets navn i llama.cpp (tokenizer.ggml.pre)
+        string? preFamilie = m.PreTokenizer != null && regler.PreTokenizer.TryGetValue(m.PreTokenizer, out var pf) ? pf : null;
         ModellFamilie? beste = null;
         int besteScore = 0;
         bool arkTreff = false, vokabTreff = false;
@@ -80,16 +102,22 @@ internal static class ModellGjenkjenning
         {
             bool a = ark != null && f.Arkitekturer.Any(x => Norm(x) == Norm(ark));
             bool v = vokab != null && f.Vokab.Contains(vokab.Value);
-            if (f.KreverVokab && !(a && v)) continue;
-            int score = (a ? 2 : 0) + (v ? (f.DeltVokab ? 1 : 2) : 0);
-            if (score > besteScore) { beste = f; besteScore = score; arkTreff = a; vokabTreff = v; }
+            bool p = preFamilie == f.Navn;
+            if (f.KreverVokab && !(a && v) && !p) continue;
+            // Ordforrådets navn veier litt mer enn en delt arkitektur alene (en «llama» med Qwen-ordforråd er Qwen)
+            int score = (a ? 2 : 0) + (v ? (f.DeltVokab ? 1 : 2) : 0) + (p ? 3 : 0);
+            if (score > besteScore) { beste = f; besteScore = score; arkTreff = a; vokabTreff = v || p; }
         }
         if (besteScore < 2) beste = null;
         // Bare arkitekturen, og flere familier bruker den (f.eks. "llama"): for svakt til å sette navn
         if (beste != null && !vokabTreff && regler.Modellfamilier.Count(f => !f.KreverVokab && f.Arkitekturer.Any(x => Norm(x) == Norm(ark))) > 1) beste = null;
 
         // Familien navnet peker på
-        var navn = string.Join(" ", new[] { m.Navn, kildenavn, configNavn, m.BaseModell, m.Organisasjon, Path.GetFileNameWithoutExtension(sti) }.Where(x => x != null)).ToLowerInvariant();
+        var navn = string.Join(" ", new[] { m.Navn, kildenavn, configNavn, m.BaseModell, m.Organisasjon, m.Finjustering, m.Inni, Path.GetFileNameWithoutExtension(sti) }
+            .Concat(m.Merker).Concat(kort).Where(x => x != null)).ToLowerInvariant();
+        // Hva modellen er laget for: angrep veier tyngst, så sensurfri, så sikkerhet
+        var formaal = regler.ModellFormaal.Where(f => f.Ord.Any(o => navn.Contains(o.ToLowerInvariant())))
+            .OrderBy(f => f.Kategori switch { "angrep" => 0, "sensurfri" => 1, _ => 2 }).FirstOrDefault();
         // Navnet kan peke på en annen familie enn innholdet (DeepSeek-R1-Distill-Qwen er DeepSeek-trent, men bygget på Qwen)
         var iNavnet = regler.Modellfamilier.Where(f => f.Ord.Any(o => navn.Contains(o.ToLowerInvariant()))).ToList();
         var navneFamilie = iNavnet.FirstOrDefault(f => f != beste) ?? iNavnet.FirstOrDefault();
@@ -102,6 +130,7 @@ internal static class ModellGjenkjenning
         {
             Familie = beste, NavneFamilie = navneFamilie, Sikkerhet = sikkerhet,
             Sha256 = sha, Fingeravtrykk = fingeravtrykk, Kildenavn = kildenavn ?? configNavn,
+            Formaal = formaal, EgenKode = egenKode, Kvantisering = kvant,
         };
         if (ark != null) id.Bevis.Add($"arkitektur {ark}");
         if (vokab != null) id.Bevis.Add($"ordforråd {vokab.Value.ToString("N0", new System.Globalization.CultureInfo("nb-NO"))} ord");
@@ -110,6 +139,9 @@ internal static class ModellGjenkjenning
         if (m.BaseModell != null) id.Bevis.Add($"laget fra {m.BaseModell}");
         if (m.Organisasjon != null) id.Bevis.Add($"organisasjon {m.Organisasjon}");
         if (m.Produsent != null) id.Bevis.Add($"laget med {m.Produsent}");
+        if (m.PreTokenizer != null) id.Bevis.Add($"ordforrådet heter {m.PreTokenizer}{(preFamilie != null ? $" ({preFamilie})" : "")}");
+        if (configKlasse != null) id.Bevis.Add($"klasse {configKlasse}");
+        if (m.Finjustering != null) id.Bevis.Add($"finjustering {m.Finjustering}");
         return id;
     }
 
@@ -139,22 +171,59 @@ internal static class ModellGjenkjenning
         catch (Exception e) { Tilgangslogg.Feil("Fil", sti, e); return null; }
     }
 
+    /// <summary>
+    /// Merkelapper og grunnmodell fra modellkortet (README.md ved modellen): bare linjene under «tags:» og «base_model:» i hodet mellom «---».
+    /// Resten av kortet leses ikke. Kilde: https://huggingface.co/docs/hub/model-cards (metadata i YAML-hodet).
+    /// </summary>
+    internal static List<string> Modellkort(string sti)
+    {
+        var ut = new List<string>();
+        var kort = FinnVed(sti, "README.md", 256 * 1024);
+        if (kort == null) return ut;
+        try
+        {
+            using var r = new StreamReader(Admintilgang.AapneLes(kort));
+            Tilgangslogg.Logg("Fil", kort, Utfall.Lest, "modellkort: bare tags og base_model");
+            if (r.ReadLine()?.Trim() != "---") return ut;
+            string? felt = null;
+            for (int i = 0; i < 300 && r.ReadLine() is { } l; i++)
+            {
+                if (l.Trim() == "---") break;
+                var kv = Regex.Match(l, @"^([A-Za-z_]+):\s*(.*)$");
+                if (kv.Success)
+                {
+                    felt = kv.Groups[1].Value is "tags" or "base_model" ? kv.Groups[1].Value : null;
+                    if (felt != null && kv.Groups[2].Value.Trim() is { Length: > 0 } v)
+                        ut.AddRange(v.Trim('[', ']').Split(',').Select(x => x.Trim().Trim('"', '\'')).Where(x => x.Length is > 0 and < 120));
+                    continue;
+                }
+                var punkt = Regex.Match(l, @"^\s*-\s*(.+)$");
+                if (felt != null && punkt.Success && ut.Count < 60) ut.Add(punkt.Groups[1].Value.Trim().Trim('"', '\''));
+                else if (!punkt.Success && !l.StartsWith(" ")) felt = null;
+            }
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", kort, e); }
+        return ut;
+    }
+
     /// <summary>config.json i samme mappe, eller i Hugging Face-lagerets snapshots-mappe for en blob.</summary>
-    private static string? FinnConfig(string sti)
+    private static string? FinnConfig(string sti) => FinnVed(sti, "config.json", 256 * 1024);
+
+    private static string? FinnVed(string sti, string filnavn, long maks)
     {
         try
         {
             var mappe = Path.GetDirectoryName(sti);
             if (mappe == null) return null;
-            var her = Path.Combine(mappe, "config.json");
-            if (File.Exists(her) && new FileInfo(her).Length < 256 * 1024) return her;
+            var her = Path.Combine(mappe, filnavn);
+            if (File.Exists(her) && new FileInfo(her).Length < maks) return her;
             if (HfBlob.IsMatch(sti))
             {
                 var snapshots = Path.Combine(Path.GetDirectoryName(mappe)!, "snapshots");
                 foreach (var s in Directory.EnumerateDirectories(snapshots))
                 {
-                    var c = Path.Combine(s, "config.json");
-                    if (File.Exists(c) && new FileInfo(c).Length < 256 * 1024) return c;
+                    var c = Path.Combine(s, filnavn);
+                    if (File.Exists(c) && new FileInfo(c).Length < maks) return c;
                 }
             }
         }
@@ -189,12 +258,17 @@ internal static class ModellGjenkjenning
                     if (deler.Length >= 3 && deler[deler.Length - 3] != "library") modell = deler[deler.Length - 3] + "/" + modell;
                     var navn = $"{modell}:{deler[deler.Length - 1]}";
                     foreach (var l in lag.EnumerateArray())
-                        if (l.TryGetProperty("mediaType", out var mt) && mt.GetString()?.EndsWith(".model") == true &&
-                            l.TryGetProperty("digest", out var d) && d.GetString() is { } digest)
+                    {
+                        // Lag av typen model, adapter (LoRA-tillegg) og projector (bildedel). Lag med systemprompt eller mal leses aldri.
+                        // Kilde: github.com/ollama/ollama server/images.go (application/vnd.ollama.image.model/.adapter/.projector)
+                        var type = l.TryGetProperty("mediaType", out var mt) ? mt.GetString() : null;
+                        var tillegg = type?.EndsWith(".model") == true ? "" : type?.EndsWith(".adapter") == true ? " (LoRA-tillegg)" : type?.EndsWith(".projector") == true ? " (bildedel)" : null;
+                        if (tillegg != null && l.TryGetProperty("digest", out var d) && d.GetString() is { } digest)
                         {
                             var hex = digest.Replace("sha256:", "");
-                            kart[hex] = kart.TryGetValue(hex, out var fra) ? fra + ", " + navn : navn;
+                            kart[hex] = kart.TryGetValue(hex, out var fra) ? fra + ", " + navn + tillegg : navn + tillegg;
                         }
+                    }
                 }
                 catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); }
             }

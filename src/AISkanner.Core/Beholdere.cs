@@ -21,6 +21,8 @@ public sealed partial class Skanner
         "mintplexlabs/anythingllm", "danny-avila/librechat", "flowiseai/flowise", "langgenius/dify-api", "langgenius/dify-web",
         "milvusdb/milvus", "semitechnologies/weaviate", "comfyui", "stable-diffusion-webui", "invokeai/invokeai", "h2oai/h2ogpt",
         "lmsysorg/sglang", "michaelf34/infinity", "ghcr.io/huggingface/text-embeddings-inference", "nvcr.io/nim/",
+        // Docker Model Runner og modeller som OCI-bilder i «ai/» på Docker Hub. Kilde: https://docs.docker.com/ai/model-runner/
+        "docker/model-runner", "ai/", "docker.io/ai/",
     };
 
     private void Beholdere()
@@ -123,17 +125,23 @@ public sealed partial class Skanner
                 continue;
             }
             var rot = $@"\\wsl.localhost\{navn}";
-            var hjem = new[] { Path.Combine(rot, "root") }.Concat(Mapper(Path.Combine(rot, "home")));
+            // Ollama som Linux-tjeneste lagrer modellene under brukeren «ollama»: /usr/share/ollama/.ollama/models. Kilde: https://docs.ollama.com/faq
+            var hjem = new[] { Path.Combine(rot, "root"), Path.Combine(rot, "usr", "share", "ollama") }.Concat(Mapper(Path.Combine(rot, "home")));
             foreach (var h in hjem)
             {
-                foreach (var (under, hva) in new[] { (@".ollama\models\manifests", "Ollama-modeller"), (@".cache\huggingface\hub", "Hugging Face-modeller"), (@".cache\lm-studio\models", "LM Studio-modeller") })
+                foreach (var (under, hva) in new[] { (@".ollama\models", "Ollama-modeller"), (@".cache\huggingface\hub", "Hugging Face-modeller"), (@".cache\lm-studio\models", "LM Studio-modeller"), (@".cache\modelscope\hub", "ModelScope-modeller") })
                 {
                     var m = Path.Combine(h, under);
                     if (!Directory.Exists(m)) continue;
-                    var antall = Plattform.Filer(m, "*", 4).Count();
-                    if (antall == 0) continue;
+                    var filer = Plattform.Filer(m, "*", 6).Take(5000).ToList();
+                    if (filer.Count == 0) continue;
+                    // Hver modell kjennes igjen på innholdet som på Windows, så familie og land (Kina, Russland) blir med
+                    int kjent = 0;
+                    foreach (var fil in filer.Where(x => x.Length >= 20L * 1024 * 1024))
+                        if (ModellFormat.Gjenkjenn(fil.FullName) is { } modell) { LeggTilModell(fil.FullName, fil.Length, modell); kjent++; }
+                    if (kjent > 0) continue;
                     var f = LeggTil($"AI-modeller i Linux (WSL): {navn}", "Lokal AI", Risiko.Gul, "AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Windows ser programmet.", "WSL", null, enkelt: "AI i WSL");
-                    f.Detalj($"{hva}: {m} · {antall} filer");
+                    f.Detalj($"{hva}: {m} · {filer.Count} filer");
                     f.Merk(Tilstand.Finnes);
                     f.Sterkt();
                 }
