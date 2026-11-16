@@ -301,17 +301,33 @@ public sealed partial class Skanner
         f.Detalj("Regel: ATLAS AML.T0053 · kartlagt på Insider-bygg (originhq.com/research/msft-odr-mcp), ikke bekreftet på 26H2");
     }
 
-    private void WindowsAiApp(string pakke, string manifest)
+    internal void WindowsAiApp(string pakke, string manifest)
     {
         var info = Pakkeinfo(pakke);
         var utgiver = info?.Utgiver;
         var visning = info?.Navn ?? Pakkenavn(Path.GetFileName(pakke));
+        var kilde = $"Fil: {manifest} · ber om systemAIModels{(utgiver != null ? " · utgiver " + utgiver : "")}";
+        // Microsofts egne apper (Paint, Bilder, Notisblokk, Outlook …) samles i ett grønt funn. Utgiveren er bekreftet av Windows:
+        // pakke-ID-en 8wekyb3d8bbwe regnes ut fra Microsoft Corporation sitt signeringssertifikat, og WindowsApps kan bare Windows skrive i.
+        // Kilde: https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/package-identity-overview (Publisher ID)
+        if (ErMicrosoftPakke(Path.GetFileName(pakke)))
+        {
+            var ms = LeggTil("Microsofts apper bruker Windows' egen AI", LeverandorKategori, Risiko.Gronn,
+                "Apper fra Microsoft har bedt om å bruke Windows' egen språkmodell og AI-funksjoner (Phi Silica) på PC-en. Utgiveren er bekreftet av Windows.", "Windows-app",
+                $"{Kutt(visning, 50)} · {kilde}");
+            ms.Merk(Tilstand.SattOpp);
+            ms.Sterkt();
+            return;
+        }
         var f = LeggTil($"Bruker Windows' egen AI: {Kutt(visning, 50)}", LeverandorKategori, Risiko.Gul,
             "Appen har bedt om å bruke Windows' egen språkmodell og AI-funksjoner (Phi Silica) på PC-en.", "Windows-app",
-            $"Fil: {manifest} · ber om systemAIModels{(utgiver != null ? " · utgiver " + utgiver : "")}");
+            kilde);
         f.Merk(Tilstand.SattOpp);
         f.Sterkt();
     }
+
+    /// <summary>"Microsoft.Paint_11.2_x64__8wekyb3d8bbwe" er fra Microsoft Corporation; "Clipchamp.Clipchamp_…__yxz26nhyzhsrt" er ikke bekreftet.</summary>
+    internal static bool ErMicrosoftPakke(string mappe) => mappe.EndsWith("__8wekyb3d8bbwe", StringComparison.OrdinalIgnoreCase);
 
     // ---------- Etter filgjennomgangen ----------
 

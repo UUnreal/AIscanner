@@ -158,6 +158,20 @@ public sealed partial class Skanner
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");
         Sjekk(System.Text.RegularExpressions.Regex.IsMatch("<systemai:Capability Name=\"systemAIModels\"/>", @"Capability\s+Name\s*=\s*""systemAIModels""", System.Text.RegularExpressions.RegexOptions.IgnoreCase), "systemAIModels i AppxManifest kjennes ikke igjen");
+        // Microsofts egne apper med systemAIModels: ett grønt funn, ikke ett gult per app. Andre utgivere er gule.
+        var wa = new Skanner(regler);
+        foreach (var (d, navn) in new[] { ("Microsoft.Paint_11.2_x64__8wekyb3d8bbwe", "Paint"), ("Microsoft.WindowsNotepad_11.2_x64__8wekyb3d8bbwe", "Notisblokk"), ("Clipchamp.Clipchamp_4.7_x64__yxz26nhyzhsrt", "Clipchamp") })
+        {
+            var pk = Path.Combine(mappe, "WindowsApps", d);
+            Directory.CreateDirectory(pk);
+            var man = Path.Combine(pk, "AppxManifest.xml");
+            File.WriteAllText(man, $"<Package><Properties><DisplayName>{navn}</DisplayName><PublisherDisplayName>Microsoft Corporation</PublisherDisplayName></Properties><Capabilities><systemai:Capability Name=\"systemAIModels\"/></Capabilities></Package>");
+            wa.WindowsAiApp(pk, man);
+        }
+        var waMs = wa._funn.Values.Where(x => x.Navn == "Microsofts apper bruker Windows' egen AI").ToList();
+        Sjekk(waMs.Count == 1 && waMs[0].Risiko == Risiko.Gronn && waMs[0].Detaljer.Count(x => x.Contains("systemAIModels")) == 2, "Microsofts apper med Windows' egen AI ble ikke samlet i ett grønt funn");
+        Sjekk(wa._funn.Values.Count(x => x.Navn.StartsWith("Bruker Windows' egen AI")) == 1 && wa._funn.Values.First(x => x.Navn.StartsWith("Bruker Windows' egen AI")).Risiko == Risiko.Gul, "app fra ikke-bekreftet utgiver med Windows' egen AI ble ikke gul");
+        Sjekk(ErMicrosoftPakke("Microsoft.Paint_11.2_x64__8wekyb3d8bbwe") && !ErMicrosoftPakke("Falsk.App_1.0_x64__8wekyb3d8bbwex") && !ErMicrosoftPakke("Microsoft.Fake_1.0_x64__abcdefghijklm"), "Microsoft-pakke kjennes feil igjen");
         return (ok, alle);
     }
 
