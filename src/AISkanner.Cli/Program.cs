@@ -253,6 +253,11 @@ static class Selvtest
         Sjekk("skygge: åpen mot nettverket er rød", sa.Risiko == Risiko.Rod && sa.RisikoGrunn!.StartsWith("Ikke godkjent av IT, og:"), true);
         var sr = Skygge(Risiko.Rod); Risikoregler.Bruk(new[] { sr }, new Regelsett());
         Sjekk("skygge: rød fra søket forblir rød", sr.Risiko == Risiko.Rod, true);
+        // Modell fra høyrisikoland: rød også lokalt, også når IT har godkjent den
+        var kina = new Funn { Navn = "Ollama", Kategori = "Lokal AI", Risiko = Risiko.Gul, Hvorfor = "x", Regel = new Produkt { Navn = "Ollama", Kategori = "Lokal AI", Risiko = "gul", Hvorfor = "y" } };
+        kina.Advarsel("Laget av Alibaba i Kina (høyrisikoland). Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
+        Risikoregler.Bruk(new[] { kina }, regelsett);
+        Sjekk("høyrisikoland: godkjent modell fra Kina er rød", kina.Risiko == Risiko.Rod, true);
 
         // Datagrunnlag: feilkoder fra Windows gir riktig utfall (antivirus 225/226 skal aldri se ut som "finnes ikke")
         Sjekk("tilgang: 225 = stoppet av antivirus", Tilgangslogg.Fra(new IOException("x", unchecked((int)0x800700E1))) == Utfall.Blokkert, true);

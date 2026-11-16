@@ -879,9 +879,12 @@ public sealed partial class Skanner
             }
         }
         YaraPaModell(sti, f);
-        // Modeller fra høyrisikoland (Kina, Russland …): navnet (finjusteringen) teller før innholdet (grunnmodellen)
+        // Modeller fra høyrisikoland (Kina, Russland …) er røde, også lokalt: navnet (finjusteringen) teller før innholdet (grunnmodellen)
         if (new[] { id.NavneFamilie, id.Familie }.FirstOrDefault(x => x?.Land is { } l && _regler.HoyrisikoLand.Contains(l)) is { } hf)
-            f.Merknad($"Laget av {hf.Utgiver} i {IpLand.Navn(hf.Land!)}. Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
+        {
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"Laget av {hf.Utgiver} i {IpLand.Navn(hf.Land!)} (høyrisikoland). Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
+        }
     }
 
     /// <summary>Gir generiske filnavn ("model", "pytorch_model-00001-of-00004") et bedre navn fra mappene rundt.</summary>

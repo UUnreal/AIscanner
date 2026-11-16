@@ -36,6 +36,13 @@ Kategoriene er:
 - Utviklerdokumentasjon: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/ARKITEKTUR.md` og
   `docs/REGELFILER.md`. `README.md`, `IT-INFO.md` og `CODE_SIGNING.md` er skrevet om og oppdatert.
 
+## [2.52.12] - 2026-11-16
+
+### Endret
+- AI-modeller laget i et høyrisikoland (Kina, Russland, Iran, Nord-Korea) er røde, også når de bare ligger lokalt og
+  også når IT har godkjent dem. Grunnen står som «Laget av … i …». Landet kommer fra modellfamilien i `regler.json`
+  (med kilde), ikke fra gjetning.
+
 ## [2.52.11] - 2026-11-15
 
 Fargen sier nå hvor farlig noe er, ikke bare om IT har godkjent det. Ingen sjekker er endret eller tatt bort.
