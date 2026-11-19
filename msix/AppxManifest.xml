@@ -3,7 +3,7 @@
   Microsoft Store-pakken (MSIX). Byggeløypa (jobben «store») legger AISkanner.exe og Assets ved siden av og setter
   versjonen fra src/Directory.Build.props. Microsoft signerer pakken når den er godkjent i Store.
   Identity Name, Publisher og PublisherDisplayName skal være nøyaktig det Partner Center viser under
-  «Product identity» når navnet er reservert. Til da er de plassholdere, og pakken kan ikke lastes opp.
+  «Product identity» for det reserverte navnet findhiddenai (Store ID 9N1LCHBBT33G). DisplayName = det reserverte navnet.
   Ingen allowElevation: den trengs bare for automatisk admin-start, og Microsoft godkjenner den bare for partnere og
   bedrifter. Admin-søket ber om godkjenning (UAC) når brukeren trykker på det, som i AISkanner.exe.
 -->
@@ -14,10 +14,10 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap uap3 desktop rescap">
-  <Identity Name="AISkanner.Plassholder" Publisher="CN=AISkanner-plassholder" Version="0.0.0.0" ProcessorArchitecture="x64" />
+  <Identity Name="JrundHeimholt.Findhiddenai" Publisher="CN=E6192E17-3BCE-42D4-9892-254E959A2F78" Version="0.0.0.0" ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>AI-skanner</DisplayName>
-    <PublisherDisplayName>AI-skanner</PublisherDisplayName>
+    <DisplayName>findhiddenai</DisplayName>
+    <PublisherDisplayName>Jørund Heimholt</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
@@ -29,7 +29,7 @@
   </Resources>
   <Applications>
     <Application Id="AISkanner" Executable="AISkanner.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="AI-skanner" Description="Finner AI på PC-en. Leser bare, lagrer ingenting."
+      <uap:VisualElements DisplayName="findhiddenai" Description="Finner AI på PC-en. Leser bare, lagrer ingenting."
         BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" />
       <Extensions>
         <!-- Kommandolinjen: «AISkanner» virker i cmd og PowerShell. Byggeløypa tester pakken slik. -->
