@@ -31,6 +31,7 @@ Kategoriene er:
 - Gemini Nano i Chrome (modellfil i nettleserens egen modellmappe) er «Sannsynlig», ikke «Mulig spor».
 - Mulig spor på kjente produkter heter «Ikke bekreftet» i oversikten, ikke «Ukjent AI-spor». «Ukjent» brukes bare når opphavet er ukjent.
 - Program med AI-motor signert av en annen enn programmet (f.eks. Microsofts onnxruntime.dll i Lenovo) sa «Microsoft har lagt AI inn i programmet». Nå: «AI-motoren er signert av Microsoft; selve programmet er ikke signert av dem».
+- Windows-apper uten lesbart visningsnavn vises ikke dobbelt («Clipchamp.Clipchamp» blir «Clipchamp»).
 - Microsoft 365 Copilot-appen (m365copilot.exe) er egen rad, «Microsoft 365 Copilot (jobb)», atskilt fra forbruker-appen Microsoft Copilot.
 
 ### Ikke testet på Windows
