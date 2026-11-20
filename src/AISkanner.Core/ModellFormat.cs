@@ -431,7 +431,7 @@ public static class ModellFormat
         string? navn = null, type = null;
         int? vokab = null, bredde = null;
         int maksLag = -1;
-        bool lora = false, diffusjon = false, flux = false;
+        bool lora = false, diffusjon = false, flux = false, sd3 = false, sdxl = false, kontroll = false, ipBilde = false, ipLag = false, vaeInn = false, vaeUt = false;
         string? kvant = null;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
@@ -452,6 +452,15 @@ public static class ModellFormat
             else if (p.Name.EndsWith(".qweight")) kvant ??= doc.RootElement.EnumerateObject().Any(x => x.Name.EndsWith(".g_idx")) ? "GPTQ" : "GPTQ eller AWQ";
             if (p.Name.StartsWith("model.diffusion_model.") || p.Name.StartsWith("down_blocks.")) diffusjon = true;
             if (p.Name.StartsWith("double_blocks.") || p.Name.StartsWith("transformer_blocks.") && p.Name.Contains("attn.add_q_proj")) flux = true;
+            // Bildemodeller på tensornavn. Kilder: ComfyUI comfy/model_detection.py (joint_blocks = SD3, conditioner.embedders.1 = SDXL,
+            // control_model = ControlNet), tencent-ailab/IP-Adapter (image_proj + ip_adapter), CompVis/latent-diffusion (encoder.down/decoder.up = VAE)
+            if (p.Name.StartsWith("model.diffusion_model.joint_blocks.") || p.Name.StartsWith("joint_blocks.")) sd3 = true;
+            if (p.Name.StartsWith("conditioner.embedders.1.")) sdxl = true;
+            if (p.Name.StartsWith("control_model.") || p.Name.StartsWith("controlnet_cond_embedding.")) kontroll = true;
+            if (p.Name.StartsWith("image_proj.")) ipBilde = true;
+            if (p.Name.StartsWith("ip_adapter.")) ipLag = true;
+            if (p.Name.StartsWith("encoder.down.") || p.Name.StartsWith("first_stage_model.encoder.")) vaeInn = true;
+            if (p.Name.StartsWith("decoder.up.") || p.Name.StartsWith("first_stage_model.decoder.")) vaeUt = true;
             var lagTreff = LagNr.Match(p.Name);
             if (lagTreff.Success) maksLag = Math.Max(maksLag, int.Parse(lagTreff.Groups[1].Value));
             if (p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("shape", out var shape) && shape.ValueKind == JsonValueKind.Array)
@@ -468,7 +477,9 @@ public static class ModellFormat
                 }
             }
         }
-        type = lora ? "LoRA-tillegg (endrer en annen modell)" : flux ? "bildemodell (FLUX)" : diffusjon ? "bildemodell (Stable Diffusion)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
+        type = lora ? "LoRA-tillegg (endrer en annen modell)" : kontroll ? "ControlNet (styrer en bildemodell)" : ipBilde && ipLag ? "IP-Adapter (bilde som mal for stil eller ansikt)"
+            : flux ? "bildemodell (FLUX)" : sd3 ? "bildemodell (Stable Diffusion 3)" : diffusjon && sdxl ? "bildemodell (SDXL)" : diffusjon ? "bildemodell (Stable Diffusion)"
+            : vaeInn && vaeUt ? "VAE (bildekoder til bildemodeller)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
         return new Modell("safetensors", navn, null, parametre > 0 ? parametre : null, false)
         {
             Vokab = vokab, Bredde = bredde, Lag = maksLag >= 0 ? maksLag + 1 : null, Type = type, Kvantisering = kvant,

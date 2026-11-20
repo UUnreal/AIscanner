@@ -121,6 +121,25 @@ public sealed partial class Skanner
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "ov.bin"), new byte[64]))?.Format == "OpenVINO", "OpenVINO-modell (.xml + .bin) ble ikke kjent igjen");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "annet.bin"), new byte[64])) == null, ".bin uten modell ved siden av ble kalt modell");
 
+        // PR 6: bildemodeller på tensornavn (bare hodet i safetensors leses)
+        string St(string navn, params string[] nokler)
+        {
+            var json = "{" + string.Join(",", nokler.Select(k => $"\"{k}\":{{\"dtype\":\"F16\",\"shape\":[4,4],\"data_offsets\":[0,32]}}")) + "}";
+            var h = Encoding.UTF8.GetBytes(json);
+            return WriteAll(Path.Combine(mappe, navn), BitConverter.GetBytes((ulong)h.Length).Concat(h).Concat(new byte[32]).ToArray());
+        }
+        string? Ty(string sti) => ModellFormat.Gjenkjenn(sti)?.Type;
+        Sjekk(Ty(St("sdxl.safetensors", "model.diffusion_model.input_blocks.0.0.weight", "conditioner.embedders.1.model.ln_final.weight")) == "bildemodell (SDXL)", "SDXL ble ikke kjent igjen på tensornavn");
+        Sjekk(Ty(St("sd3.safetensors", "model.diffusion_model.joint_blocks.0.x_block.attn.qkv.weight")) == "bildemodell (Stable Diffusion 3)", "SD3 ble ikke kjent igjen på tensornavn");
+        Sjekk(Ty(St("cn.safetensors", "control_model.input_blocks.0.0.weight")) == "ControlNet (styrer en bildemodell)", "ControlNet ble ikke kjent igjen");
+        Sjekk(Ty(St("ip.safetensors", "image_proj.proj.weight", "ip_adapter.1.to_k_ip.weight")) == "IP-Adapter (bilde som mal for stil eller ansikt)", "IP-Adapter ble ikke kjent igjen");
+        Sjekk(Ty(St("vae.safetensors", "encoder.down.0.block.0.conv1.weight", "decoder.up.0.block.0.conv1.weight")) == "VAE (bildekoder til bildemodeller)", "VAE ble ikke kjent igjen");
+        Sjekk(Ty(St("sd15.safetensors", "model.diffusion_model.input_blocks.0.0.weight")) == "bildemodell (Stable Diffusion)" && Ty(St("ip-halv.safetensors", "image_proj.proj.weight")) == null,
+            "vanlig SD 1.5 ble noe annet, eller halv IP-Adapter ble kjent igjen");
+
+        Sjekk(new[] { ("llava", "LLaVA (bilde + tekst)"), ("whisper", "Whisper"), ("siglip", "SigLIP"), ("sam2", "SAM (Segment Anything)"), ("florence2", "Florence-2") }
+            .All(x => Id(@"C:\m\x.gguf", m: new ModellFormat.Modell("GGUF", null, x.Item1, null, false)).Familie?.Navn == x.Item2), "bilde- eller lydmodell ble ikke kjent igjen på arkitekturen");
+
         // config.json og modellkort: egen kode, komprimering og merkelapper
         var hf = Path.Combine(mappe, "hf");
         Directory.CreateDirectory(hf);
