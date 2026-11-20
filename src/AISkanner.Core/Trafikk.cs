@@ -472,5 +472,5 @@ public sealed partial class Skanner
 
     /// <summary>Kan «Følg med» vise noe for funnet: et program som kjørte eller hadde forbindelser under søket.</summary>
     public bool KanFolges(Funn f) =>
-        _funnPid.ContainsKey(f) || f.Trafikk.Count > 0 || (f.Gruppe != "spor" && !f.Kategori.StartsWith("Nettleser-AI", StringComparison.Ordinal) && _mappeFunn.Values.Contains(f));
+        _funnPid.ContainsKey(f) || f.Trafikk.Count > 0 || (!f.Ukjentspor && !f.Kategori.StartsWith("Nettleser-AI", StringComparison.Ordinal) && _mappeFunn.Values.Contains(f));
 }

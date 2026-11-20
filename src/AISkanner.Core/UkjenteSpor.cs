@@ -84,9 +84,14 @@ public sealed partial class Skanner
         }
     }
 
-    // Alle spor er ukjente og røde (Risikoregler setter «Ukjent AI-spor» til rødt, som annen ukjent AI)
-    private Funn Spor(string navn, string hvorfor, string? detalj) =>
-        LeggTil(navn, SporKategori, Risiko.Rod, hvorfor, SporKategori, detalj, enkelt: navn);
+    // Sporene her er lest fra innholdet i AI-oppsett, logger, skript og pakker, så de er bekreftet AI (bevisstandarden).
+    // Ukjent opphav: Risikoregler gjør dem røde.
+    private Funn Spor(string navn, string hvorfor, string? detalj)
+    {
+        var f = LeggTil(navn, SporKategori, Risiko.Rod, hvorfor, SporKategori, detalj, enkelt: navn);
+        f.Sterkt();
+        return f;
+    }
 
     // ---------- P1: MCP-oppsett ----------
 
@@ -357,6 +362,7 @@ public sealed partial class Skanner
         var f = Spor($"Godkjenn alt: {program}",
             "AI-agenten kan kjøre kommandoer og endre filer uten å spørre.", null);
         f.Tidspunkt(endret, endret);
+        f.Advarsel("Agent som kjører kommandoer uten å spørre («Godkjenn alt» i oppsettet).");
         if (prosjekt) f.Advarsel("«Godkjenn alt» er slått på i en prosjektmappe: gjelder alle som åpner prosjektet.");
         foreach (var x in funn.Distinct())
             f.Detalj($"Fil: {sti} · {x}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");

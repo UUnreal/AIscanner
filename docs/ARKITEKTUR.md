@@ -110,6 +110,20 @@ Hver sjekk kaller `LeggTil(navn, kategori, risiko, …)`. Funn med samme navn sl
 
 ## Risikomodell
 
+**Bevisstandarden (18.11.2026) går foran alt under.** Hvert funn får et bevisnivå (`Funn.Bevisniva`):
+
+| Nivå | Krav | Telles | Kan bli rød |
+|---|---|---|---|
+| Bekreftet | Kjent igjen på innholdet eller målt oppførsel: modellhode, tensorer, kjent hash, AI-oppsett, svar fra AI-tjeneste, målt trafikk til AI | Ja | Ja, med faresignal |
+| Sannsynlig | To uavhengige spor av ulik type, eller en verifisert produktregel som traff noe annet enn bare en mappe | Ja | Ja, med faresignal |
+| Spor | Bare navn, sti, endelse, DNS, kjøremotor eller driver. To stier er fortsatt Spor | Nei, lista «Mulig spor» | Nei |
+
+Ukjent AI er rød bare når den er Bekreftet eller Sannsynlig. «Kommer fra» for ukjent AI leses bare fra bevis
+(signatur, `CompanyName` merket «ikke signert», nedlastingsmerket), ellers «Opphav ukjent»; kilden står i `opphavKilde`.
+Agent som kjører kommandoer uten å spørre er rødt faresignal: flagg på en kjørende prosess, «Godkjenn alt» i et
+oppsett (`bypassPermissions`, `autoApprove`, `chat.tools.autoApprove`, Codex) og agent med farlige flagg i oppstart.
+Hvert funn har også `bevistype`, `drift` (lokal/sky/hybrid/ukjent) og `begrensning`.
+
 Risikoen settes i to trinn.
 
 **Trinn 1: sjekkene.** Hver sjekk setter en foreløpig risiko ut fra det den ser. Eksempler:

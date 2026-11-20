@@ -33,30 +33,19 @@ public sealed partial class Skanner
         (new(@"^MNN\.dll$", RegexOptions.IgnoreCase), "MNN (Alibaba)"),
         (new(@"^ncnn\.dll$", RegexOptions.IgnoreCase), "ncnn (Tencent)"),
         (new(@"^mindspore-lite\.dll$", RegexOptions.IgnoreCase), "MindSpore Lite (Huawei)"),
+        // Kilder: ai.google.dev/edge/litert (tensorflowlite_c), github.com/alphacep/vosk-api (libvosk), github.com/leejet/stable-diffusion.cpp
+        // (stable-diffusion.dll i Windows-utgivelsene), github.com/Tencent/TNN
+        (new(@"^(lib)?tensorflowlite(_c|_gpu_delegate)?\.dll$", RegexOptions.IgnoreCase), "LiteRT/TensorFlow Lite"),
+        (new(@"^libvosk\.dll$", RegexOptions.IgnoreCase), "Vosk (tale)"),
+        (new(@"^stable-diffusion\.dll$", RegexOptions.IgnoreCase), "stable-diffusion.cpp"),
+        (new(@"^TNN\.dll$", RegexOptions.IgnoreCase), "TNN (Tencent)"),
     };
 
     private static readonly string[] KjenteUtgivere = { "Microsoft", "Google", "Adobe", "NVIDIA", "Intel", "Apple", "Mozilla", "Zoom", "AMD", "Qualcomm" };
 
-    // AI-biblioteker. Verdien sier om biblioteket lager agenter som kan handle på egen hånd.
-    private static readonly Dictionary<string, bool> PythonAi = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["torch"] = false, ["tensorflow"] = false, ["transformers"] = false, ["diffusers"] = false, ["accelerate"] = false,
-        ["onnxruntime"] = false, ["llama_cpp"] = false, ["vllm"] = false, ["sentence_transformers"] = false, ["mlx"] = false,
-        ["gpt4all"] = false, ["ctransformers"] = false, ["openai"] = false, ["anthropic"] = false, ["mistralai"] = false,
-        ["cohere"] = false, ["ollama"] = false, ["groq"] = false, ["chromadb"] = false, ["faiss"] = false,
-        ["langchain"] = true, ["langchain_core"] = true, ["langgraph"] = true, ["llama_index"] = true, ["autogen"] = true,
-        ["autogen_agentchat"] = true, ["crewai"] = true, ["smolagents"] = true, ["haystack"] = true,
-        ["interpreter"] = true, ["browser_use"] = true, ["pydantic_ai"] = true, ["agents"] = true,
-        // Finjustering, komprimering og kjøring av modeller
-        ["peft"] = false, ["bitsandbytes"] = false, ["unsloth"] = false, ["gptqmodel"] = false, ["auto_gptq"] = false, ["awq"] = false,
-        ["exllamav2"] = false, ["mlx_lm"] = false, ["optimum"] = false, ["openvino"] = false, ["ultralytics"] = false, ["keras"] = false,
-        ["faster_whisper"] = false, ["whisper"] = false, ["sglang"] = false, ["tensorrt_llm"] = false, ["litellm"] = false, ["dspy"] = false,
-        ["semantic_kernel"] = true,
-        // Kinesiske rammeverk og AI-tjenester (se KinesiskePakker)
-        ["paddle"] = false, ["mindspore"] = false, ["modelscope"] = false, ["dashscope"] = false, ["zhipuai"] = false, ["qianfan"] = false,
-        // Angrep og testing av AI (se AngrepPakker)
-        ["pentestgpt"] = true, ["villager"] = true, ["garak"] = false, ["pyrit"] = false, ["deepteam"] = false,
-    };
+    // AI-biblioteker (pythonPakker og nodePakker i regler.json). Verdien sier om biblioteket lager agenter som kan handle på egen hånd.
+    private static Dictionary<string, bool> PythonAi = new(StringComparer.OrdinalIgnoreCase);
+    private static Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// AI-verktøy laget for å angripe andre maskiner. Kilder: Villager (kinesisk, på PyPI, bruker DeepSeek)
@@ -77,16 +66,6 @@ public sealed partial class Skanner
     internal static readonly Dictionary<string, string> KinesiskePakker = new(StringComparer.OrdinalIgnoreCase)
     {
         ["dashscope"] = "Alibaba", ["zhipuai"] = "Zhipu AI", ["qianfan"] = "Baidu", ["modelscope"] = "Alibaba", ["paddle"] = "Baidu", ["mindspore"] = "Huawei",
-    };
-
-    private static readonly Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["openai"] = false, ["@anthropic-ai/sdk"] = false, ["@google/generative-ai"] = false, ["@google/genai"] = false,
-        ["ollama"] = false, ["@huggingface/transformers"] = false, ["@xenova/transformers"] = false, ["@mlc-ai/web-llm"] = false,
-        ["onnxruntime-node"] = false, ["node-llama-cpp"] = false, ["ai"] = false, ["@ai-sdk/openai"] = false,
-        ["langchain"] = true, ["@langchain/core"] = true, ["@langchain/langgraph"] = true, ["llamaindex"] = true,
-        ["@modelcontextprotocol/sdk"] = true, ["@openai/agents"] = true, ["@anthropic-ai/claude-agent-sdk"] = true,
-        ["promptfoo"] = false,
     };
 
     internal static bool ErNokkelNavn(string navn) => NokkelNavn.IsMatch(navn);
@@ -269,21 +248,42 @@ public sealed partial class Skanner
     /// <summary>Ett lesende GET-kall mot vanlige AI-adresser. Returnerer modellnavn, eller null hvis det ikke er AI.</summary>
     internal static List<string>? Spor(HttpClient klient, int port) => SporAsync(klient, port).GetAwaiter().GetResult();
 
-    /// <summary>Ollama /api/ps: modellene som ligger i minnet nå. Null når serveren ikke har denne adressen.</summary>
+    /// <summary>
+    /// Modellene som ligger i minnet nå: Ollama /api/ps, ellers LM Studio /api/v0/models (state «loaded»). Bare modellnavn leses,
+    /// aldri samtaler. Null når serveren ikke har noen av adressene. Kilder: docs.ollama.com/api, lmstudio.ai/docs/app/api/endpoints/rest
+    /// </summary>
     internal static async Task<List<string>?> LastetNaAsync(HttpClient klient, int port)
     {
+        foreach (var sti in new[] { "/api/ps", "/api/v0/models" })
+        {
+            try
+            {
+                using var svar = await klient.GetAsync($"http://127.0.0.1:{port}{sti}").ConfigureAwait(false);
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
+                if (!svar.IsSuccessStatusCode) continue;
+                var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (Lastet(sti, tekst) is { } l) return l;
+            }
+            catch (Exception e) { if (e is TaskCanceledException) return null; }
+        }
+        return null;
+    }
+
+    /// <summary>Lastede modellnavn fra svaret, eller null når svaret ikke har riktig form.</summary>
+    internal static List<string>? Lastet(string sti, string tekst)
+    {
+        if (tekst.Length > 1_000_000) return null;
         try
         {
-            using var svar = await klient.GetAsync($"http://127.0.0.1:{port}/api/ps").ConfigureAwait(false);
-            Tilgangslogg.Logg("Port", $"127.0.0.1:{port}/api/ps", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
-            if (!svar.IsSuccessStatusCode) return null;
-            var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (tekst.Length > 1_000_000) return null;
             using var doc = JsonDocument.Parse(tekst);
-            if (doc.RootElement.ValueKind != JsonValueKind.Object || !doc.RootElement.TryGetProperty("models", out var m) || m.ValueKind != JsonValueKind.Array) return null;
-            return m.EnumerateArray().Select(x => Str(x, "name") ?? Str(x, "model")).OfType<string>().ToList();
+            var r = doc.RootElement;
+            if (sti == "/api/ps")
+                return r.ValueKind == JsonValueKind.Object && r.TryGetProperty("models", out var m) && m.ValueKind == JsonValueKind.Array
+                    ? m.EnumerateArray().Select(x => Str(x, "name") ?? Str(x, "model")).OfType<string>().ToList() : null;
+            return r.ValueKind == JsonValueKind.Object && r.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array
+                ? d.EnumerateArray().Where(x => Str(x, "state") == "loaded").Select(x => Str(x, "id")).OfType<string>().ToList() : null;
         }
-        catch { return null; }
+        catch (JsonException) { return null; }
     }
 
     internal static async Task<List<string>?> SporAsync(HttpClient klient, int port)
@@ -402,6 +402,10 @@ public sealed partial class Skanner
         public readonly List<(string Sti, long Lengde, ModellFormat.Modell Modell)> Modeller = new();
         public readonly Dictionary<string, SortedSet<string>> Motorer = new(StringComparer.OrdinalIgnoreCase);
         public readonly Dictionary<string, (SortedSet<string> Pakker, bool Agent, string Sprak)> Miljoer = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Pakker med navn én bokstav unna en kjent AI-pakke (mulig typosquatting).</summary>
+        public readonly List<(string Mappe, string Navn, string Ligner, string Sprak)> Typo = new();
+        /// <summary>Avhengighetsfiler med AI-pakker (bare pakkenavn).</summary>
+        public readonly List<(string Fil, string Mappe, SortedSet<string> Pakker, bool Agent, string Sprak)> Avhengigheter = new();
         /// <summary>Filer der en farlig YARA-regel slo til.</summary>
         public readonly List<(string Sti, long Lengde, List<YaraRegler.Regel> Treff)> Farlige = new();
         /// <summary>Modellfiler som bare ligger i skyen (OneDrive), funnet på navn og størrelse. Innholdet lastes aldri ned.</summary>
@@ -513,17 +517,60 @@ public sealed partial class Skanner
 
         // Python- og Node-miljøer med AI
         foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakker, agent, sprak);
+        // Avhengighetsfiler: samme prosjekt som et miljø over gir samme funn, med fila som et ekstra spor
+        foreach (var (fil, mappe, pakker, agent, sprak) in ff.Avhengigheter) LeggTilMiljo(mappe, pakker, agent, sprak, fil);
+        LeggTilTypo(ff);
     }
 
+    /// <summary>Mulig typosquatting: bare navnet ligner, så det er et Mulig spor (telles ikke, aldri rødt).</summary>
+    private void LeggTilTypo(FilFunn ff)
+    {
+        foreach (var (mappe, navn, ligner, sprak) in ff.Typo)
+        {
+            var f = LeggTil($"Mulig forfalsket {sprak}-pakke: {navn}", "Skygge-AI (utvikling)", Risiko.Gul,
+                $"Navnet ligner AI-pakken {ligner} med én bokstav forskjell. Kan være en feilstavet eller forfalsket pakke (typosquatting). Ikke bekreftet.",
+                "Installert pakke", $"Mappe: {Path.Combine(mappe, navn)}");
+            f.Svakt();
+        }
+    }
+
+    /// <summary>Kjent pakkenavn med nøyaktig én bokstav byttet, lagt til eller fjernet. Bare navn på minst 7 tegn, så korte ord ikke gir treff.</summary>
+    internal static string? Ligner(string navn, Dictionary<string, bool> kjente)
+    {
+        static string N(string s) => s.ToLowerInvariant().Replace('-', '_').Replace('.', '_');
+        var n = N(navn);
+        if (kjente.ContainsKey(navn) || n.Length < 7 || n.EndsWith("_dist_info") || n.EndsWith("_egg_info") || IkkeTypo.Contains(n)) return null;
+        foreach (var k in kjente.Keys)
+        {
+            var m = N(k);
+            if (m.Length < 7 || m == n || Math.Abs(m.Length - n.Length) > 1) continue;
+            int i = 0; while (i < Math.Min(m.Length, n.Length) && m[i] == n[i]) i++;
+            int a = m.Length - 1, b = n.Length - 1; while (a >= i && b >= i && m[a] == n[b]) { a--; b--; }
+            if (Math.Max(a - i + 1, b - i + 1) == 1) return k;
+        }
+        return null;
+    }
+
+    /// <summary>Ekte pakker med navn nær en AI-pakke. Kilde: pypi.org og npmjs.com.</summary>
+    private static readonly HashSet<string> IkkeTypo = new() { "transformer", "diffuser", "langchain_" };
+
     /// <summary>Python- eller Node-prosjekt med AI. Angrepsverktøy og pakker fra Kina gjør det rødt, red team-verktøy får en merknad.</summary>
-    internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak)
+    internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak, string? avhengighetsfil = null)
     {
         var angrep = pakker.Where(AngrepPakker.ContainsKey).Select(x => AngrepPakker[x]).ToList();
         var f = LeggTil($"{sprak}-prosjekt med AI: {Prosjektnavn(sti)}", "Skygge-AI (utvikling)", agent || angrep.Count > 0 ? Risiko.Rod : Risiko.Gul,
             angrep.Count > 0 ? "Angrepsverktøy med AI: lager og kjører angrep mot andre maskiner." : agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-            sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
+            sprak, avhengighetsfil != null ? $"Avhengighetsfil: {avhengighetsfil} ({string.Join(", ", pakker)})" : $"Mappe: {sti} ({string.Join(", ", pakker)})");
         f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
         foreach (var a in angrep) f.Advarsel($"Angrepsverktøy med AI: {a}.");
+        // Installert pakke i et miljø: pakkebehandlerens egen oppføring er et eget spor ved siden av mappa (bevisstandarden)
+        // En avhengighetsfil sier bare at prosjektet skal bruke pakken, ikke at den er installert
+        f.LeggTilHvor(avhengighetsfil != null ? "Avhengighetsfil" : "Installert pakke");
+        foreach (var p in _regler.PythonPakker.Concat(_regler.NodePakker).Where(p => p.Fare != null && pakker.Contains(p.Navn)))
+        {
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"{p.Fare}: pakken {p.Navn}.");
+        }
         foreach (var r in pakker.Where(RedTeamPakker.Contains)) f.Merknad($"Verktøy for å teste AI mot angrep (red team): {r}.");
         foreach (var k in pakker.Where(KinesiskePakker.ContainsKey))
         {
@@ -781,6 +828,7 @@ public sealed partial class Skanner
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde, long? malLengde = null)
     {
         if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
+        if (Avhengighetsfil(fil.Name) is { } avh) SjekkAvhengighetsfil(fil, avh, ff);
         SjekkAgentfil(fil);
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")
@@ -800,7 +848,8 @@ public sealed partial class Skanner
         try { lengde = malLengde ?? fil.Length; } catch { return; }
         // Små filer som likevel er modeller: ONNX/TFLite over 5 MB, og LoRA-tillegg (.safetensors, .gguf, Ollama-lag) over 1 MB.
         // Et lite tillegg kan gjøre en vanlig modell sensurfri eller ondsinnet.
-        bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024
+        bool liten = ext is ".onnx" or ".tflite" or ".mlmodel" or ".mindir" or ".pdmodel" or ".engine" or ".plan" or ".trt" or ".msgpack" && lengde > 5 * 1024 * 1024
+                     || fil.Name.Equals("saved_model.pb", StringComparison.OrdinalIgnoreCase) && lengde > 256 * 1024
                      || (ext is ".safetensors" or ".gguf" || fil.Name.StartsWith("sha256-", StringComparison.OrdinalIgnoreCase)) && lengde > 1024 * 1024;
         if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff, lengde); return; }
         // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
@@ -822,7 +871,11 @@ public sealed partial class Skanner
             var kandidater = navn.StartsWith("@") ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
             foreach (var k in kandidater)
             {
-                if (!kjente.TryGetValue(k, out var erAgent)) continue;
+                if (!kjente.TryGetValue(k, out var erAgent))
+                {
+                    if (Ligner(k, kjente) is { } ligner) lock (ff) ff.Typo.Add((sti, k, ligner, sprak));
+                    continue;
+                }
                 // "agents" og "ai" er vanlige ord; tell dem bare sammen med andre AI-pakker
                 pakker.Add(k);
                 agent |= erAgent;
@@ -885,7 +938,7 @@ public sealed partial class Skanner
         DateTime? opprettet = null, endret = null;
         try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}");
-        f.Sterkt();   // kjent igjen på innholdet i fila, ikke på navnet
+        if (m.Type == ModellFormat.KjentPaEndelsen) f.Svakt(); else f.Sterkt();   // innholdet i fila, ikke navnet (endelse alene = Mulig spor)
         f.LeggTilModeller(1);
         f.SettVersjon(m.Versjon, "modellfila");
         // Hugging Face-lageret: mappa under snapshots er revisjonen (commit) modellen ble lastet ned fra

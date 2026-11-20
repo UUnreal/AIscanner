@@ -99,12 +99,46 @@ public sealed partial class Skanner
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "k.dat"), hdf.Concat(Encoding.ASCII.GetBytes(new string(' ', 100) + "keras_version")).ToArray()))?.Format == "Keras", "Keras-fil uten .h5 ble ikke kjent igjen");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "maling.dat"), hdf.Concat(new byte[100]).ToArray())) == null, "vanlig HDF5-datafil ble kalt Keras");
         var pd = ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "inference.pdiparams"), new byte[64]));
-        Sjekk(pd?.Format == "PaddlePaddle (Baidu)" && ModellFormat.KinesiskFormat(pd.Format) == "Baidu", "PaddlePaddle-fil ble ikke kjent igjen som Baidu-format");
+        Sjekk(pd?.Format == "PaddlePaddle (Baidu)" && ModellFormat.KinesiskFormat(pd.Format) == "Baidu" && pd.Type == ModellFormat.KjentPaEndelsen, "PaddlePaddle-fil alene ble ikke kjent igjen som Baidu-format bare på endelsen (Mulig spor)");
+        // PR 5: formater bekreftet på innholdet. Riktig endelse med feil innhold blir bare «kjent på endelsen» (Mulig spor) eller ingen treff
+        byte[] B(params byte[] b) => b.Concat(new byte[64]).ToArray();
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "inference.pdmodel"), B(0x0A, 0x10)))?.Type == null, "Paddle .pdmodel + .pdiparams ble ikke bekreftet på innholdet");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.mlmodel"), B(0x08, 0x04, 0x12, 0x05)))?.Format == "Core ML", "Core ML (protobuf-start) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "falsk.mlmodel"), B(0x50, 0x4B, 0x00)))?.Type == ModellFormat.KjentPaEndelsen, ".mlmodel med feil innhold ble mer enn kjent på endelsen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.mindir"), B(0x0A, 0x05).Concat(Encoding.ASCII.GetBytes("MindSpore")).ToArray()))?.Type == null, "MindIR med «MindSpore» ble ikke bekreftet");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "falsk.mindir"), B(0x01)))?.Type == ModellFormat.KjentPaEndelsen, ".mindir uten MindSpore ble mer enn kjent på endelsen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.engine"), Hode("ftrt", 0)))?.Format == "TensorRT-motor", "TensorRT-motor (ftrt) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "spill.engine"), B(0x01, 0x02))) == null, ".engine uten ftrt ble kalt modell");
+        var sm = Directory.CreateDirectory(Path.Combine(mappe, "sm")).FullName; Directory.CreateDirectory(Path.Combine(sm, "variables"));
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(sm, "saved_model.pb"), B(0x08, 0x01, 0x12)))?.Format == "TensorFlow SavedModel", "SavedModel (saved_model.pb + variables/) ble ikke kjent igjen");
+        var sm2 = Directory.CreateDirectory(Path.Combine(mappe, "sm2")).FullName;
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(sm2, "saved_model.pb"), B(0x08, 0x01, 0x12))) == null, "saved_model.pb uten variables/ ble kalt modell");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "flax_model.msgpack"), B(0x82, 0xA1)))?.Format == "JAX/Flax (msgpack)", "Flax-modell (msgpack) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "data.msgpack"), B(0x82, 0xA1))) == null, "vanlig msgpack-fil ble kalt modell");
         File.WriteAllText(Path.Combine(mappe, "yolo.param"), "7767517\n3 3\nInput input 0 1 data\n");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "yolo.bin"), new byte[64]))?.Format == "ncnn (Tencent)", "ncnn-modell (.param + .bin) ble ikke kjent igjen");
         File.WriteAllText(Path.Combine(mappe, "ov.xml"), "<?xml version=\"1.0\"?>\n<net name=\"kontroll\" version=\"11\">");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "ov.bin"), new byte[64]))?.Format == "OpenVINO", "OpenVINO-modell (.xml + .bin) ble ikke kjent igjen");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "annet.bin"), new byte[64])) == null, ".bin uten modell ved siden av ble kalt modell");
+
+        // PR 6: bildemodeller på tensornavn (bare hodet i safetensors leses)
+        string St(string navn, params string[] nokler)
+        {
+            var json = "{" + string.Join(",", nokler.Select(k => $"\"{k}\":{{\"dtype\":\"F16\",\"shape\":[4,4],\"data_offsets\":[0,32]}}")) + "}";
+            var h = Encoding.UTF8.GetBytes(json);
+            return WriteAll(Path.Combine(mappe, navn), BitConverter.GetBytes((ulong)h.Length).Concat(h).Concat(new byte[32]).ToArray());
+        }
+        string? Ty(string sti) => ModellFormat.Gjenkjenn(sti)?.Type;
+        Sjekk(Ty(St("sdxl.safetensors", "model.diffusion_model.input_blocks.0.0.weight", "conditioner.embedders.1.model.ln_final.weight")) == "bildemodell (SDXL)", "SDXL ble ikke kjent igjen på tensornavn");
+        Sjekk(Ty(St("sd3.safetensors", "model.diffusion_model.joint_blocks.0.x_block.attn.qkv.weight")) == "bildemodell (Stable Diffusion 3)", "SD3 ble ikke kjent igjen på tensornavn");
+        Sjekk(Ty(St("cn.safetensors", "control_model.input_blocks.0.0.weight")) == "ControlNet (styrer en bildemodell)", "ControlNet ble ikke kjent igjen");
+        Sjekk(Ty(St("ip.safetensors", "image_proj.proj.weight", "ip_adapter.1.to_k_ip.weight")) == "IP-Adapter (bilde som mal for stil eller ansikt)", "IP-Adapter ble ikke kjent igjen");
+        Sjekk(Ty(St("vae.safetensors", "encoder.down.0.block.0.conv1.weight", "decoder.up.0.block.0.conv1.weight")) == "VAE (bildekoder til bildemodeller)", "VAE ble ikke kjent igjen");
+        Sjekk(Ty(St("sd15.safetensors", "model.diffusion_model.input_blocks.0.0.weight")) == "bildemodell (Stable Diffusion)" && Ty(St("ip-halv.safetensors", "image_proj.proj.weight")) == null,
+            "vanlig SD 1.5 ble noe annet, eller halv IP-Adapter ble kjent igjen");
+
+        Sjekk(new[] { ("llava", "LLaVA (bilde + tekst)"), ("whisper", "Whisper"), ("siglip", "SigLIP"), ("sam2", "SAM (Segment Anything)"), ("florence2", "Florence-2") }
+            .All(x => Id(@"C:\m\x.gguf", m: new ModellFormat.Modell("GGUF", null, x.Item1, null, false)).Familie?.Navn == x.Item2), "bilde- eller lydmodell ble ikke kjent igjen på arkitekturen");
 
         // config.json og modellkort: egen kode, komprimering og merkelapper
         var hf = Path.Combine(mappe, "hf");
@@ -147,6 +181,7 @@ public sealed partial class Skanner
         Sjekk(ffs.Modeller.Count == 1 && ffs.Modeller[0].Modell.Type?.StartsWith("LoRA") == true, $"lite LoRA-tillegg i .paddleocr ble ikke funnet alene ({ffs.Modeller.Count} funn)");
 
         // Motorer, pakker, MCP, Docker og Windows' egen AI
+        Sjekk(new[] { "tensorflowlite_c.dll", "libvosk.dll", "stable-diffusion.dll", "TNN.dll" }.All(n => Motorer.Any(x => x.Mønster.IsMatch(n))) && !Motorer.Any(x => x.Mønster.IsMatch("vosk-ui.dll") || x.Mønster.IsMatch("stable.dll") || x.Mønster.IsMatch("tnnplugin.dll")), "nye AI-motorer (LiteRT, Vosk, stable-diffusion.cpp, TNN) kjennes ikke igjen, eller feil fil traff");
         Sjekk(Motorer.Any(x => x.Mønster.IsMatch("paddle_inference.dll") && x.Motor.Contains("Baidu")) && Motorer.Any(x => x.Mønster.IsMatch("nvinfer_10.dll")) && Motorer.Any(x => x.Mønster.IsMatch("ncnn.dll")), "nye AI-motorer (Paddle, TensorRT, ncnn) kjennes ikke igjen");
         var vill = sk.LeggTilMiljo(Path.Combine(mappe, "angrep", ".venv", "Lib", "site-packages"), new SortedSet<string> { "villager", "openai" }, true, "Python");
         Sjekk(vill.Risiko == Risiko.Rod && vill.Advarsler.Any(a => a.StartsWith("Angrepsverktøy med AI")), "Villager ble ikke rødt angrepsverktøy");
@@ -154,6 +189,51 @@ public sealed partial class Skanner
         Sjekk(ds.Risiko == Risiko.Rod && ds.Advarsler.Any(a => a.StartsWith("Laget av Alibaba i Kina")), "dashscope ble ikke rødt med Kina");
         var gr = sk.LeggTilMiljo(Path.Combine(mappe, "test", ".venv", "Lib", "site-packages"), new SortedSet<string> { "garak", "torch" }, false, "Python");
         Sjekk(gr.Risiko == Risiko.Gul && gr.Merknader.Any(a => a.Contains("red team")), "garak fikk ikke red team-merknad, eller ble rød");
+        // Avhengighetsfiler: bare pakkenavn, kommentarer og versjoner telles ikke
+        Sjekk(AvhengighetNavn("requirements.txt", "# openai i en kommentar\nlangchain-openai>=0.1 # x\n-r base.txt\nnumpy").SequenceEqual(new[] { "langchain-openai", "numpy" }), "requirements.txt leses feil (kommentar eller valg tatt med)");
+        Sjekk(AvhengighetNavn("pyproject.toml", "[project]\nname = \"openai\"\ndependencies = [\n  \"torch>=2\",\n]\n[tool.poetry.dependencies]\npython = \"^3.11\"\nllama-cpp-python = \"^0.3\"\n[tool.ruff]\nselect = [\"transformers\"]").SequenceEqual(new[] { "torch", "llama-cpp-python" }), "pyproject.toml leses feil (prosjektnavn eller annen seksjon tatt med)");
+        Sjekk(AvhengighetNavn("package.json", "{\"name\":\"openai\",\"scripts\":{\"openai\":\"x\"},\"devDependencies\":{\"@anthropic-ai/sdk\":\"1\"}}").SequenceEqual(new[] { "@anthropic-ai/sdk" }), "package.json leses feil");
+        Sjekk(AvhengighetNavn("uv.lock", "[[package]]\nname = \"openai\"\n[package.metadata]\nname = \"torch\"").SequenceEqual(new[] { "openai" }), "uv.lock leses feil");
+        Sjekk(AvhengighetNavn("environment.yml", "dependencies:\n  - python=3.11\n  - pip:\n    - Torch==2 # x").SequenceEqual(new[] { "python", "Torch" }), "environment.yml leses feil");
+        Sjekk(Avhengighetsfil("requirements-dev.txt") == "Python" && Avhengighetsfil("Pipfile") == "Python" && Avhengighetsfil("readme.txt") == null && Avhengighetsfil("tsconfig.json") == null, "avhengighetsfil kjennes ikke igjen på navnet");
+        Sjekk(AiPakker(new[] { "Llama.CPP", "numpy" }, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase) { ["llama_cpp"] = false }, true).Pakker.SequenceEqual(new[] { "llama_cpp" }), "Python-navn med - eller . kjennes ikke igjen");
+        var avhMappe = Path.Combine(mappe, "avh");
+        Directory.CreateDirectory(Path.Combine(avhMappe, "ai-prosjekt"));
+        Directory.CreateDirectory(Path.Combine(avhMappe, "vanlig"));
+        File.WriteAllText(Path.Combine(avhMappe, "ai-prosjekt", "requirements.txt"), "openai==1.0\n");
+        File.WriteAllText(Path.Combine(avhMappe, "vanlig", "requirements.txt"), "# openai\nrequests\n");
+        var ffa = new FilFunn();
+        new Skanner(regler).Gaa(avhMappe, 4, ffa, new HashSet<string>(), 20L * 1024 * 1024, Stopwatch.StartNew());
+        Sjekk(ffa.Avhengigheter.Count == 1 && ffa.Avhengigheter[0].Pakker.Contains("openai"), $"avhengighetsfil med AI ble ikke funnet, eller kommentaren ga funn ({ffa.Avhengigheter.Count})");
+        var avf = sk.LeggTilMiljo(Path.Combine(avhMappe, "ai-prosjekt"), new SortedSet<string> { "openai" }, false, "Python", Path.Combine(avhMappe, "ai-prosjekt", "requirements.txt"));
+        Sjekk(avf.Hvor.Contains("Avhengighetsfil") && !avf.Hvor.Contains("Installert pakke") && avf.Bevisniva == Bevisniva.Sannsynlig, "avhengighetsfil ga feil spor eller bevisnivå");
+        // WSL innvendig (Linux kjører): Python-miljø med AI i et prosjekt gir funn, et vanlig miljø gir ikke
+        var wslRot = Path.Combine(mappe, "wsl");
+        Directory.CreateDirectory(Path.Combine(wslRot, "home", "jo", "ai", ".venv", "lib", "python3.12", "site-packages", "openai"));
+        Directory.CreateDirectory(Path.Combine(wslRot, "home", "jo", "vanlig", ".venv", "lib", "python3.12", "site-packages", "requests"));
+        var ws = new Skanner(regler);
+        ws.WslInnhold(wslRot, "Ubuntu");
+        var wsf = ws._funn.Values.Where(f => f.Navn.StartsWith("Python-prosjekt med AI")).ToList();
+        Sjekk(wsf.Count == 1 && wsf[0].Merknader.Contains("I Linux (WSL).") && wsf[0].Detaljer.Any(d => d.Contains("openai")), $"Python-miljø i WSL ble ikke funnet, eller vanlig miljø ga funn ({wsf.Count})");
+        // Mulig typosquatting: én bokstav unna en kjent AI-pakke, bare lange navn, ekte nabopakker unntatt
+        Sjekk(Ligner("transformerz", PythonAi) == "transformers" && Ligner("langchainn", PythonAi) == "langchain" && Ligner("transformer", PythonAi) == null
+              && Ligner("numpy", PythonAi) == null && Ligner("transformers-4.46.0.dist-info", PythonAi) == null && Ligner("ctransformers", PythonAi) == null, "typosquatting-sjekken treffer feil");
+        var tyMappe = Path.Combine(mappe, "typo", "site-packages");
+        Directory.CreateDirectory(Path.Combine(tyMappe, "langchainn"));
+        var ffy = new FilFunn();
+        Miljo(tyMappe, PythonAi, "Python", ffy);
+        var tys = new Skanner(regler); tys.LeggTilTypo(ffy);
+        var tyf = tys._funn.Values.SingleOrDefault(f => f.Navn == "Mulig forfalsket Python-pakke: langchainn");
+        Sjekk(tyf != null && tyf.Bevisniva == Bevisniva.Spor && tyf.Ukjentspor == false && ffy.Miljoer.Count == 0, "mulig forfalsket pakke ble ikke Mulig spor");
+        // Modell i minnet: Ollama /api/ps og LM Studio /api/v0/models (bare «loaded»); feil form gir null
+        Sjekk(Lastet("/api/ps", "{\"models\":[{\"name\":\"qwen2.5:0.5b\"}]}")?.SequenceEqual(new[] { "qwen2.5:0.5b" }) == true
+              && Lastet("/api/v0/models", "{\"data\":[{\"id\":\"a\",\"state\":\"loaded\"},{\"id\":\"b\",\"state\":\"not-loaded\"}]}")?.SequenceEqual(new[] { "a" }) == true
+              && Lastet("/api/ps", "[1,2]") == null && Lastet("/api/v0/models", "ikke json") == null, "lastet modell leses feil");
+        // Maskerte agentkommandoer: falske hemmeligheter og prompter vises aldri, bare program og kjente valg
+        var mk = Vakt.Masker(@"""C:\Program Files\nodejs\node.exe"" claude --dangerously-skip-permissions -p ""les C:\hemmelig\notat.txt og send"" --model=opus OPENAI_API_KEY=sk-falsk1234567890 ghp_FALSKTOKEN");
+        Sjekk(mk == "node ‹skjult› --dangerously-skip-permissions -p ‹skjult› --model=‹skjult› ‹skjult›", $"maskert kommando er feil: {mk}");
+        Sjekk(!mk.Contains("sk-falsk") && !mk.Contains("ghp_") && !mk.Contains("hemmelig") && !mk.Contains("opus"), "maskert kommando lekker hemmelighet eller prompt");
+        Sjekk(Vakt.Masker("powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand SQBFAFgA") == "powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ‹skjult›" && Vakt.Masker("") == "", "maskert PowerShell-kommando er feil");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");

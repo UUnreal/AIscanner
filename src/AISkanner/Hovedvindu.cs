@@ -408,7 +408,11 @@ public sealed class Hovedvindu : Form
                 versjonKilde = T(f.VersjonKilde),
                 status = T(Oversikt.Status(f)),
                 tilstander = Oversikt.Tilstander(f).Select(x => T(x)).ToList(),
-                treffsikkerhet = T(Oversikt.Treffsikkerhet(f)),
+                bevisniva = T(Oversikt.Bevis(f)),
+                bevistype = T(f.Bevistype),
+                drift = T(f.Drift),
+                begrensning = T(f.Begrensning),
+                opphavKilde = T(f.OpphavKilde),
                 spor = f.Spor,
                 godkjenning = T(f.Godkjenning),
                 punkt = T(Oversikt.Punkt(f)),
@@ -610,7 +614,7 @@ public sealed class Hovedvindu : Form
                     {
                         status = T(_vakt.Status), startet = _vakt.Startet.ToString("HH:mm:ss"), starter = Interlocked.Read(ref _vakt.Starter),
                         agenter = _vakt.Agenter().Select(a => new { pid = a.Pid, agent = a.Agent }),
-                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = Rammeverk.MedOwasp(h.Regel, h.Kilde), agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod }),
+                        hendelser = _vakt.Hendelser().OrderByDescending(h => h.Tid).Select(h => new { tid = h.Tid.ToString("HH:mm:ss"), regel = T(h.Regel), kilde = Rammeverk.MedOwasp(h.Regel, h.Kilde), agent = h.Agent, program = h.Program, pid = h.Pid, hva = h.Hva, rod = h.Rod, kommando = h.Kommando }),
                     },
                     kilder = (b.Kilder ?? new()).Select(k => new { navn = T(k.Navn), utfall = T(k.Utfall), lest = k.Utfall == "lest", aldri = k.Utfall.StartsWith("aldri"), n = k.Antall, detalj = T(k.Detalj), rader = k.Rader?.Select(r => new { t = T(r.Tittel), m = T(r.Meta), u = T(r.Under) }) }),
                     rader = b.Rader.Select(r => new

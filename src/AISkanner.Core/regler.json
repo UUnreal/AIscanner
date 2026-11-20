@@ -1,9 +1,9 @@
 {
   "_info": "Risikoregler for AI-skanneren. Rediger fritt. risiko: gronn | gul | rod. 'treff' er tekst (uten store/små bokstaver) som søkes etter i navn på prosesser, programmer, tjenester, oppstartsoppføringer og nettleserutvidelser. 'mapper' er stier som avslører verktøyet (miljøvariabler som %USERPROFILE% er lov).",
-  "versjon": "2026-10-28m",
+  "versjon": "2026-11-20",
   "produkter": [
     {
-      "navn": "Ollama",
+      "navn": "Ollama", "id": "produkt-ollama", "bevistype": "produktregel", "kilde": "https://github.com/ollama/ollama", "verifisert": true, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "ollama", "testNegativ": "ollamax9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -22,7 +22,7 @@
       "hvorforEnkelt": "Kjører AI-modeller på selve PC-en, uten internett. Det du skriver blir på maskinen."
     },
     {
-      "navn": "LM Studio",
+      "navn": "LM Studio", "id": "produkt-lm-studio", "bevistype": "produktregel", "kilde": "https://lmstudio.ai/docs", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "lm studio", "testNegativ": "lm studiox9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -44,7 +44,7 @@
       "hvorforEnkelt": "Et program for å laste ned og kjøre AI-modeller på PC-en. Modellene kommer fra internett uten kontroll."
     },
     {
-      "navn": "GPT4All",
+      "navn": "GPT4All", "id": "produkt-gpt4all", "bevistype": "produktregel", "kilde": "https://github.com/nomic-ai/gpt4all", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "gpt4all", "testNegativ": "gpt4allx9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -63,7 +63,7 @@
       "hvorforEnkelt": "Et AI-chatprogram som kjører på PC-en og kan lese dokumentene dine hvis du ber om det."
     },
     {
-      "navn": "llama.cpp / KoboldCpp",
+      "navn": "llama.cpp / KoboldCpp", "id": "produkt-llama-cpp-koboldcpp", "bevistype": "produktregel", "kilde": "https://github.com/ggml-org/llama.cpp", "verifisert": true, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "llama-server", "testNegativ": "llama-serverx9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -82,7 +82,7 @@
       "hvorforEnkelt": "Et teknisk verktøy for å kjøre AI-modeller. Ofte lastet ned som løse filer."
     },
     {
-      "navn": "Jan",
+      "navn": "Jan", "id": "produkt-jan", "bevistype": "produktregel", "kilde": "https://github.com/janhq/jan", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "jan.exe", "testNegativ": "jan.exex9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -101,7 +101,7 @@
       "hvorforEnkelt": "Et AI-chatprogram som kjører på PC-en."
     },
     {
-      "navn": "Stable Diffusion / ComfyUI",
+      "navn": "Stable Diffusion / ComfyUI", "id": "produkt-stable-diffusion-comfyui", "bevistype": "produktregel", "kilde": "https://github.com/comfyanonymous/ComfyUI", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "comfyui", "testNegativ": "comfyuix9",
       "kategori": "Lokal AI",
       "risiko": "gul",
       "treff": [
@@ -124,7 +124,7 @@
       "hvorforEnkelt": "Et program som lager bilder med AI. Tillegg fra andre har tidligere inneholdt skadevare."
     },
     {
-      "navn": "Claude Code",
+      "navn": "Claude Code", "id": "produkt-claude-code", "bevistype": "produktregel", "kilde": "https://docs.anthropic.com/en/docs/claude-code/setup", "verifisert": true, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "claude-code", "testNegativ": "claude-codex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -144,7 +144,7 @@
       "hvorforEnkelt": "Den kan lese filene dine, kjøre programmer og sende innhold til Anthropic på nett."
     },
     {
-      "navn": "OpenAI Codex CLI",
+      "navn": "OpenAI Codex CLI", "id": "produkt-openai-codex-cli", "bevistype": "produktregel", "kilde": "https://github.com/openai/codex", "verifisert": true, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@openai/codex", "testNegativ": "@openai/codexx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -164,7 +164,7 @@
       "hvorforEnkelt": "Den kan endre filer og kjøre programmer, og sender innhold til OpenAI."
     },
     {
-      "navn": "Gemini CLI",
+      "navn": "Gemini CLI", "id": "produkt-gemini-cli", "bevistype": "produktregel", "kilde": "https://github.com/google-gemini/gemini-cli", "verifisert": true, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@google/gemini-cli", "testNegativ": "@google/gemini-clix9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -182,7 +182,7 @@
       "hvorforEnkelt": "Den kan lese filer og kjøre programmer, og sender innhold til Google."
     },
     {
-      "navn": "Aider",
+      "navn": "Aider", "id": "produkt-aider", "bevistype": "produktregel", "kilde": "https://aider.chat/docs/install.html", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "aider-chat", "testNegativ": "aider-chatx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -200,7 +200,7 @@
       "hvorforEnkelt": "Den endrer filer på egen hånd og sender koden til en AI-tjeneste."
     },
     {
-      "navn": "Cursor",
+      "navn": "Cursor", "id": "produkt-cursor", "bevistype": "produktregel", "kilde": "https://cursor.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "cursor", "testNegativ": "cursorx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -217,7 +217,7 @@
       "hvorforEnkelt": "Koden du jobber med sendes til en AI-tjeneste på nett."
     },
     {
-      "navn": "Windsurf",
+      "navn": "Windsurf", "id": "produkt-windsurf", "bevistype": "produktregel", "kilde": "https://windsurf.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "windsurf", "testNegativ": "windsurfx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -233,8 +233,9 @@
       "enkelt": "Kodeprogram med innebygd AI",
       "hvorforEnkelt": "Koden du jobber med sendes til en AI-tjeneste på nett."
     },
+    {"navn": "Roo Code", "id": "produkt-roo-code", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "rooveterinaryinc.roo-cline", "testNegativ": "rooveterinaryinc.roo-clinex9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["rooveterinaryinc.roo-cline"], "mapper": [], "porter": [], "hvorfor": "AI-kodeagent i VS Code som endrer filer og kjører kommandoer.", "kilde": "https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
     {
-      "navn": "Continue / Cline (VS Code)",
+      "navn": "Continue / Cline (VS Code)", "id": "produkt-continue-cline-vs-code", "bevistype": "produktregel", "kilde": "https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («cline»): høyere risiko.", "testPositiv": "continue.continue", "testNegativ": "continue.continuex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -251,7 +252,7 @@
       "hvorforEnkelt": "Kan endre filer og kjøre programmer fra kodeeditoren."
     },
     {
-      "navn": "GitHub Copilot (VS Code)",
+      "navn": "GitHub Copilot (VS Code)", "id": "produkt-github-copilot-vs-code", "bevistype": "produktregel", "kilde": "https://marketplace.visualstudio.com/items?itemName=GitHub.copilot", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "github.copilot", "testNegativ": "github.copilotx9",
       "kategori": "Skygge-AI",
       "risiko": "gul",
       "treff": [
@@ -264,7 +265,7 @@
       "hvorforEnkelt": "Foreslår kode mens du skriver. Koden sendes til GitHub."
     },
     {
-      "navn": "ChatGPT (skrivebordsapp)",
+      "navn": "ChatGPT (skrivebordsapp)", "id": "produkt-chatgpt-skrivebordsapp", "bevistype": "produktregel", "kilde": "https://openai.com/chatgpt/desktop/", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "chatgpt", "testNegativ": "chatgptx9",
       "kategori": "Skygge-AI",
       "risiko": "gul",
       "treff": [
@@ -278,7 +279,7 @@
       "hvorforEnkelt": "Alt du skriver eller limer inn sendes til OpenAI. Gratiskontoer kan brukes til å trene AI-en."
     },
     {
-      "navn": "Claude (skrivebordsapp)",
+      "navn": "Claude (skrivebordsapp)", "id": "produkt-claude-skrivebordsapp", "bevistype": "produktregel", "kilde": "https://claude.ai/download", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "anthropicclaude", "testNegativ": "anthropicclaudex9",
       "kategori": "Skygge-AI",
       "risiko": "gul",
       "treff": [
@@ -295,7 +296,7 @@
       "hvorforEnkelt": "Alt du skriver eller limer inn sendes til Anthropic. Appen kan kobles til filer og andre systemer."
     },
     {
-      "navn": "Microsoft Copilot",
+      "navn": "Microsoft Copilot", "id": "produkt-microsoft-copilot", "bevistype": "produktregel", "kilde": "https://apps.microsoft.com/detail/9nht9rb2f4hd", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "microsoft.copilot", "testNegativ": "microsoft.copilotx9",
       "kategori": "Skygge-AI",
       "risiko": "gronn",
       "treff": [
@@ -309,7 +310,7 @@
       "hvorforEnkelt": "Microsofts egen AI. Når jobben bruker Microsoft 365, er den dekket av avtalen."
     },
     {
-      "navn": "Comet (AI-nettleser fra Perplexity)",
+      "navn": "Comet (AI-nettleser fra Perplexity)", "id": "produkt-comet-ai-nettleser-fra-perplexity", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "perplexity\\comet", "testNegativ": "perplexity\\cometx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -325,7 +326,7 @@
       "kilde": "Installeres i %LOCALAPPDATA%\\Perplexity\\Comet\\Application (comet.exe): https://www.advanceduninstaller.com/Comet-13db63f29f86d10a886ddfe68d01ef87-application.htm"
     },
     {
-      "navn": "Perplexity",
+      "navn": "Perplexity", "id": "produkt-perplexity", "bevistype": "produktregel", "kilde": "https://www.perplexity.ai", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "perplexity", "testNegativ": "perplexityx9",
       "kategori": "Skygge-AI",
       "risiko": "gul",
       "treff": [
@@ -338,7 +339,7 @@
       "hvorforEnkelt": "Spørsmålene dine og det du limer inn sendes til Perplexity."
     },
     {
-      "navn": "DeepSeek",
+      "navn": "DeepSeek", "id": "produkt-deepseek", "bevistype": "produktregel", "kilde": "https://www.deepseek.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "deepseek", "testNegativ": "deepseekx9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -351,7 +352,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Grammarly",
+      "navn": "Grammarly", "id": "produkt-grammarly", "bevistype": "produktregel", "kilde": "https://www.grammarly.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "grammarly", "testNegativ": "grammarlyx9",
       "kategori": "Nettleser-AI",
       "risiko": "gul",
       "treff": [
@@ -364,7 +365,7 @@
       "hvorforEnkelt": "Leser alt du skriver, også e-post og interne systemer."
     },
     {
-      "navn": "Monica / Sider / Merlin (AI-sidepanel)",
+      "navn": "Monica / Sider / Merlin (AI-sidepanel)", "id": "produkt-monica-sider-merlin-ai-sidepanel", "bevistype": "produktregel", "kilde": "https://chromewebstore.google.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («sider»): høyere risiko.", "testPositiv": "monica", "testNegativ": "monicax9",
       "kategori": "Nettleser-AI",
       "risiko": "rod",
       "treff": [
@@ -379,7 +380,7 @@
       "hvorforEnkelt": "Leser sidene du besøker og sender innholdet til en AI-tjeneste."
     },
     {
-      "navn": "Gemini / Claude / ChatGPT i nettleser",
+      "navn": "Gemini / Claude / ChatGPT i nettleser", "id": "produkt-gemini-claude-chatgpt-i-nettleser", "bevistype": "produktregel", "kilde": "https://chromewebstore.google.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "chatgpt", "testNegativ": "chatgptx9",
       "kategori": "Nettleser-AI",
       "risiko": "gul",
       "treff": [
@@ -396,7 +397,7 @@
       "hvorforEnkelt": "En AI-utvidelse som kan lese det som står på nettsider."
     },
     {
-      "navn": "Trae / MarsCode (ByteDance)",
+      "navn": "Trae / MarsCode (ByteDance)", "id": "produkt-trae-marscode-bytedance", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "trae.exe", "testNegativ": "trae.exex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -417,7 +418,7 @@
       "kilde": "https://www.advanceduninstaller.com/Trae-CN-User--31ce415f5e020d25196f466ac908da79-application.htm (Trae CN.exe i %LOCALAPPDATA%\\Programs\\Trae CN, utgiver Beijing Yinli Catapult Technology). TRAE.DLL i Tencent QQ er noe annet: https://www.freefixer.com/library/file/TRAE.DLL-189290"
     },
     {
-      "navn": "Doubao (ByteDance)",
+      "navn": "Doubao (ByteDance)", "id": "produkt-doubao-bytedance", "bevistype": "produktregel", "kilde": "https://www.doubao.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "doubao", "testNegativ": "doubaox9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -430,7 +431,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Yuanbao (Tencent)",
+      "navn": "Yuanbao (Tencent)", "id": "produkt-yuanbao-tencent", "bevistype": "produktregel", "kilde": "https://yuanbao.tencent.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "yuanbao", "testNegativ": "yuanbaox9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -443,7 +444,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Qwen / Tongyi (Alibaba)",
+      "navn": "Qwen / Tongyi (Alibaba)", "id": "produkt-qwen-tongyi-alibaba", "bevistype": "produktregel", "kilde": "https://tongyi.aliyun.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "tongyi", "testNegativ": "tongyix9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -457,7 +458,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Kimi (Moonshot)",
+      "navn": "Kimi (Moonshot)", "id": "produkt-kimi-moonshot", "bevistype": "produktregel", "kilde": "https://kimi.moonshot.cn", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "kimi.exe", "testNegativ": "kimi.exex9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -470,7 +471,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Baidu Comate",
+      "navn": "Baidu Comate", "id": "produkt-baidu-comate", "bevistype": "produktregel", "kilde": "https://comate.baidu.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "comate", "testNegativ": "comatex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -484,7 +485,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "CodeGeeX (Zhipu)",
+      "navn": "CodeGeeX (Zhipu)", "id": "produkt-codegeex-zhipu", "bevistype": "produktregel", "kilde": "https://codegeex.cn", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "codegeex", "testNegativ": "codegeexx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -497,7 +498,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "Tencent CodeBuddy",
+      "navn": "Tencent CodeBuddy", "id": "produkt-tencent-codebuddy", "bevistype": "produktregel", "kilde": "https://copilot.tencent.com", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "codebuddy", "testNegativ": "codebuddyx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -511,7 +512,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "iFlyCode (iFlytek)",
+      "navn": "iFlyCode (iFlytek)", "id": "produkt-iflycode-iflytek", "bevistype": "produktregel", "kilde": "https://iflycode.xfyun.cn", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "iflycode", "testNegativ": "iflycodex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -524,7 +525,7 @@
       "hvorforEnkelt": "Det du skriver lagres i Kina. Flere land har advart mot å bruke den til sensitive data."
     },
     {
-      "navn": "opencode",
+      "navn": "opencode", "id": "produkt-opencode", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "opencode-ai", "testNegativ": "opencode-aix9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -542,7 +543,7 @@
       "kilde": "https://opencode.ai/docs/config/"
     },
     {
-      "navn": "Warp (terminal med agent)",
+      "navn": "Warp (terminal med agent)", "id": "produkt-warp-terminal-med-agent", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "\\warp\\warp\\", "testNegativ": "\\warp\\warpx9\\",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -561,7 +562,7 @@
       "kilde": "https://docs.warp.dev/terminal/settings/file-locations"
     },
     {
-      "navn": "Hermes Agent (Nous Research)",
+      "navn": "Hermes Agent (Nous Research)", "id": "produkt-hermes-agent-nous-research", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "\\.hermes\\", "testNegativ": "\\.hermesx9\\",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -578,7 +579,7 @@
       "kilde": "https://hermes-agent.nousresearch.com/docs/user-guide/configuration/"
     },
     {
-      "navn": "Foundry Local (Microsoft)",
+      "navn": "Foundry Local (Microsoft)", "id": "produkt-foundry-local-microsoft", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "foundry local", "testNegativ": "foundry localx9",
       "kategori": "Lokal AI",
       "risiko": "rod",
       "treff": [
@@ -595,7 +596,7 @@
       "kilde": "https://kb.plugable.com/question/3707880 · Microsoft Defender støttematrise for AI-agenter"
     },
     {
-      "navn": "OpenClaw",
+      "navn": "OpenClaw", "id": "produkt-openclaw", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "openclaw", "testNegativ": "openclawx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -611,7 +612,7 @@
       "kilde": "Microsoft Defender støttematrise for AI-agenter (learn.microsoft.com/defender-endpoint/ai-agent-support-matrix)"
     },
     {
-      "navn": "Google Antigravity",
+      "navn": "Google Antigravity", "id": "produkt-google-antigravity", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "antigravity", "testNegativ": "antigravityx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -628,7 +629,7 @@
       "kilde": "https://medium.com/google-cloud/configuring-mcp-servers-and-skills-for-antigravity-cli-and-ide-a938c7eebb78 (Windows-sti ikke bekreftet)"
     },
     {
-      "navn": "Goose (Block)",
+      "navn": "Goose (Block)", "id": "produkt-goose-block", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "goose.exe", "testNegativ": "goose.exex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -645,7 +646,7 @@
       "kilde": "https://block.github.io/goose/docs/guides/config-file"
     },
     {
-      "navn": "GitHub Copilot CLI",
+      "navn": "GitHub Copilot CLI", "id": "produkt-github-copilot-cli", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@github/copilot", "testNegativ": "@github/copilotx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -661,7 +662,7 @@
       "kilde": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli"
     },
     {
-      "navn": "Qwen Code (Alibaba)",
+      "navn": "Qwen Code (Alibaba)", "id": "produkt-qwen-code-alibaba", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@qwen-code/qwen-code", "testNegativ": "@qwen-code/qwen-codex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -677,7 +678,7 @@
       "kilde": "https://github.com/QwenLM/qwen-code"
     },
     {
-      "navn": "Kiro (AWS)",
+      "navn": "Kiro (AWS)", "id": "produkt-kiro-aws", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "kiro.exe", "testNegativ": "kiro.exex9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -695,7 +696,7 @@
       "kilde": "https://kiro.dev/docs/"
     },
     {
-      "navn": "Amp (Sourcegraph)",
+      "navn": "Amp (Sourcegraph)", "id": "produkt-amp-sourcegraph", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@sourcegraph/amp", "testNegativ": "@sourcegraph/ampx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -711,7 +712,7 @@
       "kilde": "https://ampcode.com/manual"
     },
     {
-      "navn": "Crush (Charm)",
+      "navn": "Crush (Charm)", "id": "produkt-crush-charm", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "@charmland/crush", "testNegativ": "@charmland/crushx9",
       "kategori": "Skygge-AI (agent)",
       "risiko": "rod",
       "treff": [
@@ -726,7 +727,7 @@
       "kilde": "https://github.com/charmbracelet/crush"
     },
     {
-      "navn": "Granola (møtenotater)",
+      "navn": "Granola (møtenotater)", "id": "produkt-granola-motenotater", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "granola.exe", "testNegativ": "granola.exex9",
       "kategori": "Skygge-AI",
       "risiko": "rod",
       "treff": [
@@ -743,7 +744,7 @@
       "kilde": "https://www.granola.ai/"
     },
     {
-      "navn": "Krisp (møte-AI)",
+      "navn": "Krisp (møte-AI)", "id": "produkt-krisp-mote-ai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "krisp.exe", "testNegativ": "krisp.exex9",
       "kategori": "Skygge-AI",
       "risiko": "gul",
       "treff": [
@@ -757,7 +758,7 @@
       "kilde": "https://krisp.ai/"
     },
     {
-      "navn": "Møteopptakere i nettleseren (Otter, Fireflies, tl;dv, Read AI)",
+      "navn": "Møteopptakere i nettleseren (Otter, Fireflies, tl;dv, Read AI)", "id": "produkt-moteopptakere-i-nettleseren-otter-fireflies-tl-dv-read-ai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («tldv»): høyere risiko.", "testPositiv": "otter.ai", "testNegativ": "otter.aix9",
       "kategori": "Nettleser-AI",
       "risiko": "rod",
       "treff": [
@@ -774,30 +775,196 @@
       "hvorforEnkelt": "Tar opp eller skriver ned møtene dine og sender dem til AI-tjenesten.",
       "kilde": "https://otter.ai/ · https://fireflies.ai/ · https://tldv.io/ · https://www.read.ai/"
     },
-    {"navn": "AnythingLLM", "kategori": "Lokal AI", "risiko": "gul", "treff": ["anythingllm", "anything-llm", "anythingllm-desktop"], "mapper": ["%APPDATA%\\anythingllm-desktop", "%LOCALAPPDATA%\\Programs\\anythingllm-desktop"], "porter": [3001], "hvorfor": "Lokal AI-app som leser dokumenter, kjører agenter og kan bruke lokale modeller eller skytjenester.", "kilde": "https://github.com/Mintplex-Labs/anything-llm", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et AI-program som leser dokumentene dine og kan sende dem til en AI-tjeneste."},
-    {"navn": "Open WebUI", "kategori": "Lokal AI", "risiko": "gul", "treff": ["open-webui", "open_webui"], "mapper": [], "kommandoer": ["open-webui"], "porter": [], "hvorfor": "Nettside for lokale og eksterne språkmodeller. Kjører en server andre på nettverket kan bruke.", "kilde": "https://github.com/open-webui/open-webui", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-chat som kjører som server på PC-en."},
-    {"navn": "LocalAI", "kategori": "Lokal AI", "risiko": "gul", "treff": ["localai", "local-ai"], "mapper": [], "kommandoer": ["local-ai"], "porter": [], "hvorfor": "Lokal AI-server med OpenAI-kompatibelt API.", "kilde": "https://github.com/mudler/LocalAI", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-server som andre programmer kan bruke."},
-    {"navn": "Text generation web UI", "kategori": "Lokal AI", "risiko": "gul", "treff": ["text-generation-webui", "oobabooga"], "mapper": [], "porter": [], "hvorfor": "Lokal nettside for å kjøre språkmodeller, med API og utvidelser.", "kilde": "https://github.com/oobabooga/text-generation-webui", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et program som kjører AI-modeller på PC-en."},
-    {"navn": "Msty", "kategori": "Lokal AI", "risiko": "gul", "treff": ["msty"], "mapper": ["%APPDATA%\\Msty", "%LOCALAPPDATA%\\Programs\\Msty"], "porter": [10000], "hvorfor": "Chat-app for lokale modeller og skytjenester.", "kilde": "https://msty.app", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et AI-chatprogram på PC-en."},
-    {"navn": "KoboldCpp", "kategori": "Lokal AI", "risiko": "gul", "treff": ["koboldcpp"], "mapper": [], "porter": [5001], "hvorfor": "Lokal AI-server for GGUF-modeller med eget API.", "kilde": "https://github.com/LostRuins/koboldcpp", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "Et program som kjører AI-modeller på PC-en."},
-    {"navn": "LibreChat", "kategori": "Lokal AI", "risiko": "gul", "treff": ["librechat"], "mapper": [], "porter": [], "hvorfor": "Selvdrevet chat-side for mange AI-tjenester og lokale modeller.", "kilde": "https://github.com/danny-avila/LibreChat", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-chat som kjører som server."},
-    {"navn": "LobeChat", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["lobehub", "lobe-chat", "lobechat"], "mapper": ["%APPDATA%\\LobeHub"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester, med tillegg og agenter.", "kilde": "https://github.com/lobehub/lobe-chat", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
-    {"navn": "Cherry Studio", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["cherry studio", "cherrystudio", "cherry-studio"], "mapper": ["%APPDATA%\\CherryStudio"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester og lokale modeller, med MCP.", "kilde": "https://github.com/CherryHQ/cherry-studio", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
-    {"navn": "Chatbox", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["chatbox.exe", "chatboxai", "xyz.chatboxapp"], "mapper": ["%APPDATA%\\xyz.chatboxapp.app"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester.", "kilde": "https://github.com/chatboxai/chatbox", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
-    {"navn": "Pinokio", "kategori": "Lokal AI", "risiko": "rod", "treff": ["pinokio"], "mapper": ["%USERPROFILE%\\pinokio"], "porter": [42000], "hvorfor": "Installerer og kjører AI-programmer med ett klikk, med skript fra nettet.", "kilde": "https://github.com/pinokiocomputer/pinokio", "enkelt": "Installerer AI-programmer", "hvorforEnkelt": "Laster ned og kjører AI-programmer og skript fra nettet."},
-    {"navn": "Fooocus", "kategori": "Lokal AI", "risiko": "gul", "treff": ["fooocus"], "mapper": [], "porter": [], "hvorfor": "Lokal bildegenerering med Stable Diffusion XL.", "kilde": "https://github.com/lllyasviel/Fooocus", "enkelt": "Lager bilder med AI på PC-en", "hvorforEnkelt": "Et program som lager bilder med AI på PC-en."},
-    {"navn": "InvokeAI", "kategori": "Lokal AI", "risiko": "gul", "treff": ["invokeai"], "mapper": ["%USERPROFILE%\\invokeai"], "porter": [9090], "hvorfor": "Lokal bildegenerering med server og nettside.", "kilde": "https://github.com/invoke-ai/InvokeAI", "enkelt": "Lager bilder med AI på PC-en", "hvorforEnkelt": "Et program som lager bilder med AI på PC-en."},
-    {"navn": "SillyTavern", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["sillytavern"], "mapper": [], "porter": [], "hvorfor": "Chat-side for AI-tjenester og lokale modeller, med utvidelser.", "kilde": "https://github.com/SillyTavern/SillyTavern", "enkelt": "AI-chat", "hvorforEnkelt": "En AI-chat som kjører som server på PC-en."},
-    {"navn": "Tabby (TabbyML)", "kategori": "Lokal AI", "risiko": "gul", "treff": ["tabbyml"], "mapper": ["%USERPROFILE%\\.tabby"], "porter": [], "hvorfor": "Lokal AI-server for kodeforslag.", "kilde": "https://github.com/TabbyML/tabby", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-server som foreslår kode."},
-    {"navn": "OpenHands", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["openhands", "all-hands-ai"], "mapper": ["%USERPROFILE%\\.openhands"], "porter": [], "hvorfor": "AI-agent som skriver og kjører kode på egen hånd.", "kilde": "https://github.com/All-Hands-AI/OpenHands", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
-    {"navn": "Kilo Code", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["kilocode", "kilo-code"], "mapper": [], "porter": [], "hvorfor": "AI-kodeagent i VS Code som endrer filer og kjører kommandoer.", "kilde": "https://github.com/Kilo-Org/kilocode", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
-    {"navn": "Amazon Q Developer", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["amazon q", "amazon-q", "amazon-q-vscode", "amazonwebservices.amazon-q-vscode"], "mapper": ["%USERPROFILE%\\.aws\\amazonq"], "porter": [], "hvorfor": "AI-kodeassistent og agent fra Amazon. Sender kode til AWS.", "kilde": "https://aws.amazon.com/q/developer/", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den sender koden din til Amazon."},
-    {"navn": "Tabnine", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["tabnine"], "mapper": ["%APPDATA%\\TabNine", "%LOCALAPPDATA%\\TabNine"], "porter": [], "hvorfor": "AI-kodeforslag. Kan sende kode til skytjenesten.", "kilde": "https://www.tabnine.com", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den kan sende koden din til en AI-tjeneste."},
-    {"navn": "Supermaven", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["supermaven"], "mapper": ["%USERPROFILE%\\.supermaven"], "porter": [], "hvorfor": "AI-kodeforslag som sender kode til skytjenesten.", "kilde": "https://supermaven.com", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den sender koden din til en AI-tjeneste."},
-    {"navn": "Zed", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["zed.exe", "zed industries"], "mapper": ["%APPDATA%\\Zed", "%LOCALAPPDATA%\\Zed"], "porter": [], "hvorfor": "Kodeeditor med innebygd AI-agent og MCP.", "kilde": "https://zed.dev", "enkelt": "Kodeeditor med AI", "hvorforEnkelt": "En kodeeditor med AI som kan endre filer og kjøre kommandoer."},
-    {"navn": "JetBrains AI (Junie)", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["junie", "jetbrains ai assistant", "ml.llm"], "mapper": ["%USERPROFILE%\\.junie"], "porter": [], "hvorfor": "AI-assistent og kodeagent i JetBrains-editorene.", "kilde": "https://www.jetbrains.com/junie/", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
-    {"navn": "Lenovo AI Now", "kategori": "Lokal AI", "risiko": "gul", "treff": ["lenovo ai now", "lenovoainow"], "mapper": [], "porter": [], "hvorfor": "AI-assistent fra Lenovo som kjører en språkmodell på PC-en og leser dokumentene du gir den.", "kilde": "https://download.lenovo.com/manual/thinkpad_x9_14/user_guide/en/Lenovo_AI_Now.html", "enkelt": "AI fra PC-produsenten", "hvorforEnkelt": "Lenovos AI-assistent. Kjører på PC-en og kan lese dokumentene dine."},
-    {"navn": "HP AI Companion", "kategori": "Skygge-AI", "risiko": "gul", "treff": ["hp ai companion", "hp.aicompanion", "aicompanion.exe"], "mapper": [], "porter": [], "hvorfor": "AI-assistent fra HP. Kan analysere filer og bruker både AI på PC-en og i skyen.", "kilde": "https://www.hp.com/gb-en/ai-solutions/ai-companion-faq.html", "enkelt": "AI fra PC-produsenten", "hvorforEnkelt": "HPs AI-assistent. Noe kjører på PC-en, noe sendes til skyen."}
+    {"navn": "AnythingLLM", "id": "produkt-anythingllm", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "anythingllm", "testNegativ": "anythingllmx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["anythingllm", "anything-llm", "anythingllm-desktop"], "mapper": ["%APPDATA%\\anythingllm-desktop", "%LOCALAPPDATA%\\Programs\\anythingllm-desktop"], "porter": [3001], "hvorfor": "Lokal AI-app som leser dokumenter, kjører agenter og kan bruke lokale modeller eller skytjenester.", "kilde": "https://github.com/Mintplex-Labs/anything-llm", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et AI-program som leser dokumentene dine og kan sende dem til en AI-tjeneste."},
+    {"navn": "Open WebUI", "id": "produkt-open-webui", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "open-webui", "testNegativ": "open-webuix9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["open-webui", "open_webui"], "mapper": [], "kommandoer": ["open-webui"], "porter": [], "hvorfor": "Nettside for lokale og eksterne språkmodeller. Kjører en server andre på nettverket kan bruke.", "kilde": "https://github.com/open-webui/open-webui", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-chat som kjører som server på PC-en."},
+    {"navn": "LocalAI", "id": "produkt-localai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "localai", "testNegativ": "localaix9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["localai", "local-ai"], "mapper": [], "kommandoer": ["local-ai"], "porter": [], "hvorfor": "Lokal AI-server med OpenAI-kompatibelt API.", "kilde": "https://github.com/mudler/LocalAI", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-server som andre programmer kan bruke."},
+    {"navn": "Text generation web UI", "id": "produkt-text-generation-web-ui", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "text-generation-webui", "testNegativ": "text-generation-webuix9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["text-generation-webui", "oobabooga"], "mapper": [], "porter": [], "hvorfor": "Lokal nettside for å kjøre språkmodeller, med API og utvidelser.", "kilde": "https://github.com/oobabooga/text-generation-webui", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et program som kjører AI-modeller på PC-en."},
+    {"navn": "Msty", "id": "produkt-msty", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («msty»): høyere risiko.", "testPositiv": "msty", "testNegativ": "mstyx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["msty"], "mapper": ["%APPDATA%\\Msty", "%LOCALAPPDATA%\\Programs\\Msty"], "porter": [10000], "hvorfor": "Chat-app for lokale modeller og skytjenester.", "kilde": "https://msty.app", "enkelt": "Kjører AI lokalt på PC-en", "hvorforEnkelt": "Et AI-chatprogram på PC-en."},
+    {"navn": "LibreChat", "id": "produkt-librechat", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "librechat", "testNegativ": "librechatx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["librechat"], "mapper": [], "porter": [], "hvorfor": "Selvdrevet chat-side for mange AI-tjenester og lokale modeller.", "kilde": "https://github.com/danny-avila/LibreChat", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-chat som kjører som server."},
+    {"navn": "LobeChat", "id": "produkt-lobechat", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "lobehub", "testNegativ": "lobehubx9", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["lobehub", "lobe-chat", "lobechat"], "mapper": ["%APPDATA%\\LobeHub"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester, med tillegg og agenter.", "kilde": "https://github.com/lobehub/lobe-chat", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
+    {"navn": "Cherry Studio", "id": "produkt-cherry-studio", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "cherry studio", "testNegativ": "cherry studiox9", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["cherry studio", "cherrystudio", "cherry-studio"], "mapper": ["%APPDATA%\\CherryStudio"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester og lokale modeller, med MCP.", "kilde": "https://github.com/CherryHQ/cherry-studio", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
+    {"navn": "Chatbox", "id": "produkt-chatbox", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "chatbox.exe", "testNegativ": "chatbox.exex9", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["chatbox.exe", "chatboxai", "xyz.chatboxapp"], "mapper": ["%APPDATA%\\xyz.chatboxapp.app"], "porter": [], "hvorfor": "Chat-app for mange AI-tjenester.", "kilde": "https://github.com/chatboxai/chatbox", "enkelt": "AI-chat", "hvorforEnkelt": "Et AI-chatprogram som sender det du skriver til AI-tjenester."},
+    {"navn": "Pinokio", "id": "produkt-pinokio", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "pinokio", "testNegativ": "pinokiox9", "kategori": "Lokal AI", "risiko": "rod", "treff": ["pinokio"], "mapper": ["%USERPROFILE%\\pinokio"], "porter": [42000], "hvorfor": "Installerer og kjører AI-programmer med ett klikk, med skript fra nettet.", "kilde": "https://github.com/pinokiocomputer/pinokio", "enkelt": "Installerer AI-programmer", "hvorforEnkelt": "Laster ned og kjører AI-programmer og skript fra nettet."},
+    {"navn": "InvokeAI", "id": "produkt-invokeai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "invokeai", "testNegativ": "invokeaix9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["invokeai"], "mapper": ["%USERPROFILE%\\invokeai"], "porter": [9090], "hvorfor": "Lokal bildegenerering med server og nettside.", "kilde": "https://github.com/invoke-ai/InvokeAI", "enkelt": "Lager bilder med AI på PC-en", "hvorforEnkelt": "Et program som lager bilder med AI på PC-en."},
+    {"navn": "SillyTavern", "id": "produkt-sillytavern", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "sillytavern", "testNegativ": "sillytavernx9", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["sillytavern"], "mapper": [], "porter": [], "hvorfor": "Chat-side for AI-tjenester og lokale modeller, med utvidelser.", "kilde": "https://github.com/SillyTavern/SillyTavern", "enkelt": "AI-chat", "hvorforEnkelt": "En AI-chat som kjører som server på PC-en."},
+    {"navn": "Tabby (TabbyML)", "id": "produkt-tabby-tabbyml", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "tabbyml", "testNegativ": "tabbymlx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["tabbyml"], "mapper": ["%USERPROFILE%\\.tabby"], "porter": [], "hvorfor": "Lokal AI-server for kodeforslag.", "kilde": "https://github.com/TabbyML/tabby", "enkelt": "AI-server på PC-en", "hvorforEnkelt": "En AI-server som foreslår kode."},
+    {"navn": "OpenHands", "id": "produkt-openhands", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "openhands", "testNegativ": "openhandsx9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["openhands", "all-hands-ai"], "mapper": ["%USERPROFILE%\\.openhands"], "porter": [], "hvorfor": "AI-agent som skriver og kjører kode på egen hånd.", "kilde": "https://github.com/All-Hands-AI/OpenHands", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
+    {"navn": "Kilo Code", "id": "produkt-kilo-code", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "kilocode", "testNegativ": "kilocodex9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["kilocode", "kilo-code"], "mapper": [], "porter": [], "hvorfor": "AI-kodeagent i VS Code som endrer filer og kjører kommandoer.", "kilde": "https://github.com/Kilo-Org/kilocode", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
+    {"navn": "Amazon Q Developer", "id": "produkt-amazon-q-developer", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "amazon q", "testNegativ": "amazon qx9", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["amazon q", "amazon-q", "amazon-q-vscode", "amazonwebservices.amazon-q-vscode"], "mapper": ["%USERPROFILE%\\.aws\\amazonq"], "porter": [], "hvorfor": "AI-kodeassistent og agent fra Amazon. Sender kode til AWS.", "kilde": "https://aws.amazon.com/q/developer/", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den sender koden din til Amazon."},
+    {"navn": "Tabnine", "id": "produkt-tabnine", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "tabnine", "testNegativ": "tabninex9", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["tabnine"], "mapper": ["%APPDATA%\\TabNine", "%LOCALAPPDATA%\\TabNine"], "porter": [], "hvorfor": "AI-kodeforslag. Kan sende kode til skytjenesten.", "kilde": "https://www.tabnine.com", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den kan sende koden din til en AI-tjeneste."},
+    {"navn": "Supermaven", "id": "produkt-supermaven", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "supermaven", "testNegativ": "supermavenx9", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["supermaven"], "mapper": ["%USERPROFILE%\\.supermaven"], "porter": [], "hvorfor": "AI-kodeforslag som sender kode til skytjenesten.", "kilde": "https://supermaven.com", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den sender koden din til en AI-tjeneste."},
+    {"navn": "Zed", "id": "produkt-zed", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "zed.exe", "testNegativ": "zed.exex9", "kategori": "Skygge-AI (utvikling)", "risiko": "rod", "treff": ["zed.exe", "zed industries"], "mapper": ["%APPDATA%\\Zed", "%LOCALAPPDATA%\\Zed"], "porter": [], "hvorfor": "Kodeeditor med innebygd AI-agent og MCP.", "kilde": "https://zed.dev", "enkelt": "Kodeeditor med AI", "hvorforEnkelt": "En kodeeditor med AI som kan endre filer og kjøre kommandoer."},
+    {"navn": "JetBrains AI (Junie)", "id": "produkt-jetbrains-ai-junie", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («junie»): høyere risiko.", "testPositiv": "junie", "testNegativ": "juniex9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["junie", "jetbrains ai assistant", "ml.llm"], "mapper": ["%USERPROFILE%\\.junie"], "porter": [], "hvorfor": "AI-assistent og kodeagent i JetBrains-editorene.", "kilde": "https://www.jetbrains.com/junie/", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
+    {"navn": "Lenovo AI Now", "id": "produkt-lenovo-ai-now", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "lenovo ai now", "testNegativ": "lenovo ai nowx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["lenovo ai now", "lenovoainow"], "mapper": [], "porter": [], "hvorfor": "AI-assistent fra Lenovo som kjører en språkmodell på PC-en og leser dokumentene du gir den.", "kilde": "https://download.lenovo.com/manual/thinkpad_x9_14/user_guide/en/Lenovo_AI_Now.html", "enkelt": "AI fra PC-produsenten", "hvorforEnkelt": "Lenovos AI-assistent. Kjører på PC-en og kan lese dokumentene dine."},
+    {"navn": "HP AI Companion", "id": "produkt-hp-ai-companion", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "hp ai companion", "testNegativ": "hp ai companionx9", "kategori": "Skygge-AI", "risiko": "gul", "treff": ["hp ai companion", "hp.aicompanion", "aicompanion.exe"], "mapper": [], "porter": [], "hvorfor": "AI-assistent fra HP. Kan analysere filer og bruker både AI på PC-en og i skyen.", "kilde": "https://www.hp.com/gb-en/ai-solutions/ai-companion-faq.html", "enkelt": "AI fra PC-produsenten", "hvorforEnkelt": "HPs AI-assistent. Noe kjører på PC-en, noe sendes til skyen."},
+    {"navn": "FaceFusion", "id": "produkt-facefusion", "bevistype": "produktregel", "kilde": "https://github.com/facefusion/facefusion", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "facefusion", "testNegativ": "facefusionx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["facefusion"], "mapper": ["%USERPROFILE%\\facefusion"], "porter": [], "hvorfor": "Bytter ansikt i bilder og video (deepfake). Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Bytter ansikt i bilder og video (deepfake)."},
+    {"navn": "Sourcegraph Cody", "id": "produkt-cody", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "sourcegraph.cody-ai", "testNegativ": "sourcegraph.cody-aix9", "kategori": "Skygge-AI (utvikling)", "risiko": "gul", "treff": ["sourcegraph.cody-ai"], "mapper": [], "porter": [], "hvorfor": "AI-kodeassistent. Sender kode til Sourcegraph eller en AI-tjeneste.", "kilde": "https://marketplace.visualstudio.com/items?itemName=sourcegraph.cody-ai", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den kan sende koden din til en AI-tjeneste."},
+    {"navn": "Qodo Gen", "id": "produkt-qodo", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "codium.codium", "testNegativ": "codium.codiumx9", "kategori": "Skygge-AI (utvikling)", "risiko": "gul", "treff": ["codium.codium", "qodo"], "mapper": [], "porter": [], "hvorfor": "AI-kodeassistent som skriver kode og tester. Sender kode til Qodo.", "kilde": "https://marketplace.visualstudio.com/items?itemName=Codium.codium", "enkelt": "AI som foreslår kode", "hvorforEnkelt": "Den kan sende koden din til en AI-tjeneste."},
+    {"navn": "Blackbox AI", "id": "produkt-blackbox", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "blackboxapp.blackbox", "testNegativ": "blackboxapp.blackboxx9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["blackboxapp.blackbox", "blackboxapp.blackboxagent"], "mapper": [], "porter": [], "hvorfor": "AI-kodeassistent og agent som kan endre filer og kjøre kommandoer.", "kilde": "https://marketplace.visualstudio.com/items?itemName=Blackboxapp.blackbox", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
+    {"navn": "Augment Code", "id": "produkt-augment", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "augment.vscode-augment", "testNegativ": "augment.vscode-augmentx9", "kategori": "Skygge-AI (agent)", "risiko": "rod", "treff": ["augment.vscode-augment"], "mapper": ["%USERPROFILE%\\.augment"], "porter": [], "hvorfor": "AI-kodeagent som leser hele kodebasen og kan kjøre kommandoer.", "kilde": "https://marketplace.visualstudio.com/items?itemName=augment.vscode-augment", "enkelt": "AI som skriver kode for deg", "hvorforEnkelt": "Den kjører kommandoer og endrer filer på egen hånd."},
+    {"navn": "RAGFlow", "id": "produkt-ragflow", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "ragflow", "testNegativ": "ragflowx9", "kategori": "Skygge-AI (utvikling)", "risiko": "gul", "treff": ["ragflow"], "mapper": [], "porter": [], "hvorfor": "System som lar AI lese og svare fra egne dokumenter (RAG).", "kilde": "https://github.com/infiniflow/ragflow", "enkelt": "AI som leser dokumentene dine", "hvorforEnkelt": "Dokumentene du legger inn, sendes til en AI-modell."},
+    {"navn": "Langflow", "id": "produkt-langflow", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "langflow", "testNegativ": "langflowx9", "kategori": "Skygge-AI (agent)", "risiko": "gul", "treff": ["langflow"], "mapper": ["%USERPROFILE%\\.langflow"], "porter": [], "hvorfor": "Verktøy for å bygge AI-agenter og RAG-flyter.", "kilde": "https://github.com/langflow-ai/langflow", "enkelt": "Verktøy for å lage AI-agenter", "hvorforEnkelt": "Agentene kan lese data og bruke verktøy på egen hånd."},
+    {"navn": "Flowise", "id": "produkt-flowise", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "flowise", "testNegativ": "flowisex9", "kategori": "Skygge-AI (agent)", "risiko": "gul", "treff": ["flowise"], "mapper": ["%USERPROFILE%\\.flowise"], "porter": [], "hvorfor": "Verktøy for å bygge AI-agenter og RAG-flyter.", "kilde": "https://github.com/FlowiseAI/Flowise", "enkelt": "Verktøy for å lage AI-agenter", "hvorforEnkelt": "Agentene kan lese data og bruke verktøy på egen hånd."},
+    {"navn": "PrivateGPT", "id": "produkt-privategpt", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "privategpt", "testNegativ": "privategptx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["privategpt", "private-gpt"], "mapper": [], "porter": [], "hvorfor": "Lokalt RAG-system som lar AI svare fra egne dokumenter.", "kilde": "https://github.com/zylon-ai/private-gpt", "enkelt": "AI som leser dokumentene dine", "hvorforEnkelt": "Dokumentene du legger inn, leses av en AI-modell."},
+    {"navn": "Deep-Live-Cam", "id": "produkt-deep-live-cam", "bevistype": "produktregel", "kilde": "https://github.com/hacksider/Deep-Live-Cam", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "deep-live-cam", "testNegativ": "deep-live-camx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["deep-live-cam"], "mapper": ["%USERPROFILE%\\Deep-Live-Cam"], "porter": [], "hvorfor": "Bytter ansikt live i webkamera og video (deepfake). Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Bytter ansikt live i webkamera og video (deepfake)."},
+    {"navn": "roop", "id": "produkt-roop", "bevistype": "produktregel", "kilde": "https://github.com/s0md3v/roop", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "roop-unleashed", "testNegativ": "roop-unleashedx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["roop-unleashed", "roop-cam"], "mapper": ["%USERPROFILE%\\roop", "%USERPROFILE%\\roop-unleashed"], "porter": [], "hvorfor": "Bytter ansikt i video med ett bilde (deepfake). Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Bytter ansikt i video med ett bilde (deepfake)."},
+    {"navn": "DeepFaceLab / DeepFaceLive", "id": "produkt-deepfacelab-deepfacelive", "bevistype": "produktregel", "kilde": "https://github.com/iperov/DeepFaceLab", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "deepfacelab", "testNegativ": "deepfacelabx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["deepfacelab", "deepfacelive"], "mapper": [], "porter": [], "hvorfor": "Lager deepfake-video og bytter ansikt live. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Lager deepfake-video og bytter ansikt live."},
+    {"navn": "LivePortrait (Kuaishou)", "id": "produkt-liveportrait-kuaishou", "bevistype": "produktregel", "kilde": "https://github.com/KwaiVGI/LivePortrait", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "liveportrait", "testNegativ": "liveportraitx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["liveportrait"], "mapper": [], "porter": [], "hvorfor": "Får et stillbilde av et ansikt til å bevege seg og snakke. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Får et stillbilde av et ansikt til å bevege seg og snakke."},
+    {"navn": "Wav2Lip", "id": "produkt-wav2lip", "bevistype": "produktregel", "kilde": "https://github.com/Rudrabha/Wav2Lip", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "wav2lip", "testNegativ": "wav2lipx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["wav2lip"], "mapper": [], "porter": [], "hvorfor": "Får munnen i en video til å følge en annen lyd (leppesynk). Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Får munnen i en video til å følge en annen lyd (leppesynk)."},
+    {"navn": "SadTalker", "id": "produkt-sadtalker", "bevistype": "produktregel", "kilde": "https://github.com/OpenTalker/SadTalker", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "sadtalker", "testNegativ": "sadtalkerx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["sadtalker"], "mapper": [], "porter": [], "hvorfor": "Lager snakkende video av ett bilde av et ansikt. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Lager snakkende video av ett bilde av et ansikt."},
+    {"navn": "RVC / Applio (stemmekloning)", "id": "produkt-rvc-applio-stemmekloning", "bevistype": "produktregel", "kilde": "https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "retrieval-based-voice-conversion", "testNegativ": "retrieval-based-voice-conversionx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["retrieval-based-voice-conversion", "rvc-webui", "applio"], "mapper": [], "porter": [], "hvorfor": "Gjør om en stemme til en annens (stemmekloning). Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Gjør om en stemme til en annens (stemmekloning)."},
+    {"navn": "GPT-SoVITS", "id": "produkt-gpt-sovits", "bevistype": "produktregel", "kilde": "https://github.com/RVC-Boss/GPT-SoVITS", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "gpt-sovits", "testNegativ": "gpt-sovitsx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["gpt-sovits"], "mapper": [], "porter": [], "hvorfor": "Kloner en stemme fra noen sekunder lyd. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra noen sekunder lyd."},
+    {"navn": "XTTS / Coqui TTS", "id": "produkt-xtts-coqui-tts", "bevistype": "produktregel", "kilde": "https://github.com/coqui-ai/TTS", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "coqui-tts", "testNegativ": "coqui-ttsx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["coqui-tts", "xtts"], "mapper": ["%LOCALAPPDATA%\\tts\\tts_models--multilingual--multi-dataset--xtts_v2"], "porter": [], "hvorfor": "Kloner en stemme fra et kort lydklipp. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra et kort lydklipp."},
+    {"navn": "OpenVoice", "id": "produkt-openvoice", "bevistype": "produktregel", "kilde": "https://github.com/myshell-ai/OpenVoice", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "openvoice", "testNegativ": "openvoicex9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["openvoice"], "mapper": [], "porter": [], "hvorfor": "Kloner en stemme fra et kort lydklipp. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra et kort lydklipp."},
+    {"navn": "F5-TTS", "id": "produkt-f5-tts", "bevistype": "produktregel", "kilde": "https://github.com/SWivid/F5-TTS", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "f5-tts", "testNegativ": "f5-ttsx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["f5-tts"], "mapper": [], "porter": [], "hvorfor": "Kloner en stemme fra et kort lydklipp. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra et kort lydklipp."},
+    {"navn": "Fish Speech", "id": "produkt-fish-speech", "bevistype": "produktregel", "kilde": "https://github.com/fishaudio/fish-speech", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "fish-speech", "testNegativ": "fish-speechx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["fish-speech"], "mapper": [], "porter": [], "hvorfor": "Kloner en stemme fra et kort lydklipp. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra et kort lydklipp."},
+    {"navn": "Chatterbox (Resemble AI)", "id": "produkt-chatterbox-resemble-ai", "bevistype": "produktregel", "kilde": "https://github.com/resemble-ai/chatterbox", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "chatterbox-tts", "testNegativ": "chatterbox-ttsx9", "fare": "Deepfake eller stemmekloning", "kategori": "Lokal AI", "risiko": "rod", "treff": ["chatterbox-tts"], "mapper": [], "porter": [], "hvorfor": "Kloner en stemme fra et kort lydklipp. Kan brukes til svindel og falske bevis.", "enkelt": "Deepfake eller stemmekloning", "hvorforEnkelt": "Kloner en stemme fra et kort lydklipp."},
+    {"navn": "Piper (tale fra tekst)", "id": "produkt-piper", "bevistype": "produktregel", "kilde": "https://github.com/rhasspy/piper", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Leser opp tekst med ferdige stemmer, kloner ikke stemmer, derfor ikke rød.", "testPositiv": "piper-tts", "testNegativ": "piper-ttsx9", "kategori": "Lokal AI", "risiko": "gul", "treff": ["piper-tts"], "mapper": [], "porter": [], "hvorfor": "Leser opp tekst med ferdige AI-stemmer lokalt.", "enkelt": "Tale fra tekst på PC-en", "hvorforEnkelt": "Leser opp tekst med AI-stemmer."}
+  ],
+  "_pythonPakker": "AI-biblioteker for Python (importnavn). agent = lager agenter som kan handle på egen hånd. Treffer bare pakkenavn, aldri innhold.",
+  "pythonPakker": [
+    {"id": "python-torch", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/torch/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "torch", "testNegativ": "torchx9", "navn": "torch", "agent": false},
+    {"id": "python-tensorflow", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/tensorflow/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "tensorflow", "testNegativ": "tensorflowx9", "navn": "tensorflow", "agent": false},
+    {"id": "python-transformers", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/transformers/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "transformers", "testNegativ": "transformersx9", "navn": "transformers", "agent": false},
+    {"id": "python-diffusers", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/diffusers/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "diffusers", "testNegativ": "diffusersx9", "navn": "diffusers", "agent": false},
+    {"id": "python-accelerate", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/accelerate/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "accelerate", "testNegativ": "acceleratex9", "navn": "accelerate", "agent": false},
+    {"id": "python-onnxruntime", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/onnxruntime/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "onnxruntime", "testNegativ": "onnxruntimex9", "navn": "onnxruntime", "agent": false},
+    {"id": "python-llama-cpp", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/llama-cpp-python/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "llama_cpp", "testNegativ": "llama_cppx9", "navn": "llama_cpp", "agent": false},
+    {"id": "python-vllm", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/vllm/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "vllm", "testNegativ": "vllmx9", "navn": "vllm", "agent": false},
+    {"id": "python-sentence-transformers", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/sentence-transformers/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "sentence_transformers", "testNegativ": "sentence_transformersx9", "navn": "sentence_transformers", "agent": false},
+    {"id": "python-mlx", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/mlx/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («mlx»): høyere risiko for falskt treff.", "testPositiv": "mlx", "testNegativ": "mlxx9", "navn": "mlx", "agent": false},
+    {"id": "python-gpt4all", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/gpt4all/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "gpt4all", "testNegativ": "gpt4allx9", "navn": "gpt4all", "agent": false},
+    {"id": "python-ctransformers", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/ctransformers/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "ctransformers", "testNegativ": "ctransformersx9", "navn": "ctransformers", "agent": false},
+    {"id": "python-openai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/openai/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "openai", "testNegativ": "openaix9", "navn": "openai", "agent": false},
+    {"id": "python-anthropic", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/anthropic/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "anthropic", "testNegativ": "anthropicx9", "navn": "anthropic", "agent": false},
+    {"id": "python-mistralai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/mistralai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "mistralai", "testNegativ": "mistralaix9", "navn": "mistralai", "agent": false},
+    {"id": "python-cohere", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/cohere/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "cohere", "testNegativ": "coherex9", "navn": "cohere", "agent": false},
+    {"id": "python-ollama", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/ollama/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "ollama", "testNegativ": "ollamax9", "navn": "ollama", "agent": false},
+    {"id": "python-groq", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/groq/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "groq", "testNegativ": "groqx9", "navn": "groq", "agent": false},
+    {"id": "python-chromadb", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/chromadb/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "chromadb", "testNegativ": "chromadbx9", "navn": "chromadb", "agent": false},
+    {"id": "python-faiss", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/faiss-cpu/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "faiss", "testNegativ": "faissx9", "navn": "faiss", "agent": false},
+    {"id": "python-langchain", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/langchain/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "langchain", "testNegativ": "langchainx9", "navn": "langchain", "agent": true},
+    {"id": "python-langchain-core", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/langchain-core/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "langchain_core", "testNegativ": "langchain_corex9", "navn": "langchain_core", "agent": true},
+    {"id": "python-langgraph", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/langgraph/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "langgraph", "testNegativ": "langgraphx9", "navn": "langgraph", "agent": true},
+    {"id": "python-llama-index", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/llama-index/", "verifisert": true, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "llama_index", "testNegativ": "llama_indexx9", "navn": "llama_index", "agent": true},
+    {"id": "python-autogen", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pyautogen/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "autogen", "testNegativ": "autogenx9", "navn": "autogen", "agent": true},
+    {"id": "python-autogen-agentchat", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/autogen-agentchat/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "autogen_agentchat", "testNegativ": "autogen_agentchatx9", "navn": "autogen_agentchat", "agent": true},
+    {"id": "python-crewai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/crewai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "crewai", "testNegativ": "crewaix9", "navn": "crewai", "agent": true},
+    {"id": "python-smolagents", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/smolagents/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "smolagents", "testNegativ": "smolagentsx9", "navn": "smolagents", "agent": true},
+    {"id": "python-haystack", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/haystack-ai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "haystack", "testNegativ": "haystackx9", "navn": "haystack", "agent": true},
+    {"id": "python-interpreter", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/open-interpreter/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («interpreter»): høyere risiko for falskt treff.", "testPositiv": "interpreter", "testNegativ": "interpreterx9", "navn": "interpreter", "agent": true},
+    {"id": "python-browser-use", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/browser-use/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "browser_use", "testNegativ": "browser_usex9", "navn": "browser_use", "agent": true},
+    {"id": "python-pydantic-ai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pydantic-ai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "pydantic_ai", "testNegativ": "pydantic_aix9", "navn": "pydantic_ai", "agent": true},
+    {"id": "python-agents", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/openai-agents/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («agents»): høyere risiko for falskt treff.", "testPositiv": "agents", "testNegativ": "agentsx9", "navn": "agents", "agent": true},
+    {"id": "python-peft", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/peft/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («peft»): høyere risiko for falskt treff.", "testPositiv": "peft", "testNegativ": "peftx9", "navn": "peft", "agent": false},
+    {"id": "python-bitsandbytes", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/bitsandbytes/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "bitsandbytes", "testNegativ": "bitsandbytesx9", "navn": "bitsandbytes", "agent": false},
+    {"id": "python-unsloth", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/unsloth/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "unsloth", "testNegativ": "unslothx9", "navn": "unsloth", "agent": false},
+    {"id": "python-gptqmodel", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/gptqmodel/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "gptqmodel", "testNegativ": "gptqmodelx9", "navn": "gptqmodel", "agent": false},
+    {"id": "python-auto-gptq", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/auto-gptq/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "auto_gptq", "testNegativ": "auto_gptqx9", "navn": "auto_gptq", "agent": false},
+    {"id": "python-awq", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/autoawq/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («awq»): høyere risiko for falskt treff.", "testPositiv": "awq", "testNegativ": "awqx9", "navn": "awq", "agent": false},
+    {"id": "python-exllamav2", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/exllamav2/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "exllamav2", "testNegativ": "exllamav2x9", "navn": "exllamav2", "agent": false},
+    {"id": "python-mlx-lm", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/mlx-lm/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "mlx_lm", "testNegativ": "mlx_lmx9", "navn": "mlx_lm", "agent": false},
+    {"id": "python-optimum", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/optimum/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "optimum", "testNegativ": "optimumx9", "navn": "optimum", "agent": false},
+    {"id": "python-openvino", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/openvino/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "openvino", "testNegativ": "openvinox9", "navn": "openvino", "agent": false},
+    {"id": "python-ultralytics", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/ultralytics/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "ultralytics", "testNegativ": "ultralyticsx9", "navn": "ultralytics", "agent": false},
+    {"id": "python-keras", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/keras/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («keras»): høyere risiko for falskt treff.", "testPositiv": "keras", "testNegativ": "kerasx9", "navn": "keras", "agent": false},
+    {"id": "python-faster-whisper", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/faster-whisper/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "faster_whisper", "testNegativ": "faster_whisperx9", "navn": "faster_whisper", "agent": false},
+    {"id": "python-whisper", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/openai-whisper/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («whisper»): høyere risiko for falskt treff.", "testPositiv": "whisper", "testNegativ": "whisperx9", "navn": "whisper", "agent": false},
+    {"id": "python-sglang", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/sglang/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "sglang", "testNegativ": "sglangx9", "navn": "sglang", "agent": false},
+    {"id": "python-tensorrt-llm", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/tensorrt-llm/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "tensorrt_llm", "testNegativ": "tensorrt_llmx9", "navn": "tensorrt_llm", "agent": false},
+    {"id": "python-litellm", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/litellm/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "litellm", "testNegativ": "litellmx9", "navn": "litellm", "agent": false},
+    {"id": "python-dspy", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/dspy/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "dspy", "testNegativ": "dspyx9", "navn": "dspy", "agent": false},
+    {"id": "python-semantic-kernel", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/semantic-kernel/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "semantic_kernel", "testNegativ": "semantic_kernelx9", "navn": "semantic_kernel", "agent": true},
+    {"id": "python-paddle", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/paddlepaddle/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "paddle", "testNegativ": "paddlex9", "navn": "paddle", "agent": false},
+    {"id": "python-mindspore", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/mindspore/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "mindspore", "testNegativ": "mindsporex9", "navn": "mindspore", "agent": false},
+    {"id": "python-modelscope", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/modelscope/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "modelscope", "testNegativ": "modelscopex9", "navn": "modelscope", "agent": false},
+    {"id": "python-dashscope", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/dashscope/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "dashscope", "testNegativ": "dashscopex9", "navn": "dashscope", "agent": false},
+    {"id": "python-zhipuai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/zhipuai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "zhipuai", "testNegativ": "zhipuaix9", "navn": "zhipuai", "agent": false},
+    {"id": "python-qianfan", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/qianfan/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "qianfan", "testNegativ": "qianfanx9", "navn": "qianfan", "agent": false},
+    {"id": "python-pentestgpt", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pentestgpt/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "pentestgpt", "testNegativ": "pentestgptx9", "navn": "pentestgpt", "agent": true},
+    {"id": "python-villager", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/villager/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "villager", "testNegativ": "villagerx9", "navn": "villager", "agent": true},
+    {"id": "python-garak", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/garak/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "garak", "testNegativ": "garakx9", "navn": "garak", "agent": false},
+    {"id": "python-pyrit", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pyrit/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "pyrit", "testNegativ": "pyritx9", "navn": "pyrit", "agent": false},
+    {"id": "python-deepteam", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/deepteam/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "deepteam", "testNegativ": "deepteamx9", "navn": "deepteam", "agent": false},
+    {"id": "python-f5-tts", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/f5-tts/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "f5_tts", "testNegativ": "f5_ttsx9", "navn": "f5_tts", "agent": false, "fare": "Deepfake eller stemmekloning"},
+    {"id": "python-fish-speech", "bevistype": "pakkenavn", "kilde": "https://github.com/fishaudio/fish-speech", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "fish_speech", "testNegativ": "fish_speechx9", "navn": "fish_speech", "agent": false, "fare": "Deepfake eller stemmekloning"},
+    {"id": "python-openvoice", "bevistype": "pakkenavn", "kilde": "https://github.com/myshell-ai/OpenVoice", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "openvoice", "testNegativ": "openvoicex9", "navn": "openvoice", "agent": false, "fare": "Deepfake eller stemmekloning"},
+    {"id": "python-chatterbox", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/chatterbox-tts/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («chatterbox»): høyere risiko.", "testPositiv": "chatterbox", "testNegativ": "chatterboxx9", "navn": "chatterbox", "agent": false, "fare": "Deepfake eller stemmekloning"},
+    {"id": "python-tts-coqui", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/coqui-tts/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («TTS»): et annet bibliotek med samme mappenavn kan gi falskt treff.", "testPositiv": "TTS", "testNegativ": "TTSx9", "navn": "TTS", "agent": false, "fare": "Deepfake eller stemmekloning"},
+    {"id": "python-pyannote", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pyannote.audio/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "pyannote", "testNegativ": "pyannotex9", "navn": "pyannote", "agent": false},
+    {"id": "python-speechbrain", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/speechbrain/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "speechbrain", "testNegativ": "speechbrainx9", "navn": "speechbrain", "agent": false},
+    {"id": "python-demucs", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/demucs/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "demucs", "testNegativ": "demucsx9", "navn": "demucs", "agent": false},
+    {"id": "python-audiocraft", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/audiocraft/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "audiocraft", "testNegativ": "audiocraftx9", "navn": "audiocraft", "agent": false},
+    {"id": "python-vosk", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/vosk/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "vosk", "testNegativ": "voskx9", "navn": "vosk", "agent": false},
+    {"id": "python-whisperx", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/whisperx/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "whisperx", "testNegativ": "whisperxx9", "navn": "whisperx", "agent": false},
+    {"id": "python-animatediff", "bevistype": "pakkenavn", "kilde": "https://github.com/guoyww/AnimateDiff", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "animatediff", "testNegativ": "animatediffx9", "navn": "animatediff", "agent": false},
+    {"id": "python-ltx-video", "bevistype": "pakkenavn", "kilde": "https://github.com/Lightricks/LTX-Video", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "ltx_video", "testNegativ": "ltx_videox9", "navn": "ltx_video", "agent": false},
+    {"id": "python-insightface", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/insightface/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "insightface", "testNegativ": "insightfacex9", "navn": "insightface", "agent": false},
+    {"id": "python-gfpgan", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/gfpgan/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "gfpgan", "testNegativ": "gfpganx9", "navn": "gfpgan", "agent": false},
+    {"id": "python-realesrgan", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/realesrgan/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "realesrgan", "testNegativ": "realesrganx9", "navn": "realesrgan", "agent": false},
+    {"id": "python-controlnet-aux", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/controlnet-aux/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "controlnet_aux", "testNegativ": "controlnet_auxx9", "navn": "controlnet_aux", "agent": false},
+    {"id": "python-open-clip", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/open-clip-torch/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "open_clip", "testNegativ": "open_clipx9", "navn": "open_clip", "agent": false},
+    {"id": "python-timm", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/timm/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "timm", "testNegativ": "timmx9", "navn": "timm", "agent": false},
+    {"id": "python-mediapipe", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/mediapipe/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "mediapipe", "testNegativ": "mediapipex9", "navn": "mediapipe", "agent": false},
+    {"id": "python-paddleocr", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/paddleocr/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "paddleocr", "testNegativ": "paddleocrx9", "navn": "paddleocr", "agent": false},
+    {"id": "python-easyocr", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/easyocr/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "easyocr", "testNegativ": "easyocrx9", "navn": "easyocr", "agent": false},
+    {"id": "python-rembg", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/rembg/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "rembg", "testNegativ": "rembgx9", "navn": "rembg", "agent": false}
+  ],
+  "_nodePakker": "AI-biblioteker for Node (pakkenavn i node_modules og package.json).",
+  "nodePakker": [
+    {"id": "node-openai", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/openai", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "openai", "testNegativ": "openaix9", "navn": "openai", "agent": false},
+    {"id": "node-anthropic-ai-sdk", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@anthropic-ai/sdk", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@anthropic-ai/sdk", "testNegativ": "@anthropic-ai/sdkx9", "navn": "@anthropic-ai/sdk", "agent": false},
+    {"id": "node-google-generative-ai", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@google/generative-ai", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@google/generative-ai", "testNegativ": "@google/generative-aix9", "navn": "@google/generative-ai", "agent": false},
+    {"id": "node-google-genai", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@google/genai", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@google/genai", "testNegativ": "@google/genaix9", "navn": "@google/genai", "agent": false},
+    {"id": "node-ollama", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/ollama", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "ollama", "testNegativ": "ollamax9", "navn": "ollama", "agent": false},
+    {"id": "node-huggingface-transformers", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@huggingface/transformers", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@huggingface/transformers", "testNegativ": "@huggingface/transformersx9", "navn": "@huggingface/transformers", "agent": false},
+    {"id": "node-xenova-transformers", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@xenova/transformers", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@xenova/transformers", "testNegativ": "@xenova/transformersx9", "navn": "@xenova/transformers", "agent": false},
+    {"id": "node-mlc-ai-web-llm", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@mlc-ai/web-llm", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@mlc-ai/web-llm", "testNegativ": "@mlc-ai/web-llmx9", "navn": "@mlc-ai/web-llm", "agent": false},
+    {"id": "node-onnxruntime-node", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/onnxruntime-node", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "onnxruntime-node", "testNegativ": "onnxruntime-nodex9", "navn": "onnxruntime-node", "agent": false},
+    {"id": "node-node-llama-cpp", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/node-llama-cpp", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "node-llama-cpp", "testNegativ": "node-llama-cppx9", "navn": "node-llama-cpp", "agent": false},
+    {"id": "node-ai", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/ai", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («ai»): høyere risiko for falskt treff.", "testPositiv": "ai", "testNegativ": "aix9", "navn": "ai", "agent": false},
+    {"id": "node-ai-sdk-openai", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@ai-sdk/openai", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@ai-sdk/openai", "testNegativ": "@ai-sdk/openaix9", "navn": "@ai-sdk/openai", "agent": false},
+    {"id": "node-langchain", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/langchain", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "langchain", "testNegativ": "langchainx9", "navn": "langchain", "agent": true},
+    {"id": "node-langchain-core", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@langchain/core", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@langchain/core", "testNegativ": "@langchain/corex9", "navn": "@langchain/core", "agent": true},
+    {"id": "node-langchain-langgraph", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@langchain/langgraph", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@langchain/langgraph", "testNegativ": "@langchain/langgraphx9", "navn": "@langchain/langgraph", "agent": true},
+    {"id": "node-llamaindex", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/llamaindex", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "llamaindex", "testNegativ": "llamaindexx9", "navn": "llamaindex", "agent": true},
+    {"id": "node-modelcontextprotocol-sdk", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@modelcontextprotocol/sdk", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@modelcontextprotocol/sdk", "testNegativ": "@modelcontextprotocol/sdkx9", "navn": "@modelcontextprotocol/sdk", "agent": true},
+    {"id": "node-openai-agents", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@openai/agents", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@openai/agents", "testNegativ": "@openai/agentsx9", "navn": "@openai/agents", "agent": true},
+    {"id": "node-anthropic-ai-claude-agent-sdk", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "@anthropic-ai/claude-agent-sdk", "testNegativ": "@anthropic-ai/claude-agent-sdkx9", "navn": "@anthropic-ai/claude-agent-sdk", "agent": true},
+    {"id": "node-promptfoo", "bevistype": "pakkenavn", "kilde": "https://www.npmjs.com/package/promptfoo", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "promptfoo", "testNegativ": "promptfoox9", "navn": "promptfoo", "agent": false}
+  ],
+  "_dockerBilder": "Kjente AI-bilder (navnet før kolon/tag). Slutter navnet på /, er det et prefiks. Uten / treffer det som del av bildenavnet.",
+  "dockerBilder": [
+    {"id": "docker-ollama-ollama", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/ollama/ollama", "verifisert": true, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "ollama/ollama", "testNegativ": "xllama/ollama", "navn": "ollama/ollama"},
+    {"id": "docker-vllm-vllm-openai", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/vllm/vllm-openai", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "vllm/vllm-openai", "testNegativ": "xllm/vllm-openai", "navn": "vllm/vllm-openai"},
+    {"id": "docker-huggingface-text-generation-inference", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/huggingface/text-generation-inference", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "huggingface/text-generation-inference", "testNegativ": "xuggingface/text-generation-inference", "navn": "huggingface/text-generation-inference"},
+    {"id": "docker-open-webui-open-webui", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/open-webui/open-webui", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "open-webui/open-webui", "testNegativ": "xpen-webui/open-webui", "navn": "open-webui/open-webui"},
+    {"id": "docker-localai-localai", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/localai/localai", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "localai/localai", "testNegativ": "xocalai/localai", "navn": "localai/localai"},
+    {"id": "docker-ggerganov-llama-cpp", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/ggerganov/llama.cpp", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "ggerganov/llama.cpp", "testNegativ": "xgerganov/llama.cpp", "navn": "ggerganov/llama.cpp"},
+    {"id": "docker-ggml-org-llama-cpp", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/ggml-org/llama.cpp", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "ggml-org/llama.cpp", "testNegativ": "xgml-org/llama.cpp", "navn": "ggml-org/llama.cpp"},
+    {"id": "docker-nvidia-tritonserver", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/nvidia/tritonserver", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "nvidia/tritonserver", "testNegativ": "xvidia/tritonserver", "navn": "nvidia/tritonserver"},
+    {"id": "docker-berriai-litellm", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/berriai/litellm", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "berriai/litellm", "testNegativ": "xerriai/litellm", "navn": "berriai/litellm"},
+    {"id": "docker-qdrant-qdrant", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/qdrant/qdrant", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "qdrant/qdrant", "testNegativ": "xdrant/qdrant", "navn": "qdrant/qdrant"},
+    {"id": "docker-chromadb-chroma", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/chromadb/chroma", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "chromadb/chroma", "testNegativ": "xhromadb/chroma", "navn": "chromadb/chroma"},
+    {"id": "docker-mintplexlabs-anythingllm", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/mintplexlabs/anythingllm", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "mintplexlabs/anythingllm", "testNegativ": "xintplexlabs/anythingllm", "navn": "mintplexlabs/anythingllm"},
+    {"id": "docker-danny-avila-librechat", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/danny-avila/librechat", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "danny-avila/librechat", "testNegativ": "xanny-avila/librechat", "navn": "danny-avila/librechat"},
+    {"id": "docker-infiniflow-ragflow", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/infiniflow/ragflow", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet.", "testPositiv": "infiniflow/ragflow:v0.20", "testNegativ": "infiniflow/ragflowx9", "navn": "infiniflow/ragflow"},
+    {"id": "docker-flowiseai-flowise", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/flowiseai/flowise", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "flowiseai/flowise", "testNegativ": "xlowiseai/flowise", "navn": "flowiseai/flowise"},
+    {"id": "docker-langgenius-dify-api", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/langgenius/dify-api", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "langgenius/dify-api", "testNegativ": "xanggenius/dify-api", "navn": "langgenius/dify-api"},
+    {"id": "docker-langgenius-dify-web", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/langgenius/dify-web", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "langgenius/dify-web", "testNegativ": "xanggenius/dify-web", "navn": "langgenius/dify-web"},
+    {"id": "docker-milvusdb-milvus", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/milvusdb/milvus", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "milvusdb/milvus", "testNegativ": "xilvusdb/milvus", "navn": "milvusdb/milvus"},
+    {"id": "docker-semitechnologies-weaviate", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/semitechnologies/weaviate", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "semitechnologies/weaviate", "testNegativ": "xemitechnologies/weaviate", "navn": "semitechnologies/weaviate"},
+    {"id": "docker-comfyui", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/search?q=comfyui", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff. Bare et ord uten /: høyere risiko.", "testPositiv": "comfyui", "testNegativ": "xomfyui", "navn": "comfyui"},
+    {"id": "docker-stable-diffusion-webui", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/search?q=stable-diffusion-webui", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff. Bare et ord uten /: høyere risiko.", "testPositiv": "stable-diffusion-webui", "testNegativ": "xtable-diffusion-webui", "navn": "stable-diffusion-webui"},
+    {"id": "docker-invokeai-invokeai", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/invokeai/invokeai", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "invokeai/invokeai", "testNegativ": "xnvokeai/invokeai", "navn": "invokeai/invokeai"},
+    {"id": "docker-h2oai-h2ogpt", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/h2oai/h2ogpt", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "h2oai/h2ogpt", "testNegativ": "x2oai/h2ogpt", "navn": "h2oai/h2ogpt"},
+    {"id": "docker-lmsysorg-sglang", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/lmsysorg/sglang", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "lmsysorg/sglang", "testNegativ": "xmsysorg/sglang", "navn": "lmsysorg/sglang"},
+    {"id": "docker-michaelf34-infinity", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/michaelf34/infinity", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "michaelf34/infinity", "testNegativ": "xichaelf34/infinity", "navn": "michaelf34/infinity"},
+    {"id": "docker-ghcr-io-huggingface-text-embeddings-inference", "bevistype": "bildenavn", "kilde": "https://ghcr.io/huggingface/text-embeddings-inference", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "ghcr.io/huggingface/text-embeddings-inference", "testNegativ": "xhcr.io/huggingface/text-embeddings-inference", "navn": "ghcr.io/huggingface/text-embeddings-inference"},
+    {"id": "docker-nvcr-io-nim", "bevistype": "bildenavn", "kilde": "https://nvcr.io/nim", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "nvcr.io/nim/", "testNegativ": "xvcr.io/nim/", "navn": "nvcr.io/nim/"},
+    {"id": "docker-docker-model-runner", "bevistype": "bildenavn", "kilde": "https://hub.docker.com/r/docker/model-runner", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "docker/model-runner", "testNegativ": "xocker/model-runner", "navn": "docker/model-runner"},
+    {"id": "docker-ai", "bevistype": "bildenavn", "kilde": "https://docs.docker.com/ai/model-runner/", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "ai/", "testNegativ": "xi/", "navn": "ai/"},
+    {"id": "docker-docker-io-ai", "bevistype": "bildenavn", "kilde": "https://docs.docker.com/ai/model-runner/", "verifisert": false, "fpMerknad": "Treffer bare bildenavnet fra Docker, aldri innholdet i beholderen. Et eget bilde med samme navn kan gi falskt treff.", "testPositiv": "docker.io/ai/", "testNegativ": "xocker.io/ai/", "navn": "docker.io/ai/"}
   ],
   "ukjentUtvidelseOrd": [
     "ai ",
@@ -1109,6 +1276,17 @@
     }
   ],
   "aiNettsteder": [
+    {
+      "navn": "Microsoft Copilot Studio",
+      "domener": [
+        "copilotstudio.microsoft.com"
+      ],
+      "kilde": "https://learn.microsoft.com/microsoft-copilot-studio/",
+      "risiko": "gul",
+      "land": "US",
+      "enkelt": "Verktøy for å lage AI-agenter fra Microsoft",
+      "hvorfor": "Lager AI-agenter som kan lese bedriftsdata og handle i andre systemer. Skytjeneste: vises bare når nettleseren har besøkt den."
+    },
     {
       "navn": "Devin (Cognition)",
       "domener": [
@@ -2792,7 +2970,14 @@
     {"navn": "Youtu", "utgiver": "Tencent", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["youtu-llm", "youtu-"], "kilde": "https://huggingface.co/tencent/Youtu-LLM-2B"},
     {"navn": "JoyAI", "utgiver": "JD.com", "land": "CN", "arkitekturer": [], "vokab": [], "ord": ["joyai"], "kilde": "https://huggingface.co/jdopensource/JoyAI-LLM-Flash"},
     {"navn": "Kandinsky", "utgiver": "Sber", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["kandinsky", "kandinskylab/"], "kilde": "Kandinsky 5.0, Sber AI https://arxiv.org/abs/2511.14993 · https://huggingface.co/kandinskylab"},
-    {"navn": "GigaAM", "utgiver": "Sber (SaluteDevices)", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["gigaam"], "kilde": "https://github.com/salute-developers/GigaAM (SaluteDevices, Sber) · https://habr.com/ru/companies/sberdevices/articles/"}
+    {"navn": "GigaAM", "utgiver": "Sber (SaluteDevices)", "land": "RU", "arkitekturer": [], "vokab": [], "ord": ["gigaam"], "kilde": "https://github.com/salute-developers/GigaAM (SaluteDevices, Sber) · https://habr.com/ru/companies/sberdevices/articles/"},
+    {"navn": "LLaVA (bilde + tekst)", "utgiver": "LLaVA-prosjektet", "land": "US", "arkitekturer": ["llava", "llava_next", "llava_onevision"], "vokab": [], "ord": ["llava"], "type": "bilde- og språkmodell", "kilde": "https://github.com/haotian-liu/LLaVA · https://huggingface.co/docs/transformers/model_doc/llava"},
+    {"navn": "SAM (Segment Anything)", "utgiver": "Meta", "land": "US", "arkitekturer": ["sam", "sam2", "sam_hq"], "vokab": [], "ord": ["segment-anything", "sam-vit", "sam2"], "type": "bildemodell (segmentering)", "kilde": "https://github.com/facebookresearch/segment-anything · https://huggingface.co/docs/transformers/model_doc/sam"},
+    {"navn": "SigLIP", "utgiver": "Google", "land": "US", "arkitekturer": ["siglip", "siglip2"], "vokab": [], "ord": ["siglip"], "type": "bildemodell (bilde og tekst)", "kilde": "https://huggingface.co/docs/transformers/model_doc/siglip"},
+    {"navn": "DINOv2", "utgiver": "Meta", "land": "US", "arkitekturer": ["dinov2", "dinov3"], "vokab": [], "ord": ["dinov2", "dinov3"], "type": "bildemodell", "kilde": "https://github.com/facebookresearch/dinov2 · https://huggingface.co/docs/transformers/model_doc/dinov2"},
+    {"navn": "Florence-2", "utgiver": "Microsoft", "land": "US", "arkitekturer": ["florence2"], "vokab": [], "ord": ["florence-2"], "type": "bilde- og språkmodell", "kilde": "https://huggingface.co/microsoft/Florence-2-large"},
+    {"navn": "CLIP", "utgiver": "OpenAI", "land": "US", "arkitekturer": ["clip"], "vokab": [], "ord": ["clip-vit"], "type": "bildemodell (bilde og tekst)", "kilde": "https://github.com/openai/CLIP · https://huggingface.co/docs/transformers/model_doc/clip"},
+    {"navn": "Whisper", "utgiver": "OpenAI", "land": "US", "arkitekturer": ["whisper"], "vokab": [], "ord": ["whisper"], "type": "talegjenkjenning", "kilde": "https://github.com/openai/whisper · https://huggingface.co/docs/transformers/model_doc/whisper"}
   ],
   "_preTokenizer": "Navnet llama.cpp gir ordforrådet i GGUF-fila (tokenizer.ggml.pre), koblet til modellfamilien. Like sterkt som ordforrådets størrelse: følger familien selv om fila får nytt navn. Kilde: https://github.com/ggml-org/llama.cpp/blob/master/convert_hf_to_gguf_update.py (lista models: name og repo).",
   "preTokenizer": {"qwen2": "Qwen", "qwen35": "Qwen", "deepseek-llm": "DeepSeek", "deepseek-coder": "DeepSeek", "deepseek-v3": "DeepSeek", "chatglm-bpe": "GLM", "glm4": "GLM", "kimi-k2": "Kimi", "hunyuan": "Hunyuan", "hunyuan-dense": "Hunyuan", "hy_v4": "Hunyuan", "bailingmoe": "Ling / Ring", "bailingmoe2": "Ling / Ring", "seed-coder": "Seed-OSS", "minimax-m2": "MiniMax", "megrez": "Megrez", "youtu": "Youtu", "joyai-llm": "JoyAI", "codeshell": "CodeShell", "gigachat": "GigaChat", "minicpm5": "MiniCPM", "llama-bpe": "Llama 3", "llama4": "Llama 3", "llama-spm": "Llama 2 eller eldre Llama-type", "tekken": "Mistral", "pixtral": "Mistral", "gemma": "Gemma", "gemma-2": "Gemma", "phi-3": "Phi", "phi-2": "Phi", "smollm": "SmolLM / StarCoder", "starcoder": "SmolLM / StarCoder", "olmo": "OLMo", "falcon": "Falcon", "falcon3": "Falcon", "falcon-h1": "Falcon", "command-r": "Command R", "bert-bge": "BGE", "bert-bge-large": "BGE"},

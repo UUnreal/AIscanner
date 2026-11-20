@@ -73,7 +73,8 @@ public static class ModellFormat
             // Kilde: https://docs.mozilla.ai/llamafile/reference/technical_details og https://justine.lol/ape.html
             if (Ascii(hode, 0, 6) == "MZqFpD") return ModellIZip(fs, "llamafile", program: true);
             if (hode[0] == 'P' && hode[1] == 'K' && hode[2] == 3 && hode[3] == 4 && ext == ".zip" && ModellIZip(fs, "zip-fil", program: false) is { } zip) return zip;
-            if (UtenMagi.TryGetValue(ext, out var formatNavn)) return new Modell(formatNavn, null, null, null, false) { Type = "AI-modell (kjent på endelsen)" };
+            if (Bekreft(sti, ext, hode, fs) is { } bekreftet) return bekreftet;
+            if (UtenMagi.TryGetValue(ext, out var formatNavn)) return new Modell(formatNavn, null, null, null, false) { Type = KjentPaEndelsen };
             if (ext == ".nemo" && fs.Length > 512) { fs.Position = 257; var t = new byte[5]; fs.LesAlt(t); if (Ascii(t, 0, 5) == "ustar") return new Modell("NVIDIA NeMo", null, null, null, true); }
             if (ext == ".bin" && Nabo(sti, ".xml", "<net ", 300)) return new Modell("OpenVINO", null, null, null, false);
             // ncnn (Tencent): .param-fila ved siden av starter med tallet 7767517. Kilde: github.com/Tencent/ncnn docs/developer-guide/param-and-model-file-structure.md
@@ -114,6 +115,32 @@ public static class ModellFormat
     }
 
     private static string Ascii(byte[] b, int fra, int lengde) => Encoding.ASCII.GetString(b, fra, lengde);
+
+    /// <summary>Formatet er bare kjent på endelsen: bevisstandarden gjør det til Mulig spor.</summary>
+    public const string KjentPaEndelsen = "AI-modell (kjent på endelsen)";
+
+    /// <summary>
+    /// Formater som kan bekreftes på innholdet, ikke bare endelsen (plan PR 5). Kilder:
+    /// Core ML: coremltools/mlmodel/format/Model.proto (felt 1 specificationVersion, felt 2 description).
+    /// MindSpore: mindspore/core/proto/mind_ir.proto (producer_name «MindSpore» først i ModelProto).
+    /// Paddle: paddle/fluid/framework/framework.proto (ProgramDesc, felt 1 blocks) + .pdiparams ved siden av.
+    /// TensorRT: serialisert motor starter med «ftrt» (NVIDIA TensorRT-plan). SavedModel: tensorflow/core/protobuf/saved_model.proto
+    /// (saved_model_schema_version = 1) med variables/ ved siden av. Flax: flax/serialization.py (msgpack-kart), Hugging Face flax_model.msgpack.
+    /// </summary>
+    private static Modell? Bekreft(string sti, string ext, byte[] hode, Stream fs)
+    {
+        var navn = Path.GetFileName(sti);
+        if (ext == ".mlmodel" && hode[0] == 0x08 && hode[1] is >= 1 and <= 12 && hode[2] == 0x12) return new Modell("Core ML", null, null, null, false);
+        if (ext == ".mindir" && Inneholder(fs, "MindSpore", 4096)) return new Modell("MindSpore (Huawei)", null, null, null, false);
+        if (ext == ".pdmodel" && hode[0] == 0x0A && File.Exists(Path.ChangeExtension(sti, ".pdiparams"))) return new Modell("PaddlePaddle (Baidu)", null, null, null, false);
+        if (ext == ".pdiparams" && File.Exists(Path.ChangeExtension(sti, ".pdmodel"))) return new Modell("PaddlePaddle (Baidu)", null, null, null, false);
+        if (ext is ".engine" or ".plan" or ".trt" && Ascii(hode, 0, 4) == "ftrt") return new Modell("TensorRT-motor", null, null, null, false);
+        if (navn.Equals("saved_model.pb", StringComparison.OrdinalIgnoreCase) && hode[0] == 0x08 && hode[1] == 0x01
+            && Directory.Exists(Path.Combine(Path.GetDirectoryName(sti) ?? "", "variables"))) return new Modell("TensorFlow SavedModel", null, null, null, false);
+        if (navn.Equals("flax_model.msgpack", StringComparison.OrdinalIgnoreCase) && (hode[0] is >= 0x80 and <= 0x8f || hode[0] is 0xde or 0xdf))
+            return new Modell("JAX/Flax (msgpack)", null, null, null, false);
+        return null;
+    }
 
     /// <summary>
     /// Formater uten kjent filmerke. Endelsen brukes bare av disse AI-formatene, og fila må være stor (sjekket før).
@@ -404,7 +431,7 @@ public static class ModellFormat
         string? navn = null, type = null;
         int? vokab = null, bredde = null;
         int maksLag = -1;
-        bool lora = false, diffusjon = false, flux = false;
+        bool lora = false, diffusjon = false, flux = false, sd3 = false, sdxl = false, kontroll = false, ipBilde = false, ipLag = false, vaeInn = false, vaeUt = false;
         string? kvant = null;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
@@ -425,6 +452,15 @@ public static class ModellFormat
             else if (p.Name.EndsWith(".qweight")) kvant ??= doc.RootElement.EnumerateObject().Any(x => x.Name.EndsWith(".g_idx")) ? "GPTQ" : "GPTQ eller AWQ";
             if (p.Name.StartsWith("model.diffusion_model.") || p.Name.StartsWith("down_blocks.")) diffusjon = true;
             if (p.Name.StartsWith("double_blocks.") || p.Name.StartsWith("transformer_blocks.") && p.Name.Contains("attn.add_q_proj")) flux = true;
+            // Bildemodeller på tensornavn. Kilder: ComfyUI comfy/model_detection.py (joint_blocks = SD3, conditioner.embedders.1 = SDXL,
+            // control_model = ControlNet), tencent-ailab/IP-Adapter (image_proj + ip_adapter), CompVis/latent-diffusion (encoder.down/decoder.up = VAE)
+            if (p.Name.StartsWith("model.diffusion_model.joint_blocks.") || p.Name.StartsWith("joint_blocks.")) sd3 = true;
+            if (p.Name.StartsWith("conditioner.embedders.1.")) sdxl = true;
+            if (p.Name.StartsWith("control_model.") || p.Name.StartsWith("controlnet_cond_embedding.")) kontroll = true;
+            if (p.Name.StartsWith("image_proj.")) ipBilde = true;
+            if (p.Name.StartsWith("ip_adapter.")) ipLag = true;
+            if (p.Name.StartsWith("encoder.down.") || p.Name.StartsWith("first_stage_model.encoder.")) vaeInn = true;
+            if (p.Name.StartsWith("decoder.up.") || p.Name.StartsWith("first_stage_model.decoder.")) vaeUt = true;
             var lagTreff = LagNr.Match(p.Name);
             if (lagTreff.Success) maksLag = Math.Max(maksLag, int.Parse(lagTreff.Groups[1].Value));
             if (p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("shape", out var shape) && shape.ValueKind == JsonValueKind.Array)
@@ -441,7 +477,9 @@ public static class ModellFormat
                 }
             }
         }
-        type = lora ? "LoRA-tillegg (endrer en annen modell)" : flux ? "bildemodell (FLUX)" : diffusjon ? "bildemodell (Stable Diffusion)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
+        type = lora ? "LoRA-tillegg (endrer en annen modell)" : kontroll ? "ControlNet (styrer en bildemodell)" : ipBilde && ipLag ? "IP-Adapter (bilde som mal for stil eller ansikt)"
+            : flux ? "bildemodell (FLUX)" : sd3 ? "bildemodell (Stable Diffusion 3)" : diffusjon && sdxl ? "bildemodell (SDXL)" : diffusjon ? "bildemodell (Stable Diffusion)"
+            : vaeInn && vaeUt ? "VAE (bildekoder til bildemodeller)" : vokab != null || maksLag >= 0 ? "språkmodell" : null;
         return new Modell("safetensors", navn, null, parametre > 0 ? parametre : null, false)
         {
             Vokab = vokab, Bredde = bredde, Lag = maksLag >= 0 ? maksLag + 1 : null, Type = type, Kvantisering = kvant,

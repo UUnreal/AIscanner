@@ -328,7 +328,7 @@ public sealed class Nettverkvisning : IDisposable
         if (nettleser == "WebView2" && Vertsprogram(pid) is { } vp) nettleser = $"WebView2 i {vp}";
         var funn = nettleser == null ? AiFor(pid, prog, sti) : null;
         // Et ukjent AI-spor er ikke «kjent» selv om programmet hører til et funn
-        bool kjent = nettleser != null || (funn != null && funn.Gruppe != "spor");
+        bool kjent = nettleser != null || (funn != null && !funn.Ukjentspor);
         var forste = g[0];
         bool uavklart = forste.Tj == null;
         var vertene = g.Select(x => x.Vert).Where(v => v != null).Distinct().ToList();

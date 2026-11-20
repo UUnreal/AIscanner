@@ -68,8 +68,8 @@ public static class Oversikt
     public sealed record Opptelling(int Modeller, int Nettsteder, int Utvidelser, int Apper, int Innebygd, int Spor, int ItRegler,
                                     int Hoy, int Middels, int Lav, int Ukjent)
     {
-        /// <summary>Alle funn. Er lik summen av artene og lik summen av risikogruppene.</summary>
-        public int Totalt => Modeller + Nettsteder + Utvidelser + Apper + Innebygd + Spor + ItRegler;
+        /// <summary>Alle funn som telles. Er lik summen av artene og lik summen av risikogruppene. Mulig spor telles aldri.</summary>
+        public int Totalt => Modeller + Nettsteder + Utvidelser + Apper + Innebygd + ItRegler;
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public static class Oversikt
     {
         var liste = funn.ToList();
         int Art_(string a) => liste.Count(f => Art(f) == a);
-        int Gr(string g) => liste.Count(f => Risikogruppe(f) == g);
+        int Gr(string g) => liste.Count(f => f.Gruppe != "spor" && Risikogruppe(f) == g);
         return new Opptelling(Art_("modell"), Art_("nettsted"), Art_("utvidelse"), Art_("app"), Art_("innebygd"), Art_("spor"), Art_("itregel"),
                               Gr("rod"), Gr("gul"), Gr("gronn"), Gr("ukjent"));
     }
@@ -121,7 +121,6 @@ public static class Oversikt
         Del(t.Utvidelser, "nettleserutvidelse", "nettleserutvidelser");
         Del(t.Apper, "AI-app eller agent", "AI-apper og agenter");
         Del(t.Innebygd, "program med innebygd AI", "programmer med innebygd AI");
-        Del(t.Spor, "ukjent AI-spor", "ukjente AI-spor");
         Del(t.ItRegler, "sett med AI-regler fra IT", "sett med AI-regler fra IT");
         if (t.Totalt == 0) return "Ingen AI";
         var hode = t.Totalt == 1 ? "1 lokalt AI-funn på PC" : $"{t.Totalt} lokale AI-funn på PC";
@@ -145,8 +144,8 @@ public static class Oversikt
         return l;
     }
 
-    /// <summary>Hvor sikkert det er at funnet er AI: Høy, Middels eller Lav.</summary>
-    public static string Treffsikkerhet(Funn f) => f.Sikkerhet switch { Sikkerhet.Hoy => "Høy", Sikkerhet.Middels => "Middels", _ => "Lav" };
+    /// <summary>Bevisnivået: Bekreftet, Sannsynlig eller Spor.</summary>
+    public static string Bevis(Funn f) => f.Bevisniva switch { Bevisniva.Bekreftet => "Bekreftet", Bevisniva.Sannsynlig => "Sannsynlig", _ => "Spor" };
 
     /// <summary>Navnet uten forklarende forstavelse: "AI-modell: Llama" blir "Llama".</summary>
     public static string Navn(Funn f)

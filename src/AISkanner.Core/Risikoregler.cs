@@ -4,7 +4,10 @@ namespace AISkanner;
 
 /// <summary>
 /// Siste steg i søket: hva slags AI hvert funn er, hvor det kommer fra, og den endelige risikoen.
-///   Ukjent AI = alltid rød.
+///   Bevisstandarden (18.11.2026) går foran: rød krever Bekreftet eller Sannsynlig (Funn.Bevisniva) og et faresignal.
+///   Funn med bare Spor-nivå (navn eller sti alene) blir aldri røde og telles ikke.
+///   Ukjent AI = rød når den er bekreftet eller sannsynlig AI.
+///   Opphav («Kommer fra») bare fra bevis: signatur, nedlastingsmerke eller verifisert produktregel. Ellers «Opphav ukjent».
 ///   Skygge-AI = aldri grønn. Skygge-AI er AI som ikke er lagt inn av Windows, en signert leverandør eller IT:
 ///     AI-nettsteder, nettleserutvidelser, agenter, kodeverktøy, AI-apper og modeller brukeren har lagt inn selv.
 ///     Gul, eller rød når søket eller regelen sier rød (f.eks. agent som kjører kommandoer, data til et høyrisikoland)
@@ -35,6 +38,7 @@ public static class Risikoregler
         "Laget av ",
         "Angrepsmodell:",
         "Angrepsverktøy med AI",
+        "Deepfake eller stemmekloning",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>
@@ -57,7 +61,8 @@ public static class Risikoregler
             bool ukjent = type.StartsWith("Ukjent", StringComparison.Ordinal);
             bool farlig = f.Navn.StartsWith("Farlig AI-modellfil", StringComparison.Ordinal)
                           || f.Advarsler.Any(a => a.StartsWith("Sender data til", StringComparison.Ordinal));
-            OpprinnelseFraNavn(f, regler);
+            var niva = f.Bevisniva;
+            OpprinnelseFraNavn(f, regler, ukjent);
             // IT sin blokkeringsliste (samme sterke identitet som godkjentlista), og AI som IT har slått av med en regel
             bool blokkert = Godkjent(f, regler.BlokkertAi);
             if (blokkert) f.Advarsel("Blokkert av IT, men finnes på PC-en.");
@@ -81,7 +86,9 @@ public static class Risikoregler
             if (ukjent)
             {
                 f.Risiko = Risiko.Rod;
-                f.RisikoGrunn = f.Navn.StartsWith("Farlig", StringComparison.Ordinal)
+                var signal = f.Advarsler.FirstOrDefault(x => RodeSignaler.Any(r => x.StartsWith(r, StringComparison.Ordinal)));
+                f.RisikoGrunn = signal != null && !f.Navn.StartsWith("Farlig", StringComparison.Ordinal) ? $"Ukjent opphav, og: {signal}"
+                    : f.Navn.StartsWith("Farlig", StringComparison.Ordinal)
                     ? "Modellfilen inneholder kode som kjører når den lastes."
                     : type == "Ukjent AI-spor"
                     ? "Ukjent AI-spor: vi vet ikke hvem som satte det opp eller hva det er brukt til."
@@ -102,6 +109,12 @@ public static class Risikoregler
             if (farlig && f.Risiko != Risiko.Rod) f.Risiko = Risiko.Rod;
             if (farlig && f.Advarsler.FirstOrDefault(a => a.StartsWith("Sender data til")) is { } adv) f.RisikoGrunn = adv;
             if (blokkert) { f.Risiko = Risiko.Rod; f.RisikoGrunn = "Blokkert av IT, men finnes på PC-en."; }
+            else if (niva == Bevisniva.Spor)
+            {
+                // Fare uten bevis for AI gir ikke rødt: Mulig spor, ikke bekreftet
+                if (f.Risiko == Risiko.Rod) f.Risiko = Risiko.Gul;
+                f.RisikoGrunn = "Mulig spor, ikke bekreftet AI: bare navn, sti eller ett spor. Telles ikke.";
+            }
         }
     }
 
@@ -165,13 +178,28 @@ public static class Risikoregler
         return false;
     }
 
-    /// <summary>Kommer fra: utgiveren fra signaturen, eller et kjent selskap i navnet.</summary>
-    private static void OpprinnelseFraNavn(Funn f, Regelsett regler)
+    /// <summary>
+    /// Kommer fra: utgiveren fra signaturen, ellers (kjent produkt) et kjent selskap i navnet. Ukjent AI får aldri opphav
+    /// fra navnet (det er en gjetning): bare signatur eller nedlastingsmerke, ellers «Opphav ukjent».
+    /// </summary>
+    private static void OpprinnelseFraNavn(Funn f, Regelsett regler, bool ukjent)
     {
+        if (f.Opprinnelse != null) f.OpphavKilde ??= "produktregel";
         if (f.Opprinnelse == null)
         {
             var utgiver = f.Detaljer.FirstOrDefault(x => x.StartsWith("Utgiver:") && !x.StartsWith("Utgiver: ukjent"));
-            if (utgiver != null) f.Opprinnelse = utgiver.Substring(8).Split(new[] { " · " }, StringSplitOptions.None)[0].Trim();
+            if (utgiver != null)
+            {
+                f.Opprinnelse = utgiver.Substring(8).Split(new[] { " · " }, StringSplitOptions.None)[0].Trim();
+                f.OpphavKilde = utgiver.Contains("ikke bekreftet") ? "filinfo (CompanyName, ikke signert)" : "signatur";
+            }
+        }
+        if (ukjent && f.Opprinnelse == null)
+        {
+            var ned = f.Detaljer.FirstOrDefault(x => x.StartsWith("Nedlastet fra: http", StringComparison.Ordinal));
+            if (ned != null && Uri.TryCreate(ned.Substring(15).Split(' ')[0], UriKind.Absolute, out var u)) { f.Opprinnelse = "Lastet ned fra " + u.Host; f.OpphavKilde = "nedlastingsmerke"; }
+            else f.Opprinnelse = "Opphav ukjent";
+            return;
         }
         foreach (var kilde in new[] { f.Opprinnelse, Oversikt.Navn(f) })
         {
@@ -187,6 +215,7 @@ public static class Risikoregler
                     // "US" eller "US:Anthropic" (produktnavn -> selskap)
                     var deler = verdi.Split(new[] { ':' }, 2);
                     f.OpprinnelseLand ??= deler[0];
+                    if (f.Opprinnelse == null) f.OpphavKilde = f.Regel != null ? "produktregel" : "navn";
                     f.Opprinnelse ??= deler.Length > 1 ? deler[1] : nokkel;
                     return;
                 }

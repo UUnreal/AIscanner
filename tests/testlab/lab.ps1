@@ -62,6 +62,12 @@ python -m pip install -q requests huggingface_hub transformers torch --index-url
 # AI-pakker i et prosjekt med eget Python-miljø i brukerens mappe, slik utviklere har dem
 python -m venv "$env:USERPROFILE\prosjekt-ai\.venv"
 & "$env:USERPROFILE\prosjekt-ai\.venv\Scripts\python.exe" -m pip install -q openai anthropic langchain-core llama-index-core ollama mcp
+# Prosjekt med bare avhengighetsfil (ingen miljø), og en pakke med navn én bokstav unna en AI-pakke (mulig typosquatting)
+New-Item -ItemType Directory -Force "$env:USERPROFILE\prosjekt-krav" | Out-Null
+Set-Content "$env:USERPROFILE\prosjekt-krav\requirements.txt" "# torch står bare i en kommentar`nopenai==1.54.0`nrequests" -Encoding utf8
+New-Item -ItemType Directory -Force "$env:USERPROFILE\prosjekt-ai\.venv\Lib\site-packages\langchainn" | Out-Null
+Notér 'Avhengighetsfil (prosjekt-krav\requirements.txt: openai)' @('prosjekt-krav') 'bare pakkenavn'
+Notér 'Mulig typosquatting (langchainn)' @('langchainn') 'Mulig spor'
 python tests/testlab/hent-modeller.py $Hf $MaksMb "$Ut\hf-fasit.json"
 $hfFasit = Get-Content "$Ut\hf-fasit.json" -Raw | ConvertFrom-Json
 foreach ($h in $hfFasit) { Notér "HF $($h.repo)" @($h.repo) "Hugging Face ($($h.formater -join ', ')) $($h.arkitektur)" $h.kina $h.russland }

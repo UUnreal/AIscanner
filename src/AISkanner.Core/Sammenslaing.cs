@@ -12,7 +12,7 @@ public sealed partial class Skanner
     private static readonly Regex ExeSti = new(@"[A-Za-z]:\\[^·""|<>\r\n]*?\.exe\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     internal static bool ErUkjentProgram(Funn f) =>
-        f.Regel == null && (f.Gruppe == "spor" || f.Navn.StartsWith("Program som har slått opp AI:", StringComparison.Ordinal)
+        f.Regel == null && (f.Ukjentspor || f.Navn.StartsWith("Program som har slått opp AI:", StringComparison.Ordinal)
                             || f.Navn.StartsWith("Ukjent program", StringComparison.Ordinal));
 
     internal void SlaSammenSpor()

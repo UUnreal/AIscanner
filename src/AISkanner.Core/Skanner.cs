@@ -34,6 +34,10 @@ public sealed partial class Skanner
     {
         _regler = regler;
         _historikk = historikk;
+        // Pakke- og bildelistene kommer fra regelfila (§9), ikke fra koden
+        PythonAi = regler.PythonPakker.GroupBy(p => p.Navn, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Agent, StringComparer.OrdinalIgnoreCase);
+        NodeAi = regler.NodePakker.GroupBy(p => p.Navn, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Agent, StringComparer.OrdinalIgnoreCase);
+        AiBilder = regler.DockerBilder.Select(b => b.Navn.ToLowerInvariant()).ToArray();
     }
 
     /// <summary>Når søket startet, for rapporten.</summary>
@@ -336,8 +340,12 @@ public sealed partial class Skanner
         _ => Tilstand.Finnes,
     };
 
-    private Funn FraRegel(Produkt p, string hvor, string detalj) =>
-        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt);
+    private Funn FraRegel(Produkt p, string hvor, string detalj)
+    {
+        var f = LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt);
+        if (p.Fare != null) f.Advarsel($"{p.Fare}: {p.Navn}.");
+        return f;
+    }
 
     internal static IEnumerable<string> Mapper(string sti) =>
         Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateDirectories(sti).ToList(), new List<string>());
@@ -812,6 +820,7 @@ public sealed partial class Skanner
             f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
                 "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
                 $"Utvidelse i {hvor}", $"{hvor}: {mappe}");
+            f.Svakt();   // bare et ord i navnet: Mulig spor til noe annet bekrefter det
         }
         f.SettVersjon(versjon, "utvidelsens manifest");
         if (TvungneUtvidelser().Contains(Path.GetFileName(mappe)))
