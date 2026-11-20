@@ -496,6 +496,9 @@ const KART={w:1000,h:394,land:{"FJ":"M995 282L995 281L996 282L996 283L994 284L99
 "use strict";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// Vakt: hvilke «Vis kommando» som er åpne, så de ikke lukkes når lista oppdateres
+const apneKmd = new Set();
+document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.kmd; if (k != null) e.target.open ? apneKmd.add(k) : apneKmd.delete(k); }, true);
 const vert = window.chrome && window.chrome.webview;   // satt når siden kjører inne i programmet
 const send = m => vert ? vert.postMessage(m) : demo(m);
 function vis(id) {
@@ -854,7 +857,9 @@ function tegnNett() {
     innhold = !v ? `<ul><li class="mer">${L("Vakt starter med første søk.", "The watch starts with the first scan.")}</li></ul>`
       : `<ul>${linje(L(`Vakt siden ${v.startet}`, `Watching since ${v.startet}`), `${tall(v.agenter.length)} ${L("agenter", "agents")} · ${tall(v.starter)} ${L("programmer startet av dem", "programs they started")}`, v.status)}`
         + v.agenter.map(a => linje(a.agent, `PID ${a.pid}`, L("AI-agent som følges", "AI agent being watched"))).join("")
-        + (v.hendelser.length ? v.hendelser.map(h => linje(`${h.tid} · ${h.agent || L("ukjent program", "unknown program")} · ${h.regel}`, h.kilde, `${h.program} (PID ${h.pid})${h.hva ? " · " + h.hva : ""}`, h.rod)).join("")
+        + (v.hendelser.length ? v.hendelser.map(h => linje(`${h.tid} · ${h.agent || L("ukjent program", "unknown program")} · ${h.regel}`, h.kilde, `${h.program} (PID ${h.pid})${h.hva ? " · " + h.hva : ""}`, h.rod)
+            // Maskert kommando: bare programnavn og kjente valg, resten ‹skjult›. Åpen/lukket huskes til neste oppdatering.
+            + (h.kommando ? `<li class="mer"><details data-kmd="${esc(h.tid + h.pid + h.regel)}"${apneKmd.has(h.tid + h.pid + h.regel) ? " open" : ""}><summary>${L("Vis kommando", "Show command")}</summary><code>${esc(h.kommando)}</code></details></li>` : "")).join("")
           : `<li class="mer">${L("Ingenting kjent fra angrep sett så langt.", "Nothing known from attacks seen so far.")}</li>`) + `</ul>`;
   }
   else if (nettFane === "dg" && nettDg != null && (nett.kilder || [])[nettDg]) {

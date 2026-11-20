@@ -10,12 +10,39 @@ namespace AISkanner;
 /// Kilder: Windows' egne hendelser (ETW Kernel-Process, Kernel-File, Kernel-Network, DNS-Client) som administrator,
 /// ellers prosesslista hvert halve sekund og varsler om endrede filer. Bare lesing og bare i minnet: ingen prompt, ingen
 /// innhold i filer eller pakker, ikke minnet til andre prosesser. Kommandolinjen til programmer agenten starter sammenlignes
-/// med reglene og kastes; den vises aldri, bare regelen som slo til.
+/// med reglene og kastes; bare en maskert form (programnavn og kjente valg, resten ‹skjult›) vises bak «Vis kommando».
 /// Regler: ATR (Agent Threat Rules), SigmaHQ og MITRE ATLAS, med kilde per regel.
 /// </summary>
 public sealed class Vakt : IDisposable
 {
-    public sealed record Hendelse(DateTime Tid, string Regel, string Kilde, string Agent, int AgentPid, string Program, int Pid, string? Hva, bool Rod);
+    public sealed record Hendelse(DateTime Tid, string Regel, string Kilde, string Agent, int AgentPid, string Program, int Pid, string? Hva, bool Rod, string? Kommando = null);
+
+    /// <summary>
+    /// Maskert kommando (vises bak «Vis kommando»): bare programnavnet og kjente valg fra en fast liste. Alt annet (filnavn,
+    /// adresser, tekst, verdier, mulige hemmeligheter og prompter) blir ‹skjult›. Lagres aldri; lever bare i minnet mens vinduet er åpent.
+    /// </summary>
+    internal static string Masker(string linje)
+    {
+        var deler = Regex.Matches(linje, @"""[^""]*""|'[^']*'|\S+").Cast<Match>().Select(m => m.Value).ToList();
+        if (deler.Count == 0) return "";
+        var ut = new List<string> { Kort(deler[0].Trim('"', '\'')) };
+        foreach (var d in deler.Skip(1))
+        {
+            var navn = d.Split('=')[0];
+            var vis = KjenteValg.Contains(navn) ? (d.Contains('=') ? navn + "=‹skjult›" : navn) : "‹skjult›";
+            if (!(vis == "‹skjult›" && ut[ut.Count - 1] == "‹skjult›")) ut.Add(vis);
+        }
+        return string.Join(" ", ut);
+    }
+
+    /// <summary>Valg som vises i klartekst: ufarlige ord som sier hva agenten ba om, aldri verdier.</summary>
+    internal static readonly HashSet<string> KjenteValg = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "-c", "/c", "/k", "-m", "-e", "-p", "-y", "-i", "-Command", "-EncodedCommand", "-enc", "-NoProfile", "-NonInteractive", "-ExecutionPolicy",
+        "Bypass", "Unrestricted", "-WindowStyle", "Hidden", "-w", "-File", "--print", "--yes", "--yolo", "--full-auto", "--dangerously-skip-permissions",
+        "--dangerously-bypass-approvals-and-sandbox", "--headless", "--no-sandbox", "--model", "--resume", "--continue", "--verbose", "--version", "--help",
+        "run", "exec", "install", "add", "i", "pip", "npx", "npm", "uvx", "-u", "-s", "-L", "-o", "-O", "-d", "--data", "-F", "-T", "--upload-file", "-X", "POST", "PUT", "GET",
+    };
 
     // ---------- Reglene ----------
 
@@ -174,12 +201,13 @@ public sealed class Vakt : IDisposable
         // V1: hva agenten startet. Kommandolinjen leses nå, mens programmet kjører, sammenlignes og kastes.
         var linje = _linjer ? Kommandolinje.Les(pid) : null;
         if (linje == null) return;
+        var maskert = Masker(linje);
         foreach (var (regel, m, kilde) in Kommandoregler)
-            if (m.IsMatch(linje)) Legg(new Hendelse(naa, regel, kilde, agent, rot, sti ?? navn, pid, null, true));
+            if (m.IsMatch(linje)) Legg(new Hendelse(naa, regel, kilde, agent, rot, sti ?? navn, pid, null, true, maskert));
         if (RaIp.Match(linje) is { Success: true } x && Offentlig(int.Parse(x.Groups[2].Value), int.Parse(x.Groups[3].Value)))
-            Legg(new Hendelse(naa, "henter fra en IP-adresse uten navn", "ATR-2026-00220 · ATLAS AML.T0072", agent, rot, sti ?? navn, pid, null, true));
+            Legg(new Hendelse(naa, "henter fra en IP-adresse uten navn", "ATR-2026-00220 · ATLAS AML.T0072", agent, rot, sti ?? navn, pid, null, true, maskert));
         if (Skanner.ErSkillsAdd(linje))
-            Legg(new Hendelse(naa, "legger til ferdigheter (npx skills add)", "SigmaHQ proc_creation_win_node_new_agent_skills_installed · ATLAS AML.T0104", agent, rot, sti ?? navn, pid, null, false));
+            Legg(new Hendelse(naa, "legger til ferdigheter (npx skills add)", "SigmaHQ proc_creation_win_node_new_agent_skills_installed · ATLAS AML.T0104", agent, rot, sti ?? navn, pid, null, false, maskert));
     }
 
     // Programnavn uten mappe og .exe (Windows-sti, også når kontrollen kjører utenfor Windows)

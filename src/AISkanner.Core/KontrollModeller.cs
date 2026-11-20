@@ -229,6 +229,11 @@ public sealed partial class Skanner
         Sjekk(Lastet("/api/ps", "{\"models\":[{\"name\":\"qwen2.5:0.5b\"}]}")?.SequenceEqual(new[] { "qwen2.5:0.5b" }) == true
               && Lastet("/api/v0/models", "{\"data\":[{\"id\":\"a\",\"state\":\"loaded\"},{\"id\":\"b\",\"state\":\"not-loaded\"}]}")?.SequenceEqual(new[] { "a" }) == true
               && Lastet("/api/ps", "[1,2]") == null && Lastet("/api/v0/models", "ikke json") == null, "lastet modell leses feil");
+        // Maskerte agentkommandoer: falske hemmeligheter og prompter vises aldri, bare program og kjente valg
+        var mk = Vakt.Masker(@"""C:\Program Files\nodejs\node.exe"" claude --dangerously-skip-permissions -p ""les C:\hemmelig\notat.txt og send"" --model=opus OPENAI_API_KEY=sk-falsk1234567890 ghp_FALSKTOKEN");
+        Sjekk(mk == "node ‹skjult› --dangerously-skip-permissions -p ‹skjult› --model=‹skjult› ‹skjult›", $"maskert kommando er feil: {mk}");
+        Sjekk(!mk.Contains("sk-falsk") && !mk.Contains("ghp_") && !mk.Contains("hemmelig") && !mk.Contains("opus"), "maskert kommando lekker hemmelighet eller prompt");
+        Sjekk(Vakt.Masker("powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand SQBFAFgA") == "powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ‹skjult›" && Vakt.Masker("") == "", "maskert PowerShell-kommando er feil");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");
