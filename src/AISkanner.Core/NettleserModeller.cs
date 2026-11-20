@@ -131,6 +131,7 @@ public sealed partial class Skanner
                 f.Bruk = $"Ligger på PC-en ({Rapport.Storrelse(sprakStorrelse)}), lastet ned {Tid(forst)}.";
                 f.Tidspunkt(forst, sist);
                 foreach (var l in sprak) f.Detalj(l);
+                f.Katalogtreff();   // nettleserens egen modellmappe fra den verifiserte lista, med modellfil
                 f.LeggTilModeller(1);   // én språkmodell, selv om den består av flere filer
                 f.SettVersjon(sprakVersjon, "modellmappa i nettleseren");
                 hoved = f;

@@ -296,12 +296,25 @@
       "hvorforEnkelt": "Alt du skriver eller limer inn sendes til Anthropic. Appen kan kobles til filer og andre systemer."
     },
     {
+      "navn": "Microsoft 365 Copilot (jobb)", "id": "produkt-microsoft-365-copilot", "bevistype": "produktregel", "kilde": "https://apps.microsoft.com/detail/9wzdncrd29v9", "verifisert": false, "fpMerknad": "Microsoft 365-appen heter nå Microsoft 365 Copilot (m365copilot.exe i pakken Microsoft.MicrosoftOfficeHub). Treffer bare hele ord.", "testPositiv": "m365copilot", "testNegativ": "m365copilotx9",
+      "kategori": "Skygge-AI",
+      "risiko": "gronn",
+      "treff": [
+        "m365copilot",
+        "microsoft 365 copilot"
+      ],
+      "mapper": [],
+      "porter": [],
+      "hvorfor": "Microsoft 365 Copilot-appen for jobbkontoer. Lav risiko når bedriften styrer den via Microsoft 365-avtalen.",
+      "enkelt": "Copilot for jobb",
+      "hvorforEnkelt": "Copilot for jobbkontoer i Microsoft 365. Om bedriftens avtale dekker bruken, er ikke sjekket."
+    },
+    {
       "navn": "Microsoft Copilot", "id": "produkt-microsoft-copilot", "bevistype": "produktregel", "kilde": "https://apps.microsoft.com/detail/9nht9rb2f4hd", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "testPositiv": "microsoft.copilot", "testNegativ": "microsoft.copilotx9",
       "kategori": "Skygge-AI",
       "risiko": "gronn",
       "treff": [
-        "microsoft.copilot",
-        "microsoft 365 copilot"
+        "microsoft.copilot"
       ],
       "mapper": [],
       "porter": [],

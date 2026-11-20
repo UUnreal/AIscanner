@@ -23,6 +23,21 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.55.1] - 2026-11-20
+
+### Rettet
+
+- Kjente AI-nettsteder (domenet står i den verifiserte lista, med bruk over terskelen) er nå «Sannsynlig» og telles igjen. I 2.54 og 2.55 ble de feil satt til «Mulig spor» når de bare var i én nettleser (Gemini, Grok, Mistral, Microsoft 365 Copilot, Copilot Studio m.fl.). Ukjente .ai-adresser er fortsatt Mulig spor.
+- Gemini Nano i Chrome (modellfil i nettleserens egen modellmappe) er «Sannsynlig», ikke «Mulig spor».
+- Mulig spor på kjente produkter heter «Ikke bekreftet» i oversikten, ikke «Ukjent AI-spor». «Ukjent» brukes bare når opphavet er ukjent.
+- Program med AI-motor signert av en annen enn programmet (f.eks. Microsofts onnxruntime.dll i Lenovo) sa «Microsoft har lagt AI inn i programmet». Nå: «AI-motoren er signert av Microsoft; selve programmet er ikke signert av dem».
+- Windows-apper uten lesbart visningsnavn vises ikke dobbelt («Clipchamp.Clipchamp» blir «Clipchamp»).
+- Microsoft 365 Copilot-appen (m365copilot.exe) er egen rad, «Microsoft 365 Copilot (jobb)», atskilt fra forbruker-appen Microsoft Copilot.
+
+### Ikke testet på Windows
+
+- Alt over er kontrollert med --kontroll og --selvtest (Linux). Ikke kjørt på Windows før Jørunds test.
+
 ## [2.55.0] - 2026-11-20
 
 ### Lagt til (aktive agenter, M365 og møteopptak)

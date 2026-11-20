@@ -121,6 +121,9 @@ public sealed class Funn
     private int _svake;
     public void Sterkt() => Interlocked.Increment(ref _sterke);
     public void Svakt() => Interlocked.Increment(ref _svake);
+    /// <summary>Nøyaktig treff i en verifisert liste som ikke er en produktregel (kjent AI-nettsted på domenet, nettleserens kjente modellmappe). Teller som regel.</summary>
+    private int _katalog;
+    public void Katalogtreff() => Interlocked.Increment(ref _katalog);
 
     /// <summary>Uavhengige spor: steder funnet er sett (installert, kjører, oppstart, historikk …) og målt trafikk.</summary>
     public int Spor { get { lock (this) return Hvor.Count + (Trafikk.Count > 0 && !Hvor.Contains("Koblet til nå") ? 1 : 0); } }
@@ -132,7 +135,7 @@ public sealed class Funn
         {
             if (Volatile.Read(ref _sterke) > 0) return Bevisniva.Bekreftet;
             bool bareNavn = Volatile.Read(ref _svake) > 0;
-            if (Regel == null) return !bareNavn && Spor >= 2 ? Bevisniva.Sannsynlig : Bevisniva.Spor;
+            if (Regel == null && Volatile.Read(ref _katalog) == 0) return !bareNavn && Spor >= 2 ? Bevisniva.Sannsynlig : Bevisniva.Spor;
             return !bareNavn || Spor >= 2 ? Bevisniva.Sannsynlig : Bevisniva.Spor;
         }
     }
@@ -141,7 +144,7 @@ public sealed class Funn
     public string Bevistype => Bevisniva switch
     {
         Bevisniva.Bekreftet => "Innhold eller målt oppførsel",
-        Bevisniva.Sannsynlig => Regel != null && Spor < 2 ? "Verifisert produktregel" : "Flere uavhengige spor",
+        Bevisniva.Sannsynlig => (Regel != null || _katalog > 0) && Spor < 2 ? "Verifisert produktregel" : "Flere uavhengige spor",
         _ => "Bare navn, sti eller ett spor",
     };
 
@@ -267,6 +270,7 @@ public sealed class Funn
         Merk(a.Tilstander);
         Interlocked.Add(ref _sterke, Volatile.Read(ref a._sterke));
         Interlocked.Add(ref _svake, Volatile.Read(ref a._svake));
+        Interlocked.Add(ref _katalog, Volatile.Read(ref a._katalog));
         LeggTilModeller(a.Modeller);
         LeggTilInnebygde(a.Innebygde);
         Tidspunkt(a.Forst, a.Sist);
