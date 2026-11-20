@@ -361,6 +361,22 @@ public sealed partial class Skanner
         Sjekk(s2._funn.Count == 0, "et vanlig program med samme IP som ChatGPT ble regnet som AI (IP-en kan deles på CDN-et)");
         Sjekk(treff != null && treff.Trafikk.Any(m => m.KildeIp.Contains("192.168.1.10") && m.Prosesser.Any(p => p.Pid == 7001 && p.Fil == @"C:\Prog\chrome.exe")),
             "kilde-IP og programfil ble ikke tatt vare på for forbindelsen");
+        // Personlig agent: samme ukjente program mot AI og IMAP/Graph er rødt og Sannsynlig; bare AI er det ikke
+        Funn? Agent(bool epost)
+        {
+            var s = new Skanner(regler);
+            var nb = new NettBilde { Prosesser = { [7003] = ("minagent", @"C:\Users\a\minagent\minagent.exe") }, Lyttere = new() };
+            var ai = IPAddress.Parse("203.0.113.20");
+            nb.Dns[ai] = new List<string> { "api.openai.com" };
+            nb.Tilkoblinger.Add(new Tilkobling(7003, IPAddress.Parse("192.168.1.10"), 52010, ai, 443));
+            if (epost) nb.Tilkoblinger.Add(new Tilkobling(7003, IPAddress.Parse("192.168.1.10"), 52011, IPAddress.Parse("203.0.113.21"), 993));
+            s.Trafikk(nb);
+            return s._funn.Values.FirstOrDefault(f => f.Navn.StartsWith("Ukjent program snakker med AI"));
+        }
+        var pa = Agent(true); var ikkePa = Agent(false);
+        Sjekk(pa != null && pa.Advarsler.Any(a => a.StartsWith("Personlig agent") && a.Contains("IMAP")) && pa.Risiko == Risiko.Rod && pa.Bevisniva != Bevisniva.Spor
+              && ikkePa != null && !ikkePa.Advarsler.Any(a => a.StartsWith("Personlig agent")), "program mot både AI og e-post ble ikke personlig agent, eller bare AI ble det");
+        Sjekk(EpostMal("graph.microsoft.com", 443) != null && EpostMal("example.com", 443) == null && EpostMal(null, 587) == "e-post (SMTP)", "e-post- og kalenderadresser kjennes feil igjen");
         // DNS-bufferen fylt av en eldre skanners egne oppslag: brukes ikke som bevis
         var s3 = new Skanner(regler);
         var nb3 = new NettBilde { Lyttere = new() };
