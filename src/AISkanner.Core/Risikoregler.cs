@@ -63,6 +63,7 @@ public static class Risikoregler
                           || f.Advarsler.Any(a => a.StartsWith("Sender data til", StringComparison.Ordinal));
             var niva = f.Bevisniva;
             OpprinnelseFraNavn(f, regler, ukjent);
+            if (ukjent) OpphavBlokk(f);
             // IT sin blokkeringsliste (samme sterke identitet som godkjentlista), og AI som IT har slått av med en regel
             bool blokkert = Godkjent(f, regler.BlokkertAi);
             if (blokkert) f.Advarsel("Blokkert av IT, men finnes på PC-en.");
@@ -221,6 +222,34 @@ public static class Risikoregler
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Fast opphavslinje på ukjente funn: det vi vet og det vi ikke vet, fra spor skanneren allerede har (aldri gjettet).
+    /// SHA-256 regnes bare av fila funnet peker på (høyst 256 MB), så IT kan slå den opp selv. Ingenting sendes ut.
+    /// </summary>
+    internal static void OpphavBlokk(Funn f)
+    {
+        if (f.Detaljer.Any(d => d.StartsWith("Opphav:", StringComparison.Ordinal))) return;
+        var navn = f.Navn.StartsWith("Ukjent", StringComparison.Ordinal) || f.Navn.StartsWith("Mulig", StringComparison.Ordinal) ? "ukjent" : Oversikt.Navn(f);
+        var laget = f.Opprinnelse is { } o && o != "Opphav ukjent" && !o.StartsWith("Lastet ned fra", StringComparison.Ordinal)
+            ? $"{o}{(f.OpphavKilde != null ? $" ({f.OpphavKilde})" : "")}" : "ukjent";
+        var ned = f.Detaljer.FirstOrDefault(d => d.StartsWith("Nedlastet fra: http", StringComparison.Ordinal)) is { } n
+            && Uri.TryCreate(n.Substring(15).Split(' ')[0], UriKind.Absolute, out var u) ? u.Host : "ikke merket";
+        List<string> til;
+        lock (f) til = f.Trafikk.Select(m => $"{m.Tjeneste ?? m.Adresse}{((m.EierLand ?? m.Land) is { } l && l != "CDN" ? $" ({l})" : "")}").Distinct().Take(4).ToList();
+        string sha = "ingen fil";
+        var sti = f.Detaljer.Select(d => d.StartsWith("Program: ", StringComparison.Ordinal) ? d.Substring(9) : d.StartsWith("Fil: ", StringComparison.Ordinal) ? d.Substring(5) : null)
+            .Where(x => x != null).Select(x => x!.Split(new[] { " · ", " (" }, StringSplitOptions.None)[0].Trim()).FirstOrDefault(File.Exists);
+        if (sti != null)
+            try
+            {
+                var fi = new FileInfo(sti);
+                if (fi.Length > 256L << 20) sha = "ikke regnet (over 256 MB)";
+                else { using var fs = fi.OpenRead(); using var h = System.Security.Cryptography.SHA256.Create(); sha = BitConverter.ToString(h.ComputeHash(fs)).Replace("-", "").ToLowerInvariant(); }
+            }
+            catch (Exception e) { sha = "kunne ikke leses"; Tilgangslogg.Feil("Fil", sti, e); }
+        f.Detalj($"Opphav: navn {navn} · laget av {laget} · lastet ned fra {ned} · sender data til {(til.Count > 0 ? string.Join(", ", til) : "ingen forbindelse målt")} · SHA-256 {sha}");
     }
 
     /// <summary>Landene dataene går til (to bokstaver): målte forbindelser, tjenestens land og oppslag Windows har gjort.</summary>
