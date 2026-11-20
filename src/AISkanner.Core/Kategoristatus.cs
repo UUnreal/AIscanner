@@ -27,7 +27,7 @@ public static class Kategoristatus
         ("K", "Windows' egen AI", new[] { "Sjekker registeret", "Sjekker installerte programmer" }, "Copilot Studio, AI Builder og Designer kjennes ikke igjen."),
         ("L", "AI fra maskinvareprodusenter", new[] { "Leter etter AI som leverandører har lagt inn" }, null),
         ("M", "Tredjepartsprogrammer med AI", new[] { "Sjekker installerte programmer", "Sjekker utvidelser i nettleserne" }, "Rene skyfunksjoner (Webex, Slack, Box) gir bare navnetreff og tas ikke med."),
-        ("N", "WSL, beholdere og VM-er", new[] { "Spør lokale programmer" }, "VM-disker åpnes aldri. Podman og Dev Containers vises ikke."),
+        ("N", "WSL, beholdere og VM-er", new[] { "Spør lokale programmer" }, "WSL leses bare når Linux allerede kjører (modeller, Python-miljøer, Claude Code og Gemini CLI). VM-disker åpnes aldri. Podman og Dev Containers vises ikke."),
         ("O", "Portabel og ukjent AI", new[] { "Leter gjennom filene" }, ".7z og .rar åpnes ikke."),
         ("P", "Nettverk", new[] { "Ser hvor AI sender data", "Spør lokale programmer" }, null),
         ("Q", "Identitet og rettigheter", new[] { "Ser etter AI som kjører nå", "Ser i Windows' historikk" }, null),

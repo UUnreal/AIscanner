@@ -117,29 +117,50 @@ public sealed partial class Skanner
                 Tilgangslogg.Logg("Mappe", $@"\\wsl.localhost\{navn}", Utfall.HoppetOver, "Linux (WSL) kjører ikke; søket starter den aldri. Disken (ext4.vhdx) kan ikke leses fra Windows.");
                 continue;
             }
-            var rot = $@"\\wsl.localhost\{navn}";
-            // Ollama som Linux-tjeneste lagrer modellene under brukeren «ollama»: /usr/share/ollama/.ollama/models. Kilde: https://docs.ollama.com/faq
-            var hjem = new[] { Path.Combine(rot, "root"), Path.Combine(rot, "usr", "share", "ollama") }.Concat(Mapper(Path.Combine(rot, "home")));
-            foreach (var h in hjem)
-            {
-                foreach (var (under, hva) in new[] { (@".ollama\models", "Ollama-modeller"), (@".cache\huggingface\hub", "Hugging Face-modeller"), (@".cache\lm-studio\models", "LM Studio-modeller"), (@".cache\modelscope\hub", "ModelScope-modeller") })
-                {
-                    var m = Path.Combine(h, under);
-                    if (!Directory.Exists(m)) continue;
-                    var filer = Plattform.Filer(m, "*", 6).Take(5000).ToList();
-                    if (filer.Count == 0) continue;
-                    // Hver modell kjennes igjen på innholdet som på Windows, så familie og land (Kina, Russland) blir med
-                    int kjent = 0;
-                    foreach (var fil in filer.Where(x => x.Length >= 20L * 1024 * 1024))
-                        if (ModellFormat.Gjenkjenn(fil.FullName) is { } modell) { LeggTilModell(fil.FullName, fil.Length, modell); kjent++; }
-                    if (kjent > 0) continue;
-                    var f = LeggTil($"AI-modeller i Linux (WSL): {navn}", "Lokal AI", Risiko.Gul, "AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Windows ser programmet.", "WSL", null, enkelt: "AI i WSL");
-                    f.Detalj($"{hva}: {m} · {filer.Count} filer");
-                    f.Merk(Tilstand.Finnes);
-                    f.Sterkt();
-                }
-            }
+            WslInnhold($@"\\wsl.localhost\{navn}", navn);
             if (basis != null) Tilgangslogg.Logg("Mappe", basis, Utfall.Lest, $"WSL-distribusjon {navn}");
         }
+    }
+
+    /// <summary>Linux-delen av en WSL-distribusjon som allerede kjører: modeller, Python-miljøer og agentoppsett.</summary>
+    internal void WslInnhold(string rot, string navn)
+    {
+        // Ollama som Linux-tjeneste lagrer modellene under brukeren «ollama»: /usr/share/ollama/.ollama/models. Kilde: https://docs.ollama.com/faq
+        var hjem = new[] { Path.Combine(rot, "root"), Path.Combine(rot, "usr", "share", "ollama") }.Concat(Mapper(Path.Combine(rot, "home")));
+        foreach (var h in hjem)
+        {
+            foreach (var (under, hva) in new[] { (@".ollama\models", "Ollama-modeller"), (@".cache\huggingface\hub", "Hugging Face-modeller"), (@".cache\lm-studio\models", "LM Studio-modeller"), (@".cache\modelscope\hub", "ModelScope-modeller") })
+            {
+                var m = Path.Combine(h, under);
+                if (!Directory.Exists(m)) continue;
+                var filer = Plattform.Filer(m, "*", 6).Take(5000).ToList();
+                if (filer.Count == 0) continue;
+                // Hver modell kjennes igjen på innholdet som på Windows, så familie og land (Kina, Russland) blir med
+                int kjent = 0;
+                foreach (var fil in filer.Where(x => x.Length >= 20L * 1024 * 1024))
+                    if (ModellFormat.Gjenkjenn(fil.FullName) is { } modell) { LeggTilModell(fil.FullName, fil.Length, modell); kjent++; }
+                if (kjent > 0) continue;
+                var f = LeggTil($"AI-modeller i Linux (WSL): {navn}", "Lokal AI", Risiko.Gul, "AI-modeller lagret i Linux-delen av Windows (WSL). De kan kjøres uten at Windows ser programmet.", "WSL", null, enkelt: "AI i WSL");
+                f.Detalj($"{hva}: {m} · {filer.Count} filer");
+                f.Merk(Tilstand.Finnes);
+                f.Sterkt();
+            }
+        }
+        // Agenter og Python-miljøer i Linux: samme sjekker som på Windows, bare når Linux allerede kjører
+        var ff = new FilFunn();
+        var py = new List<string>();
+        foreach (var lib in new[] { Path.Combine(rot, "usr", "lib"), Path.Combine(rot, "usr", "local", "lib") })
+            py.AddRange(Mapper(lib).Where(x => Path.GetFileName(x).StartsWith("python3")).Select(x => Path.Combine(x, "dist-packages")));
+        foreach (var h in Mapper(Path.Combine(rot, "home")).Append(Path.Combine(rot, "root")))
+        {
+            LesMcpFil(Path.Combine(h, ".claude.json"), "Claude Code (WSL)", prosjekt: false);
+            LesMcpFil(Path.Combine(h, ".gemini", "settings.json"), "Gemini CLI (WSL)", prosjekt: false);
+            foreach (var s in new[] { "settings.json", "settings.local.json" }) ClaudeInnstillinger(Path.Combine(h, ".claude", s), prosjekt: false);
+            // ~/.local (pip --user) og prosjekter rett under hjemmemappa med .venv eller venv
+            foreach (var v in Mapper(h).Take(500).SelectMany(p => new[] { Path.Combine(p, ".venv"), Path.Combine(p, "venv") }).Prepend(Path.Combine(h, ".local")))
+                py.AddRange(Mapper(Path.Combine(v, "lib")).Where(x => Path.GetFileName(x).StartsWith("python3")).Select(x => Path.Combine(x, "site-packages")));
+        }
+        foreach (var pm in py.Where(Directory.Exists).Take(200)) Miljo(pm, PythonAi, "Python", ff);
+        foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakker, agent, sprak).Merknad("I Linux (WSL).");
     }
 }

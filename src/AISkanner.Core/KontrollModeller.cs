@@ -206,6 +206,14 @@ public sealed partial class Skanner
         Sjekk(ffa.Avhengigheter.Count == 1 && ffa.Avhengigheter[0].Pakker.Contains("openai"), $"avhengighetsfil med AI ble ikke funnet, eller kommentaren ga funn ({ffa.Avhengigheter.Count})");
         var avf = sk.LeggTilMiljo(Path.Combine(avhMappe, "ai-prosjekt"), new SortedSet<string> { "openai" }, false, "Python", Path.Combine(avhMappe, "ai-prosjekt", "requirements.txt"));
         Sjekk(avf.Hvor.Contains("Avhengighetsfil") && !avf.Hvor.Contains("Installert pakke") && avf.Bevisniva == Bevisniva.Sannsynlig, "avhengighetsfil ga feil spor eller bevisnivå");
+        // WSL innvendig (Linux kjører): Python-miljø med AI i et prosjekt gir funn, et vanlig miljø gir ikke
+        var wslRot = Path.Combine(mappe, "wsl");
+        Directory.CreateDirectory(Path.Combine(wslRot, "home", "jo", "ai", ".venv", "lib", "python3.12", "site-packages", "openai"));
+        Directory.CreateDirectory(Path.Combine(wslRot, "home", "jo", "vanlig", ".venv", "lib", "python3.12", "site-packages", "requests"));
+        var ws = new Skanner(regler);
+        ws.WslInnhold(wslRot, "Ubuntu");
+        var wsf = ws._funn.Values.Where(f => f.Navn.StartsWith("Python-prosjekt med AI")).ToList();
+        Sjekk(wsf.Count == 1 && wsf[0].Merknader.Contains("I Linux (WSL).") && wsf[0].Detaljer.Any(d => d.Contains("openai")), $"Python-miljø i WSL ble ikke funnet, eller vanlig miljø ga funn ({wsf.Count})");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");
