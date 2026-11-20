@@ -634,7 +634,10 @@ public sealed partial class Skanner
             foreach (var (klasse, felt) in new[] { ("CommandLineEventConsumer", "CommandLineTemplate"), ("ActiveScriptEventConsumer", "ScriptText") })
                 try
                 {
-                    using var sok = new System.Management.ManagementObjectSearcher(@"root\subscription", $"SELECT Name, {felt} FROM {klasse}");
+                    // Fast tidsgrense: et WMI-kall uten grense kan henge hele søket
+                    using var sok = new System.Management.ManagementObjectSearcher(new System.Management.ManagementScope(@"root\subscription"),
+                        new System.Management.ObjectQuery($"SELECT Name, {felt} FROM {klasse}"),
+                        new System.Management.EnumerationOptions { Timeout = TimeSpan.FromSeconds(10), ReturnImmediately = true, Rewindable = false });
                     foreach (System.Management.ManagementBaseObject o in sok.Get())
                         using (o) if (o[felt] is string tekst) Sjekk(tekst, $"WMI-abonnement: {o["Name"]} ({klasse})", null);
                     Tilgangslogg.Tell("WMI", Utfall.Lest, sted: @"root\subscription", detalj: klasse);

@@ -8,7 +8,14 @@ $cli = "src/AISkanner.Cli/bin/Release/net8.0/AISkanner.Cli.exe"
 if (-not (Test-Path $cli)) { $cli = (Get-ChildItem src/AISkanner.Cli/bin/Release -Recurse -Filter AISkanner.Cli.exe | Select-Object -First 1).FullName }
 function Steg($t) { "::group::$t"; $script:stegStart = Get-Date }
 function Ferdig { "::endgroup::"; "  ($([int]((Get-Date) - $script:stegStart).TotalSeconds) s)" }
-function Skann($navn) { & $cli @args 2> "$Ut\$navn-logg.txt" | Out-File "$Ut\$navn.json" -Encoding utf8; Get-Content "$Ut\$navn.json" -Raw | ConvertFrom-Json }
+# Skanneren får 15 minutter. Henger den, stoppes den og siste steg skrives ut, så feilen kan finnes (ellers henger hele laben).
+function Skann($navn) {
+  $sp = @{ FilePath = $cli; RedirectStandardOutput = "$Ut\$navn.json"; RedirectStandardError = "$Ut\$navn-logg.txt"; PassThru = $true; NoNewWindow = $true }
+  if ($args.Count) { $sp.ArgumentList = $args }
+  $p = Start-Process @sp
+  if (-not $p.WaitForExit(900000)) { $p.Kill(); "::error::Skanneren brukte over 15 minutter ($navn). Siste steg:"; Get-Content "$Ut\$navn-logg.txt" -Tail 8 }
+  Get-Content "$Ut\$navn.json" -Raw | ConvertFrom-Json
+}
 
 # Øyeblikksbilde av alt som kan bli spor: mapper, registernøkler, programmer, tjenester, porter, prosesser, oppgaver, brannmur, miljø
 function Bilde {
