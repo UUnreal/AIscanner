@@ -154,6 +154,8 @@ public static class Revisjon
         L();
         L("UTFALL");
         L(Kortversjon(s));
+        L(Kategoristatus.Regelalder(s.Regelsett.Versjon, DateTime.Now));
+        L("Dekning per kategori (A–T): " + string.Join(" · ", Kategoristatus.Regn(s.Logg.Antall, s.Sjekker, Plattform.ErWindows).Select(k => $"{k.Bokstav} {k.Kode}")));
         foreach (var g in s.Logg.Antall.GroupBy(x => x.Sjekk))
             Ra($"{T(g.Key)}: " + string.Join(", ", g.Select(x => $"{T(x.Hva)} {T(UtfallTekst(x.Utfall))} {x.Antall}")));
 
@@ -249,6 +251,8 @@ public static class Revisjon
             antallPoster = poster.Count,
             // Dekning per disk: det søket listet (mapper, filer, byte) mot det disken har i bruk. Målt, ikke anslått.
             disker = Disker(s),
+            kategorier = Kategoristatus.Regn(antall, s.Sjekker, Plattform.ErWindows).Select(k => new { b = k.Bokstav, navn = T(k.Navn), kode = k.Kode, begrensning = k.Begrensning == null ? null : T(k.Begrensning) }),
+            regelalder = T(Kategoristatus.Regelalder(s.Regelsett.Versjon, DateTime.Now)),
             filhoder = ModellFormat.Filhoder,
             avkortet = s.Logg.Avkortet,
             defender = av == null ? T("Defender-loggen ble ikke lest.")

@@ -33,6 +33,17 @@ public sealed partial class Skanner
             Sjekk(r.TestPositiv.Length > 0 && treffer(r.TestPositiv), $"{hvem}: positiv test «{r.TestPositiv}» treffer ikke regelen (skygget eller feil)");
             Sjekk(r.TestNegativ.Length > 0 && !treffer(r.TestNegativ), $"{hvem}: negativ test «{r.TestNegativ}» treffer regelen (for bred)");
         }
+        // Status per kategori A–T (§5T): alltid 20, nektet tilgang → ACCESS_DENIED, ingen WSL og Docker → NOT_APPLICABLE
+        var nektet = new List<(string, string, Utfall, int)> { ("Leter gjennom filene etter AI-modeller og AI-kode", "Mappe", Utfall.Nektet, 3), ("Spør lokale programmer om de er AI", "Port", Utfall.Lest, 1) };
+        var ingen = new[] { new Sjekkstatus("Docker", "kjører ikke", 0), new Sjekkstatus("WSL", "ikke installert", 0) };
+        var k1 = Kategoristatus.Regn(nektet, ingen, true);
+        Sjekk(k1.Count == 20 && k1.Select(k => k.Bokstav).Distinct().Count() == 20, "ikke alle 20 kategoriene fikk én status");
+        Sjekk(k1.First(k => k.Bokstav == "A").Kode == "ACCESS_DENIED" && k1.First(k => k.Bokstav == "N").Kode == "NOT_APPLICABLE"
+              && k1.First(k => k.Bokstav == "J").Kode == "NOT_SCANNED", "nektet tilgang ble ikke ACCESS_DENIED, ingen WSL ikke NOT_APPLICABLE, eller uskannet ikke NOT_SCANNED");
+        var k2 = Kategoristatus.Regn(new List<(string, string, Utfall, int)> { ("Ser etter ukjente AI-spor", "Fil", Utfall.Tidsgrense, 1) }, Array.Empty<Sjekkstatus>(), false);
+        Sjekk(k2.First(k => k.Bokstav == "G").Kode == "TIME_LIMIT" && k2.First(k => k.Bokstav == "A").Kode == "UNSUPPORTED", "tidsgrense ble ikke TIME_LIMIT, eller ikke Windows ble ikke UNSUPPORTED");
+        Sjekk(Kategoristatus.Regelalder("2026-01-01", new DateTime(2026, 6, 1)).Contains("over 90 dager") && !Kategoristatus.Regelalder("2026-05-20", new DateTime(2026, 6, 1)).Contains("over 90"),
+            "regelalderen varsler ikke etter 90 dager (eller for tidlig)");
         return (ok, alle);
     }
 }

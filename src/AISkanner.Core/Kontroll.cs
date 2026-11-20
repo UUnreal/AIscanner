@@ -780,7 +780,7 @@ public sealed partial class Skanner
             sb.AppendLine($"{(mhOk == mhAlle ? "OK  " : "FEIL")}  Modeller (2.53): {mhOk} av {mhAlle} riktige (angrep, sensurfri, sikkerhetsmodell, ordforrådets navn, llamafile, zip, nye formater, modellkort, egen kode, ModelScope, LoRA, pakker, MCP, Docker)");
             var (kgOk, kgAlle) = KatalogKontroll(regler, sb);
             ok += kgOk;
-            sb.AppendLine($"{(kgOk == kgAlle ? "OK  " : "FEIL")}  Regelkatalog (§9): {kgOk} av {kgAlle} riktige (id, bevistype, kilde, verifisert, falsk-positiv-merknad, positiv og negativ test per regel)");
+            sb.AppendLine($"{(kgOk == kgAlle ? "OK  " : "FEIL")}  Regelkatalog (§9): {kgOk} av {kgAlle} riktige (id, bevistype, kilde, verifisert, falsk-positiv-merknad, positiv og negativ test per regel; status per kategori A–T; regelalder)");
             int alle = kgAlle + mhAlle + Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");

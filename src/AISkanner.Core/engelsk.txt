@@ -1679,3 +1679,20 @@ produktregel|product rule
 Agent som kjører kommandoer uten å spørre («Godkjenn alt» i oppsettet).|Agent that runs commands without asking ("approve all" in its settings).
 Agent som kjører kommandoer uten å spørre, og starter av seg selv.|Agent that runs commands without asking, and starts by itself.
 Modellfiler i programmet|Model files in the program
+~^Reglene er fra (\d\d)\.(\d\d)\.(\d{4})\.|The rules are from $3-$2-$1.
+De er over 90 dager gamle: hent ny versjon på|They are more than 90 days old: get a new version at
+Dekning per kategori (A–T)|Coverage per category (A–T)
+Bilde, lyd og video|Image, audio and video
+Kjøremotorer|Runtimes
+Utviklermiljø|Development environments
+AI-apper og kodeagenter|AI apps and coding agents
+Agenter og MCP|Agents and MCP
+RAG og vektordatabaser|RAG and vector databases
+Innebygd AI i programmer|AI embedded in programs
+Windows' egen AI|Windows' own AI
+AI fra maskinvareprodusenter|AI from hardware makers
+Tredjepartsprogrammer med AI|Third-party programs with AI
+WSL, beholdere og VM-er|WSL, containers and VMs
+Portabel og ukjent AI|Portable and unknown AI
+Identitet og rettigheter|Identity and permissions
+Opprinnelse|Origin

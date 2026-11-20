@@ -55,6 +55,13 @@ public static class Rapport
         if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
+        if (skanner != null)
+        {
+            L(Kategoristatus.Regelalder(skanner.Regelsett.Versjon, DateTime.Now));
+            L("Dekning per kategori (A–T):");
+            foreach (var k in Kategoristatus.Regn(skanner.Logg.Antall, skanner.Sjekker, Plattform.ErWindows))
+                L($"  {k.Bokstav} {k.Navn}: {k.Kode}{(k.Begrensning != null ? " · " + k.Begrensning : "")}");
+        }
         if (skanner != null && skanner.Sjekker.Count > 0) L("Sjekket: " + string.Join(" · ", skanner.Sjekker.Select(x => $"{x.Navn}: {x.Tekst}")) + ".");
         int spor = liste.Count(f => f.Gruppe == "spor");
         L(spor > 0 ? $"Mulig spor (ikke bekreftet AI, telles ikke): {spor}." : "Mulig spor: ingen.");

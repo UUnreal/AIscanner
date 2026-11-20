@@ -1000,7 +1000,8 @@ function tegnData() {
       + `<div class="ufliser">${deler.map(x => `<div class="uflis${x[0] === "mangler" ? " mangler" : ""}${x[1] ? " har" : ""}"${x[1] && x[0] !== "annet" ? ` data-u="${x[0]}" title="${esc(L("Vis hvor", "Show where"))}"` : ""}><b>${tall(x[1])}</b><small><i class="s-${x[0]}"></i>${esc(x[2])}</small></div>`).join("")}</div>`
       + `<h3 class="medSider"><span>${L("Per sjekk", "Per check")}</span><span class="sidevalg" id="dsv"></span></h3>`
       + `<ul class="sjekkTabell"><li class="sjekkRad hode"><span>${L("Sjekk", "Check")}</span><span>${L("Tid", "Time")}</span><span>${L("Sjekket for AI", "Checked for AI")}</span><span>${L("Finnes ikke", "Does not exist")}</span><span>${L("Utelatt etter regel", "Left out by rule")}</span><span>${L("Kunne ikke leses", "Could not be read")}</span></li></ul>`
-      + `<div class="dl" id="dl"><ul id="dlu" class="sjekkTabell">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`;
+      + `<div class="dl" id="dl"><ul id="dlu" class="sjekkTabell">${g.sjekker.slice(0, 40).map(sjekkLinje).join("")}</ul></div>`
+      + (g.kategorier ? `<h3>${L("Dekning per kategori (A–T)", "Coverage per category (A–T)")}</h3>${g.regelalder ? `<p class="liten">${esc(g.regelalder)}</p>` : ""}<ul class="sjekkTabell">${g.kategorier.map(k => `<li class="sjekkRad"><span>${esc(k.b)} · ${esc(k.navn)}</span><span>${esc(k.kode)}</span><span>${esc(k.begrensning || "")}</span></li>`).join("")}</ul>` : "");
     rader = g.sjekker; linje = sjekkLinje;
   } else if (fane === "kart") {
     kropp = `<div class="skTopp"><div class="skSti" id="skSti"></div><div class="bryter" id="skMal"><button data-m="antall" class="${kartMal === "antall" ? "valgt" : ""}">${L("Antall", "Count")}</button><button data-m="storrelse" class="${kartMal === "storrelse" ? "valgt" : ""}">${L("Størrelse", "Size")}</button></div><button class="skInfoKnapp" id="skOm">ⓘ ${L("Om dette stedet", "About this place")}</button></div>`

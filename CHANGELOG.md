@@ -33,6 +33,12 @@ Kategoriene er:
 - NVD-teksten sier «nevnt i X CVE-er, ikke sjekket mot din versjon».
 - Nye felt per funn: bevistype, lokal/sky/hybrid/ukjent og begrensning (skjerm, rapport, JSON, CSV).
 
+### Lagt til (status per kategori, plan PR 3)
+- Datagrunnlag, rapporten og revisjonsloggen viser status for hver av de 20 kategoriene A–T: SCANNED, PARTIAL,
+  NOT_SCANNED, ACCESS_DENIED, TIME_LIMIT, UNSUPPORTED eller NOT_APPLICABLE, regnet ut av hva sjekkene fikk lest.
+  Kjente hull i dekningen står ved kategorien, som da er PARTIAL.
+- «Reglene er fra <dato>», og etter 90 dager en lenke til ny versjon (ingen oppslag på nett).
+
 ### Lagt til (regelkatalog, plan PR 2)
 - Hver regel i `produkter`, `pythonPakker`, `nodePakker` og `dockerBilder` har id, bevistype, kilde, verifisert,
   falsk-positiv-merknad og en positiv og negativ test. `--kontroll` kjører testene mot den ekte matchingen.
