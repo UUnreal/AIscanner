@@ -601,7 +601,7 @@ public sealed partial class Skanner
         if (linjer.Count == 0) return;
         var f = Spor("AI-agent startes med farlige flagg",
             "En AI-agent startes av seg selv (oppstart, profil eller register) med flagg som slår av spørsmålene før den kjører kommandoer. Bare agent og flagg vises.", null);
-        f.Advarsel("AI-agent som starter av seg selv uten å spørre før den gjør noe.");
+        f.Advarsel("Agent som kjører kommandoer uten å spørre, og starter av seg selv.");
         foreach (var (tekst, t) in linjer.Distinct().Take(20))
         {
             f.Tidspunkt(t, t);

@@ -23,6 +23,20 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+### Endret (bevisstandard, plan PR 1)
+- Hvert funn har bevisnivå **Bekreftet / Sannsynlig / Spor**. Bare navn, sti, endelse, DNS eller kjøremotor gir
+  «Mulig spor, ikke bekreftet»: egen liste, telles aldri, blir aldri rød. To stier er fortsatt Spor.
+- Ukjent AI er rød bare når den er bekreftet eller sannsynlig AI. Ord som «ai» og «gpt» i navnet på en utvidelse
+  eller nettleserbro gir bare Spor.
+- Opphav for ukjent AI kommer bare fra bevis (signatur, filinfo, nedlastingsmerke) med kilden vist, ellers «Opphav ukjent».
+- «Godkjenn alt» i agentoppsett og agent med farlige flagg i oppstart gir samme røde faresignal som en kjørende agent med flagg.
+- NVD-teksten sier «nevnt i X CVE-er, ikke sjekket mot din versjon».
+- Nye felt per funn: bevistype, lokal/sky/hybrid/ukjent og begrensning (skjerm, rapport, JSON, CSV).
+
+### Lagt til (testlab, plan PR 0)
+- Testlaben bygger og starter en ekte llamafile, prøver WSL1 og sammenligner med `tests/testlab/fasit.json`.
+  Den blir rød når noe forventet mangler, har feil farge/nivå, eller når den rene maskinen gir et AI-funn.
+
 ### Endret
 - GitHub-utgivelsen har bare `AISkanner.exe` (hele programmet) og `SHA256.txt`. Zip-fila og `CHANGELOG.md` er
   tatt bort; endringene står i teksten på utgivelsen.

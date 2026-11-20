@@ -26,8 +26,13 @@ public static class RisikoTekst
 [Flags]
 public enum Tilstand { Finnes = 1, SattOpp = 2, BruktFor = 4, KjorerNa = 8, SlattOpp = 16 }
 
-/// <summary>Hvor sikkert det er at funnet er AI, ut fra hvor sterke og hvor mange uavhengige spor som peker dit.</summary>
-public enum Sikkerhet { Hoy = 0, Middels = 1, Lav = 2 }
+/// <summary>
+/// Bevisstandarden (Jørund 18.11.2026): Bekreftet = AI kjent igjen på innholdet eller målt oppførsel (modellhode, tensorer,
+/// kjent hash, oppsett for en AI-agent, svar fra en AI-tjeneste, målt trafikk til AI). Sannsynlig = to uavhengige spor av ulik
+/// type, eller en verifisert produktregel som traff noe annet enn bare en mappe. Spor = bare navn, sti, endelse, DNS,
+/// kjøremotor eller driver: står i lista «Mulig spor», telles aldri og blir aldri rød.
+/// </summary>
+public enum Bevisniva { Bekreftet = 0, Sannsynlig = 1, Spor = 2 }
 
 /// <summary>Ett produkt på listen. Samme produkt funnet flere steder slås sammen til ett funn.</summary>
 public sealed class Funn
@@ -39,8 +44,11 @@ public sealed class Funn
     /// <summary>
     /// Hvor AI-en lever: "lokal" (kjører på PC-en: modeller, motorer, lokale servere),
     /// "nettleser" (nettsteder, utvidelser, innebygd AI) eller "skjult" (alt annet på PC-en: apper og agenter som bruker AI i skyen, kode, nøkler, bakgrunnsprogrammer).
+    /// «spor» er lista «Mulig spor»: alt som bare har spor-nivå (navn eller sti alene). Den telles aldri.
     /// </summary>
-    public string Gruppe => Kategori == Skanner.SporKategori ? "spor" : Kategori.StartsWith("Nettleser") ? "nettleser" : Kategori.StartsWith("Lokal") ? "lokal" : "skjult";
+    public string Gruppe => Bevisniva == Bevisniva.Spor ? "spor" : Kategori.StartsWith("Nettleser") ? "nettleser" : Kategori.StartsWith("Lokal") ? "lokal" : "skjult";
+    /// <summary>Et ukjent AI-spor (oppsett, logg eller program uten kjent opphav), uansett bevisnivå.</summary>
+    public bool Ukjentspor => Kategori == Skanner.SporKategori;
     public required string Hvorfor { get; init; }
     public string? Enkelt { get; init; }
     /// <summary>Kort om hvor mye noe brukes, f.eks. "Brukes ofte i Chrome."</summary>
@@ -117,13 +125,46 @@ public sealed class Funn
     /// <summary>Uavhengige spor: steder funnet er sett (installert, kjører, oppstart, historikk …) og målt trafikk.</summary>
     public int Spor { get { lock (this) return Hvor.Count + (Trafikk.Count > 0 && !Hvor.Contains("Koblet til nå") ? 1 : 0); } }
 
-    /// <summary>
-    /// Høy: et spor på innholdet eller oppførselen, eller minst to uavhengige spor. Lav: bare svake spor (navn alene).
-    /// Middels: ett spor på navnet til en kjent AI (regel).
-    /// </summary>
-    public Sikkerhet Sikkerhet =>
-        Volatile.Read(ref _sterke) > 0 || Spor >= 2 ? Sikkerhet.Hoy
-        : Volatile.Read(ref _svake) > 0 && Regel == null ? Sikkerhet.Lav : Sikkerhet.Middels;
+    /// <summary>Bevisnivået etter bevisstandarden. To spor av samme type (to stier) er fortsatt bare Spor.</summary>
+    public Bevisniva Bevisniva
+    {
+        get
+        {
+            if (Volatile.Read(ref _sterke) > 0) return Bevisniva.Bekreftet;
+            bool bareNavn = Volatile.Read(ref _svake) > 0;
+            if (Regel == null) return !bareNavn && Spor >= 2 ? Bevisniva.Sannsynlig : Bevisniva.Spor;
+            return !bareNavn || Spor >= 2 ? Bevisniva.Sannsynlig : Bevisniva.Spor;
+        }
+    }
+
+    /// <summary>Hva slags bevis nivået bygger på, kort, til skjerm og rapport.</summary>
+    public string Bevistype => Bevisniva switch
+    {
+        Bevisniva.Bekreftet => "Innhold eller målt oppførsel",
+        Bevisniva.Sannsynlig => Regel != null && Spor < 2 ? "Verifisert produktregel" : "Flere uavhengige spor",
+        _ => "Bare navn, sti eller ett spor",
+    };
+
+    /// <summary>Hvor AI-en kjører: lokal, sky, hybrid eller ukjent. Bare fra det som er sett.</summary>
+    public string Drift
+    {
+        get
+        {
+            bool lokal = Modeller > 0 || Kategori.StartsWith("Lokal", StringComparison.Ordinal);
+            bool sky = Trafikk.Count > 0 || SenderTil.Count > 0 || Kategori.Contains("(nettsted)");
+            return lokal && sky ? "hybrid" : lokal ? "lokal" : sky ? "sky" : "ukjent";
+        }
+    }
+
+    /// <summary>Det viktigste skanneren ikke kan si om funnet (§6), eller null.</summary>
+    public string? Begrensning =>
+        Bevisniva == Bevisniva.Spor ? "Ikke bekreftet at dette er AI: bare navn, sti eller ett spor."
+        : Status == Tilstand.SlattOpp ? "Bare slått opp i DNS, ikke sett brukt."
+        : Drift == "ukjent" ? "Ikke sett om den kjører lokalt eller sender data ut."
+        : null;
+
+    /// <summary>Hvor «Kommer fra» er lest: «signatur», «nedlastingsmerke», «produktregel», «navn» eller null (opphav ukjent).</summary>
+    public string? OpphavKilde { get; set; }
 
     /// <summary>Hva IT har sagt: godkjent, blokkert eller ikke vurdert. Settes av Risikoregler.</summary>
     public string Godkjenning { get; set; } = "Ikke vurdert";

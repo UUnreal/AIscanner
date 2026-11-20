@@ -374,7 +374,7 @@ public sealed partial class Skanner
         var ds = s4._funn.Values.FirstOrDefault(f => f.Navn == "DeepSeek");
         Sjekk(!s4.DnsBufferForurenset && ds != null, "ett ekte DNS-oppslag (chat.deepseek.com) ble ikke funnet");
         // Et oppslag alene er ikke bruk: «Bare slått opp», lav treffsikkerhet, IP-en og at programmet er ukjent
-        Sjekk(ds != null && ds.Status == Tilstand.SlattOpp && !ds.Tilstander.HasFlag(Tilstand.BruktFor) && ds.Sikkerhet == Sikkerhet.Lav,
+        Sjekk(ds != null && ds.Status == Tilstand.SlattOpp && !ds.Tilstander.HasFlag(Tilstand.BruktFor) && ds.Bevisniva == Bevisniva.Spor,
             "DNS-oppslag alene ble vist som bruk");
         Sjekk(ds != null && ds.Detaljer.Any(d => d.StartsWith("Windows' DNS-buffer: chat.deepseek.com → 203.0.113.9") && d.Contains("programmet som slo opp er ukjent")),
             "DNS-funnet viser ikke kilde, IP og at programmet er ukjent");
@@ -440,7 +440,7 @@ public sealed partial class Skanner
         Sjekk(f2 != null && f2.Advarsler.Any(a => a.StartsWith("Åpen mot nettverket")), "python -m vllm --host 0.0.0.0 ble ikke merket åpen mot nettverket");
         var kode = Convert.ToBase64String(Encoding.Unicode.GetBytes("Invoke-RestMethod -Uri https://api.openai.com/v1/chat/completions -Headers @{a='hemmelig123'}"));
         var f3 = s.Vurder("powershell.exe", null, 9104, $"powershell.exe -NoProfile -WindowStyle Hidden -enc {kode}", null, null);
-        Sjekk(f3 != null && f3.Navn == "PowerShell med gjemt AI-kode" && f3.Gruppe == "spor", "PowerShell med base64-kodet AI-kall ble ikke et ukjent AI-spor");
+        Sjekk(f3 != null && f3.Navn == "PowerShell med gjemt AI-kode" && f3.Ukjentspor, "PowerShell med base64-kodet AI-kall ble ikke et ukjent AI-spor");
         var f4 = s.Vurder("node.exe", null, 9105, @"""C:\Program Files\nodejs\node.exe"" ""C:\Program Files\nodejs\node_modules\npm\bin\npx-cli.js"" -y openai@4.20.0 hemmelig123", null, null);
         Sjekk(f4 != null && f4.Navn == "Node-skript med AI: openai", "npx openai ble ikke kjent igjen som pakke");
         var ai = s.Vurder("llama-server.exe", null, 9106, @"llama-server.exe -m C:\modeller\qwen.gguf --host 0.0.0.0 --port 8080", new Funn { Navn = "llama.cpp", Kategori = "Lokal AI", Hvorfor = "" }, null);
@@ -533,11 +533,30 @@ public sealed partial class Skanner
         var regel = regler.Produkter.First(p => p.Kategori.StartsWith("Skygge-AI", StringComparison.Ordinal));
         Funn Lag() { var f = new Funn { Navn = regel.Navn, Kategori = regel.Kategori, Hvorfor = "x", Regel = regel, Risiko = Risiko.Gul }; f.LeggTilHvor("Installert program"); return f; }
         var vanlig = Lag();
-        Sjekk(vanlig.Sikkerhet == Sikkerhet.Middels, "ett navnetreff på en kjent AI ble ikke middels treffsikkerhet");
+        Sjekk(vanlig.Bevisniva == Bevisniva.Sannsynlig, "verifisert produktregel (installert program) ble ikke Sannsynlig");
         var sterk = Lag(); sterk.Sterkt();
-        Sjekk(sterk.Sikkerhet == Sikkerhet.Hoy, "spor på innholdet ga ikke høy treffsikkerhet");
-        var svak = new Funn { Navn = "Mulig AI-nettsted: x.ai", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "x" }; svak.Svakt(); svak.LeggTilHvor("Chrome");
-        Sjekk(svak.Sikkerhet == Sikkerhet.Lav, "bare et navn uten regel ga ikke lav treffsikkerhet");
+        Sjekk(sterk.Bevisniva == Bevisniva.Bekreftet, "spor på innholdet (modellhode) ga ikke Bekreftet");
+        var svak = new Funn { Navn = "Mulig AI-nettsted: x.ai", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "x", Risiko = Risiko.Rod }; svak.Svakt(); svak.LeggTilHvor("Chrome"); svak.LeggTilHvor("Edge");
+        svak.Advarsel("Er åpen mot nettverket (test)");
+        Risikoregler.Bruk(new[] { svak }, new Regelsett());
+        Sjekk(svak.Bevisniva == Bevisniva.Spor && svak.Gruppe == "spor" && svak.Risiko != Risiko.Rod && Oversikt.Telling(new[] { svak }).Totalt == 0,
+            "bare et navn (to steder) ble ikke Spor, ble rød med faresignal eller ble telt");
+        // Bevisstandarden: to stier er fortsatt Spor, prosess + port er Sannsynlig, ukjent med modellhode er rød
+        var stier = new Funn { Navn = "Ukjent mappe", Kategori = "Skygge-AI", Hvorfor = "x" }; stier.Svakt(); stier.LeggTilHvor("Mappe på disk"); stier.LeggTilHvor("Mappe på disk");
+        Sjekk(stier.Bevisniva == Bevisniva.Spor, "to stier ble mer enn Spor");
+        var dirRegel = new Funn { Navn = regel.Navn, Kategori = regel.Kategori, Hvorfor = "x", Regel = regel }; dirRegel.Svakt(); dirRegel.LeggTilHvor("Mappe på disk");
+        Sjekk(dirRegel.Bevisniva == Bevisniva.Spor, "kjent produkt med bare en mappe ble mer enn Spor");
+        var pp = new Funn { Navn = "Lokal AI-server (x)", Kategori = "Lokal AI", Hvorfor = "x" }; pp.LeggTilHvor("Kjører nå"); pp.LeggTilHvor("Lytter på port 8080");
+        Sjekk(pp.Bevisniva == Bevisniva.Sannsynlig && pp.Gruppe != "spor", "prosess + port ble ikke Sannsynlig");
+        var ukjentModell = new Funn { Navn = "Ukjent AI-modell: x.gguf", Kategori = "Lokal AI (modell)", Hvorfor = "x", Risiko = Risiko.Gul }; ukjentModell.Sterkt(); ukjentModell.LeggTilHvor("Disk");
+        Risikoregler.Bruk(new[] { ukjentModell }, new Regelsett());
+        Sjekk(ukjentModell.Risiko == Risiko.Rod && ukjentModell.Opprinnelse == "Opphav ukjent" && ukjentModell.OpphavKilde == null,
+            "ukjent AI med modellhode ble ikke rød med «Opphav ukjent»");
+        var ukjentNavn = new Funn { Navn = "Ukjent AI-modell: OpenAI-assistent.gguf", Kategori = "Lokal AI (modell)", Hvorfor = "x" }; ukjentNavn.Sterkt(); ukjentNavn.LeggTilHvor("Disk");
+        ukjentNavn.Detalj("Nedlastet fra: https://example.org/m.gguf (Windows' nedlastingsmerke, Zone.Identifier)");
+        Risikoregler.Bruk(new[] { ukjentNavn }, new Regelsett { Selskapsland = new() { ["OpenAI"] = "US" } });
+        Sjekk(ukjentNavn.OpprinnelseLand == null && ukjentNavn.Opprinnelse == "Lastet ned fra example.org" && ukjentNavn.OpphavKilde == "nedlastingsmerke",
+            "ukjent AI fikk opphav eller land gjettet fra navnet, ikke fra nedlastingsmerket");
         var godkjent = Lag();
         Risikoregler.Bruk(new[] { godkjent }, new Regelsett { GodkjentAi = new() { regel.Navn } });
         Sjekk(godkjent.Godkjenning == "Godkjent av IT" && godkjent.Risiko == Risiko.Gronn, "godkjent AI ble ikke «Godkjent av IT» og grønn");
@@ -554,7 +573,7 @@ public sealed partial class Skanner
         sm.LeggTil("Ukjent program snakker med AI: annet", SporKategori, Risiko.Rod, "x", "Koblet til nå", @"Program: C:\Users\a\annet.exe · PID 78");
         sm.SlaSammenSpor();
         var samlet = sm._funn.Values.Where(f => f.Detaljer.Any(d => d.Contains("notesync.exe"))).ToList();
-        Sjekk(samlet.Count == 1 && samlet[0].Detaljer.Count(d => d.Contains("notesync.exe")) >= 2 && samlet[0].Sikkerhet == Sikkerhet.Hoy
+        Sjekk(samlet.Count == 1 && samlet[0].Detaljer.Count(d => d.Contains("notesync.exe")) >= 2 && samlet[0].Bevisniva != Bevisniva.Spor
               && sm._funn.Values.Any(f => f.Navn.EndsWith(": annet")), "svake spor etter samme program ble ikke ett funn");
         // Programmer som startet og stoppet mens søket lyttet
         var sk = new Skanner(regler);
@@ -611,28 +630,31 @@ public sealed partial class Skanner
 
         // Tellingen: innebygde modellfiler hos en leverandør er ett program, ikke mange AI-modeller
         var lev = new Funn { Navn = "Kontroll: Office", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Fra leverandør" };
-        lev.LeggTilInnebygde(7);
+        lev.LeggTilInnebygde(7); lev.LeggTilHvor("Innebygd AI"); lev.LeggTilHvor("Modellfiler i programmet");
         var smaa = new Funn { Navn = "Andre AI-modeller i Edge", Kategori = "Innebygd AI fra leverandør (nettleser)", Hvorfor = "", Type = "Innebygd i nettleser" };
-        smaa.LeggTilInnebygde(5);
+        smaa.LeggTilInnebygde(5); smaa.LeggTilHvor("Innebygd AI"); smaa.LeggTilHvor("Modellfiler i programmet");
         var nano = new Funn { Navn = "Gemini Nano i Chrome", Kategori = "Innebygd AI fra leverandør (nettleser)", Hvorfor = "", Type = "Innebygd i nettleser" };
-        nano.LeggTilModeller(1);
+        nano.LeggTilModeller(1); nano.Sterkt();
         var gguf = new Funn { Navn = "AI-modell: kontroll", Kategori = "Lokal AI (modell)", Hvorfor = "", Type = "Lokal modell" };
-        gguf.LeggTilModeller(1);
+        gguf.LeggTilModeller(1); gguf.Sterkt();
         var motor = new Funn { Navn = "Kontroll: bare AI-motor", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Fra leverandør" };
+        motor.LeggTilHvor("Innebygd AI");   // kjøremotor alene: Mulig spor, telles ikke
         var t = Oversikt.Telling(new[] { lev, smaa, nano, gguf, motor });
         Sjekk(t.Modeller == 2, $"AI-modeller i overskriften skulle vært bare språkmodellen og modellfila, men ble {t.Modeller}");
-        Sjekk(t.Innebygd == 3, $"programmer med innebygd AI skulle vært tre, men ble {t.Innebygd}");
+        Sjekk(t.Innebygd == 2 && motor.Gruppe == "spor", $"programmer med innebygd AI skulle vært to (motor alene er Mulig spor), men ble {t.Innebygd}");
         Sjekk(t.Apper == 0, "innebygd AI fra leverandør telles som AI-app eller agent");
         // Alle slags rader, også IT-regler, ukjente og mulige nettsteder: summene skal være like antall rader
         var itRegel = new Funn { Navn = "AI-regler fra IT", Kategori = "Regler", Hvorfor = "", Type = "IT-regel", Risiko = Risiko.Gronn };
         var mulig = new Funn { Navn = "Mulig AI-nettsted: kontroll.ai", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "", Type = "Ukjent AI-nettsted", Risiko = Risiko.Rod };
         var ukjentApp = new Funn { Navn = "Kontroll: ukjent", Kategori = "Innebygd AI fra leverandør", Hvorfor = "", Type = "Ukjent AI", Risiko = Risiko.Rod };
+        itRegel.Sterkt(); mulig.Svakt(); ukjentApp.Sterkt();
         var alleRader = new[] { lev, smaa, nano, gguf, motor, itRegel, mulig, ukjentApp };
         var ta = Oversikt.Telling(alleRader);
-        Sjekk(ta.Totalt == alleRader.Length && ta.Hoy + ta.Middels + ta.Lav + ta.Ukjent == alleRader.Length && ta.Ukjent == 2,
+        int telte = alleRader.Count(f => f.Gruppe != "spor");
+        Sjekk(telte == 6 && ta.Totalt == telte && ta.Hoy + ta.Middels + ta.Lav + ta.Ukjent == telte && ta.Ukjent == 1,
             $"tallene stemmer ikke med radene (rader {alleRader.Length}, overskrift {ta.Totalt}, risiko {ta.Hoy + ta.Middels + ta.Lav + ta.Ukjent}, ukjent {ta.Ukjent})");
-        Sjekk(Rapport.Merke(mulig) == "🔴 UKJENT" && Rapport.Merke(nano) != "🔴 UKJENT", "rapporten merker ikke ukjente funn som UKJENT");
-        Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("5 lokale AI-funn på PC: 2 lokale AI-modeller", StringComparison.Ordinal),
+        Sjekk(Rapport.Merke(ukjentApp) == "🔴 UKJENT" && Rapport.Merke(mulig) == "⚪ MULIG SPOR" && Rapport.Merke(nano) != "🔴 UKJENT", "rapporten merker ikke ukjente funn som UKJENT og mulige spor som MULIG SPOR");
+        Sjekk(Oversikt.TellingTekst(new[] { lev, smaa, nano, gguf, motor }).StartsWith("4 lokale AI-funn på PC: 2 lokale AI-modeller", StringComparison.Ordinal),
             "overskriften er ikke summen av alle AI-funn med lokale AI-modeller først");
 
         // Samme komponent i flere versjoner eller med to utgivernavn skal bli én rad
@@ -695,7 +717,9 @@ public sealed partial class Skanner
             foreach (var x in Kontrollspor)
             {
                 var f = funn.FirstOrDefault(y => y.Navn.StartsWith(x.Navn, StringComparison.Ordinal));
-                bool riktig = f != null && f.Risiko == Risiko.Rod && f.Gruppe == "spor";
+                bool riktig = f != null && f.Risiko == Risiko.Rod && f.Ukjentspor && f.Bevisniva != Bevisniva.Spor
+                    && (!x.Navn.StartsWith("Godkjenn alt", StringComparison.Ordinal) && !x.Navn.StartsWith("AI-agent startes", StringComparison.Ordinal)
+                        || f.RisikoGrunn?.Contains("Agent som kjører kommandoer uten å spørre") == true);
                 if (riktig) ok++;
                 sb.AppendLine($"{(riktig ? "OK  " : "FEIL")}  {x.Hva}{(f == null ? " (ikke funnet)" : riktig ? "" : $" (funnet, men {f.Risiko}/{f.Gruppe})")}");
             }

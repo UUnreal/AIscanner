@@ -70,6 +70,7 @@ public sealed partial class Skanner
             "IT har satt regler for innebygd AI på denne PC-en.", "Registeret", null,
             enkelt: "Regler fra IT");
         f.Bruk = $"{AiRegler.Count} {(AiRegler.Count == 1 ? "regel" : "regler")}.";
+        f.Sterkt();   // lest fra IT sine regler i registeret, ikke et navn
         foreach (var r in AiRegler) f.Detalj($"Regel: {r}");
     }
 

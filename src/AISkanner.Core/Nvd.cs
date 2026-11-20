@@ -28,7 +28,7 @@ public static class Nvd
                 int antall = doc.RootElement.TryGetProperty("totalResults", out var t) ? t.GetInt32() : 0;
                 Tilgangslogg.Logg("Nettverk", $"services.nvd.nist.gov ord=\"{ord}\"", Utfall.Lest, $"{antall} CVE");
                 f.Merknad(antall > 0
-                    ? $"NVD: {antall} kjente sårbarheter (CVE) nevner \"{ord}\". Hold programmet oppdatert."
+                    ? $"NVD: \"{ord}\" er nevnt i {antall} CVE-er, ikke sjekket mot din versjon. Hold programmet oppdatert."
                     : $"NVD: ingen kjente sårbarheter funnet for \"{ord}\".");
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }

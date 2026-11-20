@@ -164,6 +164,7 @@
   .prikk { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--svak); }
   .prikk.rod { background: var(--rod); } .prikk.gul { background: var(--gul); } .prikk.gronn { background: var(--gronn); }
   .prikk.ukjent { background: transparent; box-shadow: inset 0 0 0 2px var(--rod); }
+  .prikk.spor { background: transparent; box-shadow: inset 0 0 0 2px var(--linje); }
   /* Funn, Nettverk og Datagrunnlag: tre likeverdige visninger */
   .fanerad { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .kjort { margin-left: auto; font: var(--t12); color: var(--dempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -567,7 +568,7 @@ function kart(f) {
   }).join("");
   return `<div class="kart"><svg viewBox="0 0 ${KART.w} ${KART.h}" preserveAspectRatio="xMidYMid meet">${stier}${nåler}</svg>${Object.keys(cdn).length ? `<div class="cdn">${L("Tjenesten skjuler IP-en", "The service hides the IP")}: ${esc(Object.entries(cdn).map(([n, a]) => `${a} ${L("bak", "behind")} ${n}`).join(", "))}</div>` : ""}</div>`;
 }
-const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Ukjent AI-spor", "Unknown AI trace")]];
+const GRUPPER = [["lokal", () => L("Lokal", "Local")], ["nettleser", () => L("Nettleser", "Browser")], ["skjult", () => L("Skjult", "Hidden")], ["spor", () => L("Mulig spor, ikke bekreftet (telles ikke)", "Possible trace, not confirmed (not counted)")]];
 const gruppeNr = f => Math.max(0, GRUPPER.findIndex(g => g[0] === f.gruppe));
 
 // Overskriften er alle funn på PC-en (alt er funnet lokalt: filer, nettleserdata, programmer). Én rad i tabellen er
@@ -586,7 +587,7 @@ function visResultat(funn, inf) {
   const RISIKO = r => Math.max(0, RISIKOGRUPPER.indexOf(r));
   alle = funn.map((f, i) => [f, i]).sort((a, b) => RISIKO(a[0].risiko) - RISIKO(b[0].risiko) || gruppeNr(a[0]) - gruppeNr(b[0]) || a[1] - b[1]).map(x => x[0]);
   info = inf || {}; side = 0; valgt = null; risikoValg = null;
-  const ant = r => alle.filter(f => f.risiko === r).length;
+  const ant = r => alle.filter(f => f.gruppe !== "spor" && f.risiko === r).length;
   visTelling(funn.length, info.telling || { totalt: funn.length });
   $("bar").innerHTML = funn.length ? RISIKOGRUPPER.filter(r => ant(r)).map(r => `<span class="${r}" style="flex:${ant(r)}"></span>`).join("") : "";
   tegnFordeling();
@@ -597,7 +598,7 @@ function visResultat(funn, inf) {
 }
 
 function tegnFordeling() {
-  const funn = alle, ant = r => alle.filter(f => f.risiko === r).length;
+  const funn = alle, ant = r => alle.filter(f => f.gruppe !== "spor" && f.risiko === r).length;
   // Høy, Middels, Lav og Ukjent: hvert funn står i nøyaktig én, så de summerer til overskriften. Ukjent vises bare når det finnes.
   $("fordeling").innerHTML = funn.length
     ? RISIKOGRUPPER.filter(r => r !== "ukjent" || ant(r)).map(r => `<button data-r="${r}" class="${risikoValg === r ? "valgt" : risikoValg ? "av" : ""}" aria-pressed="${risikoValg === r}" title="${esc(risikoValg === r ? L("Vis alle", "Show all") : L(`Vis bare ${merke(r).toLowerCase()}`, `Show only ${merke(r).toLowerCase()}`))}"><span class="prikk ${r}"></span><b>${ant(r)}</b>${merke(r)}</button>`).join("")
@@ -705,7 +706,7 @@ function tegnListe() {
     const r = document.createElement("div");
     r.className = "rad" + (f === valgt ? " valgt" : "");
     r.title = L("Trykk for detaljer", "Click for details");
-    r.innerHTML = `<span class="prikk ${f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
+    r.innerHTML = `<span class="prikk ${f.gruppe === "spor" ? "spor" : f.risiko}"></span><div class="navn"><div class="ai" title="${esc(f.navn)}${f.versjon ? " · " + esc(f.versjon) : ""}">${esc(f.kortnavn || f.navn)}${f.versjon ? `<span class="ver">${esc(f.versjon)}</span>` : ""}</div>
       <div class="l2" title="${esc(sortering === "land" ? kildeTekst(f) : f.lokasjon || "")}">${esc(sortering === "land" ? [f.lokasjon, kildeTekst(f)].filter(Boolean).join(" · ") : [f.status && f.status !== L("Finnes", "Present") ? f.status : "", kobling(f) || f.type || GRUPPER[gruppeNr(f)][1](), f.sist ? L("sist ", "last ") + f.sist : ""].filter(Boolean).join(" · "))}</div></div>
       <div class="land${!(f.senderTil || []).length && erLokal(f) ? " lokalt" : ""}">${landListe(f)}</div><span class="pil">${CHEV}</span>`;
     r.onclick = () => valgt === f ? lukkArk() : apneArk(f);
@@ -1267,11 +1268,12 @@ return `<li class="api ${kl}" title="${esc(st)}"><span><b>${esc(navn)}</b> ${esc
       ? `<div class="stor">${f.senderTil.slice(0, 3).map(l => `<span class="${l.farlig ? "fare" : ""}">${esc(l.land)}</span>`).join(", ")}</div>` + (f.senderTil.length > 3 ? `<div class="liten">${L(`og ${f.senderTil.length - 3} til`, `and ${f.senderTil.length - 3} more`)}</div>` : "")
       : f.lokalt || f.ingenLand === "Ingen · lokalt" ? `<div class="stor lokalt">${L("Ingen", "Nobody")}</div><div class="liten">${L("Kjører bare på PC-en", "Runs only on the PC")}</div>` : `<div class="stor">${L("Ikke sett", "Not seen")}</div><div class="liten">${L("Sendte ingenting under søket", "Sent nothing during the scan")}</div>`;
     d.innerHTML = `<button class="lukk hjorne" id="tilbake" title="${esc(L("Lukk (Esc)", "Close (Esc)"))}"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button><div class="dTopp"><h2 title="${esc(f.navn)}">${esc(f.kortnavn || f.navn)}</h2>
-      <div class="dMeta"><span class="merke"><span class="prikk ${f.risiko}"></span>${L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div>
-      <div class="dMeta"><span>${esc([(f.tilstander || []).join(", "), f.treffsikkerhet ? L(`treffsikkerhet ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "spor" : "uavhengige spor"})`, `confidence ${f.treffsikkerhet.toLowerCase()} (${f.spor} ${f.spor === 1 ? "trace" : "independent traces"})`) : "", f.godkjenning || ""].filter(Boolean).join(" · "))}</span></div>
+      <div class="dMeta"><span class="merke"><span class="prikk ${f.gruppe === "spor" ? "spor" : f.risiko}"></span>${f.gruppe === "spor" ? L("Mulig spor, ikke bekreftet AI", "Possible trace, not confirmed AI") : L(`${merke(f.risiko)} risiko`, `${merke(f.risiko)} risk`)}</span><span>${esc([f.type, f.versjon ? `${L("versjon", "version")} ${f.versjon}` : "", ...tider].filter(Boolean).join(" · "))}</span></div>
+      <div class="dMeta"><span>${esc([(f.tilstander || []).join(", "), f.bevisniva ? `${L("Bevis", "Evidence")}: ${f.bevisniva} (${f.bevistype})` : "", f.drift ? `${L("Kjører", "Runs")}: ${f.drift}` : "", f.godkjenning || ""].filter(Boolean).join(" · "))}</span></div>
+      ${f.begrensning ? `<div class="dMeta"><span>${L("Begrensning", "Limitation")}: ${esc(f.begrensning)}</span></div>` : ""}
       ${f.rammeverk ? `<div class="dMeta"><span title="${esc(f.rammeverk.alle.join("\n"))}">${L("Kjent risiko", "Known risk")}: ${esc(f.rammeverk.kort)}</span></div>` : ""}</div>
       <div class="flyt">
-        <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Ukjent selskap", "Unknown company"))}</div></div>
+        <div class="flis2"><small>${L("Kommer fra", "Comes from")}</small><div class="stor ${f.kommerFraFarlig ? "fare" : ""}">${esc(f.kommerFra || L("Ukjent", "Unknown"))}</div><div class="liten">${esc(f.selskap || L("Opphav ukjent", "Origin unknown"))}${f.opphavKilde ? ` · ${L("kilde", "source")}: ${esc(f.opphavKilde)}` : ""}</div></div>
         <div class="pil2">${PIL}</div>
         <div class="flis2"><small>${L("Sender data til", "Sends data to")}</small>${sendt}</div>
       </div>

@@ -390,6 +390,8 @@ public sealed partial class Skanner
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
         f.LeggTilInnebygde(app.Filer.Count);
+        // Bevisstandarden: modellfiler i programmet er et eget spor ved siden av programmet. En AI-motor alene er bare Spor.
+        if (app.Filer.Count > 0) f.LeggTilHvor("Modellfiler i programmet");
 
         // Når kom det på PC-en
         DateTime? lagtInn = null, oppdatert = null;

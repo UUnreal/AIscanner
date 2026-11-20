@@ -132,7 +132,7 @@ public static class Revisjon
         L($"Eksperimentflagg i nettleseren (Local State): {(s.LesNettleserflagg ? "lest (slått på av IT)" : "ikke lest")}");
         L($"Agentøkter (tidspunkter og treff, aldri innhold): {(s.MedAgentlogger ? "sjekket" : "slått av av IT")}");
         int spor = funn.Count(f => f.Gruppe == "spor");
-        L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        L(spor > 0 ? $"Mulig spor (ikke bekreftet AI, telles ikke): {spor}." : "Mulig spor: ingen.");
         L(s.LyttetSekunder > 0
             ? $"Nettverk: lyttet i {s.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). " + (s.UdpLest ? "UDP (QUIC/HTTP/3, WebRTC, DNS) lest fra Windows' nettverkshendelser: adresse, port og mengde, aldri innhold." : "UDP og QUIC (HTTP/3): bare lokale porter, adresse krever administrator.")
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");

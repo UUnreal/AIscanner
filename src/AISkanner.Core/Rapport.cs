@@ -54,7 +54,7 @@ public static class Rapport
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
         if (skanner != null && skanner.Sjekker.Count > 0) L("Sjekket: " + string.Join(" · ", skanner.Sjekker.Select(x => $"{x.Navn}: {x.Tekst}")) + ".");
         int spor = liste.Count(f => f.Gruppe == "spor");
-        L(spor > 0 ? $"Ukjente AI-spor: fant spor ({spor})." : "Ukjente AI-spor: fant ingen spor.");
+        L(spor > 0 ? $"Mulig spor (ikke bekreftet AI, telles ikke): {spor}." : "Mulig spor: ingen.");
         if (skanner != null) L(skanner.LyttetSekunder > 0
             ? $"Nettverk: lyttet i {skanner.LyttetSekunder:0} sekunder (TCP-tabellen hvert 250. ms). " + (skanner.UdpLest ? "UDP (QUIC/HTTP/3, WebRTC, DNS) lest fra Windows' nettverkshendelser: adresse, port og mengde, aldri innhold." : "UDP og QUIC (HTTP/3): bare lokale porter, adresse krever administrator.")
             : "Nettverk: ett øyeblikksbilde av TCP-tabellen. UDP og QUIC (HTTP/3) vises ikke.");
@@ -87,7 +87,8 @@ public static class Rapport
             L($"[{Merke(f)}] {f.Navn}");
             L($"  {f.Kort}");
             if (f.Versjon != null) L($"  Versjon: {f.Versjon} · lest fra {f.VersjonKilde}");
-            L($"  Status: {string.Join(", ", Oversikt.Tilstander(f))} · treffsikkerhet {Oversikt.Treffsikkerhet(f).ToLowerInvariant()} ({f.Spor} {(f.Spor == 1 ? "spor" : "uavhengige spor")}) · {f.Godkjenning.ToLowerInvariant()}");
+            L($"  Status: {string.Join(", ", Oversikt.Tilstander(f))} · bevis {Oversikt.Bevis(f).ToLowerInvariant()} ({f.Bevistype.ToLowerInvariant()}) · kjører {f.Drift}{(f.OpphavKilde != null ? $" · opphav fra {f.OpphavKilde}" : "")} · {f.Godkjenning.ToLowerInvariant()}");
+            if (f.Begrensning != null) L($"  Begrensning: {f.Begrensning}");
             if (f.Sist != null)
                 L(f.Forst != null && f.Forst.Value.Date != f.Sist.Value.Date ? $"  Tid: først {Skanner.Tid(f.Forst)}, sist {Skanner.Tid(f.Sist)}" : $"  Tid: {Skanner.Tid(f.Sist)}");
             foreach (var a in f.Advarsler.Skip(1)) L($"  Advarsel: {a}");
@@ -121,14 +122,14 @@ public static class Rapport
     public static readonly (string Id, string Tittel)[] Grupper =
     {
         ("lokal", "Lokal AI (kjører på PC-en)"), ("nettleser", "AI i nettleseren"), ("skjult", "Skjult på PC-en (apper, agenter og bakgrunnsprogrammer)"),
-        ("spor", "Ukjente AI-spor (oppsett og logger med ukjent opphav)"),
+        ("spor", "Mulig spor (bare navn, sti eller ett spor: ikke bekreftet AI, telles ikke)"),
     };
 
     private static string Klipp(string s, int maks) => s.Length <= maks ? s : s.Substring(0, maks - 1) + "…";
 
     internal static string Merke(Risiko r) => r switch { Risiko.Rod => "🔴 HØY", Risiko.Gul => "🟡 MIDDELS", _ => "🟢 LAV" };
     /// <summary>Som på skjermen: ukjent AI står som UKJENT (alltid rød), resten etter risiko.</summary>
-    internal static string Merke(Funn f) => Oversikt.Risikogruppe(f) == "ukjent" ? "🔴 UKJENT" : Merke(f.Risiko);
+    internal static string Merke(Funn f) => f.Gruppe == "spor" ? "⚪ MULIG SPOR" : Oversikt.Risikogruppe(f) == "ukjent" ? "🔴 UKJENT" : Merke(f.Risiko);
 
     public static string MalTekst(Mal m)
     {
@@ -165,7 +166,7 @@ public static class Rapport
             risiko = f.Risiko.ToString().ToLowerInvariant(),
             risikogruppe = Oversikt.Risikogruppe(f), art = Oversikt.Art(f),
             navn = f.Navn, gruppe = f.Gruppe, kort = f.Kort, kategori = f.Kategori, enkelt = f.Enkelt, hvorfor = f.Hvorfor, punkt = Oversikt.Punkt(f), lokasjon = Oversikt.Lokasjon(f), type = f.Type, kommerFra = f.Opprinnelse, kommerFraLand = f.OpprinnelseLand, versjon = f.Versjon, versjonKilde = f.VersjonKilde,
-            status = Oversikt.Status(f), tilstander = Oversikt.Tilstander(f), treffsikkerhet = Oversikt.Treffsikkerhet(f), spor = f.Spor, godkjenning = f.Godkjenning,
+            status = Oversikt.Status(f), tilstander = Oversikt.Tilstander(f), bevisniva = Oversikt.Bevis(f), bevistype = f.Bevistype, drift = f.Drift, begrensning = f.Begrensning, opphavKilde = f.OpphavKilde, spor = f.Spor, godkjenning = f.Godkjenning,
             senderTil = Risikoregler.SenderTil(f), risikoGrunn = f.RisikoGrunn,
             // Nettleserfunn er med, som i tekstrapporten: AI-domene, nettleser og profil, antall besøk, første og siste gang.
             // Aldri hele adresser eller sidetitler: de leses aldri inn i minnet som funn.
@@ -194,13 +195,13 @@ public static class Rapport
         }
         var sb = new StringBuilder();
         var kolonner = engelsk
-            ? new[] { "Risk", "AI", "Status", "Confidence", "Type", "Located here", "Sends data to", "Comes from", "Version", "First seen", "Last seen", "PC" }
-            : new[] { "Risiko", "AI", "Status", "Treffsikkerhet", "Type", "Ligger her", "Sender data til", "Kommer fra", "Versjon", "Først sett", "Sist sett", "PC" };
+            ? new[] { "Risk", "AI", "Status", "Evidence", "Type", "Located here", "Sends data to", "Comes from", "Version", "First seen", "Last seen", "PC" }
+            : new[] { "Risiko", "AI", "Status", "Bevisnivå", "Type", "Ligger her", "Sender data til", "Kommer fra", "Versjon", "Først sett", "Sist sett", "PC" };
         sb.AppendLine(string.Join(";", kolonner.Select(C)));
         foreach (var f in liste)
             sb.AppendLine(string.Join(";", new[]
             {
-                T(Oversikt.Risikogruppe(f) switch { "rod" => "Høy", "gul" => "Middels", "gronn" => "Lav", _ => "Ukjent" }), T(f.Navn), T(Oversikt.Status(f)), T(Oversikt.Treffsikkerhet(f)), T(f.Type), T(Oversikt.Lokasjon(f)),
+                T(Oversikt.Risikogruppe(f) switch { "rod" => "Høy", "gul" => "Middels", "gronn" => "Lav", _ => "Ukjent" }), T(f.Navn), T(Oversikt.Status(f)), T(Oversikt.Bevis(f)), T(f.Type), T(Oversikt.Lokasjon(f)),
                 string.Join(", ", Risikoregler.SenderTil(f)), f.Opprinnelse, f.Versjon,
                 f.Forst?.ToString("yyyy-MM-dd HH:mm"), f.Sist?.ToString("yyyy-MM-dd HH:mm"), Environment.MachineName,
             }.Select(C)));

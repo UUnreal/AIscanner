@@ -812,6 +812,7 @@ public sealed partial class Skanner
             f = LeggTil(visning, "Nettleser-AI", Risiko.Rod,
                 "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
                 $"Utvidelse i {hvor}", $"{hvor}: {mappe}");
+            f.Svakt();   // bare et ord i navnet: Mulig spor til noe annet bekrefter det
         }
         f.SettVersjon(versjon, "utvidelsens manifest");
         if (TvungneUtvidelser().Contains(Path.GetFileName(mappe)))

@@ -462,7 +462,8 @@ Sender data til|Sends data to
 
 # ---------- NVD ----------
 Sjekker kjente sårbarheter for|Checking known vulnerabilities for
-kjente sårbarheter (CVE) nevner|known vulnerabilities (CVE) mention
+CVE-er, ikke sjekket mot din versjon|CVEs, not checked against your version
+er nevnt i|is mentioned in
 Hold programmet oppdatert.|Keep the program updated.
 NVD: ingen kjente sårbarheter funnet for|NVD: no known vulnerabilities found for
 NVD: oppslaget feilet (ingen nett eller for mange forespørsler).|NVD: the lookup failed (no network or too many requests).
@@ -1657,3 +1658,24 @@ lest, ingen AI|read, no AI
 siste 12 måneder|last 12 months
 Kjent risiko:|Known risk:
 Kjent risiko|Known risk
+
+# ---------- Bevisstandard (2.54) ----------
+Bekreftet|Confirmed
+Sannsynlig|Likely
+Innhold eller målt oppførsel|Content or measured behaviour
+Verifisert produktregel|Verified product rule
+Flere uavhengige spor|Several independent traces
+Bare navn, sti eller ett spor|Only a name, path or one trace
+Ikke bekreftet at dette er AI: bare navn, sti eller ett spor.|Not confirmed to be AI: only a name, path or one trace.
+Bare slått opp i DNS, ikke sett brukt.|Only looked up in DNS, not seen in use.
+Ikke sett om den kjører lokalt eller sender data ut.|Not seen whether it runs locally or sends data out.
+Mulig spor, ikke bekreftet AI: bare navn, sti eller ett spor. Telles ikke.|Possible trace, not confirmed AI: only a name, path or one trace. Not counted.
+Opphav ukjent|Origin unknown
+Lastet ned fra|Downloaded from
+Ukjent opphav, og:|Unknown origin, and:
+filinfo (CompanyName, ikke signert)|file info (CompanyName, not signed)
+nedlastingsmerke|download mark
+produktregel|product rule
+Agent som kjører kommandoer uten å spørre («Godkjenn alt» i oppsettet).|Agent that runs commands without asking ("approve all" in its settings).
+Agent som kjører kommandoer uten å spørre, og starter av seg selv.|Agent that runs commands without asking, and starts by itself.
+Modellfiler i programmet|Model files in the program

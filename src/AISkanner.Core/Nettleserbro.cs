@@ -65,7 +65,7 @@ public sealed partial class Skanner
         if (opphav.Count > 0) f.Detalj($"Utvidelser som kan bruke broen: {string.Join(", ", opphav.Take(5))}{(opphav.Count > 5 ? $" (+{opphav.Count - 5})" : "")}");
         f.Merknad("En nettleserutvidelse kan starte dette programmet på PC-en og sende data begge veier.");
         f.Merk(Tilstand.SattOpp);
-        f.Sterkt();
+        if (r != null) f.Sterkt(); else f.Svakt();   // ukjent: bare et ord i navnet
     }
 
     private HashSet<string>? _tvungne;
