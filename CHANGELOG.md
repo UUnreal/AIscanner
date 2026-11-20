@@ -23,6 +23,27 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.55.0] - 2026-11-20
+
+### Lagt til (aktive agenter, M365 og møteopptak)
+- MCP: «kalender og avtaler» og «styrer skjermen og programmer» som egne tilganger. E-post eller kalender pluss
+  kommandoer, nettleser eller skjermstyring = rød «personlig agent».
+- Personlig agent målt i nettverket: samme program koblet til både en AI-tjeneste og e-post eller kalender
+  (Microsoft Graph/Outlook, Gmail, Google-kalender, IMAP/POP/SMTP) blir Sannsynlig og rødt. Bare adresse og port.
+  E-postprogrammer fra Microsoft, Google og Mozilla regnes ikke.
+- PowerShell, pwsh, wscript, cscript og mshta mot en AI-tjeneste er «ukjent skript», ikke «kjent utgiver». Oppstartsskript,
+  PowerShell-profil og Run-nøkler som kaller en AI-tjeneste vises (bare fil og tjeneste).
+- Agenter som styrer skjermen: UI-TARS Desktop (ByteDance), Agent S, Skyvern, Windows-Use; Windows-MCP i MCP-oppsett.
+- Møte-AI: Fathom, Jamie, MeetGeek, Notta (program) og Tactiq, Bluedot, Fathom, MeetGeek, Notta (nettleser).
+- Møteopptaker: program med mikrofon, kamera eller skjermopptak i Windows' personvernlogg og et AI-funn blir rødt.
+  Mikrofon alene vises ikke.
+- Blindsoner som alltid sies: møtebots og agenter i skyen (sjekkes i Teams- og M365-administrasjonen), og opptak av
+  lyden PC-en spiller av.
+
+### Ikke testet på Windows
+- Alt over er testet i `--kontroll` med falske nettbilder og falske personvernlogger, ikke på Windows. Testlaben
+  har ikke e-post, mikrofon eller agenter som styrer skjermen.
+
 ## [2.54.1] - 2026-11-20
 
 ### Rettet
