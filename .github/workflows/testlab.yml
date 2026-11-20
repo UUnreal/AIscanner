@@ -1,16 +1,16 @@
 name: Testlab
 
 # Ren Windows-maskin får ekte AI og mange ekte modeller installert, skanneren kjøres før og etter.
-# Startes for hånd (Actions → Testlab → Run workflow), hver mandag, og når laben selv endres.
+# Kjøres på hver PR som rører skanneren eller laben, hver natt, og for hånd. Blir rød ved avvik fra tests/testlab/fasit.json.
 on:
   workflow_dispatch:
     inputs:
       modeller: { description: 'Antall Hugging Face-modeller', default: '100' }
       maks_mb: { description: 'Største vektfil per modell (MB)', default: '60' }
   schedule:
-    - cron: '0 4 * * 1'
+    - cron: '0 3 * * *'
   pull_request:
-    paths: ['tests/testlab/**', '.github/workflows/testlab.yml']
+    paths: ['src/**', 'tests/testlab/**', '.github/workflows/testlab.yml']
 
 permissions:
   contents: read
