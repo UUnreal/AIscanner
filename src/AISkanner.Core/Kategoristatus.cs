@@ -32,7 +32,7 @@ public static class Kategoristatus
         ("P", "Nettverk", new[] { "Ser hvor AI sender data", "Spør lokale programmer" }, null),
         ("Q", "Identitet og rettigheter", new[] { "Ser etter AI som kjører nå", "Ser i Windows' historikk" }, null),
         ("R", "Opprinnelse", new[] { "Leter gjennom filene" }, "Avstamning utover base_model og lisens for safetensors leses ikke."),
-        ("S", "Sikkerhet", new[] { "Ser etter ukjente AI-spor", "Leter gjennom filene" }, "Utgåtte versjoner (EOL), typosquatting og kjente ondsinnede hasher sjekkes ikke."),
+        ("S", "Sikkerhet", new[] { "Ser etter ukjente AI-spor", "Leter gjennom filene" }, "Typosquatting bare som Mulig spor (én bokstav unna en kjent AI-pakke). Utgåtte versjoner (EOL) og kjente ondsinnede hasher sjekkes ikke: ingen verifisert liste ennå."),
         ("T", "Dekning", Array.Empty<string>(), null),
     };
 

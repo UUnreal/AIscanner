@@ -215,6 +215,16 @@ public sealed partial class Skanner
         ws.WslInnhold(wslRot, "Ubuntu");
         var wsf = ws._funn.Values.Where(f => f.Navn.StartsWith("Python-prosjekt med AI")).ToList();
         Sjekk(wsf.Count == 1 && wsf[0].Merknader.Contains("I Linux (WSL).") && wsf[0].Detaljer.Any(d => d.Contains("openai")), $"Python-miljø i WSL ble ikke funnet, eller vanlig miljø ga funn ({wsf.Count})");
+        // Mulig typosquatting: én bokstav unna en kjent AI-pakke, bare lange navn, ekte nabopakker unntatt
+        Sjekk(Ligner("transformerz", PythonAi) == "transformers" && Ligner("langchainn", PythonAi) == "langchain" && Ligner("transformer", PythonAi) == null
+              && Ligner("numpy", PythonAi) == null && Ligner("transformers-4.46.0.dist-info", PythonAi) == null && Ligner("ctransformers", PythonAi) == null, "typosquatting-sjekken treffer feil");
+        var tyMappe = Path.Combine(mappe, "typo", "site-packages");
+        Directory.CreateDirectory(Path.Combine(tyMappe, "langchainn"));
+        var ffy = new FilFunn();
+        Miljo(tyMappe, PythonAi, "Python", ffy);
+        var tys = new Skanner(regler); tys.LeggTilTypo(ffy);
+        var tyf = tys._funn.Values.SingleOrDefault(f => f.Navn == "Mulig forfalsket Python-pakke: langchainn");
+        Sjekk(tyf != null && tyf.Bevisniva == Bevisniva.Spor && tyf.Ukjentspor == false && ffy.Miljoer.Count == 0, "mulig forfalsket pakke ble ikke Mulig spor");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");

@@ -381,6 +381,8 @@ public sealed partial class Skanner
         public readonly List<(string Sti, long Lengde, ModellFormat.Modell Modell)> Modeller = new();
         public readonly Dictionary<string, SortedSet<string>> Motorer = new(StringComparer.OrdinalIgnoreCase);
         public readonly Dictionary<string, (SortedSet<string> Pakker, bool Agent, string Sprak)> Miljoer = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Pakker med navn én bokstav unna en kjent AI-pakke (mulig typosquatting).</summary>
+        public readonly List<(string Mappe, string Navn, string Ligner, string Sprak)> Typo = new();
         /// <summary>Avhengighetsfiler med AI-pakker (bare pakkenavn).</summary>
         public readonly List<(string Fil, string Mappe, SortedSet<string> Pakker, bool Agent, string Sprak)> Avhengigheter = new();
         /// <summary>Filer der en farlig YARA-regel slo til.</summary>
@@ -496,7 +498,40 @@ public sealed partial class Skanner
         foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakker, agent, sprak);
         // Avhengighetsfiler: samme prosjekt som et miljø over gir samme funn, med fila som et ekstra spor
         foreach (var (fil, mappe, pakker, agent, sprak) in ff.Avhengigheter) LeggTilMiljo(mappe, pakker, agent, sprak, fil);
+        LeggTilTypo(ff);
     }
+
+    /// <summary>Mulig typosquatting: bare navnet ligner, så det er et Mulig spor (telles ikke, aldri rødt).</summary>
+    private void LeggTilTypo(FilFunn ff)
+    {
+        foreach (var (mappe, navn, ligner, sprak) in ff.Typo)
+        {
+            var f = LeggTil($"Mulig forfalsket {sprak}-pakke: {navn}", "Skygge-AI (utvikling)", Risiko.Gul,
+                $"Navnet ligner AI-pakken {ligner} med én bokstav forskjell. Kan være en feilstavet eller forfalsket pakke (typosquatting). Ikke bekreftet.",
+                "Installert pakke", $"Mappe: {Path.Combine(mappe, navn)}");
+            f.Svakt();
+        }
+    }
+
+    /// <summary>Kjent pakkenavn med nøyaktig én bokstav byttet, lagt til eller fjernet. Bare navn på minst 7 tegn, så korte ord ikke gir treff.</summary>
+    internal static string? Ligner(string navn, Dictionary<string, bool> kjente)
+    {
+        static string N(string s) => s.ToLowerInvariant().Replace('-', '_').Replace('.', '_');
+        var n = N(navn);
+        if (kjente.ContainsKey(navn) || n.Length < 7 || n.EndsWith("_dist_info") || n.EndsWith("_egg_info") || IkkeTypo.Contains(n)) return null;
+        foreach (var k in kjente.Keys)
+        {
+            var m = N(k);
+            if (m.Length < 7 || m == n || Math.Abs(m.Length - n.Length) > 1) continue;
+            int i = 0; while (i < Math.Min(m.Length, n.Length) && m[i] == n[i]) i++;
+            int a = m.Length - 1, b = n.Length - 1; while (a >= i && b >= i && m[a] == n[b]) { a--; b--; }
+            if (Math.Max(a - i + 1, b - i + 1) == 1) return k;
+        }
+        return null;
+    }
+
+    /// <summary>Ekte pakker med navn nær en AI-pakke. Kilde: pypi.org og npmjs.com.</summary>
+    private static readonly HashSet<string> IkkeTypo = new() { "transformer", "diffuser", "langchain_" };
 
     /// <summary>Python- eller Node-prosjekt med AI. Angrepsverktøy og pakker fra Kina gjør det rødt, red team-verktøy får en merknad.</summary>
     internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak, string? avhengighetsfil = null)
@@ -815,7 +850,11 @@ public sealed partial class Skanner
             var kandidater = navn.StartsWith("@") ? Mapper(d).Select(u => $"{navn}/{Path.GetFileName(u)}") : new[] { navn };
             foreach (var k in kandidater)
             {
-                if (!kjente.TryGetValue(k, out var erAgent)) continue;
+                if (!kjente.TryGetValue(k, out var erAgent))
+                {
+                    if (Ligner(k, kjente) is { } ligner) lock (ff) ff.Typo.Add((sti, k, ligner, sprak));
+                    continue;
+                }
                 // "agents" og "ai" er vanlige ord; tell dem bare sammen med andre AI-pakker
                 pakker.Add(k);
                 agent |= erAgent;

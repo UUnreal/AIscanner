@@ -217,6 +217,7 @@ public sealed partial class Skanner
         // Modeller fra Hugging Face, LM Studio osv. og Python/Node med AI i AppData
         foreach (var (sti, lengde, m) in ff.Modeller.OrderByDescending(m => m.Lengde)) LeggTilModell(sti, lengde, m);
         foreach (var (sti, (pakkeliste, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakkeliste, agent, sprak);
+        LeggTilTypo(ff);
     }
 
     private void LeverandorGaa(string mappe, int dybde, AppAi app, FilFunn ff, HashSet<string> hopp, Stopwatch frist, Action<string, int> videre)
