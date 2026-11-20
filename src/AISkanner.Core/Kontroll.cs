@@ -382,6 +382,19 @@ public sealed partial class Skanner
         psS.Trafikk(psNb);
         Sjekk(psS._funn.Values.Any(f => f.Navn == "Ukjent program snakker med AI: powershell" && f.Advarsler.Any(a => a.StartsWith("Skript (powershell)"))), "PowerShell mot AI ble ikke et ukjent skript");
         Sjekk(psS.AiAdresseITekst("Invoke-RestMethod https://api.openai.com/v1/chat/completions -Body $x") != null && psS.AiAdresseITekst("Invoke-RestMethod https://example.com/api") == null, "AI-kall i skript kjennes feil igjen");
+        // Møteopptaker: ukjent program med mikrofonbruk og AI-funn blir rødt; mikrofon uten AI gir ingenting
+        var mo = new Skanner(regler);
+        var moNb = new NettBilde { Prosesser = { [7005] = ("opptak", @"C:\Users\a\opptak\opptak.exe") }, Lyttere = new() };
+        var moAi = IPAddress.Parse("203.0.113.23");
+        moNb.Dns[moAi] = new List<string> { "api.openai.com" };
+        moNb.Tilkoblinger.Add(new Tilkobling(7005, IPAddress.Parse("192.168.1.10"), 52013, moAi, 443));
+        mo.Trafikk(moNb);
+        mo._opptak.Add((@"C:\Users\a\opptak\opptak.exe", "mikrofonen", DateTime.Now.AddMinutes(-5)));
+        mo._opptak.Add((@"C:\Users\a\zoom\zoom.exe", "mikrofonen", DateTime.Now.AddMinutes(-5)));
+        int forMo = mo._funn.Count;
+        mo.Moteopptak();
+        Sjekk(mo._funn.Values.Any(f => f.Advarsler.Any(a => a.StartsWith("Mulig møteopptaker")) && f.Hvor.Contains("Windows' personvernlogg")) && mo._funn.Count == forMo,
+            "program med mikrofon og AI ble ikke møteopptaker, eller mikrofon alene ga funn");
         var pa = Agent(true); var ikkePa = Agent(false);
         Sjekk(pa != null && pa.Advarsler.Any(a => a.StartsWith("Personlig agent") && a.Contains("IMAP")) && pa.Risiko == Risiko.Rod && pa.Bevisniva != Bevisniva.Spor
               && ikkePa != null && !ikkePa.Advarsler.Any(a => a.StartsWith("Personlig agent")), "program mot både AI og e-post ble ikke personlig agent, eller bare AI ble det");
