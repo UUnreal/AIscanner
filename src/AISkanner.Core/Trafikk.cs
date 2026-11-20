@@ -356,7 +356,10 @@ public sealed partial class Skanner
             }
             catch { }
         }
-        bool kjent = KjenteUtgivere.Any(u => utgiver.Inneholder(u));
+        // Skriptverter (PowerShell, Windows Script, mshta) er signert av Microsoft, men koden de kjører er ikke det: regnes som ukjent
+        bool skript = prosess.ToLowerInvariant() is "powershell" or "pwsh" or "wscript" or "cscript" or "mshta";
+        if (skript) produkt = prosess;
+        bool kjent = !skript && KjenteUtgivere.Any(u => utgiver.Inneholder(u));
         bool fraNedlasting = sti != null && ErRisikabelPlass(sti);
         if (!kjent || fraNedlasting)
         {
@@ -364,7 +367,8 @@ public sealed partial class Skanner
             var u = Spor($"Ukjent program snakker med AI: {produkt}",
                 $"Et program uten kjent utgiver har forbindelse til {tj.Navn}. Vi vet ikke hva det er eller hva det sender.", null);
             u.Detalj($"Program som kjører: {sti ?? prosess} (PID {pid}) · utgiver: {(string.IsNullOrWhiteSpace(utgiver) ? "ukjent" : utgiver.Trim())}");
-            if (fraNedlasting) u.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
+            if (skript) u.Advarsel($"Skript ({prosess}) med forbindelse til {tj.Navn}. Kan være en skjult agent; skriptet vises ikke.");
+            else if (fraNedlasting) u.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
             else u.Advarsel($"Ukjent program med forbindelse til {tj.Navn}.");
             HuskMappe(sti, u);
             return u;

@@ -558,6 +558,14 @@ public sealed partial class Skanner
         ("Aider", new Regex(@"\baider(\.exe)?\b[^\r\n]{0,200}?(--yes-always)", RegexOptions.IgnoreCase | RegexOptions.Compiled)),
     };
 
+    /// <summary>Første AI-tjeneste med kjent adresse (https://vert) i en tekst, eller null. Bare vertsnavnet sammenlignes.</summary>
+    internal string? AiAdresseITekst(string tekst)
+    {
+        foreach (Match m in Regex.Matches(tekst, @"https?://([A-Za-z0-9.-]+)", RegexOptions.IgnoreCase))
+            if (Tjeneste(m.Groups[1].Value) is { } t) return t.Navn;
+        return null;
+    }
+
     /// <summary>Agent og flagg i en tekst, aldri resten av kommandoen.</summary>
     internal static List<(string Agent, string Flagg)> FlaggITekst(string tekst)
     {
@@ -571,9 +579,12 @@ public sealed partial class Skanner
     private void AutostartMedFlagg()
     {
         var linjer = new List<(string Tekst, DateTime? T)>();
+        var aiKall = new List<(string Tekst, DateTime? T)>();
         void Sjekk(string tekst, string kilde, DateTime? t)
         {
             foreach (var (agent, flagg) in FlaggITekst(tekst)) linjer.Add(($"{kilde} · {agent} {flagg}", t));
+            // Skript som starter av seg selv og kaller en AI-tjeneste direkte (PowerShell-profil, oppstartsmappe, Run): bare tjenestens navn vises
+            if (AiAdresseITekst(tekst) is { } tj) aiKall.Add(($"{kilde} · kaller {tj}", t));
         }
         if (Plattform.ErWindows)
         {
@@ -597,6 +608,13 @@ public sealed partial class Skanner
         {
             var t = Endret(fil);
             LesLinjer(fil, 1, l => Sjekk(l, $"Fil: {fil}", t));
+        }
+        if (aiKall.Count > 0)
+        {
+            var k = Spor("Skript som starter av seg selv og kaller AI",
+                "Et skript i oppstarten, PowerShell-profilen eller registeret kaller en AI-tjeneste hver gang det kjører. Bare fil og tjeneste vises, aldri resten av skriptet.", null);
+            k.Advarsel("Skjult AI-kall som starter av seg selv (PowerShell-profil, oppstart eller register).");
+            foreach (var (tekst, t) in aiKall.Distinct().Take(20)) { k.Tidspunkt(t, t); k.Detalj(tekst); }
         }
         if (linjer.Count == 0) return;
         var f = Spor("AI-agent startes med farlige flagg",

@@ -373,6 +373,15 @@ public sealed partial class Skanner
             s.Trafikk(nb);
             return s._funn.Values.FirstOrDefault(f => f.Navn.StartsWith("Ukjent program snakker med AI"));
         }
+        // PowerShell (signert av Microsoft) mot en AI-tjeneste er et ukjent skript, ikke «kjent utgiver»
+        var psS = new Skanner(regler);
+        var psNb = new NettBilde { Prosesser = { [7004] = ("powershell", null) }, Lyttere = new() };
+        var psAi = IPAddress.Parse("203.0.113.22");
+        psNb.Dns[psAi] = new List<string> { "api.openai.com" };
+        psNb.Tilkoblinger.Add(new Tilkobling(7004, IPAddress.Parse("192.168.1.10"), 52012, psAi, 443));
+        psS.Trafikk(psNb);
+        Sjekk(psS._funn.Values.Any(f => f.Navn == "Ukjent program snakker med AI: powershell" && f.Advarsler.Any(a => a.StartsWith("Skript (powershell)"))), "PowerShell mot AI ble ikke et ukjent skript");
+        Sjekk(psS.AiAdresseITekst("Invoke-RestMethod https://api.openai.com/v1/chat/completions -Body $x") != null && psS.AiAdresseITekst("Invoke-RestMethod https://example.com/api") == null, "AI-kall i skript kjennes feil igjen");
         var pa = Agent(true); var ikkePa = Agent(false);
         Sjekk(pa != null && pa.Advarsler.Any(a => a.StartsWith("Personlig agent") && a.Contains("IMAP")) && pa.Risiko == Risiko.Rod && pa.Bevisniva != Bevisniva.Spor
               && ikkePa != null && !ikkePa.Advarsler.Any(a => a.StartsWith("Personlig agent")), "program mot både AI og e-post ble ikke personlig agent, eller bare AI ble det");
