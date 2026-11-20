@@ -14,7 +14,7 @@ public static class Oversikt
     public static string Punkt(Funn f)
     {
         var detaljer = f.Detaljer;
-        if (f.Gruppe == "spor") return SporPunkt(f.Navn);
+        if (f.Gruppe == "spor") return SporPunkt(f.Navn) is var sp && sp == "Ukjent AI-spor" && !f.Ukjentspor ? "Ikke bekreftet" : sp;
         if (f.Navn.StartsWith("Farlig AI-modellfil", StringComparison.Ordinal)) return "Skjult kode";
         if (f.Navn.StartsWith("AI slått på manuelt", StringComparison.Ordinal)) return "Slått på manuelt";
 

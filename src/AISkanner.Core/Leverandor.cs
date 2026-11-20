@@ -340,7 +340,8 @@ public sealed partial class Skanner
             }
         }
         catch { }
-        if (signert == null) foreach (var m in app.MotorFiler.Take(3)) if ((signert = Signatur.Utgiver(m)) != null) break;
+        bool fraMotor = false;   // signaturen er på AI-motoren (f.eks. Microsofts onnxruntime.dll), ikke på programmet selv
+        if (signert == null) foreach (var m in app.MotorFiler.Take(3)) if ((signert = Signatur.Utgiver(m)) != null) { fraMotor = true; break; }
         if (signert != null) { utgiver = signert; kilde = "signatur"; }
         if (app.Beskyttet && Pakkeinfo(rot) is { } pk)
         {
@@ -384,12 +385,14 @@ public sealed partial class Skanner
             : app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer) ? "AI-motor som kan kjøre AI-modeller lokalt" : "AI-biblioteker pakket inn i programmet");
         var hvorfor = kopi
             ? "Modellfiler med samme mappestruktur som Chrome/Edge sine innebygde AI-modeller, utenfor nettleserens egen mappe og uten noe program ved siden av. Hvem som la dem her, er ikke bekreftet."
+            : kjent && fraMotor
+            ? $"AI lagt inn i programmet: {hva}. AI-motoren er signert av {Forkort(utgiver!)}; selve programmet er ikke signert av dem."
             : kjent
             ? $"{Forkort(utgiver!)} har lagt AI inn i programmet: {hva}. Kom med programmet eller en oppdatering, uten at noen ble spurt."
             : "Ukjent program med egne AI-modeller eller AI-motor. Vi kan ikke bekrefte hvem som har laget det.";
         var f = regel != null ? FraRegel(regel, "Innebygd AI", null!)
             : LeggTil(navn, kopi ? LeverandorKategori + " (nettleser)" : LeverandorKategori, risiko, hvorfor, "Innebygd AI", null,
-                enkelt: kopi ? "Kopi av nettleserens AI-modeller" : kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
+                enkelt: kopi ? "Kopi av nettleserens AI-modeller" : kjent && fraMotor ? "Innebygd AI-motor" : kjent ? $"AI lagt inn av {Forkort(utgiver!)}" : "Ukjent program med AI");
         f.Risiko = RisikoTekst.Hoyeste(f.Risiko, risiko);
         // Innebygde modellfiler er ikke AI brukeren kjører selv: programmet telles én gang, ikke hver fil
         f.LeggTilInnebygde(app.Filer.Count);

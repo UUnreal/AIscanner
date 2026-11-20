@@ -597,6 +597,10 @@ public sealed partial class Skanner
         Risikoregler.Bruk(new[] { svak }, new Regelsett());
         Sjekk(svak.Bevisniva == Bevisniva.Spor && svak.Gruppe == "spor" && svak.Risiko != Risiko.Rod && Oversikt.Telling(new[] { svak }).Totalt == 0,
             "bare et navn (to steder) ble ikke Spor, ble rød med faresignal eller ble telt");
+        var kjentSted = new Funn { Navn = "Grok", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "x" }; kjentSted.LeggTilHvor("Chrome"); kjentSted.Katalogtreff();
+        var ukjentSted = new Funn { Navn = "Grok", Kategori = "Nettleser-AI (nettsted)", Hvorfor = "x" }; ukjentSted.LeggTilHvor("Chrome");
+        Sjekk(kjentSted.Bevisniva == Bevisniva.Sannsynlig && ukjentSted.Bevisniva == Bevisniva.Spor && Oversikt.Punkt(ukjentSted) == "Ikke bekreftet",
+            "kjent AI-nettsted (domenet i lista) ble ikke Sannsynlig, eller Mulig spor uten ukjent opphav ble kalt «Ukjent AI-spor»");
         // Bevisstandarden: to stier er fortsatt Spor, prosess + port er Sannsynlig, ukjent med modellhode er rød
         var stier = new Funn { Navn = "Ukjent mappe", Kategori = "Skygge-AI", Hvorfor = "x" }; stier.Svakt(); stier.LeggTilHvor("Mappe på disk"); stier.LeggTilHvor("Mappe på disk");
         Sjekk(stier.Bevisniva == Bevisniva.Spor, "to stier ble mer enn Spor");

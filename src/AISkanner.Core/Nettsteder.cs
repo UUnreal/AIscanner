@@ -189,6 +189,7 @@ public sealed partial class Skanner
             var hvor = string.Join(", ", s.Nettlesere);
             var f = LeggTil(n.Navn, "Nettleser-AI (nettsted)", RisikoTekst.Fra(n.Risiko), n.Hvorfor, hvor, null, enkelt: n.Enkelt);
             f.Privat = true;
+            f.Katalogtreff();   // kjent AI-tjeneste, gjenkjent på domenet, med bruk over terskelen
             f.Land ??= n.Land;
             f.OpprinnelseLand ??= n.Land;
             f.Tidspunkt(s.Forst, s.Sist);
