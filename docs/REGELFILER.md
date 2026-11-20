@@ -54,15 +54,16 @@ Samme format som `godkjent-ai.txt`, men for AI bedriften har forbudt. Lages ikke
 - Samme sterke identitet som godkjentlista: navnet må komme fra `regler.json` eller være et kjent nettsted, og et
   domene treffer bare målte forbindelser og nettstedsfunn. En mappe som tilfeldigvis heter det samme, treffer ikke.
 
-## Status, treffsikkerhet og godkjenning per funn
+## Status, bevisnivå og godkjenning per funn
 
 Hvert funn har tre felt i vinduet og i rapporten:
 
 - **Status:** Kjører nå, Brukt før (historikk, logger, besøk), Satt opp (starter med Windows, planlagt oppgave,
   tjeneste, MCP-oppsett) og Finnes (ligger på PC-en). Alle som gjelder, vises; den sterkeste står i lista.
-- **Treffsikkerhet:** Høy når AI-en er kjent igjen på innholdet eller oppførselen (modellhode, import i kode, svar som
-  AI-tjeneste, trafikk til en AI-tjeneste, YARA) eller av minst to uavhengige spor. Middels ved ett navnetreff på en
-  kjent AI. Lav når bare et ord eller navn peker dit («Mulig AI-nettsted», mappenavn).
+- **Bevisnivå:** Bekreftet når AI-en er kjent igjen på innholdet eller målt oppførsel (modellhode, import i kode, AI-oppsett,
+  svar som AI-tjeneste, trafikk til en AI-tjeneste, YARA). Sannsynlig ved to uavhengige spor av ulik type, eller en
+  verifisert produktregel som traff noe annet enn bare en mappe. Spor når bare et navn, en sti, en endelse, DNS eller en
+  kjøremotor peker dit: står under «Mulig spor», telles ikke og blir aldri rød. Se [Risikomodell](ARKITEKTUR.md#risikomodell).
 - **Godkjenning:** Godkjent av IT, Blokkert av IT (blokkeringslista, eller en IT-regel som slår den av) eller Ikke vurdert.
 
 ## regler.json
@@ -95,6 +96,21 @@ Kommandolinjen kan peke på en annen fil: `AISkanner.Cli --regler sti\regler.jso
 | `nettleserInnebygd` | liste | Innebygd AI i nettlesere (Gemini Nano, Edge). |
 | `ukjentUtvidelseOrd` | liste med tekst | Ord i navn eller beskrivelse som gjør en ukjent utvidelse til et AI-funn, for eksempel `gpt` og `copilot`. |
 | `modellfilMinMB` | tall | Minste størrelse for modellfiler med kjent endelse. Standard 200. |
+
+### Katalogfelt (§9, gjelder produkter, pythonPakker, nodePakker, dockerBilder og nye regellister)
+
+| Felt | Betyr |
+|---|---|
+| `id` | Unik id, f.eks. `produkt-ollama`. `--kontroll` feiler ved dobbel id. |
+| `bevistype` | Hva regelen kjenner igjen: `produktregel`, `pakkenavn`, `bildenavn`, `tensornavn` … |
+| `kilde` | Hvor regelen kommer fra (leverandørens side, PyPI, npm, Docker Hub, forskning). |
+| `verifisert` | `true` bare når regelen er sett treffe på ekte Windows (testlaben eller en ekte PC). |
+| `fpMerknad` | Når regelen kan gi falskt treff. |
+| `testPositiv` | Tekst som MÅ treffe akkurat denne regelen. Kjøres av `--kontroll` mot den ekte matchingen. |
+| `testNegativ` | Tekst som IKKE skal treffe regelen. |
+
+`pythonPakker` og `nodePakker` (`navn`, `agent`) og `dockerBilder` (`navn`) lå før i koden. Rapporten viser hver
+regelfil som ble brukt med sti og SHA-256, og `AISkanner.exe --lisens` viser MIT-lisensen.
 
 ### produkter
 

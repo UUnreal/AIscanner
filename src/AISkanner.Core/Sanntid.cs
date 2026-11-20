@@ -37,26 +37,9 @@ public sealed partial class Skanner
 
     private static readonly string[] KjenteUtgivere = { "Microsoft", "Google", "Adobe", "NVIDIA", "Intel", "Apple", "Mozilla", "Zoom", "AMD", "Qualcomm" };
 
-    // AI-biblioteker. Verdien sier om biblioteket lager agenter som kan handle på egen hånd.
-    private static readonly Dictionary<string, bool> PythonAi = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["torch"] = false, ["tensorflow"] = false, ["transformers"] = false, ["diffusers"] = false, ["accelerate"] = false,
-        ["onnxruntime"] = false, ["llama_cpp"] = false, ["vllm"] = false, ["sentence_transformers"] = false, ["mlx"] = false,
-        ["gpt4all"] = false, ["ctransformers"] = false, ["openai"] = false, ["anthropic"] = false, ["mistralai"] = false,
-        ["cohere"] = false, ["ollama"] = false, ["groq"] = false, ["chromadb"] = false, ["faiss"] = false,
-        ["langchain"] = true, ["langchain_core"] = true, ["langgraph"] = true, ["llama_index"] = true, ["autogen"] = true,
-        ["autogen_agentchat"] = true, ["crewai"] = true, ["smolagents"] = true, ["haystack"] = true,
-        ["interpreter"] = true, ["browser_use"] = true, ["pydantic_ai"] = true, ["agents"] = true,
-        // Finjustering, komprimering og kjøring av modeller
-        ["peft"] = false, ["bitsandbytes"] = false, ["unsloth"] = false, ["gptqmodel"] = false, ["auto_gptq"] = false, ["awq"] = false,
-        ["exllamav2"] = false, ["mlx_lm"] = false, ["optimum"] = false, ["openvino"] = false, ["ultralytics"] = false, ["keras"] = false,
-        ["faster_whisper"] = false, ["whisper"] = false, ["sglang"] = false, ["tensorrt_llm"] = false, ["litellm"] = false, ["dspy"] = false,
-        ["semantic_kernel"] = true,
-        // Kinesiske rammeverk og AI-tjenester (se KinesiskePakker)
-        ["paddle"] = false, ["mindspore"] = false, ["modelscope"] = false, ["dashscope"] = false, ["zhipuai"] = false, ["qianfan"] = false,
-        // Angrep og testing av AI (se AngrepPakker)
-        ["pentestgpt"] = true, ["villager"] = true, ["garak"] = false, ["pyrit"] = false, ["deepteam"] = false,
-    };
+    // AI-biblioteker (pythonPakker og nodePakker i regler.json). Verdien sier om biblioteket lager agenter som kan handle på egen hånd.
+    private static Dictionary<string, bool> PythonAi = new(StringComparer.OrdinalIgnoreCase);
+    private static Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// AI-verktøy laget for å angripe andre maskiner. Kilder: Villager (kinesisk, på PyPI, bruker DeepSeek)
@@ -77,16 +60,6 @@ public sealed partial class Skanner
     internal static readonly Dictionary<string, string> KinesiskePakker = new(StringComparer.OrdinalIgnoreCase)
     {
         ["dashscope"] = "Alibaba", ["zhipuai"] = "Zhipu AI", ["qianfan"] = "Baidu", ["modelscope"] = "Alibaba", ["paddle"] = "Baidu", ["mindspore"] = "Huawei",
-    };
-
-    private static readonly Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["openai"] = false, ["@anthropic-ai/sdk"] = false, ["@google/generative-ai"] = false, ["@google/genai"] = false,
-        ["ollama"] = false, ["@huggingface/transformers"] = false, ["@xenova/transformers"] = false, ["@mlc-ai/web-llm"] = false,
-        ["onnxruntime-node"] = false, ["node-llama-cpp"] = false, ["ai"] = false, ["@ai-sdk/openai"] = false,
-        ["langchain"] = true, ["@langchain/core"] = true, ["@langchain/langgraph"] = true, ["llamaindex"] = true,
-        ["@modelcontextprotocol/sdk"] = true, ["@openai/agents"] = true, ["@anthropic-ai/claude-agent-sdk"] = true,
-        ["promptfoo"] = false,
     };
 
     internal static bool ErNokkelNavn(string navn) => NokkelNavn.IsMatch(navn);

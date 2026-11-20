@@ -13,17 +13,8 @@ namespace AISkanner;
 /// </summary>
 public sealed partial class Skanner
 {
-    // Kjente AI-bilder (navnet før kolon/tag). Treff i regelfila brukes også.
-    private static readonly string[] AiBilder =
-    {
-        "ollama/ollama", "vllm/vllm-openai", "huggingface/text-generation-inference", "open-webui/open-webui", "localai/localai",
-        "ggerganov/llama.cpp", "ggml-org/llama.cpp", "nvidia/tritonserver", "berriai/litellm", "qdrant/qdrant", "chromadb/chroma",
-        "mintplexlabs/anythingllm", "danny-avila/librechat", "flowiseai/flowise", "langgenius/dify-api", "langgenius/dify-web",
-        "milvusdb/milvus", "semitechnologies/weaviate", "comfyui", "stable-diffusion-webui", "invokeai/invokeai", "h2oai/h2ogpt",
-        "lmsysorg/sglang", "michaelf34/infinity", "ghcr.io/huggingface/text-embeddings-inference", "nvcr.io/nim/",
-        // Docker Model Runner og modeller som OCI-bilder i «ai/» på Docker Hub. Kilde: https://docs.docker.com/ai/model-runner/
-        "docker/model-runner", "ai/", "docker.io/ai/",
-    };
+    // Kjente AI-bilder (dockerBilder i regler.json, navnet før kolon/tag). Treff i regelfila brukes også.
+    private static string[] AiBilder = Array.Empty<string>();
 
     private void Beholdere()
     {
@@ -102,8 +93,10 @@ public sealed partial class Skanner
     internal static bool ErAiBilde(string tag)
     {
         var t = tag.ToLowerInvariant().Split(':')[0];
-        return AiBilder.Any(a => t == a || t.EndsWith("/" + a) || (a.EndsWith("/") ? t.StartsWith(a) : t.Contains(a) && a.IndexOf('/') < 0));
+        return AiBilder.Any(a => Bildetreff(t, a));
     }
+
+    private static bool Bildetreff(string t, string a) => t == a || t.EndsWith("/" + a) || (a.EndsWith("/") ? t.StartsWith(a) : t.Contains(a) && a.IndexOf('/') < 0);
 
     private void Wsl()
     {

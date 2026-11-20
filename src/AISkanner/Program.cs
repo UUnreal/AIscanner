@@ -135,6 +135,7 @@ internal static class Program
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+        if (args.Contains("--lisens")) { MessageBox.Show(Lisens.Tekst(), "AI-skanner: lisens (MIT)", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         if (args.Contains("--kontroll")) { try { VisKontroll(args.Contains("--en")); } catch (Exception e) { VisFeil(e); } return; }
         try { Kjor(args); }
         catch (Exception e) { VisFeil(e); }

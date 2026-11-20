@@ -778,7 +778,10 @@ public sealed partial class Skanner
             var (mhOk, mhAlle) = ModellhullKontroll(regler, sb, rot);
             ok += mhOk;
             sb.AppendLine($"{(mhOk == mhAlle ? "OK  " : "FEIL")}  Modeller (2.53): {mhOk} av {mhAlle} riktige (angrep, sensurfri, sikkerhetsmodell, ordforrådets navn, llamafile, zip, nye formater, modellkort, egen kode, ModelScope, LoRA, pakker, MCP, Docker)");
-            int alle = mhAlle + Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
+            var (kgOk, kgAlle) = KatalogKontroll(regler, sb);
+            ok += kgOk;
+            sb.AppendLine($"{(kgOk == kgAlle ? "OK  " : "FEIL")}  Regelkatalog (§9): {kgOk} av {kgAlle} riktige (id, bevistype, kilde, verifisert, falsk-positiv-merknad, positiv og negativ test per regel)");
+            int alle = kgAlle + mhAlle + Kontrollspor.Length + 4 + rvAlle + ksAlle + anAlle + kinaAlle + falskAlle + fulltAlle + nettAlle + ipAlle + tolkAlle + stAlle + prAlle;
             sb.AppendLine(new string('-', 60));
             sb.AppendLine($"{ok} av {alle} alarmer slo ut riktig på {klokke.Elapsed.TotalSeconds:0.0} sekunder.");
             sb.AppendLine("Ikke kontrollert her: symlinker (krever rettigheter), Prefetch, BAM og hendelseslogger (Windows og admin), Run-nøkkelen og ekte nettverkstabeller. Amcache-lesingen er prøvd med --amcache på en ekte Amcache.hve.");

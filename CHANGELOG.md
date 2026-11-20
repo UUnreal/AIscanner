@@ -33,6 +33,17 @@ Kategoriene er:
 - NVD-teksten sier «nevnt i X CVE-er, ikke sjekket mot din versjon».
 - Nye felt per funn: bevistype, lokal/sky/hybrid/ukjent og begrensning (skjerm, rapport, JSON, CSV).
 
+### Lagt til (regelkatalog, plan PR 2)
+- Hver regel i `produkter`, `pythonPakker`, `nodePakker` og `dockerBilder` har id, bevistype, kilde, verifisert,
+  falsk-positiv-merknad og en positiv og negativ test. `--kontroll` kjører testene mot den ekte matchingen.
+- Python- og Node-pakkelistene og Docker-bildene er flyttet fra koden til `regler.json`, uten å endre hva de finner.
+- Rapporten viser hver regelfil som ble brukt, med sti, SHA-256 og regelversjon.
+- `--lisens` viser MIT-lisensen (CLI og AISkanner.exe).
+
+### Fjernet
+- Regelene «KoboldCpp» og «Fooocus» kunne aldri treffe (navnene tilhørte allerede «llama.cpp / KoboldCpp» og
+  «Stable Diffusion / ComfyUI»). Katalogtesten fant dem.
+
 ### Lagt til (testlab, plan PR 0)
 - Testlaben bygger og starter en ekte llamafile, prøver WSL1 og sammenligner med `tests/testlab/fasit.json`.
   Den blir rød når noe forventet mangler, har feil farge/nivå, eller når den rene maskinen gir et AI-funn.

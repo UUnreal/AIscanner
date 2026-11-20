@@ -54,6 +54,7 @@ public static class Revisjon
         var y = s.Yara;
         liste.Add(File.Exists(y.Kilde) ? new Kilde("ai-modeller.yar", y.Kilde, Fil(y.Kilde)) : new Kilde("ai-modeller.yar", y.Kilde == "innebygd" ? "innebygd" : y.Kilde, Ressurs("AISkanner.ai-modeller.yar")));
         liste.Add(r.GodkjentKilde != null ? new Kilde("godkjent-ai.txt", r.GodkjentKilde, Fil(r.GodkjentKilde)) : new Kilde("godkjent-ai.txt", "ingen", null));
+        liste.Add(r.BlokkertKilde != null ? new Kilde("blokkert-ai.txt", r.BlokkertKilde, Fil(r.BlokkertKilde)) : new Kilde("blokkert-ai.txt", "ingen", null));
         return liste;
     }
 

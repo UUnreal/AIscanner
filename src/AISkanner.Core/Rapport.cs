@@ -50,6 +50,9 @@ public static class Rapport
         if (skanner != null)
             L($"YARA-regler for AI-modeller: {skanner.Yara.Regler.Count} regler ({(skanner.Yara.Kilde == "innebygd" ? "innebygde" : skanner.Yara.Kilde)}).");
         if (skanner != null)
+            foreach (var k in Revisjon.Kilder(skanner).Where(k => k.Navn is not ("Program" or "Kjerne")))
+                L($"Regelfil: {k.Navn} · {k.Hvor}{(k.Sha256 != null ? " · SHA-256 " + k.Sha256 : "")}{(k.Navn == "regler.json" ? $" · regelversjon {skanner.Regelsett.Versjon}" : "")}");
+        if (skanner != null)
             L(skanner.AiRegler.Count == 0 ? "AI-regler fra IT: ingen funnet." : "AI-regler fra IT: " + string.Join("; ", skanner.AiRegler) + ".");
         if (skanner != null) L(Revisjon.Kortversjon(skanner));
         if (skanner != null && skanner.Sjekker.Count > 0) L("Sjekket: " + string.Join(" · ", skanner.Sjekker.Select(x => $"{x.Navn}: {x.Tekst}")) + ".");

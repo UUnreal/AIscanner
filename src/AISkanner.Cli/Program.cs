@@ -30,6 +30,7 @@ if (args.Length == 1 && args[0] == "--oversett")
 
 // Regresjonstester for risikologikken (kjør: AISkanner.Cli --selvtest). Returnerer 0 når alt er grønt, ellers 1.
 // Sikrer at IT-godkjentlisten ikke kan lures av angriper-styrte navn (se v2.13.1).
+if (args.Length == 1 && args[0] == "--lisens") { Console.WriteLine(Lisens.Tekst()); return 0; }
 if (args.Length == 1 && args[0] == "--selvtest")
     return Selvtest.Kjor();
 

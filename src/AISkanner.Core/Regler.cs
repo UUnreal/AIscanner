@@ -4,7 +4,35 @@ using System.Text.Json.Serialization;
 
 namespace AISkanner;
 
-public sealed class Produkt
+/// <summary>
+/// Felt hver regel i katalogen må ha (§9). --kontroll feiler hvis ett mangler eller en id er dobbel, og kjører
+/// testPositiv (må treffe regelen) og testNegativ (må ikke treffe den).
+/// </summary>
+public abstract class Regelmeta
+{
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("bevistype")] public string Bevistype { get; set; } = "";
+    [JsonPropertyName("kilde")] public string? Kilde { get; set; }
+    [JsonPropertyName("verifisert")] public bool? Verifisert { get; set; }
+    [JsonPropertyName("fpMerknad")] public string FpMerknad { get; set; } = "";
+    [JsonPropertyName("testPositiv")] public string TestPositiv { get; set; } = "";
+    [JsonPropertyName("testNegativ")] public string TestNegativ { get; set; } = "";
+}
+
+/// <summary>AI-bibliotek (Python-import eller Node-pakke). Agent = lager agenter som kan handle på egen hånd.</summary>
+public sealed class Pakke : Regelmeta
+{
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+    [JsonPropertyName("agent")] public bool Agent { get; set; }
+}
+
+/// <summary>Kjent AI-bilde i Docker (navnet før kolon). Slutter på / = prefiks.</summary>
+public sealed class DockerBilde : Regelmeta
+{
+    [JsonPropertyName("navn")] public string Navn { get; set; } = "";
+}
+
+public sealed class Produkt : Regelmeta
 {
     [JsonPropertyName("navn")] public string Navn { get; set; } = "";
     [JsonPropertyName("kategori")] public string Kategori { get; set; } = "";
@@ -133,6 +161,9 @@ public sealed class Regelsett
 {
     [JsonPropertyName("versjon")] public string Versjon { get; set; } = "";
     [JsonPropertyName("produkter")] public List<Produkt> Produkter { get; set; } = new();
+    [JsonPropertyName("pythonPakker")] public List<Pakke> PythonPakker { get; set; } = new();
+    [JsonPropertyName("nodePakker")] public List<Pakke> NodePakker { get; set; } = new();
+    [JsonPropertyName("dockerBilder")] public List<DockerBilde> DockerBilder { get; set; } = new();
     [JsonPropertyName("ukjentUtvidelseOrd")] public List<string> UkjentUtvidelseOrd { get; set; } = new();
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;
     [JsonPropertyName("nettleserInnebygd")] public List<InnebygdAI> NettleserInnebygd { get; set; } = new();
@@ -149,6 +180,7 @@ public sealed class Regelsett
     [JsonPropertyName("selskapsland")] public Dictionary<string, string> Selskapsland { get; set; } = new();
     /// <summary>Hvor godkjentlista kom fra, for rapporten.</summary>
     [JsonIgnore] public string? GodkjentKilde { get; set; }
+    [JsonIgnore] public string? BlokkertKilde { get; set; }
     [JsonPropertyName("modellfamilier")] public List<ModellFamilie> Modellfamilier { get; set; } = new();
     /// <summary>Ordforrådets navn i llama.cpp (GGUF tokenizer.ggml.pre) -> modellfamilie (navn).</summary>
     [JsonPropertyName("preTokenizer")] public Dictionary<string, string> PreTokenizer { get; set; } = new();
@@ -194,7 +226,7 @@ public sealed class Regelsett
             r = JsonSerializer.Deserialize<Regelsett>(s, Valg) ?? new Regelsett();
         }
         if (Plattform.Sidefil("godkjent-ai.txt") is { } godkjent) r.LesGodkjentliste(godkjent);
-        if (Plattform.Sidefil("blokkert-ai.txt") is { } blokkert) r.LesListe(blokkert, r.BlokkertAi);
+        if (Plattform.Sidefil("blokkert-ai.txt") is { } blokkert && r.LesListe(blokkert, r.BlokkertAi)) r.BlokkertKilde = blokkert;
         return r;
     }
 
