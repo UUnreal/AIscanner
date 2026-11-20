@@ -23,6 +23,21 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.57.0] - 2026-11-20
+
+### Lagt til
+
+- **Opphav på ukjente funn:** én fast linje med navn (eller «ukjent»), hvem som laget det (signatur eller filinfo), hvor fila er lastet ned fra (nedlastingsmerket), hvor data sendes (målte forbindelser med land) og SHA-256 av fila (høyst 256 MB), så IT kan slå den opp selv. Ingenting sendes ut.
+- STYRING.md: regler, vedtak med dato og utgivelsesrutinen samlet på ett sted.
+
+### Endret
+
+- Byggejobben gjør releasen til «siste» først når exe-fila er lastet opp, så nedlastingsknappen på nettsiden aldri peker på en release uten fil.
+
+### Ikke testet på Windows
+
+- Opphav-linjen er kontrollert med --kontroll (Linux), ikke på Windows.
+
 ## [2.56.0] - 2026-11-20
 
 ### Lagt til

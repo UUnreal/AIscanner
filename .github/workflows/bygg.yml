@@ -360,9 +360,10 @@ jobs:
           printf '\n---\nLast ned **AISkanner.exe** og kjør den. Den er hele programmet.\n' >> notater.md
           filer=(publish/AISkanner.exe publish/SHA256.txt)
           # Laget på nettsiden («Draft a new release») først? Da fylles den bare med filene og teksten.
+          # --latest først når filene er lastet opp, så nettsidens nedlastingsknapp aldri peker på en release uten exe.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${filer[@]}" --clobber
-            gh release edit "$TAG" --title "AI-skanner $v" --notes-file notater.md
+            gh release edit "$TAG" --title "AI-skanner $v" --notes-file notater.md --latest
           else
-            gh release create "$TAG" "${filer[@]}" --title "AI-skanner $v" --notes-file notater.md
+            gh release create "$TAG" "${filer[@]}" --title "AI-skanner $v" --notes-file notater.md --latest
           fi

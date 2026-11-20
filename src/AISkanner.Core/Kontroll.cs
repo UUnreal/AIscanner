@@ -617,6 +617,16 @@ public sealed partial class Skanner
         Risikoregler.Bruk(new[] { ukjentNavn }, new Regelsett { Selskapsland = new() { ["OpenAI"] = "US" } });
         Sjekk(ukjentNavn.OpprinnelseLand == null && ukjentNavn.Opprinnelse == "Lastet ned fra example.org" && ukjentNavn.OpphavKilde == "nedlastingsmerke",
             "ukjent AI fikk opphav eller land gjettet fra navnet, ikke fra nedlastingsmerket");
+        var opphavFil = Path.Combine(Path.GetTempPath(), $"aiskanner-opphav-{Guid.NewGuid():N}.bin");
+        File.WriteAllBytes(opphavFil, new byte[] { 1, 2, 3 });
+        var ukjentProg = new Funn { Navn = "Ukjent program snakker med AI: x", Kategori = SporKategori, Hvorfor = "x" }; ukjentProg.Sterkt(); ukjentProg.Detalj($"Program: {opphavFil} · PID 7");
+        ukjentProg.Trafikk.Add(new Mal { Adresse = "api.deepseek.com", Tjeneste = "DeepSeek API", Land = "CN" });
+        Risikoregler.Bruk(new[] { ukjentProg }, new Regelsett());
+        var opphav = ukjentProg.Detaljer.FirstOrDefault(d => d.StartsWith("Opphav:")) ?? "";
+        File.Delete(opphavFil);
+        Sjekk(opphav.Contains("navn ukjent") && opphav.Contains("laget av ukjent") && opphav.Contains("lastet ned fra ikke merket") && opphav.Contains("DeepSeek API (CN)")
+            && opphav.Contains("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81") && ukjentNavn.Detaljer.Any(d => d.StartsWith("Opphav:") && d.Contains("lastet ned fra example.org")),
+            "Opphav-linjen på ukjente funn ble feil (navn, laget av, nedlasting, mottaker eller SHA-256)");
         var godkjent = Lag();
         Risikoregler.Bruk(new[] { godkjent }, new Regelsett { GodkjentAi = new() { regel.Navn } });
         Sjekk(godkjent.Godkjenning == "Godkjent av IT" && godkjent.Risiko == Risiko.Gronn, "godkjent AI ble ikke «Godkjent av IT» og grønn");
