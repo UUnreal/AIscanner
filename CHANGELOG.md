@@ -46,7 +46,9 @@ Kategoriene er:
 - G5: PowerShell-loggen (4104), bare når IT har slått på skriptblokklogging: skript som har kalt en AI-tjeneste. Bare
   tjenestenavn og tid; skriptteksten vises og lagres aldri.
 - Ikke bygget: G1 (UI Automation) krever å lese modullista inne i andre programmer (minnetilgang), som reglene forbyr.
-  G2 (Agent Workspace) venter på at kontonavn og registernøkler er bekreftet på Windows 26H2.
+- G2: Windows' agentarbeidsområde vises som en linje i datagrunnlaget (på, av eller finnes ikke), og som blindsone når
+  den er på. Microsoft bekrefter at agentene får egne kontoer, men ikke hva kontoene heter. Registerverdien
+  (IsoEnvBroker\Enabled) er fra Elevenforum, så den gir aldri et funn. Testlaben kjører Windows Server, som ikke har funksjonen.
 
 ### Ikke testet på Windows
 - Alt over er testet i `--kontroll` med falske nettbilder og falske personvernlogger, ikke på Windows. Testlaben

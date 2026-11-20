@@ -278,6 +278,18 @@ public sealed partial class Skanner
                 }
         }
         catch (Exception e) { Tilgangslogg.Feil("Register", @"HKCU\" + samtykke, e); }
+        // G2: Windows' agentarbeidsområde («Experimental agentic features»). Microsoft: agentene får egne standardkontoer, som bare
+        // lages når funksjonen slås på (learn.microsoft.com/windows/security/book/operating-system-agentic-security). Registerverdien
+        // er fra Elevenforum, ikke Microsoft, og ikke prøvd på 26H2: derfor bare en linje i datagrunnlaget, aldri et funn.
+        try
+        {
+            using var iso = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\IsoEnvBroker");
+            var på = iso?.GetValue("Enabled") is int e && e == 1;
+            Tilgangslogg.Logg("Register", @"HKLM\SYSTEM\CurrentControlSet\Services\IsoEnvBroker", iso != null ? Utfall.Lest : Utfall.IkkeFunnet,
+                iso == null ? "Windows' agentarbeidsområde finnes ikke på denne PC-en" : på ? "Windows' agentarbeidsområde er slått på: AI-agenter i Windows har egne kontoer (kilde for verdien: Elevenforum, ikke bekreftet av Microsoft)" : "Windows' agentarbeidsområde er slått av");
+            if (på) lock (Blindsoner) Blindsoner.Add("Windows' agentarbeidsområde er slått på. Agentene kjører i egne kontoer og en egen Windows-økt; hva de gjør der, ser skanneren bare via prosesser og nettverk.");
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Register", "IsoEnvBroker", e); }
         // MSIX-pakker som melder seg som MCP-server i Windows
         var apps = Utvid(@"%ProgramFiles%\WindowsApps");
         foreach (var d in Mapper(apps).Take(2000))
