@@ -99,7 +99,22 @@ public sealed partial class Skanner
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "k.dat"), hdf.Concat(Encoding.ASCII.GetBytes(new string(' ', 100) + "keras_version")).ToArray()))?.Format == "Keras", "Keras-fil uten .h5 ble ikke kjent igjen");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "maling.dat"), hdf.Concat(new byte[100]).ToArray())) == null, "vanlig HDF5-datafil ble kalt Keras");
         var pd = ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "inference.pdiparams"), new byte[64]));
-        Sjekk(pd?.Format == "PaddlePaddle (Baidu)" && ModellFormat.KinesiskFormat(pd.Format) == "Baidu", "PaddlePaddle-fil ble ikke kjent igjen som Baidu-format");
+        Sjekk(pd?.Format == "PaddlePaddle (Baidu)" && ModellFormat.KinesiskFormat(pd.Format) == "Baidu" && pd.Type == ModellFormat.KjentPaEndelsen, "PaddlePaddle-fil alene ble ikke kjent igjen som Baidu-format bare på endelsen (Mulig spor)");
+        // PR 5: formater bekreftet på innholdet. Riktig endelse med feil innhold blir bare «kjent på endelsen» (Mulig spor) eller ingen treff
+        byte[] B(params byte[] b) => b.Concat(new byte[64]).ToArray();
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "inference.pdmodel"), B(0x0A, 0x10)))?.Type == null, "Paddle .pdmodel + .pdiparams ble ikke bekreftet på innholdet");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.mlmodel"), B(0x08, 0x04, 0x12, 0x05)))?.Format == "Core ML", "Core ML (protobuf-start) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "falsk.mlmodel"), B(0x50, 0x4B, 0x00)))?.Type == ModellFormat.KjentPaEndelsen, ".mlmodel med feil innhold ble mer enn kjent på endelsen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.mindir"), B(0x0A, 0x05).Concat(Encoding.ASCII.GetBytes("MindSpore")).ToArray()))?.Type == null, "MindIR med «MindSpore» ble ikke bekreftet");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "falsk.mindir"), B(0x01)))?.Type == ModellFormat.KjentPaEndelsen, ".mindir uten MindSpore ble mer enn kjent på endelsen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "m.engine"), Hode("ftrt", 0)))?.Format == "TensorRT-motor", "TensorRT-motor (ftrt) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "spill.engine"), B(0x01, 0x02))) == null, ".engine uten ftrt ble kalt modell");
+        var sm = Directory.CreateDirectory(Path.Combine(mappe, "sm")).FullName; Directory.CreateDirectory(Path.Combine(sm, "variables"));
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(sm, "saved_model.pb"), B(0x08, 0x01, 0x12)))?.Format == "TensorFlow SavedModel", "SavedModel (saved_model.pb + variables/) ble ikke kjent igjen");
+        var sm2 = Directory.CreateDirectory(Path.Combine(mappe, "sm2")).FullName;
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(sm2, "saved_model.pb"), B(0x08, 0x01, 0x12))) == null, "saved_model.pb uten variables/ ble kalt modell");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "flax_model.msgpack"), B(0x82, 0xA1)))?.Format == "JAX/Flax (msgpack)", "Flax-modell (msgpack) ble ikke kjent igjen");
+        Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "data.msgpack"), B(0x82, 0xA1))) == null, "vanlig msgpack-fil ble kalt modell");
         File.WriteAllText(Path.Combine(mappe, "yolo.param"), "7767517\n3 3\nInput input 0 1 data\n");
         Sjekk(ModellFormat.Gjenkjenn(WriteAll(Path.Combine(mappe, "yolo.bin"), new byte[64]))?.Format == "ncnn (Tencent)", "ncnn-modell (.param + .bin) ble ikke kjent igjen");
         File.WriteAllText(Path.Combine(mappe, "ov.xml"), "<?xml version=\"1.0\"?>\n<net name=\"kontroll\" version=\"11\">");

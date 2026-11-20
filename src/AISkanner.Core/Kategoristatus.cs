@@ -15,7 +15,7 @@ public static class Kategoristatus
     private static readonly (string B, string Navn, string[] Steg, string? Hull)[] Kart =
     {
         ("A", "AI-modeller", new[] { "Leter gjennom filene" }, "Endret metadata sjekkes ikke mot tensorstrukturen."),
-        ("B", "Modellformater", new[] { "Leter gjennom filene" }, "Paddle, MindSpore, MNN, Core ML, TensorRT-motor, SavedModel og JAX kjennes bare på endelsen eller ikke."),
+        ("B", "Modellformater", new[] { "Leter gjennom filene" }, "MNN, RKNN og Caffe kjennes bare på endelsen (Mulig spor). Andre JAX-filer enn flax_model.msgpack kjennes ikke igjen."),
         ("C", "Bilde, lyd og video", new[] { "Leter gjennom filene", "Ser etter AI som kjører nå" }, "Deepfake og stemmekloning kjennes på programmer, mapper og pakker, ikke på tensornavn. Mye bilde-, lyd- og video-AI kjennes ikke igjen."),
         ("D", "Kjøremotorer", new[] { "Ser etter AI som kjører nå", "Leter gjennom filene" }, "TensorFlow.js og WebNN kjennes ikke igjen. En motor alene er bare Mulig spor."),
         ("E", "Utviklermiljø", new[] { "Leter gjennom filene", "Ser etter AI-verktøy" }, "Avhengighetsfiler (requirements, package.json, låsefiler) og Conda-miljøer leses ikke."),

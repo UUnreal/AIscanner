@@ -780,7 +780,8 @@ public sealed partial class Skanner
         try { lengde = malLengde ?? fil.Length; } catch { return; }
         // Små filer som likevel er modeller: ONNX/TFLite over 5 MB, og LoRA-tillegg (.safetensors, .gguf, Ollama-lag) over 1 MB.
         // Et lite tillegg kan gjøre en vanlig modell sensurfri eller ondsinnet.
-        bool liten = ext is ".onnx" or ".tflite" && lengde > 5 * 1024 * 1024
+        bool liten = ext is ".onnx" or ".tflite" or ".mlmodel" or ".mindir" or ".pdmodel" or ".engine" or ".plan" or ".trt" or ".msgpack" && lengde > 5 * 1024 * 1024
+                     || fil.Name.Equals("saved_model.pb", StringComparison.OrdinalIgnoreCase) && lengde > 256 * 1024
                      || (ext is ".safetensors" or ".gguf" || fil.Name.StartsWith("sha256-", StringComparison.OrdinalIgnoreCase)) && lengde > 1024 * 1024;
         if (lengde < minLengde && !liten) { SjekkLitenModell(fil, ff, lengde); return; }
         // Fullt søk: filhodet sjekkes uansett endelse, så en modell omdøpt til .zip, .mp4 eller .png blir funnet
@@ -865,7 +866,7 @@ public sealed partial class Skanner
         DateTime? opprettet = null, endret = null;
         try { var fi = new FileInfo(sti); opprettet = fi.CreationTime; endret = fi.LastWriteTime; } catch { }
         var f = LeggTil($"AI-modell: {Kutt(navn, 50)}", "Lokal AI (modell)", risiko, hvorfor, m.Format, $"Fil: {sti} · {m.Format} · {Gb(lengde)} · endret {Tid(endret)}");
-        f.Sterkt();   // kjent igjen på innholdet i fila, ikke på navnet
+        if (m.Type == ModellFormat.KjentPaEndelsen) f.Svakt(); else f.Sterkt();   // innholdet i fila, ikke navnet (endelse alene = Mulig spor)
         f.LeggTilModeller(1);
         f.SettVersjon(m.Versjon, "modellfila");
         // Hugging Face-lageret: mappa under snapshots er revisjonen (commit) modellen ble lastet ned fra
