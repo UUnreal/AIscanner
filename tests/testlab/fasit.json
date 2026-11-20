@@ -26,8 +26,10 @@
         "rod"
       ],
       "niva": [
-        "Bekreftet"
-      ]
+        "Bekreftet",
+        "Sannsynlig"
+      ],
+      "_niva": "Sannsynlig når serveren fortsatt laster en stor modell og ikke svarer ennå: programregel + lyttende port, ikke målt svar."
     },
     {
       "id": "Kinesisk Ollama-modell qwen2.5",
@@ -142,6 +144,18 @@
       "id": "WSL1 med Ollama-modellmappe",
       "navn": "WSL|Linux",
       "krever": "wsl"
+    },
+    {
+      "id": "Avhengighetsfil uten miljø",
+      "navn": "^Python-prosjekt med AI: prosjekt-krav$",
+      "farge": ["gul"],
+      "niva": ["Sannsynlig"]
+    },
+    {
+      "id": "Mulig typosquatting av AI-pakke",
+      "navn": "^Mulig forfalsket Python-pakke: langchainn$",
+      "farge": ["gul"],
+      "niva": ["Spor"]
     }
   ]
 }

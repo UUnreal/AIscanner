@@ -23,6 +23,49 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.54.0] - 2026-11-20
+
+### Testet på virtuell Windows (CI-testlaben, windows-latest)
+- Bevisnivå i funnene for ekte Ollama, llama.cpp-server, llamafile, modeller (Kina, Russland, vestlige), Claude Code,
+  Codex, Gemini CLI og Python-prosjekt: fasiten sjekker farge og nivå.
+- Ren maskin: ingen bekreftede eller sannsynlige røde/gule funn og ingen ukjent AI.
+- Avhengighetsfil uten miljø (requirements.txt med openai, torch bare i kommentar) gir Sannsynlig Python-prosjekt.
+- Pakke med navn én bokstav unna en AI-pakke gir Mulig spor.
+
+### Ikke testet på Windows (bare Linux med falske profiler i `--kontroll`)
+- WSL innvendig (Python-miljøer, Claude Code og Gemini CLI i Linux), Vakt med modell i minnet, maskerte kommandoer
+  i Vakt, nye AI-motorer på filnavn, nye produktregler, Poetry-miljøer i AppData, nye modellformater (PR 5) og
+  multimodale typer (PR 6). Testlaben har ikke WSL2, LM Studio eller disse programmene.
+
+### Lagt til (plan PR 5–13)
+- Modellformater bekreftet på innholdet: Core ML, MindSpore, Paddle, TensorRT, TensorFlow SavedModel og Flax.
+  Endelse alene er Mulig spor.
+- Multimodal: SDXL, SD3, ControlNet, IP-Adapter og VAE kjennes igjen på tensornavn; familiene LLaVA, SAM, SigLIP,
+  DINOv2, Florence-2, CLIP og Whisper; lyd-, video- og bildepakker (pyannote, speechbrain, demucs, audiocraft, vosk,
+  whisperx, animatediff, ltx_video, insightface, gfpgan, realesrgan, controlnet_aux, open_clip, timm, mediapipe,
+  paddleocr, easyocr, rembg).
+- Avhengighetsfiler i prosjekter: requirements*.txt, pyproject.toml, Pipfile, poetry.lock, uv.lock, environment.yml
+  og package.json. Bare pakkenavn leses (maks 1 MB, låsefiler 4 MB); kommentarer, versjoner og adresser leses ikke
+  videre. Samme prosjekt som et miljø blir ett funn med fila som ekstra spor. Poetry-miljøer i AppData leses.
+- WSL innvendig, bare når Linux allerede kjører: Python-miljøer (system, ~/.local og prosjekter med .venv/venv),
+  MCP-oppsett og «godkjenn alt» for Claude Code og Gemini CLI.
+- AI-motorer på filnavn: LiteRT/TensorFlow Lite, Vosk, stable-diffusion.cpp og TNN (Tencent).
+- Produktregler: Sourcegraph Cody, Qodo Gen, Blackbox AI, Augment Code, Roo Code, RAGFlow, Langflow, Flowise og
+  PrivateGPT; Copilot Studio som AI-nettsted.
+- Mulig typosquatting: pakke med navn én bokstav unna en kjent AI-pakke (minst 7 tegn) er Mulig spor, aldri rød.
+- Vakt: modellen som ligger i minnet hos Ollama (/api/ps), LM Studio (/api/v0/models) og llama.cpp (/v1/models),
+  hvert 10. sekund, bare for servere som allerede kjører. Bare modellnavn, aldri samtaler.
+- Vakt: maskert kommando bak «Vis kommando»: bare programnavn og kjente valg, alt annet ‹skjult›. Testet med falske
+  nøkler, token og prompt i `--kontroll`. Lagres aldri.
+
+### Ikke gjort (ingen verifisert kilde)
+- Utgåtte versjoner (EOL) og kjente ondsinnede hasher: ingen verifisert offline-liste. Står som hull i kategori S.
+- Podman, Dev Containers og VM-disker: vises ikke (kategori N er PARTIAL).
+
+### Endret
+- Testlab-fasiten godtar Sannsynlig for llama.cpp-serveren: mens en stor modell lastes, svarer den ikke ennå, og da er
+  beviset programregel + lyttende port, ikke målt svar.
+
 ### Endret (bevisstandard, plan PR 1)
 - Hvert funn har bevisnivå **Bekreftet / Sannsynlig / Spor**. Bare navn, sti, endelse, DNS eller kjøremotor gir
   «Mulig spor, ikke bekreftet»: egen liste, telles aldri, blir aldri rød. To stier er fortsatt Spor.
