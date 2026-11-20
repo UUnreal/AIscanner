@@ -23,6 +23,21 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.56.0] - 2026-11-20
+
+### Lagt til
+
+- **.NET-programmer med AI:** NuGet-pakker for AI (Semantic Kernel, Microsoft.Extensions.AI, Microsoft Agent Framework, Azure.AI.OpenAI, OpenAI, Anthropic.SDK, OllamaSharp, LLamaSharp, ONNX Runtime GenAI, AutoGen) i .csproj, packages.lock.json og packages.config, og som DLL med samme navn i programmer. Bare pakkenavn.
+- **WMI-abonnementer:** kommandoer og skript Windows kjører ved en hendelse (root\subscription) sjekkes for AI-kall og agentflagg, som de andre oppstartsstedene. Kommandoen vises aldri.
+- **Shimcache:** Windows' kompatibilitetsliste gir enda et spor etter AI-programmer, også slettede. Bare sti og tid; vises som «sett av Windows», ikke «kjørt».
+- **PowerShell-historikk:** installasjon av kjente AI-verktøy (Ollama, Claude Code, Codex CLI, Gemini CLI, Copilot CLI, LM Studio og AI-pakker med pip/pipx/uv). Bare verktøyets navn vises, aldri kommandoen.
+- **Conda-miljøer, Jupyter-kjerner, pipx og globale bun-pakker:** også når de ligger utenfor brukermappa. Bare pakkenavn.
+- **Installasjonsfiler i Nedlastinger** for kjente AI-programmer, med signatur og nedlastingsmerke. Usignert = Mulig spor.
+
+### Ikke testet på Windows
+
+- Alt over er kontrollert med --kontroll og --selvtest (Linux). WMI, Shimcache fra registeret, PowerShell-historikk, Conda og Jupyter er ikke kjørt på Windows ennå.
+
 ## [2.55.1] - 2026-11-20
 
 ### Rettet

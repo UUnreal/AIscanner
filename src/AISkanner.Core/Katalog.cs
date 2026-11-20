@@ -15,6 +15,7 @@ public sealed partial class Skanner
         foreach (var p in _regler.Produkter) yield return ("produkter", p, t => FinnRegel(t) == p || FinnRegel(t, utvidelse: true) == p);
         foreach (var p in _regler.PythonPakker) yield return ("pythonPakker", p, t => PythonAi.TryGetValue(t, out _) && string.Equals(t, p.Navn, StringComparison.OrdinalIgnoreCase));
         foreach (var p in _regler.NodePakker) yield return ("nodePakker", p, t => NodeAi.TryGetValue(t, out _) && string.Equals(t, p.Navn, StringComparison.OrdinalIgnoreCase));
+        foreach (var p in _regler.DotnetPakker) yield return ("dotnetPakker", p, t => DotnetAi.TryGetValue(t, out _) && string.Equals(t, p.Navn, StringComparison.OrdinalIgnoreCase));
         foreach (var b in _regler.DockerBilder) yield return ("dockerBilder", b, t => ErAiBilde(t) && new[] { b.Navn.ToLowerInvariant() }.Any(a => Bildetreff(t.ToLowerInvariant().Split(':')[0], a)));
     }
 

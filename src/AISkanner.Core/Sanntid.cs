@@ -46,6 +46,7 @@ public sealed partial class Skanner
     // AI-biblioteker (pythonPakker og nodePakker i regler.json). Verdien sier om biblioteket lager agenter som kan handle på egen hånd.
     private static Dictionary<string, bool> PythonAi = new(StringComparer.OrdinalIgnoreCase);
     private static Dictionary<string, bool> NodeAi = new(StringComparer.OrdinalIgnoreCase);
+    private static Dictionary<string, bool> DotnetAi = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// AI-verktøy laget for å angripe andre maskiner. Kilder: Villager (kinesisk, på PyPI, bruker DeepSeek)
@@ -566,7 +567,7 @@ public sealed partial class Skanner
         // Installert pakke i et miljø: pakkebehandlerens egen oppføring er et eget spor ved siden av mappa (bevisstandarden)
         // En avhengighetsfil sier bare at prosjektet skal bruke pakken, ikke at den er installert
         f.LeggTilHvor(avhengighetsfil != null ? "Avhengighetsfil" : "Installert pakke");
-        foreach (var p in _regler.PythonPakker.Concat(_regler.NodePakker).Where(p => p.Fare != null && pakker.Contains(p.Navn)))
+        foreach (var p in _regler.PythonPakker.Concat(_regler.NodePakker).Concat(_regler.DotnetPakker).Where(p => p.Fare != null && pakker.Contains(p.Navn)))
         {
             f.Risiko = Risiko.Rod;
             f.Advarsel($"{p.Fare}: pakken {p.Navn}.");

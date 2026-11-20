@@ -252,6 +252,37 @@ public sealed partial class Skanner
         Sjekk(waMs.Count == 1 && waMs[0].Risiko == Risiko.Gronn && waMs[0].Detaljer.Count(x => x.Contains("systemAIModels")) == 2, "Microsofts apper med Windows' egen AI ble ikke samlet i ett grønt funn");
         Sjekk(wa._funn.Values.Count(x => x.Navn.StartsWith("Bruker Windows' egen AI")) == 1 && wa._funn.Values.First(x => x.Navn.StartsWith("Bruker Windows' egen AI")).Risiko == Risiko.Gul, "app fra ikke-bekreftet utgiver med Windows' egen AI ble ikke gul");
         Sjekk(ErMicrosoftPakke("Microsoft.Paint_11.2_x64__8wekyb3d8bbwe") && !ErMicrosoftPakke("Falsk.App_1.0_x64__8wekyb3d8bbwex") && !ErMicrosoftPakke("Microsoft.Fake_1.0_x64__abcdefghijklm"), "Microsoft-pakke kjennes feil igjen");
+        // H1: .NET-prosjekter og programmer med AI-SDK (bare pakkenavn)
+        Sjekk(Avhengighetsfil("Agent.csproj") == ".NET" && Avhengighetsfil("packages.lock.json") == ".NET" && Avhengighetsfil("App.config") == null, ".NET-prosjektfil kjennes ikke igjen");
+        var net = AvhengighetNavn("agent.csproj", "<Project><ItemGroup><PackageReference Include=\"Microsoft.SemanticKernel\" Version=\"1.0\" /><PackageReference Include=\"Newtonsoft.Json\" /></ItemGroup></Project>").ToList();
+        var lockNet = AvhengighetNavn("packages.lock.json", "{\"dependencies\":{\"net8.0\":{\"OllamaSharp\":{\"type\":\"Direct\"}}}}").ToList();
+        Sjekk(net.Contains("Microsoft.SemanticKernel") && net.Contains("Newtonsoft.Json") && lockNet.Contains("OllamaSharp"), "NuGet-navn leses ikke fra .csproj eller packages.lock.json");
+        var netAi = AiPakker(net.Concat(lockNet), DotnetAi, false);
+        Sjekk(netAi.Pakker.SetEquals(new[] { "Microsoft.SemanticKernel", "OllamaSharp" }) && !netAi.Agent, ".NET-AI-pakker ble feil (Newtonsoft.Json er ikke AI)");
+        // H3: Shimcache (Windows 10/11-format, laget som byte)
+        byte[] Shim(params string[] stier)
+        {
+            using var ms = new MemoryStream(); using var w = new BinaryWriter(ms);
+            w.Write(0x34); w.Write(new byte[0x30]);
+            foreach (var st in stier) { var b = System.Text.Encoding.Unicode.GetBytes(st); w.Write(System.Text.Encoding.ASCII.GetBytes("10ts")); w.Write(0); w.Write(2 + b.Length + 8 + 4); w.Write((ushort)b.Length); w.Write(b); w.Write(DateTime.UtcNow.ToFileTimeUtc()); w.Write(0); }
+            return ms.ToArray();
+        }
+        var sc = new Skanner(regler);
+        int nShim = sc.LesShimcache(Shim(@"C:\Windows\notepad.exe", @"C:\Users\a\AppData\Local\Programs\Ollama\ollama app.exe"));
+        Sjekk(nShim == 2 && sc._funn.Values.Count(x => x.Hvor.Contains("Windows' kompatibilitetsliste (Shimcache)")) == 1 && sc.LesShimcache(new byte[64]) == -1, "Shimcache ble lest feil");
+        // H4: PowerShell-historikk: bare navn på kjente AI-verktøy
+        Sjekk(AiIKommando("irm https://ollama.com/install.ps1 | iex").Contains("Ollama") && AiIKommando("npm i -g @anthropic-ai/claude-code").Contains("Claude Code")
+            && AiIKommando("pip install --upgrade transformers requests").SequenceEqual(new[] { "transformers" }) && !AiIKommando("git status").Any() && !AiIKommando("pip install requests").Any(),
+            "AI-installasjon i PowerShell-historikk kjennes feil igjen");
+        // H7: installasjonsfiler i Nedlastinger
+        var ned = Path.Combine(mappe, "Nedlast");
+        Directory.CreateDirectory(ned);
+        File.WriteAllBytes(Path.Combine(ned, "OllamaSetup.exe"), new byte[16]);
+        File.WriteAllBytes(Path.Combine(ned, "notater.exe"), new byte[16]);
+        var inst = new Skanner(regler);
+        inst.InstallasjonsfilerINedlastinger(ned);
+        var instF = inst._funn.Values.Where(x => x.Hvor.Contains("Installasjonsfil i Nedlastinger")).ToList();
+        Sjekk(instF.Count == 1 && instF[0].Bevisniva == Bevisniva.Spor && instF[0].Detaljer.Any(x => x.Contains("OllamaSetup.exe") && x.Contains("ikke signert")), "installasjonsfil for Ollama i Nedlastinger ble feil (usignert skal være Mulig spor)");
         return (ok, alle);
     }
 

@@ -165,6 +165,8 @@ public sealed class Regelsett
     [JsonPropertyName("produkter")] public List<Produkt> Produkter { get; set; } = new();
     [JsonPropertyName("pythonPakker")] public List<Pakke> PythonPakker { get; set; } = new();
     [JsonPropertyName("nodePakker")] public List<Pakke> NodePakker { get; set; } = new();
+    /// <summary>NuGet-pakker med AI (Semantic Kernel, Microsoft.Extensions.AI, OpenAI …): i prosjektfiler og som DLL i programmer.</summary>
+    [JsonPropertyName("dotnetPakker")] public List<Pakke> DotnetPakker { get; set; } = new();
     [JsonPropertyName("dockerBilder")] public List<DockerBilde> DockerBilder { get; set; } = new();
     [JsonPropertyName("ukjentUtvidelseOrd")] public List<string> UkjentUtvidelseOrd { get; set; } = new();
     [JsonPropertyName("modellfilMinMB")] public int ModellfilMinMB { get; set; } = 200;

@@ -203,10 +203,33 @@ public sealed partial class Skanner
 
     // ---------- Instruksjonsfiler i Nedlastinger ----------
 
+    /// <summary>
+    /// Installasjonsfiler for kjente AI-programmer i Nedlastinger (OllamaSetup.exe, LM-Studio-….exe): lastet ned, ikke nødvendigvis
+    /// installert. Bare filnavn, signatur og nedlastingsmerke leses; fila åpnes aldri. Navnet alene er Mulig spor; signert er Sannsynlig.
+    /// </summary>
+    internal void InstallasjonsfilerINedlastinger(string ned)
+    {
+        if (!Directory.Exists(ned)) { Tilgangslogg.Logg("Mappe", ned, Utfall.IkkeFunnet); return; }
+        foreach (var fil in Plattform.Filer(ned, "*", 1).Take(5000))
+        {
+            if (fil.Extension.ToLowerInvariant() is not (".exe" or ".msi" or ".msix" or ".msixbundle" or ".appx")) continue;
+            if (FinnRegel(Regex.Replace(Path.GetFileNameWithoutExtension(fil.Name), "(?<=[a-z])(?=[A-Z])|[-_.]", " ")) is not { } regel) continue;
+            var utgiver = Plattform.ErWindows ? Signatur.Utgiver(fil.FullName) : null;
+            var merke = LesNedlastingsmerke(fil.FullName);
+            var f = FraRegel(regel, "Installasjonsfil i Nedlastinger",
+                $"Installasjonsfil: {fil.FullName} · {Rapport.Storrelse(fil.Length)} · lastet ned {Tid(fil.CreationTime)} · {(utgiver != null ? $"signert av {utgiver}" : "ikke signert")}"
+                + (merke != null ? $" · {NedlastetTekst(merke)}" : ""));
+            if (utgiver == null) f.Svakt();   // bare filnavnet: Mulig spor til noe annet bekrefter det
+            f.Tidspunkt(fil.CreationTime, fil.CreationTime);
+        }
+        Tilgangslogg.Logg("Mappe", ned, Utfall.Lest, "bare navn, signatur og nedlastingsmerke på installasjonsfiler (ett nivå)");
+    }
+
     private void InstruksjonerINedlastinger()
     {
         var ned = Utvid(@"%USERPROFILE%\Downloads");
-        if (!Directory.Exists(ned)) { Tilgangslogg.Logg("Mappe", ned, Utfall.IkkeFunnet); return; }
+        InstallasjonsfilerINedlastinger(ned);
+        if (!Directory.Exists(ned)) return;
         var funnet = new List<string>();
         foreach (var fil in Plattform.Filer(ned, "*", 2))
             if (Instruksjonsnavn.Contains(fil.Name) || (fil.Name.Equals("SKILL.md", StringComparison.OrdinalIgnoreCase))) funnet.Add(fil.FullName);

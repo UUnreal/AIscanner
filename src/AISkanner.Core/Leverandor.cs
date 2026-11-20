@@ -65,6 +65,7 @@ public sealed partial class Skanner
         public readonly List<string> MotorFiler = new();
         public readonly SortedSet<string> AiPakker = new(StringComparer.OrdinalIgnoreCase);
         public readonly List<string> AsarFiler = new();
+        public readonly List<string> SdkFiler = new();
     }
 
     /// <summary>
@@ -266,6 +267,9 @@ public sealed partial class Skanner
         {
             foreach (var (m, motor) in Motorer)
                 if (m.IsMatch(fil.Name)) lock (app) { app.Motorer.Add(motor); if (app.MotorFiler.Count < 20) app.MotorFiler.Add(fil.FullName); }
+            // .NET-bibliotek for AI (Semantic Kernel, OpenAI, OllamaSharp …) med nøyaktig samme navn som NuGet-pakken
+            var dll = Path.GetFileNameWithoutExtension(fil.Name);
+            if (DotnetAi.ContainsKey(dll)) lock (app) { app.AiPakker.Add(DotnetAi.Keys.First(k => k.Equals(dll, StringComparison.OrdinalIgnoreCase))); if (app.SdkFiler.Count < 8) app.SdkFiler.Add(fil.FullName); }
             return;
         }
         long lengde = fil.Length;
@@ -426,8 +430,9 @@ public sealed partial class Skanner
             f.Detalj($"Fil: {x.Sti} · {x.Format} · {Rapport.Storrelse(x.Lengde)} · lagt inn {Tid(x.Opprettet)}{(x.Endret.Date != x.Opprettet.Date ? $" · oppdatert {Tid(x.Endret)}" : "")}");
         if (app.Filer.Count > 40) f.Detalj($"Og {app.Filer.Count - 40} modellfiler til i {rot}");
         foreach (var m in app.MotorFiler.Take(8)) f.Detalj($"AI-motor: {m}");
+        foreach (var d in app.SdkFiler) f.Detalj($"AI-bibliotek (.NET): {d}");
         foreach (var a in app.AsarFiler.Take(4)) f.Detalj($"app.asar: {a} ({string.Join(", ", app.AiPakker)})");
-        if (app.AiPakker.Any(p => NodeAi.TryGetValue(p, out var ag) && ag)) f.Advarsel("Programmet har med biblioteker for AI-agenter som kan handle på egen hånd.");
+        if (app.AiPakker.Any(p => (NodeAi.TryGetValue(p, out var ag) || DotnetAi.TryGetValue(p, out ag)) && ag)) f.Advarsel("Programmet har med biblioteker for AI-agenter som kan handle på egen hånd.");
         if (frø != null && !frø.Bekreftet) f.Merknad("Navnet kommer fra en liste over kjente mapper som ikke er bekreftet på alle PC-er. Selve funnet er gjort på innholdet.");
         if (!bekreftet && utgiver != null) f.Advarsel($"Programmet sier at det er fra {Forkort(utgiver)}, men det er ikke bekreftet med en gyldig signatur.");
         foreach (var k in kjorer.Where(k => k.StartsWith(rot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))) HuskMappe(k, f);
