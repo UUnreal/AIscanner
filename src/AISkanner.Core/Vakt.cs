@@ -123,6 +123,7 @@ public sealed class Vakt : IDisposable
         v.Status = v._etw != null ? "Windows' hendelser i sanntid (prosesser, filer, nett, DNS)" : $"prosesslista hvert halve sekund; filer og nett {grunn}";
         Tilgangslogg.Logg("Vakt", "AI-agentenes prosesser, filer, nett og oppsett (live)", Utfall.Lest, v.Status + "; bare i minnet, aldri innhold");
         v.Folg(prosjektmapper);
+        if (Plattform.ErWindows) v._modellTimer = new Timer(_ => v.Modeller(), null, 2000, 10000);
         return v;
     }
 
@@ -377,8 +378,46 @@ public sealed class Vakt : IDisposable
             "ATR-2026-00200 · ATR-2026-00429 · ATLAS AML.T0081", t?.Agent ?? "", t?.Rot ?? 0, prog, pid, sti, ned || agentSkrev && !Path.GetFileName(prog).StartsWith(t!.Value.Agent.Split(' ')[0], StringComparison.OrdinalIgnoreCase)));
     }
 
+    // ---------- Modell i minnet hos lokale AI-servere (Ollama, LM Studio, llama.cpp) ----------
+
+    private Timer? _modellTimer;
+    private int _iModell;
+    private readonly Dictionary<int, HashSet<string>> _lastet = new();
+    private static readonly HttpClient Lokal = new(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(2), MaxResponseContentBufferSize = 4 * 1024 * 1024 };
+
+    /// <summary>
+    /// Hvert 10. sekund: bare porter som allerede lytter på denne PC-en og eies av en kjent lokal AI-server (regel i kategorien
+    /// Lokal AI). Starter aldri en server, leser bare modellnavn, aldri samtaler eller prompter. Ingenting lagres.
+    /// </summary>
+    private async void Modeller()
+    {
+        if (Interlocked.Exchange(ref _iModell, 1) == 1) return;
+        try
+        {
+            var lyttere = TcpTabell.Hent().Where(l => l.Pid > 4 && !Plattform.ErEgen(l.Pid) && l.Port >= 1024
+                    && (IPAddress.IsLoopback(l.Adresse) || l.Adresse.Equals(IPAddress.Any) || l.Adresse.Equals(IPAddress.IPv6Any)))
+                .GroupBy(l => l.Port).Select(g => g.First()).Take(80).ToList();
+            foreach (var l in lyttere)
+            {
+                string navn, sti;
+                try { using var p = Process.GetProcessById(l.Pid); navn = p.ProcessName; sti = ProsessSti.Hent(p) ?? ""; } catch { continue; }
+                var regel = _s.FinnRegel($"{navn} {sti}");
+                if (regel?.Kategori != "Lokal AI") continue;
+                var naa = await Skanner.LastetNaAsync(Lokal, l.Port).ConfigureAwait(false) ?? await Skanner.SporAsync(Lokal, l.Port).ConfigureAwait(false);
+                if (naa == null) continue;
+                HashSet<string>? for_;
+                lock (_las) { _lastet.TryGetValue(l.Port, out for_); _lastet[l.Port] = new HashSet<string>(naa); }
+                foreach (var m in naa.Where(m => for_ == null || !for_.Contains(m)).Take(10))
+                    Legg(new Hendelse(DateTime.Now, "Modell i minnet hos lokal AI-server", "Lokal AI-server (bare modellnavn)", regel.Navn, l.Pid, sti.Length > 0 ? sti : navn, l.Pid, $"{m} (port {l.Port})", false));
+            }
+        }
+        catch { }
+        finally { Volatile.Write(ref _iModell, 0); }
+    }
+
     public void Dispose()
     {
+        _modellTimer?.Dispose(); _modellTimer = null;
         _etw?.Dispose(); _etw = null;
         _poll?.Dispose(); _poll = null;
         foreach (var w in _fsw) try { w.Dispose(); } catch { }

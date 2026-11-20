@@ -248,21 +248,42 @@ public sealed partial class Skanner
     /// <summary>Ett lesende GET-kall mot vanlige AI-adresser. Returnerer modellnavn, eller null hvis det ikke er AI.</summary>
     internal static List<string>? Spor(HttpClient klient, int port) => SporAsync(klient, port).GetAwaiter().GetResult();
 
-    /// <summary>Ollama /api/ps: modellene som ligger i minnet nå. Null når serveren ikke har denne adressen.</summary>
+    /// <summary>
+    /// Modellene som ligger i minnet nå: Ollama /api/ps, ellers LM Studio /api/v0/models (state «loaded»). Bare modellnavn leses,
+    /// aldri samtaler. Null når serveren ikke har noen av adressene. Kilder: docs.ollama.com/api, lmstudio.ai/docs/app/api/endpoints/rest
+    /// </summary>
     internal static async Task<List<string>?> LastetNaAsync(HttpClient klient, int port)
     {
+        foreach (var sti in new[] { "/api/ps", "/api/v0/models" })
+        {
+            try
+            {
+                using var svar = await klient.GetAsync($"http://127.0.0.1:{port}{sti}").ConfigureAwait(false);
+                Tilgangslogg.Logg("Port", $"127.0.0.1:{port}{sti}", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
+                if (!svar.IsSuccessStatusCode) continue;
+                var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (Lastet(sti, tekst) is { } l) return l;
+            }
+            catch (Exception e) { if (e is TaskCanceledException) return null; }
+        }
+        return null;
+    }
+
+    /// <summary>Lastede modellnavn fra svaret, eller null når svaret ikke har riktig form.</summary>
+    internal static List<string>? Lastet(string sti, string tekst)
+    {
+        if (tekst.Length > 1_000_000) return null;
         try
         {
-            using var svar = await klient.GetAsync($"http://127.0.0.1:{port}/api/ps").ConfigureAwait(false);
-            Tilgangslogg.Logg("Port", $"127.0.0.1:{port}/api/ps", svar.IsSuccessStatusCode ? Utfall.Lest : Utfall.IkkeFunnet, $"HTTP {(int)svar.StatusCode}");
-            if (!svar.IsSuccessStatusCode) return null;
-            var tekst = await svar.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (tekst.Length > 1_000_000) return null;
             using var doc = JsonDocument.Parse(tekst);
-            if (doc.RootElement.ValueKind != JsonValueKind.Object || !doc.RootElement.TryGetProperty("models", out var m) || m.ValueKind != JsonValueKind.Array) return null;
-            return m.EnumerateArray().Select(x => Str(x, "name") ?? Str(x, "model")).OfType<string>().ToList();
+            var r = doc.RootElement;
+            if (sti == "/api/ps")
+                return r.ValueKind == JsonValueKind.Object && r.TryGetProperty("models", out var m) && m.ValueKind == JsonValueKind.Array
+                    ? m.EnumerateArray().Select(x => Str(x, "name") ?? Str(x, "model")).OfType<string>().ToList() : null;
+            return r.ValueKind == JsonValueKind.Object && r.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array
+                ? d.EnumerateArray().Where(x => Str(x, "state") == "loaded").Select(x => Str(x, "id")).OfType<string>().ToList() : null;
         }
-        catch { return null; }
+        catch (JsonException) { return null; }
     }
 
     internal static async Task<List<string>?> SporAsync(HttpClient klient, int port)

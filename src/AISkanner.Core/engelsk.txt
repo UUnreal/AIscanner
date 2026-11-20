@@ -1696,3 +1696,9 @@ WSL, beholdere og VM-er|WSL, containers and VMs
 Portabel og ukjent AI|Portable and unknown AI
 Identitet og rettigheter|Identity and permissions
 Opprinnelse|Origin
+Modell i minnet hos lokal AI-server|Model in memory of local AI server
+Lokal AI-server (bare modellnavn)|Local AI server (model names only)
+Mulig forfalsket Python-pakke|Possibly fake Python package
+Mulig forfalsket Node-pakke|Possibly fake Node package
+Avhengighetsfil|Dependency file
+I Linux (WSL).|In Linux (WSL).

@@ -225,6 +225,10 @@ public sealed partial class Skanner
         var tys = new Skanner(regler); tys.LeggTilTypo(ffy);
         var tyf = tys._funn.Values.SingleOrDefault(f => f.Navn == "Mulig forfalsket Python-pakke: langchainn");
         Sjekk(tyf != null && tyf.Bevisniva == Bevisniva.Spor && tyf.Ukjentspor == false && ffy.Miljoer.Count == 0, "mulig forfalsket pakke ble ikke Mulig spor");
+        // Modell i minnet: Ollama /api/ps og LM Studio /api/v0/models (bare «loaded»); feil form gir null
+        Sjekk(Lastet("/api/ps", "{\"models\":[{\"name\":\"qwen2.5:0.5b\"}]}")?.SequenceEqual(new[] { "qwen2.5:0.5b" }) == true
+              && Lastet("/api/v0/models", "{\"data\":[{\"id\":\"a\",\"state\":\"loaded\"},{\"id\":\"b\",\"state\":\"not-loaded\"}]}")?.SequenceEqual(new[] { "a" }) == true
+              && Lastet("/api/ps", "[1,2]") == null && Lastet("/api/v0/models", "ikke json") == null, "lastet modell leses feil");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");
