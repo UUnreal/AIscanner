@@ -757,8 +757,10 @@
       "hvorforEnkelt": "Behandler lyden fra mikrofonen. Møtenotater sendes til AI-tjenesten.",
       "kilde": "https://krisp.ai/"
     },
+    {"bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "porter": [], "mapper": [], "navn": "Møte-AI (Fathom, Jamie, MeetGeek, Notta)", "id": "produkt-mote-ai-skrivebord", "testPositiv": "fathom.exe", "kategori": "Skygge-AI", "risiko": "rod", "treff": ["fathom.exe", "\\programs\\fathom\\", "jamie.exe", "\\programs\\jamie\\", "meetgeek.exe", "notta.exe"], "hvorfor": "Tar opp eller lytter på møter og lager notater med AI i skyen.", "kilde": "https://fathom.video/", "enkelt": "AI som tar notater fra møter", "hvorforEnkelt": "Lytter på møtene dine. Det som blir sagt, sendes til AI-tjenesten.", "testNegativ": "fathom.exex9"},
+    {"bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor.", "porter": [], "mapper": [], "navn": "UI-TARS Desktop (ByteDance)", "id": "produkt-ui-tars", "testPositiv": "ui-tars", "kategori": "Skygge-AI (agent)", "risiko": "rod", "land": "CN", "treff": ["ui-tars", "ui tars"], "hvorfor": "AI-agent som ser på skjermen og styrer mus og tastatur i alle programmer.", "kilde": "https://github.com/bytedance/UI-TARS-desktop", "enkelt": "AI som styrer PC-en for deg", "hvorforEnkelt": "Den klikker og skriver i programmene dine på egen hånd.", "testNegativ": "ui-tarsx9"},
     {
-      "navn": "Møteopptakere i nettleseren (Otter, Fireflies, tl;dv, Read AI)", "id": "produkt-moteopptakere-i-nettleseren-otter-fireflies-tl-dv-read-ai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («tldv»): høyere risiko.", "testPositiv": "otter.ai", "testNegativ": "otter.aix9",
+      "navn": "Møteopptakere i nettleseren (Otter, Fireflies, tl;dv, Read AI, Tactiq, Fathom m.fl.)", "id": "produkt-moteopptakere-i-nettleseren-otter-fireflies-tl-dv-read-ai", "bevistype": "produktregel", "verifisert": false, "fpMerknad": "Treffer bare hele ord i program-, mappe-, pakke- og utvidelsesnavn. Et annet program med samme navn kan gi falskt treff; med bare én mappe blir det Mulig spor. Kort ord («tldv»): høyere risiko.", "testPositiv": "otter.ai", "testNegativ": "otter.aix9",
       "kategori": "Nettleser-AI",
       "risiko": "rod",
       "treff": [
@@ -766,7 +768,12 @@
         "fireflies",
         "tl;dv",
         "tldv",
-        "read ai"
+        "read ai",
+        "tactiq",
+        "bluedot",
+        "fathom",
+        "meetgeek",
+        "notta"
       ],
       "mapper": [],
       "porter": [],
@@ -853,6 +860,9 @@
     {"id": "python-smolagents", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/smolagents/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "smolagents", "testNegativ": "smolagentsx9", "navn": "smolagents", "agent": true},
     {"id": "python-haystack", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/haystack-ai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "haystack", "testNegativ": "haystackx9", "navn": "haystack", "agent": true},
     {"id": "python-interpreter", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/open-interpreter/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («interpreter»): høyere risiko for falskt treff.", "testPositiv": "interpreter", "testNegativ": "interpreterx9", "navn": "interpreter", "agent": true},
+    {"id": "python-gui-agents", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/gui-agents/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "gui_agents", "testNegativ": "gui_agentsx9", "navn": "gui_agents", "agent": true},
+    {"id": "python-skyvern", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/skyvern/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "skyvern", "testNegativ": "skyvernx9", "navn": "skyvern", "agent": true},
+    {"id": "python-windows-use", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/windows-use/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "windows_use", "testNegativ": "windows_usex9", "navn": "windows_use", "agent": true},
     {"id": "python-browser-use", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/browser-use/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "browser_use", "testNegativ": "browser_usex9", "navn": "browser_use", "agent": true},
     {"id": "python-pydantic-ai", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/pydantic-ai/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer.", "testPositiv": "pydantic_ai", "testNegativ": "pydantic_aix9", "navn": "pydantic_ai", "agent": true},
     {"id": "python-agents", "bevistype": "pakkenavn", "kilde": "https://pypi.org/project/openai-agents/", "verifisert": false, "fpMerknad": "Treffer bare navnet på en installert pakke, en import eller en avhengighet, aldri innholdet i filer. Vanlig ord («agents»): høyere risiko for falskt treff.", "testPositiv": "agents", "testNegativ": "agentsx9", "navn": "agents", "agent": true},

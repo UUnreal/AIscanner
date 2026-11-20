@@ -233,6 +233,7 @@ public sealed partial class Skanner
         (new(@"filesystem|\bfiles?\b|\bfs\b|everything", RegexOptions.IgnoreCase), "filer"),
         (new(@"shell|terminal|command|commander|\bexec|powershell|\bcmd\b|bash|ssh", RegexOptions.IgnoreCase), "kjører kommandoer"),
         (new(@"puppeteer|playwright|browser|chrome|selenium", RegexOptions.IgnoreCase), "styrer en nettleser"),
+        (new(@"windows-?mcp|computer-?use|pyautogui|pywinauto|ui-?automation|desktop-?automation|ui-?tars|screen-?control", RegexOptions.IgnoreCase), "styrer skjermen og programmer"),
         (new(@"fetch|\bhttp|\bweb\b|search|tavily|\bexa\b|firecrawl|scrap", RegexOptions.IgnoreCase), "henter fra nettet"),
         (new(@"github|gitlab|bitbucket|\bgit\b", RegexOptions.IgnoreCase), "kode og Git"),
         (new(@"postgres|mysql|sqlite|mongo|redis|supabase|database|\bsql|snowflake|bigquery", RegexOptions.IgnoreCase), "databaser"),
@@ -287,8 +288,8 @@ public sealed partial class Skanner
             foreach (var t in tilgang) kart[t] = kart.TryGetValue(t, out var n) ? n + 1 : 1;
             f.Detalj($"Fil: {sti} · MCP-server «{s.Navn}» · {hva}{(tilgang.Count > 0 ? $" · tilgang: {string.Join(", ", tilgang)}" : "")}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
         }
-        // Personlig agent: leser e-post eller kalender og kan handle selv (kommandoer eller nettleser). Kan sende e-post og lage avtaler uten deg.
-        if ((kart.ContainsKey("e-post og chat") || kart.ContainsKey("kalender og avtaler")) && (kart.ContainsKey("kjører kommandoer") || kart.ContainsKey("styrer en nettleser")))
+        // Personlig agent: leser e-post eller kalender og kan handle selv (kommandoer, nettleser eller skjermen). Kan sende e-post og lage avtaler uten deg.
+        if ((kart.ContainsKey("e-post og chat") || kart.ContainsKey("kalender og avtaler")) && (kart.ContainsKey("kjører kommandoer") || kart.ContainsKey("styrer en nettleser") || kart.ContainsKey("styrer skjermen og programmer")))
         {
             f.Risiko = Risiko.Rod;
             f.Advarsel("Personlig agent: har tilgang til e-post eller kalender og kan handle selv (kommandoer eller nettleser). Kan sende e-post og lage avtaler uten deg.");
