@@ -35,6 +35,8 @@ jobs:
         run: dotnet build src/AISkanner.Cli -c Release
       - name: Kjør laben
         shell: pwsh
+        # Vanlig tid er 15 minutter. Grensen gir logg og testlab-fila også når noe henger.
+        timeout-minutes: 45
         env:
           GH_TOKEN: ${{ github.token }}
           HF_HUB_DISABLE_PROGRESS_BARS: '1'

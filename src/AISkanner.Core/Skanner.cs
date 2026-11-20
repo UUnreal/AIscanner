@@ -37,6 +37,7 @@ public sealed partial class Skanner
         // Pakke- og bildelistene kommer fra regelfila (§9), ikke fra koden
         PythonAi = regler.PythonPakker.GroupBy(p => p.Navn, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Agent, StringComparer.OrdinalIgnoreCase);
         NodeAi = regler.NodePakker.GroupBy(p => p.Navn, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Agent, StringComparer.OrdinalIgnoreCase);
+        DotnetAi = regler.DotnetPakker.GroupBy(p => p.Navn, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Agent, StringComparer.OrdinalIgnoreCase);
         AiBilder = regler.DockerBilder.Select(b => b.Navn.ToLowerInvariant()).ToArray();
     }
 

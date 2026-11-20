@@ -18,7 +18,7 @@ public static class Kategoristatus
         ("B", "Modellformater", new[] { "Leter gjennom filene" }, "MNN, RKNN og Caffe kjennes bare på endelsen (Mulig spor). Andre JAX-filer enn flax_model.msgpack kjennes ikke igjen."),
         ("C", "Bilde, lyd og video", new[] { "Leter gjennom filene", "Ser etter AI som kjører nå" }, "Deepfake og stemmekloning kjennes på programmer, mapper og pakker, ikke på tensornavn. Videomodeller (Wan, HunyuanVideo, LTX) kjennes på arkitektur og pakker, ikke på tensorstruktur."),
         ("D", "Kjøremotorer", new[] { "Ser etter AI som kjører nå", "Leter gjennom filene" }, "TensorFlow.js og WebNN kjennes ikke igjen. En motor alene er bare Mulig spor."),
-        ("E", "Utviklermiljø", new[] { "Leter gjennom filene", "Ser etter AI-verktøy" }, "Avhengighetsfiler leses for Python og Node (bare pakkenavn); Cargo, go.mod, Maven, Gradle og .NET-prosjekter leses ikke. Jupyter-kjerner vises ikke."),
+        ("E", "Utviklermiljø", new[] { "Leter gjennom filene", "Ser etter AI-verktøy" }, "Avhengighetsfiler leses for Python, Node og .NET (bare pakkenavn); Cargo, go.mod, Maven og Gradle leses ikke. Jupyter-kjerner og Conda-miljøer leses bare for pakkenavn."),
         ("F", "AI-apper og kodeagenter", new[] { "Sjekker installerte programmer", "Ser etter AI som kjører nå", "Ser etter AI-verktøy" }, "Kjennes igjen på navn og utvidelses-ID; agenter med nytt navn finnes bare via ukjente spor."),
         ("G", "Agenter og MCP", new[] { "Ser etter ukjente AI-spor", "Sjekker hva som starter av seg selv" }, null),
         ("H", "RAG og vektordatabaser", new[] { "Spør lokale programmer", "Leter gjennom filene" }, "Vektorfiler på disk kjennes ikke igjen på innholdet."),

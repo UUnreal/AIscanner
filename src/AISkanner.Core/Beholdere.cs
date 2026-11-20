@@ -21,6 +21,50 @@ public sealed partial class Skanner
         if (!Plattform.ErWindows) return;
         try { Docker(); } catch (Exception e) { Tilgangslogg.Logg("Sjekk", "Docker", Utfall.Feil, Tilgangslogg.Beskriv(e)); }
         try { Wsl(); } catch (Exception e) { Tilgangslogg.Logg("Sjekk", "WSL", Utfall.Feil, Tilgangslogg.Beskriv(e)); }
+        try { AndreMiljoer(); } catch (Exception e) { Tilgangslogg.Logg("Sjekk", "Conda, Jupyter, pipx og bun", Utfall.Feil, Tilgangslogg.Beskriv(e)); }
+    }
+
+    /// <summary>
+    /// Miljøer som kan ligge utenfor brukermappa eller i mapper hurtigsøket hopper over: Conda-miljøer (environments.txt),
+    /// Jupyter-kjerner (python-stien i kernel.json), pipx-verktøy og globale bun-pakker. Bare pakkenavn leses, som ellers.
+    /// Kilder: docs.conda.io (environments.txt), jupyter-client.readthedocs.io (kernel specs), pipx.pypa.io (PIPX_HOME), bun.sh/docs/install/global
+    /// </summary>
+    private void AndreMiljoer()
+    {
+        var ff = new FilFunn();
+        var hvor = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        void Py(string? rot, string kilde)
+        {
+            if (string.IsNullOrEmpty(rot)) return;
+            var sp = Path.Combine(rot, "Lib", "site-packages");
+            if (Directory.Exists(sp) && !hvor.ContainsKey(sp)) { hvor[sp] = kilde; Miljo(sp, PythonAi, "Python", ff); }
+        }
+        var conda = Utvid(@"%USERPROFILE%\.conda\environments.txt");
+        if (File.Exists(conda)) LesLinjer(conda, 1, l => { var t = l.Trim(); if (t.Length > 3 && Path.IsPathRooted(t)) Py(t, "Conda-miljø"); });
+        foreach (var k in new[] { @"%APPDATA%\jupyter\kernels", @"%ProgramData%\jupyter\kernels" }.SelectMany(m => Mapper(Utvid(m))).Take(100))
+        {
+            var kj = Path.Combine(k, "kernel.json");
+            if (!File.Exists(kj) || new FileInfo(kj).Length > 64 * 1024) continue;
+            try
+            {
+                using var d = System.Text.Json.JsonDocument.Parse(File.ReadAllText(kj));
+                if (d.RootElement.TryGetProperty("argv", out var a) && a.ValueKind == System.Text.Json.JsonValueKind.Array && a.GetArrayLength() > 0
+                    && a[0].GetString() is { } py && Path.IsPathRooted(py))
+                {
+                    var mappe = Path.GetDirectoryName(py);
+                    if (Path.GetFileName(mappe ?? "").Equals("Scripts", StringComparison.OrdinalIgnoreCase)) mappe = Path.GetDirectoryName(mappe);
+                    Py(mappe, $"Jupyter-kjerne «{Path.GetFileName(k)}»");
+                }
+                Tilgangslogg.Tell("Fil", Utfall.Lest, sted: kj, detalj: "Jupyter-kjerne: bare python-stien");
+            }
+            catch (Exception e) { Tilgangslogg.Feil("Fil", kj, e); }
+        }
+        foreach (var v in new[] { @"%USERPROFILE%\pipx\venvs", @"%USERPROFILE%\.local\pipx\venvs", @"%LOCALAPPDATA%\pipx\pipx\venvs" }.SelectMany(m => Mapper(Utvid(m))).Take(200))
+            Py(v, "pipx-verktøy");
+        var bun = Utvid(@"%USERPROFILE%\.bun\install\global\node_modules");
+        if (Directory.Exists(bun)) { hvor[bun] = "globale bun-pakker"; Miljo(bun, NodeAi, "Node", ff); }
+        foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer)
+            LeggTilMiljo(sti, pakker, agent, sprak).Merknad($"Funnet via {(hvor.TryGetValue(sti, out var h) ? h : "miljølista")}.");
     }
 
     private static string? DockerGet(string sti)

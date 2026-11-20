@@ -5,7 +5,7 @@ namespace AISkanner;
 
 /// <summary>
 /// Avhengighetsfiler i prosjekter (requirements*.txt, pyproject.toml, Pipfile, poetry.lock, uv.lock, environment.yml,
-/// package.json). Bare pakkenavn leses og sammenlignes med pakkelistene i regler.json. Kommentarer, versjoner, adresser
+/// package.json, .csproj, packages.lock.json, packages.config). Bare pakkenavn leses og sammenlignes med pakkelistene i regler.json. Kommentarer, versjoner, adresser
 /// og alt annet i fila leses ikke videre, vises ikke og lagres ikke. Store filer hoppes over.
 /// </summary>
 public sealed partial class Skanner
@@ -19,6 +19,7 @@ public sealed partial class Skanner
     {
         var n = navn.ToLowerInvariant();
         if (n == "package.json") return "Node";
+        if (n.EndsWith(".csproj") || n.EndsWith(".fsproj") || n.EndsWith(".vbproj") || n is "packages.lock.json" or "directory.packages.props" or "packages.config") return ".NET";
         if (n.StartsWith("requirements") && n.EndsWith(".txt") || n is "pyproject.toml" or "pipfile" or "poetry.lock" or "uv.lock" or "environment.yml" or "environment.yaml") return "Python";
         return null;
     }
@@ -41,8 +42,16 @@ public sealed partial class Skanner
             catch (JsonException) { }
             return ut;
         }
+        if (Avhengighetsfil(n) == ".NET")
+        {
+            // <PackageReference Include="X"/>, <PackageVersion Include="X"/>, <package id="X"/> og «"X": { "type": …» i packages.lock.json
+            var ut = new List<string>();
+            foreach (Match m in NugetNavn.Matches(tekst)) ut.Add(m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value);
+            return ut;
+        }
         return Linjer(n, tekst);
     }
+    private static readonly Regex NugetNavn = new(@"<(?:PackageReference|PackageVersion|package)\s[^>]*?\b(?:Include|Update|id)\s*=\s*""([A-Za-z0-9_.\-]{1,100})""|""([A-Za-z0-9_.\-]{1,100})""\s*:\s*\{\s*""type""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static IEnumerable<string> Linjer(string n, string tekst)
     {
@@ -88,7 +97,7 @@ public sealed partial class Skanner
         string tekst;
         try { tekst = File.ReadAllText(fil.FullName); } catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); return; }
         Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName, detalj: "avhengighetsfil: bare pakkenavn");
-        var (pakker, agent) = AiPakker(AvhengighetNavn(fil.Name, tekst), sprak == "Node" ? NodeAi : PythonAi, sprak == "Python");
+        var (pakker, agent) = AiPakker(AvhengighetNavn(fil.Name, tekst), sprak == "Node" ? NodeAi : sprak == ".NET" ? DotnetAi : PythonAi, sprak == "Python");
         if (pakker.Count == 0 || pakker.All(p => p is "ai" or "agents")) return;
         lock (ff) ff.Avhengigheter.Add((fil.FullName, fil.DirectoryName ?? "", pakker, agent, sprak));
     }

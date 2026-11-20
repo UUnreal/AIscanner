@@ -259,6 +259,7 @@ public sealed partial class Skanner
         HfOgOllama();
         AutostartMedFlagg();
         PowerShellLogg();
+        PowerShellHistorikk();
         NpxForgiftning();
         KjenteFiler();
         InstruksjonerINedlastinger();
@@ -627,6 +628,22 @@ public sealed partial class Skanner
                 foreach (var v in k.GetValueNames())
                     if (k.GetValue(v) is string s) Sjekk(s, $"Register: HKCU\\{n} · {v}", null);
             }
+#if NETFRAMEWORK
+            // WMI-abonnementer (root\subscription): kommandoer og skript Windows kjører ved en hendelse, en kjent skjult oppstartsvei
+            // (MITRE ATT&CK T1546.003). Bare lesing; kommandoen sjekkes som de andre oppstartsstedene og vises aldri.
+            foreach (var (klasse, felt) in new[] { ("CommandLineEventConsumer", "CommandLineTemplate"), ("ActiveScriptEventConsumer", "ScriptText") })
+                try
+                {
+                    // Fast tidsgrense: et WMI-kall uten grense kan henge hele søket
+                    using var sok = new System.Management.ManagementObjectSearcher(new System.Management.ManagementScope(@"root\subscription"),
+                        new System.Management.ObjectQuery($"SELECT Name, {felt} FROM {klasse}"),
+                        new System.Management.EnumerationOptions { Timeout = TimeSpan.FromSeconds(10), ReturnImmediately = true, Rewindable = false });
+                    foreach (System.Management.ManagementBaseObject o in sok.Get())
+                        using (o) if (o[felt] is string tekst) Sjekk(tekst, $"WMI-abonnement: {o["Name"]} ({klasse})", null);
+                    Tilgangslogg.Tell("WMI", Utfall.Lest, sted: @"root\subscription", detalj: klasse);
+                }
+                catch (Exception e) { Tilgangslogg.Feil("WMI", klasse, e); }
+#endif
         }
         var filer = new List<string>();
         filer.AddRange(Plattform.Filer(Utvid(@"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"), "*", 0)
@@ -644,7 +661,7 @@ public sealed partial class Skanner
         if (aiKall.Count > 0)
         {
             var k = Spor("Skript som starter av seg selv og kaller AI",
-                "Et skript i oppstarten, PowerShell-profilen eller registeret kaller en AI-tjeneste hver gang det kjører. Bare fil og tjeneste vises, aldri resten av skriptet.", null);
+                "Et skript i oppstarten, PowerShell-profilen, registeret eller et WMI-abonnement kaller en AI-tjeneste hver gang det kjører. Bare fil og tjeneste vises, aldri resten av skriptet.", null);
             k.Advarsel("Skjult AI-kall som starter av seg selv (PowerShell-profil, oppstart eller register).");
             foreach (var (tekst, t) in aiKall.Distinct().Take(20)) { k.Tidspunkt(t, t); k.Detalj(tekst); }
         }
@@ -656,6 +673,58 @@ public sealed partial class Skanner
         {
             f.Tidspunkt(t, t);
             f.Detalj(tekst + (t != null ? " · endret " + Nar(t.Value, "endringstid på fil") : ""));
+        }
+    }
+
+    // ---------- PowerShell-historikk (PSReadLine): installasjon av kjente AI-verktøy ----------
+
+    // Faste installasjonskommandoer fra leverandørenes egne sider. Bare navnet til høyre vises, aldri linjen.
+    // Kilder: ollama.com/download/windows, docs.anthropic.com/en/docs/claude-code/setup, github.com/openai/codex,
+    // github.com/google-gemini/gemini-cli, docs.github.com/copilot (Copilot CLI), lmstudio.ai/docs/cli
+    private static readonly (Regex Monster, string Navn)[] AiInstallasjoner =
+    {
+        (new(@"ollama\.com/install|winget\s+install\b.*\bOllama\.Ollama\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "Ollama"),
+        (new(@"claude\.ai/install|@anthropic-ai/claude-code\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "Claude Code"),
+        (new(@"@openai/codex\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "Codex CLI"),
+        (new(@"@google/gemini-cli\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "Gemini CLI"),
+        (new(@"@github/copilot\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "GitHub Copilot CLI"),
+        (new(@"winget\s+install\b.*\bElementLabs\.LMStudio\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "LM Studio"),
+    };
+    private static readonly Regex PipInstall = new(@"\b(?:pip3?|uv\s+pip|pipx|uv\s+tool)\s+install\s+(.{1,300})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex OllamaKjor = new(@"^\s*ollama(\.exe)?\s+(run|pull)\s", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>Navnene på kjente AI-verktøy og AI-pakker en kommandolinje installerer. Resten av linjen brukes ikke.</summary>
+    internal static IEnumerable<string> AiIKommando(string linje)
+    {
+        foreach (var (m, navn) in AiInstallasjoner) if (m.IsMatch(linje)) yield return navn;
+        if (OllamaKjor.IsMatch(linje)) yield return "Ollama";
+        if (PipInstall.Match(linje) is { Success: true } p)
+            foreach (var del in p.Groups[1].Value.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+                if (!del.StartsWith("-") && AvhNavn.Match(del) is { Success: true } n && PythonAi.ContainsKey(n.Value)) yield return PythonAi.Keys.First(k => k.Equals(n.Value, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void PowerShellHistorikk()
+    {
+        var mappe = Utvid(@"%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine");
+        var filer = Plattform.Filer(mappe, "*_history.txt", 0).ToList();
+        if (filer.Count == 0) { Tilgangslogg.Logg("Mappe", mappe, Utfall.IkkeFunnet); return; }
+        var funnet = new Dictionary<string, (string Fil, DateTime T)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var fil in filer)
+        {
+            if (fil.Length > 16L << 20) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver, sted: fil.FullName, detalj: "historikk større enn 16 MB"); continue; }
+            // Linjene leses i minnet og kastes; bare navnet på et kjent AI-verktøy beholdes
+            LesLinjer(fil.FullName, 16, l => { foreach (var n in AiIKommando(l)) funnet[n] = (fil.FullName, fil.LastWriteTime); });
+            Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName, detalj: "PowerShell-historikk: bare navn på kjente AI-verktøy, aldri kommandoene");
+        }
+        foreach (var (navn, (fil, t)) in funnet)
+        {
+            var detalj = $"PowerShell-historikk: {navn} er installert eller startet med en kommando · {fil} · fila endret {Tid(t)} (kommandoen vises ikke)";
+            var f = FinnRegel(navn) is { } regel ? FraRegel(regel, "PowerShell-historikk", detalj)
+                : LeggTil($"AI-pakke installert fra PowerShell: {navn}", "Skygge-AI (utvikling)", Risiko.Gul,
+                    "En kjent AI-pakke er installert med en kommando i PowerShell. Den kan være fjernet senere.", "PowerShell-historikk", detalj);
+            f.Katalogtreff();
+            f.Merk(Tilstand.BruktFor);
+            f.Tidspunkt(t, t);
         }
     }
 

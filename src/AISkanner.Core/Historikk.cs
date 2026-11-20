@@ -20,7 +20,7 @@ public sealed partial class Skanner
         if (!Plattform.ErWindows) return;
         foreach (var (navn, steg) in new (string, Action)[]
         {
-            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
+            ("Prefetch", PrefetchHistorikk), ("BAM", Bam), ("Amcache", Amcache), ("Shimcache", Shimcache), ("Hendelseslogger", Hendelseslogger), ("Brannmurlogg", Brannmurlogg), ("Fastvare", Fastvare), ("SRUM", Srum),
             ("Personvernlogg", Personvernlogg), ("UserAssist", UserAssist), ("Installasjonslogg", Installasjonslogg),
         })
         {
@@ -182,6 +182,52 @@ public sealed partial class Skanner
     {
         try { return new SecurityIdentifier(sid).Translate(typeof(NTAccount)).Value; }
         catch { return sid; }
+    }
+
+    // ---------- Shimcache (AppCompatCache) ----------
+
+    /// <summary>
+    /// Windows' kompatibilitetsliste over programfiler som er sett på PC-en, også slettede. Bare sti og endringstid leses.
+    /// Format (Windows 10/11): hode på 0x30 eller 0x34 byte, så oppføringer som starter med «10ts».
+    /// Kilde: https://www.mandiant.com/resources/blog/caching-out-the-val (AppCompatCache), SANS «Shimcache» (Windows 10-format).
+    /// </summary>
+    private void Shimcache()
+    {
+        const string sti = @"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache";
+        try
+        {
+            using var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(sti);
+            if (k?.GetValue("AppCompatCache") is not byte[] data) { Tilgangslogg.Logg("Register", $"HKLM\\{sti}", Utfall.IkkeFunnet, null); return; }
+            var n = LesShimcache(data);
+            Tilgangslogg.Logg("Register", $"HKLM\\{sti}", n < 0 ? Utfall.HoppetOver : Utfall.Lest, n < 0 ? "ukjent format" : $"{n} programstier, bare sti og tid");
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Register", $"HKLM\\{sti}", e); }
+    }
+
+    /// <summary>Leser oppføringene og lager funn for stier som treffer en produktregel. Returnerer antall, eller -1 ved ukjent format.</summary>
+    internal int LesShimcache(byte[] d)
+    {
+        if (d.Length < 0x38) return -1;
+        int pos = BitConverter.ToInt32(d, 0);
+        if (pos is not (0x30 or 0x34) || pos + 4 > d.Length || Encoding.ASCII.GetString(d, pos, 4) != "10ts") return -1;
+        int antall = 0;
+        while (pos + 14 <= d.Length && Encoding.ASCII.GetString(d, pos, 4) == "10ts" && antall < 5000)
+        {
+            int storrelse = BitConverter.ToInt32(d, pos + 8);
+            int lengde = BitConverter.ToUInt16(d, pos + 12);
+            int start = pos + 14;
+            if (storrelse <= 0 || storrelse > d.Length - pos || lengde > 2048 || start + lengde + 8 > d.Length) break;
+            var programsti = Encoding.Unicode.GetString(d, start, lengde);
+            long ft = BitConverter.ToInt64(d, start + lengde);
+            antall++;
+            pos += 12 + storrelse;
+            var regel = FinnRegel(programsti);
+            if (regel == null) continue;
+            DateTime? t = ft > 0 && ft < DateTime.MaxValue.ToFileTimeUtc() ? DateTime.FromFileTimeUtc(ft).ToLocalTime() : null;
+            // Windows 10/11 fører ikke sikkert om fila ble kjørt, bare at den er sett: derfor ingen «Brukt før»
+            FraRegel(regel, "Windows' kompatibilitetsliste (Shimcache)", $"Shimcache: {programsti} · sett av Windows{(t != null ? $" · filen endret {Tid(t)}" : "")}");
+        }
+        return antall;
     }
 
     // ---------- Amcache ----------
