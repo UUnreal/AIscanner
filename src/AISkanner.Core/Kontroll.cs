@@ -395,6 +395,15 @@ public sealed partial class Skanner
         mo.Moteopptak();
         Sjekk(mo._funn.Values.Any(f => f.Advarsler.Any(a => a.StartsWith("Mulig møteopptaker")) && f.Hvor.Contains("Windows' personvernlogg")) && mo._funn.Count == forMo,
             "program med mikrofon og AI ble ikke møteopptaker, eller mikrofon alene ga funn");
+        // G3: AccessVBOM gir advarsel på agentfunn, aldri et eget funn
+        var vb = new Skanner(regler);
+        var claude = regler.Produkter.First(p => p.Navn == "Claude Code");
+        var cf = vb.FraRegel(claude, "Installert program", null!);
+        var vanlig = vb.LeggTil("Notatprogram", "Skygge-AI", Risiko.Gul, "x", "Installert program", null);
+        lock (vb._vbom) vb._vbom.Add("Word (HKCU)");
+        int forVb = vb._funn.Count;
+        vb.Vbom();
+        Sjekk(cf.Advarsler.Any(a => a.Contains("AccessVBOM")) && !vanlig.Advarsler.Any(a => a.Contains("AccessVBOM")) && vb._funn.Count == forVb, "AccessVBOM ga ikke advarsel på agenten, eller ga eget funn");
         var pa = Agent(true); var ikkePa = Agent(false);
         Sjekk(pa != null && pa.Advarsler.Any(a => a.StartsWith("Personlig agent") && a.Contains("IMAP")) && pa.Risiko == Risiko.Rod && pa.Bevisniva != Bevisniva.Spor
               && ikkePa != null && !ikkePa.Advarsler.Any(a => a.StartsWith("Personlig agent")), "program mot både AI og e-post ble ikke personlig agent, eller bare AI ble det");

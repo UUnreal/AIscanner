@@ -40,6 +40,14 @@ Kategoriene er:
 - Blindsoner som alltid sies: møtebots og agenter i skyen (sjekkes i Teams- og M365-administrasjonen), og opptak av
   lyden PC-en spiller av.
 
+- G3: Office med «stol på tilgang til VBA-prosjektmodellen» (AccessVBOM) gir advarsel på AI-agenter: de kan styre
+  Word, Excel og Outlook gjennom makroer. Aldri et eget funn.
+- G4: AutoHotkey-skript i oppstartsmappen sjekkes for agenter og AI-kall; AutoHotkey mot AI er «ukjent skript».
+- G5: PowerShell-loggen (4104), bare når IT har slått på skriptblokklogging: skript som har kalt en AI-tjeneste. Bare
+  tjenestenavn og tid; skriptteksten vises og lagres aldri.
+- Ikke bygget: G1 (UI Automation) krever å lese modullista inne i andre programmer (minnetilgang), som reglene forbyr.
+  G2 (Agent Workspace) venter på at kontonavn og registernøkler er bekreftet på Windows 26H2.
+
 ### Ikke testet på Windows
 - Alt over er testet i `--kontroll` med falske nettbilder og falske personvernlogger, ikke på Windows. Testlaben
   har ikke e-post, mikrofon eller agenter som styrer skjermen.

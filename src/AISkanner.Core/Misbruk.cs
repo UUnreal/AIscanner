@@ -258,6 +258,7 @@ public sealed partial class Skanner
         if (Directory.Exists(gemini)) foreach (var d in Mapper(gemini).Take(300)) SjekkSkill(d, "Gemini CLI (utvidelse)");
         HfOgOllama();
         AutostartMedFlagg();
+        PowerShellLogg();
         NpxForgiftning();
         KjenteFiler();
         InstruksjonerINedlastinger();
@@ -576,6 +577,37 @@ public sealed partial class Skanner
         return svar.Distinct().ToList();
     }
 
+    /// <summary>
+    /// G5: PowerShell-loggen (hendelse 4104), bare når IT har slått på skriptblokklogging. Bare AI-tjenestens navn og tiden tas
+    /// med; skriptteksten sammenlignes og kastes, vises og lagres aldri. Kilde: learn.microsoft.com about_Logging_Windows.
+    /// </summary>
+    private void PowerShellLogg()
+    {
+        if (!Plattform.ErWindows) return;
+        const string logg = "Microsoft-Windows-PowerShell/Operational";
+        using (var p = Tilgangslogg.Nokkel(Microsoft.Win32.Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"))
+            if (!(p?.GetValue("EnableScriptBlockLogging") is int på && på == 1)) { Tilgangslogg.Logg("Hendelseslogg", logg, Utfall.IkkeFunnet, "skriptblokklogging er ikke slått på av IT; ikke lest"); return; }
+#if NETFRAMEWORK
+        var treff = new List<string>();
+        try
+        {
+            var q = new System.Diagnostics.Eventing.Reader.EventLogQuery(logg, System.Diagnostics.Eventing.Reader.PathType.LogName, "*[System[EventID=4104]]") { ReverseDirection = true };
+            using var leser = new System.Diagnostics.Eventing.Reader.EventLogReader(q);
+            int n = 0;
+            for (var h = leser.ReadEvent(); h != null && n < 2000 && treff.Count < 20; h = leser.ReadEvent(), n++)
+                using (h)
+                    if (h.Properties.Count > 2 && h.Properties[2].Value is string tekst && AiAdresseITekst(tekst) is { } tj)
+                        treff.Add($"PowerShell-loggen (4104): skript kaller {tj} · {Nar(h.TimeCreated ?? DateTime.Now, "PowerShell-loggen")}");
+            Tilgangslogg.Logg("Hendelseslogg", logg, Utfall.Lest, $"{n} skriptblokker sjekket; bare AI-tjenestens navn tas med, skriptene vises aldri");
+        }
+        catch (UnauthorizedAccessException) { Tilgangslogg.Logg("Hendelseslogg", logg, Utfall.Nektet, "krever administrator"); return; }
+        catch (Exception e) { Tilgangslogg.Feil("Hendelseslogg", logg, e); return; }
+        if (treff.Count == 0) return;
+        var f = Spor("PowerShell-skript har kalt AI", "Windows' PowerShell-logg viser skript som har kalt en AI-tjeneste. Bare tjenesten og tiden vises, aldri skriptet.", null);
+        foreach (var t in treff.Distinct()) f.Detalj(t);
+#endif
+    }
+
     private void AutostartMedFlagg()
     {
         var linjer = new List<(string Tekst, DateTime? T)>();
@@ -598,7 +630,7 @@ public sealed partial class Skanner
         }
         var filer = new List<string>();
         filer.AddRange(Plattform.Filer(Utvid(@"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"), "*", 0)
-            .Where(x => x.Extension.ToLowerInvariant() is ".bat" or ".cmd" or ".ps1" or ".vbs").Select(x => x.FullName));
+            .Where(x => x.Extension.ToLowerInvariant() is ".bat" or ".cmd" or ".ps1" or ".vbs" or ".ahk").Select(x => x.FullName));
         var dok = Bruker.Dokumenter();
         if (!string.IsNullOrEmpty(dok))
             foreach (var m in new[] { "WindowsPowerShell", "PowerShell" })

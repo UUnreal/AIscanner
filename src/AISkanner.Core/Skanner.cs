@@ -185,6 +185,7 @@ public sealed partial class Skanner
         catch (Exception e) when (e is not OperationCanceledException) { Debug.WriteLine($"Trafikk feilet: {e.Message}"); }
         VaktTilFunn();
         Moteopptak();
+        Vbom();
         SlaSammenSpor();
         Ordne();
         Risikoregler.Bruk(_funn.Values, _regler);
@@ -259,6 +260,7 @@ public sealed partial class Skanner
                 KortlivedeProsesser(nb);
                 VaktTilFunn();
                 Moteopptak();
+                Vbom();
                 SlaSammenSpor();
                 Ordne();
                 Risikoregler.Bruk(_funn.Values, _regler);

@@ -357,7 +357,7 @@ public sealed partial class Skanner
             catch { }
         }
         // Skriptverter (PowerShell, Windows Script, mshta) er signert av Microsoft, men koden de kjører er ikke det: regnes som ukjent
-        bool skript = prosess.ToLowerInvariant() is "powershell" or "pwsh" or "wscript" or "cscript" or "mshta";
+        bool skript = prosess.ToLowerInvariant() is "powershell" or "pwsh" or "wscript" or "cscript" or "mshta" or "autohotkey" or "autohotkey64" or "autohotkeyu64";
         if (skript) produkt = prosess;
         bool kjent = !skript && KjenteUtgivere.Any(u => utgiver.Inneholder(u));
         bool fraNedlasting = sti != null && ErRisikabelPlass(sti);
