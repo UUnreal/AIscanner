@@ -237,6 +237,7 @@ public sealed partial class Skanner
         (new(@"github|gitlab|bitbucket|\bgit\b", RegexOptions.IgnoreCase), "kode og Git"),
         (new(@"postgres|mysql|sqlite|mongo|redis|supabase|database|\bsql|snowflake|bigquery", RegexOptions.IgnoreCase), "databaser"),
         (new(@"gmail|outlook|slack|teams|discord|\bmail|e-?post|telegram|whatsapp", RegexOptions.IgnoreCase), "e-post og chat"),
+        (new(@"calendar|kalender|caldav|ms-?graph|microsoft-?graph|ms365|microsoft-?365", RegexOptions.IgnoreCase), "kalender og avtaler"),
         (new(@"\baws\b|azure|\bgcp\b|cloudflare|vercel|kubernetes|kubectl|docker|terraform", RegexOptions.IgnoreCase), "sky og drift"),
         (new(@"notion|confluence|jira|linear|asana|gdrive|google-?drive|sharepoint|onedrive|atlassian", RegexOptions.IgnoreCase), "dokumenter og saker"),
         (new(@"stripe|paypal|payment|betaling", RegexOptions.IgnoreCase), "betaling"),
@@ -285,6 +286,12 @@ public sealed partial class Skanner
             var tilgang = McpTilgang(s);
             foreach (var t in tilgang) kart[t] = kart.TryGetValue(t, out var n) ? n + 1 : 1;
             f.Detalj($"Fil: {sti} · MCP-server «{s.Navn}» · {hva}{(tilgang.Count > 0 ? $" · tilgang: {string.Join(", ", tilgang)}" : "")}{(endret != null ? " · endret " + Nar(endret.Value, "endringstid på fil") : "")}");
+        }
+        // Personlig agent: leser e-post eller kalender og kan handle selv (kommandoer eller nettleser). Kan sende e-post og lage avtaler uten deg.
+        if ((kart.ContainsKey("e-post og chat") || kart.ContainsKey("kalender og avtaler")) && (kart.ContainsKey("kjører kommandoer") || kart.ContainsKey("styrer en nettleser")))
+        {
+            f.Risiko = Risiko.Rod;
+            f.Advarsel("Personlig agent: har tilgang til e-post eller kalender og kan handle selv (kommandoer eller nettleser). Kan sende e-post og lage avtaler uten deg.");
         }
         if (kart.Count > 0) f.ErstattDetalj($"Tilgangskart for {program}:", $"Tilgangskart for {program}: {string.Join(", ", kart.OrderByDescending(x => x.Value).Select(x => $"{x.Key} ({x.Value})"))}");
         f.Bruk = $"{servere.Count} MCP-server{(servere.Count == 1 ? "" : "e")} i {program}.";

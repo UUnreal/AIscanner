@@ -464,6 +464,15 @@ public sealed partial class Skanner
         var mcp = McpTilgang(new McpServer("fs", "npx", "-y @modelcontextprotocol/server-filesystem C:\\Users", null));
         var mcp2 = McpTilgang(new McpServer("desktop-commander", "npx", "-y @wonderwhy-er/desktop-commander", null));
         Sjekk(mcp.SequenceEqual(new[] { "filer" }) && mcp2.Contains("kjører kommandoer"), $"MCP-tilgangskart ga {string.Join("/", mcp)} og {string.Join("/", mcp2)}");
+        // Personlig agent: e-post/kalender + kan handle selv er rødt; kalender alene og kunnskapsgraf er ikke
+        Sjekk(McpTilgang(new McpServer("google-calendar", "npx", "-y @cocal/google-calendar-mcp", null)).Contains("kalender og avtaler")
+              && !McpTilgang(new McpServer("memory", "npx", "-y @modelcontextprotocol/server-memory knowledge-graph", null)).Contains("kalender og avtaler"), "kalender i MCP kjennes ikke igjen, eller kunnskapsgraf ble kalender");
+        var pa = new Skanner(regler);
+        pa.VurderMcp(@"C:\Users\a\.cursor\mcp.json", "Cursor", new List<McpServer> { new("gmail", "npx", "-y @gongrzhe/server-gmail-autoauth-mcp", null), new("desktop-commander", "npx", "-y @wonderwhy-er/desktop-commander", null) }, false);
+        pa.VurderMcp(@"C:\Users\a\.gemini\settings.json", "Gemini CLI", new List<McpServer> { new("google-calendar", "npx", "-y @cocal/google-calendar-mcp", null) }, false);
+        var paf = pa.FunnHittil();
+        Sjekk(paf.Any(f => f.Navn == "MCP-servere: Cursor" && f.Risiko == Risiko.Rod && f.Advarsler.Any(a => a.StartsWith("Personlig agent")))
+              && paf.Any(f => f.Navn == "MCP-servere: Gemini CLI" && !f.Advarsler.Any(a => a.StartsWith("Personlig agent"))), "personlig agent (e-post + kommandoer) ble ikke rød, eller kalender alene ble det");
         var av = new Regelsett { LesKommandolinjer = false };
         Sjekk(!Kommandolinje.Tillatt(av, out _), "IT kunne ikke slå av lesing av kommandolinjer");
         return (ok, alle);
