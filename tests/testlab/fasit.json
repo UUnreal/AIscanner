@@ -1,0 +1,19 @@
+{
+  "_info": "Fasit for testlaben. «med»: hver linje MÅ finnes (navn = regex mot funnets navn, tekst = må stå i funnet), med en av fargene og nivåene. «ren»: maskinen før laben installerte noe skal ikke ha bekreftede/sannsynlige funn i disse fargene eller ukjent AI. Laben blir rød ved avvik.",
+  "ren": { "forbudtFarge": ["rod", "gul"] },
+  "med": [
+    { "id": "Ollama-program og server", "navn": "^Ollama$", "farge": ["gul", "rod"] },
+    { "id": "llama.cpp-server åpen på 0.0.0.0", "navn": "llama\\.cpp", "farge": ["rod"] },
+    { "id": "Kinesisk Ollama-modell qwen2.5", "navn": "^AI-modell: qwen2\\.5:0\\.5b$", "farge": ["rod"] },
+    { "id": "Kinesisk Ollama-modell deepseek-r1", "navn": "^AI-modell: deepseek-r1:1\\.5b$", "farge": ["rod"] },
+    { "id": "Vestlig Ollama-modell llama3.2", "navn": "^AI-modell: llama3\\.2:1b$", "farge": ["gul"] },
+    { "id": "Omdøpt kinesisk GGUF med feil endelse", "navn": "DeepSeek R1 Distill Qwen", "tekst": "notater-final.dat", "farge": ["rod"] },
+    { "id": "Omdøpt kinesisk GGUF med nøytralt navn", "navn": "DeepSeek R1 Distill Qwen", "tekst": "assistent.gguf", "farge": ["rod"] },
+    { "id": "Agent Claude Code", "navn": "^Claude Code$", "farge": ["rod", "gul"] },
+    { "id": "Agent Codex", "navn": "Codex", "farge": ["rod", "gul"] },
+    { "id": "Agent Gemini CLI", "navn": "^Gemini CLI$", "farge": ["rod", "gul"] },
+    { "id": "Python-prosjekt med AI-pakker", "navn": "prosjekt-ai", "farge": ["rod", "gul"] },
+    { "id": "llamafile med modell inni", "navn": ".", "tekst": "smollm.llamafile", "krever": "llamafile" },
+    { "id": "WSL1 med Ollama-modellmappe", "navn": "WSL|Linux", "krever": "wsl" }
+  ]
+}

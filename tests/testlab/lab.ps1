@@ -89,6 +89,30 @@ $server = Get-ChildItem "$env:USERPROFILE\llama.cpp" -Recurse -Filter llama-serv
 if ($server -and $gguf) { Start-Process $server.FullName -ArgumentList '-m', "`"$(Join-Path $dl $gguf[0].Name)`"", '--host', '0.0.0.0', '--port', '8080' -WindowStyle Hidden; Notér 'llama.cpp-server' @('llama.cpp', 'llama-server') 'server på 0.0.0.0:8080' }
 Ferdig
 
+Steg 'llamafile: ekte llamafile-program med en liten GGUF inni, startet som server'
+# Ekte llamafile = Mozillas program (MZqFpD) med modellen i en ukomprimert zip bakerst. Bygges av laben, startes på 8081.
+try {
+  $lrel = Invoke-RestMethod 'https://api.github.com/repos/Mozilla-Ocho/llamafile/releases/latest' -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
+  $la = $lrel.assets | Where-Object name -match '^llamafile-[\d.]+$' | Select-Object -First 1
+  $lf = "$dl\smollm.llamafile.exe"
+  Invoke-WebRequest $la.browser_download_url -OutFile $lf
+  $liten = Get-ChildItem "$env:USERPROFILE\.cache\huggingface\hub" -Recurse -Filter *.gguf | Sort-Object Length | Select-Object -First 1
+  python -I -c "import sys,zipfile; z=zipfile.ZipFile(sys.argv[1],'a',zipfile.ZIP_STORED); z.write(sys.argv[2],'smollm.gguf'); z.close()" $lf $liten.FullName
+  Start-Process $lf -ArgumentList '--server', '--nobrowser', '--port', '8081', '-m', 'smollm.gguf' -WindowStyle Hidden
+  Notér 'llamafile' @('smollm.llamafile') 'llamafile med GGUF inni, server på 8081'
+} catch { "::warning::llamafile ikke testet: $_" }
+Ferdig
+
+Steg 'WSL1 med Ubuntu og en Ollama-modellmappe (bare hvis maskinen tillater det)'
+# WSL2 virker ikke på GitHub-maskinene. WSL1 prøves; går det ikke, står WSL som «ikke testet» i rapporten.
+$wslOk = $false
+try {
+  $j = Start-Job { wsl --install -d Ubuntu --web-download --no-launch 2>&1; wsl --set-default-version 1 2>&1; ubuntu install --root 2>&1; wsl -d Ubuntu -u root -- sh -c 'mkdir -p /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2 && echo "{}" > /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2/135m' 2>&1 }
+  if (Wait-Job $j -Timeout 600) { Receive-Job $j | Select-Object -Last 5; $wslOk = (wsl -d Ubuntu -- echo ok 2>$null) -eq 'ok' } else { Stop-Job $j }
+} catch { }
+if ($wslOk) { Notér 'WSL1 Ubuntu med Ollama-modellmappe' @('WSL') 'WSL1 med Ollama-modellmappe' } else { '::warning::WSL ikke testet: kunne ikke settes opp på maskinen' }
+Ferdig
+
 Steg 'Python med transformers som holder en modell i minnet'
 $py = "import time; from transformers import AutoModel; AutoModel.from_pretrained('hf-internal-testing/tiny-random-gpt2'); time.sleep(3600)"
 Start-Process python -ArgumentList '-c', "`"$py`"" -WindowStyle Hidden
@@ -154,6 +178,29 @@ foreach ($f in $farlige) {
 }
 L ""; L "Farlige testmodeller riktig: $farligOk av $($farlige.Count)"
 
+# ---------- Fasit: det som MÅ finnes, med riktig nivå og farge, og ren maskin uten AI-funn ----------
+$feil = [System.Collections.Generic.List[string]]::new()
+if ($farligOk -ne $farlige.Count) { $feil.Add("Farlige testmodeller: $farligOk av $($farlige.Count)") }
+$fasit = Get-Content tests/testlab/fasit.json -Raw | ConvertFrom-Json
+L ""; L "## Fasit"; L ""; L "| | Forventet | Nivå | Farge | Skanneren |"; L "|---|---|---|---|---|"
+foreach ($x in $fasit.med) {
+  if ($x.krever -eq 'wsl' -and -not $wslOk) { L "| ⏭️ | $($x.id) | | | ikke testet (WSL kunne ikke settes opp) |"; continue }
+  if ($x.krever -eq 'llamafile' -and -not ($installert | Where-Object Navn -eq 'llamafile')) { L "| ⏭️ | $($x.id) | | | ikke testet (llamafile kunne ikke lastes ned) |"; continue }
+  $hit = $funnTekst | Where-Object { $_.F.navn -match $x.navn -and (-not $x.tekst -or $_.T.IndexOf($x.tekst, [StringComparison]::OrdinalIgnoreCase) -ge 0) } | Select-Object -First 1
+  $okFarge = $hit -and (-not $x.farge -or $hit.F.risiko -in @($x.farge))
+  $okNiva = $hit -and (-not $x.niva -or $hit.F.bevisniva -in @($x.niva))
+  $ok = $okFarge -and $okNiva
+  if (-not $ok) { $feil.Add("$($x.id): " + $(if (-not $hit) { 'ikke funnet' } else { "fikk $($hit.F.risiko)/$($hit.F.bevisniva), ventet $($x.farge -join '|')/$($x.niva -join '|')" })) }
+  L "| $(if ($ok) { '✅' } else { '❌' }) | $($x.id) | $($x.niva -join '/') | $($x.farge -join '/') | $(if ($hit) { "$($hit.F.risiko) · $($hit.F.bevisniva) · $($hit.F.navn)" } else { 'ikke funnet' }) |"
+}
+# Ren maskin: ingen bekreftede eller sannsynlige AI-funn som er gule, røde eller ukjente (grønn AI fra Windows/leverandør er lov)
+$renFeil = @($ren.funn | Where-Object { $_.bevisniva -ne 'Spor' -and ($_.risiko -in @($fasit.ren.forbudtFarge) -or $_.type -like 'Ukjent*') })
+foreach ($f in $renFeil) { $feil.Add("Ren maskin: falskt funn $($f.risiko) $($f.navn) ($($f.type))") }
+L ""; L "Fasit: $(if ($feil.Count) { "❌ $($feil.Count) feil" } else { '✅ alt riktig' })"; $feil | ForEach-Object { L "- $_" }
+L ""; L "Ikke testet her (ærlig): LM Studio (installasjonen kan ikke skriptes trygt), WSL2, Docker Desktop, GPU/NPU, Recall/Copilot, Windows 26H2, fart."
+L ""; L "## Alle funn (navn · type · farge · nivå)"
+foreach ($f in $med.funn) { L "- $($f.navn) · $($f.type) · $($f.risiko) · $($f.bevisniva)" }
+
 L ""; L "## Ren maskin (før laben installerte noe): $(@($ren.funn).Count) funn"
 L "Alt her er enten ekte AI som GitHub har på maskinen, eller falske funn. Hvert funn må ha bevis."
 foreach ($f in $ren.funn) { L "- **$($f.risiko)** $($f.navn) · $($f.type) · $((@($f.hvor) + @($f.detaljer) | Select-Object -First 2) -join ' · ')" }
@@ -177,4 +224,5 @@ Select-String -Path "$Ut\spor.txt" -Pattern '^## ' | ForEach-Object { "- $($_.Li
 # Hele rapporten og de første sporene i loggen (artefakter kan ikke alltid lastes ned)
 Get-Content "$Ut\rapport.md"
 $etter.Keys | ForEach-Object { $k = $_; $ny = @(Compare-Object @($for[$k] | Where-Object { $_ }) @($etter[$k] | Where-Object { $_ }) | Where-Object SideIndicator -eq '=>' | ForEach-Object InputObject); "SPOR $k ($($ny.Count))"; $ny | Where-Object { $_ -notmatch '\\(pip|npm-cache|_cacache|__pycache__|site-packages|node_modules)\\' } | Select-Object -First 25 | ForEach-Object { "  $_" } }
+if ($feil.Count) { $feil | ForEach-Object { "::error::$_" }; exit 1 }
 exit 0
