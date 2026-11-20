@@ -22,7 +22,7 @@ public static class Kategoristatus
         ("F", "AI-apper og kodeagenter", new[] { "Sjekker installerte programmer", "Ser etter AI som kjører nå", "Ser etter AI-verktøy" }, "Cody, Qodo, Blackbox og Augment kjennes ikke igjen."),
         ("G", "Agenter og MCP", new[] { "Ser etter ukjente AI-spor", "Sjekker hva som starter av seg selv" }, null),
         ("H", "RAG og vektordatabaser", new[] { "Spør lokale programmer", "Leter gjennom filene" }, "Vektorfiler på disk kjennes ikke igjen på innholdet."),
-        ("I", "Innebygd AI i programmer", new[] { "Leter etter AI som leverandører har lagt inn", "Sjekker registeret" }, "AI-motorer i programmer som ikke kjører, finnes bare via leverandørlista."),
+        ("I", "Innebygd AI i programmer", new[] { "Leter etter AI som leverandører har lagt inn", "Sjekker registeret" }, "AI-motorer finnes på filnavn i programmappene også når programmet ikke kjører. Motorer med uvanlig filnavn eller bygd inn i selve exe-fila finnes ikke."),
         ("J", "Nettleser-AI", new[] { "Sjekker utvidelser i nettleserne", "Ser etter AI-nettsteder", "Sjekker innebygd AI i Chrome og Edge", "Ser etter AI-modeller som nettsider kjører" }, null),
         ("K", "Windows' egen AI", new[] { "Sjekker registeret", "Sjekker installerte programmer" }, "Copilot Studio, AI Builder og Designer kjennes ikke igjen."),
         ("L", "AI fra maskinvareprodusenter", new[] { "Leter etter AI som leverandører har lagt inn" }, null),

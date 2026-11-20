@@ -181,6 +181,7 @@ public sealed partial class Skanner
         Sjekk(ffs.Modeller.Count == 1 && ffs.Modeller[0].Modell.Type?.StartsWith("LoRA") == true, $"lite LoRA-tillegg i .paddleocr ble ikke funnet alene ({ffs.Modeller.Count} funn)");
 
         // Motorer, pakker, MCP, Docker og Windows' egen AI
+        Sjekk(new[] { "tensorflowlite_c.dll", "libvosk.dll", "stable-diffusion.dll", "TNN.dll" }.All(n => Motorer.Any(x => x.Mønster.IsMatch(n))) && !Motorer.Any(x => x.Mønster.IsMatch("vosk-ui.dll") || x.Mønster.IsMatch("stable.dll") || x.Mønster.IsMatch("tnnplugin.dll")), "nye AI-motorer (LiteRT, Vosk, stable-diffusion.cpp, TNN) kjennes ikke igjen, eller feil fil traff");
         Sjekk(Motorer.Any(x => x.Mønster.IsMatch("paddle_inference.dll") && x.Motor.Contains("Baidu")) && Motorer.Any(x => x.Mønster.IsMatch("nvinfer_10.dll")) && Motorer.Any(x => x.Mønster.IsMatch("ncnn.dll")), "nye AI-motorer (Paddle, TensorRT, ncnn) kjennes ikke igjen");
         var vill = sk.LeggTilMiljo(Path.Combine(mappe, "angrep", ".venv", "Lib", "site-packages"), new SortedSet<string> { "villager", "openai" }, true, "Python");
         Sjekk(vill.Risiko == Risiko.Rod && vill.Advarsler.Any(a => a.StartsWith("Angrepsverktøy med AI")), "Villager ble ikke rødt angrepsverktøy");

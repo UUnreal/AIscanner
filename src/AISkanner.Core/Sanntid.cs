@@ -33,6 +33,12 @@ public sealed partial class Skanner
         (new(@"^MNN\.dll$", RegexOptions.IgnoreCase), "MNN (Alibaba)"),
         (new(@"^ncnn\.dll$", RegexOptions.IgnoreCase), "ncnn (Tencent)"),
         (new(@"^mindspore-lite\.dll$", RegexOptions.IgnoreCase), "MindSpore Lite (Huawei)"),
+        // Kilder: ai.google.dev/edge/litert (tensorflowlite_c), github.com/alphacep/vosk-api (libvosk), github.com/leejet/stable-diffusion.cpp
+        // (stable-diffusion.dll i Windows-utgivelsene), github.com/Tencent/TNN
+        (new(@"^(lib)?tensorflowlite(_c|_gpu_delegate)?\.dll$", RegexOptions.IgnoreCase), "LiteRT/TensorFlow Lite"),
+        (new(@"^libvosk\.dll$", RegexOptions.IgnoreCase), "Vosk (tale)"),
+        (new(@"^stable-diffusion\.dll$", RegexOptions.IgnoreCase), "stable-diffusion.cpp"),
+        (new(@"^TNN\.dll$", RegexOptions.IgnoreCase), "TNN (Tencent)"),
     };
 
     private static readonly string[] KjenteUtgivere = { "Microsoft", "Google", "Adobe", "NVIDIA", "Intel", "Apple", "Mozilla", "Zoom", "AMD", "Qualcomm" };
