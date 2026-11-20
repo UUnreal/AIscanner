@@ -497,6 +497,13 @@ public sealed partial class Skanner
             sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
         f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
         foreach (var a in angrep) f.Advarsel($"Angrepsverktøy med AI: {a}.");
+        // Installert pakke i et miljø: pakkebehandlerens egen oppføring er et eget spor ved siden av mappa (bevisstandarden)
+        f.LeggTilHvor("Installert pakke");
+        foreach (var p in _regler.PythonPakker.Concat(_regler.NodePakker).Where(p => p.Fare != null && pakker.Contains(p.Navn)))
+        {
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"{p.Fare}: pakken {p.Navn}.");
+        }
         foreach (var r in pakker.Where(RedTeamPakker.Contains)) f.Merknad($"Verktøy for å teste AI mot angrep (red team): {r}.");
         foreach (var k in pakker.Where(KinesiskePakker.ContainsKey))
         {

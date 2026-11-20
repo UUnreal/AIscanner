@@ -38,6 +38,7 @@ public static class Risikoregler
         "Laget av ",
         "Angrepsmodell:",
         "Angrepsverktøy med AI",
+        "Deepfake eller stemmekloning",
     };
 
     /// <summary>Faresignaler som gjør en godkjent AI gul: den er ikke installert slik IT har godkjent den.</summary>

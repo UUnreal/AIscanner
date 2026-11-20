@@ -33,6 +33,15 @@ public sealed partial class Skanner
             Sjekk(r.TestPositiv.Length > 0 && treffer(r.TestPositiv), $"{hvem}: positiv test «{r.TestPositiv}» treffer ikke regelen (skygget eller feil)");
             Sjekk(r.TestNegativ.Length > 0 && !treffer(r.TestNegativ), $"{hvem}: negativ test «{r.TestNegativ}» treffer regelen (for bred)");
         }
+        // Deepfake og stemmekloning (C) er røde, også når IT har godkjent dem; vanlige programmer gir ikke treff
+        var py = s.LeggTilMiljo(Path.Combine(Path.GetTempPath(), "dfk", "site-packages"), new SortedSet<string>(StringComparer.OrdinalIgnoreCase) { "f5_tts", "torch" }, false, "Python");
+        var ff = s.FinnRegel("facefusion");
+        var fp = ff == null ? null : s.FraRegel(ff, "Installert program", @"Program: C:\facefusion\facefusion.exe");
+        Risikoregler.Bruk(new[] { py, fp! }.Where(x => x != null), new Regelsett { GodkjentAi = new() { "FaceFusion" } });
+        Sjekk(py.Risiko == Risiko.Rod && py.Bevisniva == Bevisniva.Sannsynlig && py.RisikoGrunn?.Contains("Deepfake") == true, "Python-miljø med f5_tts ble ikke rødt med «Deepfake eller stemmekloning»");
+        Sjekk(fp != null && fp.Risiko == Risiko.Rod && fp.RisikoGrunn?.Contains("Deepfake") == true, "FaceFusion ble ikke rødt, også når IT har godkjent det");
+        Sjekk(new[] { "paint.net", "photoshop.exe", "audacity.exe", "obs64.exe" }.All(x => s.FinnRegel(x)?.Fare == null), "vanlig bilde-, lyd- eller videoprogram ble deepfake");
+
         // Status per kategori A–T (§5T): alltid 20, nektet tilgang → ACCESS_DENIED, ingen WSL og Docker → NOT_APPLICABLE
         var nektet = new List<(string, string, Utfall, int)> { ("Leter gjennom filene etter AI-modeller og AI-kode", "Mappe", Utfall.Nektet, 3), ("Spør lokale programmer om de er AI", "Port", Utfall.Lest, 1) };
         var ingen = new[] { new Sjekkstatus("Docker", "kjører ikke", 0), new Sjekkstatus("WSL", "ikke installert", 0) };

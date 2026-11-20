@@ -17,6 +17,8 @@ public abstract class Regelmeta
     [JsonPropertyName("fpMerknad")] public string FpMerknad { get; set; } = "";
     [JsonPropertyName("testPositiv")] public string TestPositiv { get; set; } = "";
     [JsonPropertyName("testNegativ")] public string TestNegativ { get; set; } = "";
+    /// <summary>Rødt faresignal regelen alltid gir, f.eks. «Deepfake eller stemmekloning». Godkjenning fjerner det ikke.</summary>
+    [JsonPropertyName("fare")] public string? Fare { get; set; }
 }
 
 /// <summary>AI-bibliotek (Python-import eller Node-pakke). Agent = lager agenter som kan handle på egen hånd.</summary>

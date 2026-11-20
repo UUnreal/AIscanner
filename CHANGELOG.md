@@ -33,6 +33,14 @@ Kategoriene er:
 - NVD-teksten sier «nevnt i X CVE-er, ikke sjekket mot din versjon».
 - Nye felt per funn: bevistype, lokal/sky/hybrid/ukjent og begrensning (skjerm, rapport, JSON, CSV).
 
+### Lagt til (deepfake og stemmekloning, plan PR 4)
+- Røde regler for FaceFusion, Deep-Live-Cam, roop, DeepFaceLab/DeepFaceLive, LivePortrait, Wav2Lip, SadTalker,
+  RVC/Applio, GPT-SoVITS, XTTS/Coqui, OpenVoice, F5-TTS, Fish Speech og Chatterbox (programmer, mapper og Python-pakker).
+  Faresignalet «Deepfake eller stemmekloning» blir stående rødt også når IT har godkjent verktøyet.
+- Piper (tale fra tekst med ferdige stemmer) er gul: den kloner ikke stemmer.
+- Installert AI-pakke i et Python- eller Node-miljø er Sannsynlig (mappa og pakkebehandlerens oppføring).
+- Ikke lagt inn: kjennetegn på tensornavn for deepfake-modeller (ingen verifisert kilde).
+
 ### Lagt til (status per kategori, plan PR 3)
 - Datagrunnlag, rapporten og revisjonsloggen viser status for hver av de 20 kategoriene A–T: SCANNED, PARTIAL,
   NOT_SCANNED, ACCESS_DENIED, TIME_LIMIT, UNSUPPORTED eller NOT_APPLICABLE, regnet ut av hva sjekkene fikk lest.

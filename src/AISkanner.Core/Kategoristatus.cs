@@ -16,7 +16,7 @@ public static class Kategoristatus
     {
         ("A", "AI-modeller", new[] { "Leter gjennom filene" }, "Endret metadata sjekkes ikke mot tensorstrukturen."),
         ("B", "Modellformater", new[] { "Leter gjennom filene" }, "Paddle, MindSpore, MNN, Core ML, TensorRT-motor, SavedModel og JAX kjennes bare på endelsen eller ikke."),
-        ("C", "Bilde, lyd og video", new[] { "Leter gjennom filene", "Ser etter AI som kjører nå" }, "Deepfake, stemmekloning og det meste av bilde-, lyd- og video-AI kjennes ikke igjen."),
+        ("C", "Bilde, lyd og video", new[] { "Leter gjennom filene", "Ser etter AI som kjører nå" }, "Deepfake og stemmekloning kjennes på programmer, mapper og pakker, ikke på tensornavn. Mye bilde-, lyd- og video-AI kjennes ikke igjen."),
         ("D", "Kjøremotorer", new[] { "Ser etter AI som kjører nå", "Leter gjennom filene" }, "TensorFlow.js og WebNN kjennes ikke igjen. En motor alene er bare Mulig spor."),
         ("E", "Utviklermiljø", new[] { "Leter gjennom filene", "Ser etter AI-verktøy" }, "Avhengighetsfiler (requirements, package.json, låsefiler) og Conda-miljøer leses ikke."),
         ("F", "AI-apper og kodeagenter", new[] { "Sjekker installerte programmer", "Ser etter AI som kjører nå", "Ser etter AI-verktøy" }, "Cody, Qodo, Blackbox og Augment kjennes ikke igjen."),

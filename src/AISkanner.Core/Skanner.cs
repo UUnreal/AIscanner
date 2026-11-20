@@ -340,8 +340,12 @@ public sealed partial class Skanner
         _ => Tilstand.Finnes,
     };
 
-    private Funn FraRegel(Produkt p, string hvor, string detalj) =>
-        LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt);
+    private Funn FraRegel(Produkt p, string hvor, string detalj)
+    {
+        var f = LeggTil(p.Navn, p.Kategori, RisikoTekst.Fra(p.Risiko), p.HvorforEnkelt ?? p.Hvorfor, hvor, detalj, p, p.Enkelt);
+        if (p.Fare != null) f.Advarsel($"{p.Fare}: {p.Navn}.");
+        return f;
+    }
 
     internal static IEnumerable<string> Mapper(string sti) =>
         Tilgangslogg.Prov("Mappe", sti, () => Directory.EnumerateDirectories(sti).ToList(), new List<string>());
