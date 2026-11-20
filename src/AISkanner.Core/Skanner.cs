@@ -90,7 +90,13 @@ public sealed partial class Skanner
         while (_prosjektOppsett.TryTake(out _)) { }
         TomMisbruk();
         TomAngrep();
-        lock (Blindsoner) Blindsoner.Clear();
+        lock (Blindsoner)
+        {
+            Blindsoner.Clear();
+            // Det ingen skanner på PC-en kan se: sies alltid, så ingen tror det er sjekket
+            Blindsoner.Add("Møtebots og AI-agenter i skyen (bots som blir med i Teams-møter, Copilot-agenter, notatbots) kjører hos leverandøren og kan ikke ses fra PC-en. IT sjekker dem i Teams-administrasjonen (apper og bots) og i Microsoft 365-administrasjonen (integrerte apper og agenter).");
+            Blindsoner.Add("Opptak av lyden PC-en spiller av (de andre i et møte) logges ikke av Windows. Bare mikrofon, kamera og skjermopptak står i personvernloggen.");
+        }
         var klokke = Stopwatch.StartNew();
         // Med administrator: slå på Windows' egne datatellere mens søket pågår, så vi kan måle ekte datamengde
         Tilgangslogg.Sjekk.Value = "Ser hvor AI sender data";
