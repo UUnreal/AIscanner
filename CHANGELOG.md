@@ -30,6 +30,7 @@ Kategoriene er:
   kommandoer etter sammenslåingen. Funnet er ført i `.gitleaksignore` (testdata, ingen ekte hemmelighet).
   2.54.0 ble aldri bygget som utgivelse; 2.54.1 har samme innhold.
 - Kompilatoradvarsel (mulig null) i CSV-eksporten.
+- Nettsiden (findhiddenai.com) beskriver det nye i 2.54: modeller for bilde, lyd og video kjent på innholdet, WSL, AI-pakker i prosjekter, deepfake, pakker med lignende navn, Vakt med lastet modell og maskert kommando, og bevisnivåene.
 
 ## [2.54.0] - 2026-11-20 (ikke utgitt, se 2.54.1)
 
