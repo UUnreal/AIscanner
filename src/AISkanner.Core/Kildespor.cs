@@ -99,6 +99,32 @@ public sealed partial class Skanner
         ("graphicsCaptureProgrammatic", "skjermopptak"), ("graphicsCaptureWithoutBorder", "skjermopptak"),
     };
 
+    private readonly List<(string Program, string Hva, DateTime Tid)> _opptak = new();
+
+    /// <summary>
+    /// Møteopptaker: et program som har brukt mikrofonen, kameraet eller tatt opp skjermen (personvernloggen) og som også har
+    /// et AI-funn (samme programfil i funnet, eller AI fra samme mappe). Mikrofon alene er ikke AI og vises ikke. Bare tidspunkt, aldri lyd.
+    /// </summary>
+    internal void Moteopptak()
+    {
+        List<(string Program, string Hva, DateTime Tid)> liste;
+        lock (_opptak) liste = _opptak.ToList();
+        if (liste.Count == 0) return;
+        List<Funn> alle;
+        lock (_funn) alle = _funn.Values.Where(f => !f.Kategori.StartsWith("Nettleser")).ToList();
+        foreach (var g in liste.GroupBy(x => x.Program, StringComparer.OrdinalIgnoreCase))
+        {
+            var mappe = Path.GetDirectoryName(g.Key);
+            var f = alle.FirstOrDefault(x => { lock (x) return x.Detaljer.Any(d => d.IndexOf(g.Key, StringComparison.OrdinalIgnoreCase) >= 0); })
+                    ?? (mappe != null && _mappeFunn.TryGetValue(mappe, out var mf) ? mf : null);
+            if (f == null) continue;
+            var hva = string.Join(", ", g.Select(x => x.Hva).Distinct());
+            f.LeggTilHvor("Windows' personvernlogg");
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"Mulig møteopptaker: har brukt {hva} (sist {Nar(g.Max(x => x.Tid), "personvernloggen i Windows")}) og har AI. Det som blir sagt eller vist, kan sendes til AI.");
+        }
+    }
+
     /// <summary>Programnavnet i personvernloggen: pakkenavn for apper, ellers stien med # i stedet for \.</summary>
     internal static string PersonvernProgram(string nokkel, bool upakket) => upakket ? nokkel.Replace('#', '\\') : nokkel;
 
@@ -128,10 +154,11 @@ public sealed partial class Skanner
                     lest++;
                     var program = PersonvernProgram(upakket ? navn.Substring(12) : navn, upakket);
                     var regel = FinnRegel(program);
-                    if (regel == null) continue;
                     DateTime? start = Filtid(Tall(app.GetValue("LastUsedTimeStart")));
                     DateTime? stopp = Filtid(Tall(app.GetValue("LastUsedTimeStop")));
                     if (start == null && stopp == null) continue;
+                    // Ukjent program: huskes bare i minnet. Blir et signal når samme program også har et AI-funn (møteopptaker).
+                    if (regel == null) { if (upakket) lock (_opptak) _opptak.Add((program, hva, (stopp ?? start)!.Value)); continue; }
                     bool naa = start != null && (stopp == null || stopp < start);
                     var nar = naa ? $"bruker {hva} nå (startet {Nar(start!.Value, "personvernloggen i Windows")})" : $"brukte {hva} sist {Nar((stopp ?? start)!.Value, "personvernloggen i Windows")}";
                     var f = FraRegel(regel, "Windows' personvernlogg", $"Personvernloggen: {program} {nar}");
@@ -144,7 +171,7 @@ public sealed partial class Skanner
                 }
             }
             Tilgangslogg.Logg("Register", $@"{hiveNavn}\{rot}", lest > forHive ? Utfall.Lest : Utfall.IkkeFunnet,
-                $"{lest - forHive} programmer med tid for mikrofon, kamera og skjermopptak; bare AI-programmer vises, tidene for andre programmer brukes ikke");
+                $"{lest - forHive} programmer med tid for mikrofon, kamera og skjermopptak; bare AI-programmer vises; tidene for andre programmer brukes bare til å se om de også har AI (møteopptaker), og vises ikke");
         }
     }
 

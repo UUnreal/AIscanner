@@ -13,6 +13,20 @@ public sealed partial class Skanner
 
     private static readonly string[] OfficeApper = { "Word", "Excel", "Outlook", "PowerPoint", "OneNote", "MS Project", "Visio" };
 
+    private readonly SortedSet<string> _vbom = new();
+
+    /// <summary>AccessVBOM på + AI-agent på PC-en: agenten kan styre Office gjennom makroer. Advarsel på agentfunnene.</summary>
+    internal void Vbom()
+    {
+        string[] apper;
+        lock (_vbom) apper = _vbom.ToArray();
+        if (apper.Length == 0) return;
+        List<Funn> agenter;
+        lock (_funn) agenter = _funn.Values.Where(f => f.Kategori == "Skygge-AI (agent)" || f.Advarsler.Any(a => a.StartsWith("Personlig agent"))).ToList();
+        foreach (var f in agenter)
+            f.Advarsel($"Office lar andre programmer skrive og kjøre makroer ({string.Join(", ", apper)}: AccessVBOM). Agenten kan styre Word, Excel og Outlook den veien.");
+    }
+
     private void OfficeTillegg()
     {
         if (!Plattform.ErWindows) return;
@@ -31,6 +45,15 @@ public sealed partial class Skanner
                         int last = t?.GetValue("LoadBehavior") is int l ? l : -1;
                         VurderOfficeTillegg(app, navn, besk, id, $@"{rotNavn}\{sti}\{id}", last >= 0 ? ((last & 1) != 0 ? "lastes når Office starter" : "lastes ikke nå") : null);
                     }
+                }
+        // G3: «Stol på tilgang til VBA-prosjektmodellen» (AccessVBOM = 1): andre programmer kan skrive og kjøre makroer i Office.
+        // Bare verdien leses. Blir en advarsel på AI-agenter som finnes (Vbom), aldri et eget funn. Kilde: learn.microsoft.com (AccessVBOM)
+        foreach (var (rot, rotNavn) in new[] { (Bruker.Hkcu, "HKCU"), (Registry.LocalMachine, "HKLM") })
+            foreach (var del in new[] { "", @"Policies\" })
+                foreach (var app in new[] { "Word", "Excel", "PowerPoint", "Outlook" })
+                {
+                    using var k = Tilgangslogg.Nokkel(rot, $@"SOFTWARE\{del}Microsoft\Office\16.0\{app}\Security");
+                    if (k?.GetValue("AccessVBOM") is int v && v == 1) lock (_vbom) _vbom.Add($"{app} ({rotNavn})");
                 }
         // Nettbaserte tillegg: manifestene Office har hentet ned (DisplayName og Description i XML)
         var wef = Utvid(@"%LOCALAPPDATA%\Microsoft\Office\16.0\Wef");

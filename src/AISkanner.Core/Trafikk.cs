@@ -223,6 +223,22 @@ public sealed partial class Skanner
             }
         }
 
+        // Personlig agent: samme program er koblet til både en AI-tjeneste og e-post eller kalender nå (to målte signaler).
+        // Bare adresse og port, aldri innhold. E-postprogrammer fra Microsoft, Google og Mozilla regnes ikke.
+        var epost = new Dictionary<int, SortedSet<string>>();
+        foreach (var t in nb.Tilkoblinger)
+            if (!Inn(t) && EpostMal(oppslag[t].Vert, t.FjernPort) is { } e)
+                (epost.TryGetValue(t.Pid, out var ss) ? ss : epost[t.Pid] = new SortedSet<string>()).Add(e);
+        foreach (var (f, liste) in mal)
+        {
+            if (f.Kategori.StartsWith("Nettleser") || !liste.Values.Any(m => m.Tjeneste != null) || !_funnPid.TryGetValue(f, out var pider)) continue;
+            var hva = pider.Where(epost.ContainsKey).Where(pid => !(nb.Prosesser.TryGetValue(pid, out var pp) && EpostProgram(pp.Sti))).SelectMany(pid => epost[pid]).Distinct().ToList();
+            if (hva.Count == 0) continue;
+            f.LeggTilHvor("Koblet til e-post/kalender nå");
+            f.Risiko = Risiko.Rod;
+            f.Advarsel($"Personlig agent: koblet til både AI og {string.Join(", ", hva)} nå. Kan lese og sende e-post eller lage avtaler, og sende innholdet til AI.");
+        }
+
         // Navn Windows nylig har slått opp. Viser AI som er brukt selv om forbindelsen er lukket, også i privat nettlesing.
         var nylig = new Dictionary<AiNettsted, SortedSet<string>>();
         // Vern mot falske spor: AI-skanner før 2.30.0 slo selv opp alle kjente AI-adresser via Windows, og de ligger
@@ -340,7 +356,10 @@ public sealed partial class Skanner
             }
             catch { }
         }
-        bool kjent = KjenteUtgivere.Any(u => utgiver.Inneholder(u));
+        // Skriptverter (PowerShell, Windows Script, mshta) er signert av Microsoft, men koden de kjører er ikke det: regnes som ukjent
+        bool skript = prosess.ToLowerInvariant() is "powershell" or "pwsh" or "wscript" or "cscript" or "mshta" or "autohotkey" or "autohotkey64" or "autohotkeyu64";
+        if (skript) produkt = prosess;
+        bool kjent = !skript && KjenteUtgivere.Any(u => utgiver.Inneholder(u));
         bool fraNedlasting = sti != null && ErRisikabelPlass(sti);
         if (!kjent || fraNedlasting)
         {
@@ -348,7 +367,8 @@ public sealed partial class Skanner
             var u = Spor($"Ukjent program snakker med AI: {produkt}",
                 $"Et program uten kjent utgiver har forbindelse til {tj.Navn}. Vi vet ikke hva det er eller hva det sender.", null);
             u.Detalj($"Program som kjører: {sti ?? prosess} (PID {pid}) · utgiver: {(string.IsNullOrWhiteSpace(utgiver) ? "ukjent" : utgiver.Trim())}");
-            if (fraNedlasting) u.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
+            if (skript) u.Advarsel($"Skript ({prosess}) med forbindelse til {tj.Navn}. Kan være en skjult agent; skriptet vises ikke.");
+            else if (fraNedlasting) u.Advarsel("Kjører fra en nedlastings- eller midlertidig mappe, ikke fra en vanlig installasjon.");
             else u.Advarsel($"Ukjent program med forbindelse til {tj.Navn}.");
             HuskMappe(sti, u);
             return u;
@@ -360,6 +380,23 @@ public sealed partial class Skanner
         f.Detalj($"Program som kjører: {sti ?? prosess} (PID {pid})");
         HuskMappe(sti, f);
         return f;
+    }
+
+    /// <summary>E-post og kalender: Microsoft Graph/Outlook, Gmail og Google Calendar API, eller IMAP/POP/SMTP på standardporter. Kilde: IANA-portregisteret, learn.microsoft.com/graph, developers.google.com.</summary>
+    internal static string? EpostMal(string? vert, int port)
+    {
+        var v = vert?.ToLowerInvariant();
+        if (v is "graph.microsoft.com" or "outlook.office.com" or "outlook.office365.com" or "substrate.office.com") return "Microsoft 365 (e-post, kalender, Teams)";
+        if (v is "gmail.googleapis.com" or "imap.gmail.com" or "smtp.gmail.com" or "calendar-json.googleapis.com") return "Gmail eller Google-kalender";
+        return port switch { 993 or 143 => "e-post (IMAP)", 995 or 110 => "e-post (POP)", 465 or 587 => "e-post (SMTP)", _ => null };
+    }
+
+    /// <summary>Vanlige e-postprogrammer (Microsoft, Google, Mozilla) er ikke personlige agenter selv om de bruker AI.</summary>
+    private static bool EpostProgram(string? sti)
+    {
+        if (sti == null) return false;
+        try { var c = FileVersionInfo.GetVersionInfo(sti).CompanyName ?? ""; return c.Inneholder("Microsoft") || c.Inneholder("Google") || c.Inneholder("Mozilla"); }
+        catch { return false; }
     }
 
     /// <summary>Porter som nesten bare brukes av lokale AI-servere. Andre porter teller bare når programmet er kjent AI.</summary>

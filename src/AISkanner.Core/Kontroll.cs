@@ -361,6 +361,53 @@ public sealed partial class Skanner
         Sjekk(s2._funn.Count == 0, "et vanlig program med samme IP som ChatGPT ble regnet som AI (IP-en kan deles på CDN-et)");
         Sjekk(treff != null && treff.Trafikk.Any(m => m.KildeIp.Contains("192.168.1.10") && m.Prosesser.Any(p => p.Pid == 7001 && p.Fil == @"C:\Prog\chrome.exe")),
             "kilde-IP og programfil ble ikke tatt vare på for forbindelsen");
+        // Personlig agent: samme ukjente program mot AI og IMAP/Graph er rødt og Sannsynlig; bare AI er det ikke
+        Funn? Agent(bool epost)
+        {
+            var s = new Skanner(regler);
+            var nb = new NettBilde { Prosesser = { [7003] = ("minagent", @"C:\Users\a\minagent\minagent.exe") }, Lyttere = new() };
+            var ai = IPAddress.Parse("203.0.113.20");
+            nb.Dns[ai] = new List<string> { "api.openai.com" };
+            nb.Tilkoblinger.Add(new Tilkobling(7003, IPAddress.Parse("192.168.1.10"), 52010, ai, 443));
+            if (epost) nb.Tilkoblinger.Add(new Tilkobling(7003, IPAddress.Parse("192.168.1.10"), 52011, IPAddress.Parse("203.0.113.21"), 993));
+            s.Trafikk(nb);
+            return s._funn.Values.FirstOrDefault(f => f.Navn.StartsWith("Ukjent program snakker med AI"));
+        }
+        // PowerShell (signert av Microsoft) mot en AI-tjeneste er et ukjent skript, ikke «kjent utgiver»
+        var psS = new Skanner(regler);
+        var psNb = new NettBilde { Prosesser = { [7004] = ("powershell", null) }, Lyttere = new() };
+        var psAi = IPAddress.Parse("203.0.113.22");
+        psNb.Dns[psAi] = new List<string> { "api.openai.com" };
+        psNb.Tilkoblinger.Add(new Tilkobling(7004, IPAddress.Parse("192.168.1.10"), 52012, psAi, 443));
+        psS.Trafikk(psNb);
+        Sjekk(psS._funn.Values.Any(f => f.Navn == "Ukjent program snakker med AI: powershell" && f.Advarsler.Any(a => a.StartsWith("Skript (powershell)"))), "PowerShell mot AI ble ikke et ukjent skript");
+        Sjekk(psS.AiAdresseITekst("Invoke-RestMethod https://api.openai.com/v1/chat/completions -Body $x") != null && psS.AiAdresseITekst("Invoke-RestMethod https://example.com/api") == null, "AI-kall i skript kjennes feil igjen");
+        // Møteopptaker: ukjent program med mikrofonbruk og AI-funn blir rødt; mikrofon uten AI gir ingenting
+        var mo = new Skanner(regler);
+        var moNb = new NettBilde { Prosesser = { [7005] = ("opptak", @"C:\Users\a\opptak\opptak.exe") }, Lyttere = new() };
+        var moAi = IPAddress.Parse("203.0.113.23");
+        moNb.Dns[moAi] = new List<string> { "api.openai.com" };
+        moNb.Tilkoblinger.Add(new Tilkobling(7005, IPAddress.Parse("192.168.1.10"), 52013, moAi, 443));
+        mo.Trafikk(moNb);
+        mo._opptak.Add((@"C:\Users\a\opptak\opptak.exe", "mikrofonen", DateTime.Now.AddMinutes(-5)));
+        mo._opptak.Add((@"C:\Users\a\zoom\zoom.exe", "mikrofonen", DateTime.Now.AddMinutes(-5)));
+        int forMo = mo._funn.Count;
+        mo.Moteopptak();
+        Sjekk(mo._funn.Values.Any(f => f.Advarsler.Any(a => a.StartsWith("Mulig møteopptaker")) && f.Hvor.Contains("Windows' personvernlogg")) && mo._funn.Count == forMo,
+            "program med mikrofon og AI ble ikke møteopptaker, eller mikrofon alene ga funn");
+        // G3: AccessVBOM gir advarsel på agentfunn, aldri et eget funn
+        var vb = new Skanner(regler);
+        var claude = regler.Produkter.First(p => p.Navn == "Claude Code");
+        var cf = vb.FraRegel(claude, "Installert program", null!);
+        var vanlig = vb.LeggTil("Notatprogram", "Skygge-AI", Risiko.Gul, "x", "Installert program", null);
+        lock (vb._vbom) vb._vbom.Add("Word (HKCU)");
+        int forVb = vb._funn.Count;
+        vb.Vbom();
+        Sjekk(cf.Advarsler.Any(a => a.Contains("AccessVBOM")) && !vanlig.Advarsler.Any(a => a.Contains("AccessVBOM")) && vb._funn.Count == forVb, "AccessVBOM ga ikke advarsel på agenten, eller ga eget funn");
+        var pa = Agent(true); var ikkePa = Agent(false);
+        Sjekk(pa != null && pa.Advarsler.Any(a => a.StartsWith("Personlig agent") && a.Contains("IMAP")) && pa.Risiko == Risiko.Rod && pa.Bevisniva != Bevisniva.Spor
+              && ikkePa != null && !ikkePa.Advarsler.Any(a => a.StartsWith("Personlig agent")), "program mot både AI og e-post ble ikke personlig agent, eller bare AI ble det");
+        Sjekk(EpostMal("graph.microsoft.com", 443) != null && EpostMal("example.com", 443) == null && EpostMal(null, 587) == "e-post (SMTP)", "e-post- og kalenderadresser kjennes feil igjen");
         // DNS-bufferen fylt av en eldre skanners egne oppslag: brukes ikke som bevis
         var s3 = new Skanner(regler);
         var nb3 = new NettBilde { Lyttere = new() };
@@ -464,6 +511,15 @@ public sealed partial class Skanner
         var mcp = McpTilgang(new McpServer("fs", "npx", "-y @modelcontextprotocol/server-filesystem C:\\Users", null));
         var mcp2 = McpTilgang(new McpServer("desktop-commander", "npx", "-y @wonderwhy-er/desktop-commander", null));
         Sjekk(mcp.SequenceEqual(new[] { "filer" }) && mcp2.Contains("kjører kommandoer"), $"MCP-tilgangskart ga {string.Join("/", mcp)} og {string.Join("/", mcp2)}");
+        // Personlig agent: e-post/kalender + kan handle selv er rødt; kalender alene og kunnskapsgraf er ikke
+        Sjekk(McpTilgang(new McpServer("google-calendar", "npx", "-y @cocal/google-calendar-mcp", null)).Contains("kalender og avtaler")
+              && !McpTilgang(new McpServer("memory", "npx", "-y @modelcontextprotocol/server-memory knowledge-graph", null)).Contains("kalender og avtaler"), "kalender i MCP kjennes ikke igjen, eller kunnskapsgraf ble kalender");
+        var pa = new Skanner(regler);
+        pa.VurderMcp(@"C:\Users\a\.cursor\mcp.json", "Cursor", new List<McpServer> { new("gmail", "npx", "-y @gongrzhe/server-gmail-autoauth-mcp", null), new("desktop-commander", "npx", "-y @wonderwhy-er/desktop-commander", null) }, false);
+        pa.VurderMcp(@"C:\Users\a\.gemini\settings.json", "Gemini CLI", new List<McpServer> { new("google-calendar", "npx", "-y @cocal/google-calendar-mcp", null) }, false);
+        var paf = pa.FunnHittil();
+        Sjekk(paf.Any(f => f.Navn == "MCP-servere: Cursor" && f.Risiko == Risiko.Rod && f.Advarsler.Any(a => a.StartsWith("Personlig agent")))
+              && paf.Any(f => f.Navn == "MCP-servere: Gemini CLI" && !f.Advarsler.Any(a => a.StartsWith("Personlig agent"))), "personlig agent (e-post + kommandoer) ble ikke rød, eller kalender alene ble det");
         var av = new Regelsett { LesKommandolinjer = false };
         Sjekk(!Kommandolinje.Tillatt(av, out _), "IT kunne ikke slå av lesing av kommandolinjer");
         return (ok, alle);

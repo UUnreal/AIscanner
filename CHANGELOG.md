@@ -23,6 +23,37 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.55.0] - 2026-11-20
+
+### Lagt til (aktive agenter, M365 og møteopptak)
+- MCP: «kalender og avtaler» og «styrer skjermen og programmer» som egne tilganger. E-post eller kalender pluss
+  kommandoer, nettleser eller skjermstyring = rød «personlig agent».
+- Personlig agent målt i nettverket: samme program koblet til både en AI-tjeneste og e-post eller kalender
+  (Microsoft Graph/Outlook, Gmail, Google-kalender, IMAP/POP/SMTP) blir Sannsynlig og rødt. Bare adresse og port.
+  E-postprogrammer fra Microsoft, Google og Mozilla regnes ikke.
+- PowerShell, pwsh, wscript, cscript og mshta mot en AI-tjeneste er «ukjent skript», ikke «kjent utgiver». Oppstartsskript,
+  PowerShell-profil og Run-nøkler som kaller en AI-tjeneste vises (bare fil og tjeneste).
+- Agenter som styrer skjermen: UI-TARS Desktop (ByteDance), Agent S, Skyvern, Windows-Use; Windows-MCP i MCP-oppsett.
+- Møte-AI: Fathom, Jamie, MeetGeek, Notta (program) og Tactiq, Bluedot, Fathom, MeetGeek, Notta (nettleser).
+- Møteopptaker: program med mikrofon, kamera eller skjermopptak i Windows' personvernlogg og et AI-funn blir rødt.
+  Mikrofon alene vises ikke.
+- Blindsoner som alltid sies: møtebots og agenter i skyen (sjekkes i Teams- og M365-administrasjonen), og opptak av
+  lyden PC-en spiller av.
+
+- G3: Office med «stol på tilgang til VBA-prosjektmodellen» (AccessVBOM) gir advarsel på AI-agenter: de kan styre
+  Word, Excel og Outlook gjennom makroer. Aldri et eget funn.
+- G4: AutoHotkey-skript i oppstartsmappen sjekkes for agenter og AI-kall; AutoHotkey mot AI er «ukjent skript».
+- G5: PowerShell-loggen (4104), bare når IT har slått på skriptblokklogging: skript som har kalt en AI-tjeneste. Bare
+  tjenestenavn og tid; skriptteksten vises og lagres aldri.
+- Ikke bygget: G1 (UI Automation) krever å lese modullista inne i andre programmer (minnetilgang), som reglene forbyr.
+- G2: Windows' agentarbeidsområde vises som en linje i datagrunnlaget (på, av eller finnes ikke), og som blindsone når
+  den er på. Microsoft bekrefter at agentene får egne kontoer, men ikke hva kontoene heter. Registerverdien
+  (IsoEnvBroker\Enabled) er fra Elevenforum, så den gir aldri et funn. Testlaben kjører Windows Server, som ikke har funksjonen.
+
+### Ikke testet på Windows
+- Alt over er testet i `--kontroll` med falske nettbilder og falske personvernlogger, ikke på Windows. Testlaben
+  har ikke e-post, mikrofon eller agenter som styrer skjermen.
+
 ## [2.54.1] - 2026-11-20
 
 ### Rettet
