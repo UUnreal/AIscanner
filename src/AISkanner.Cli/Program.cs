@@ -216,6 +216,7 @@ static class Selvtest
 
         // Ukjent lokal AI-server skal merkes "Ukjent AI" og være rød (død gren rettet i v2.13.1)
         var server = new Funn { Navn = "Lokal AI-server (ukjent)", Kategori = "Lokal AI", Risiko = Risiko.Rod, Hvorfor = "x" };
+        server.Sterkt();   // svarte som en AI-tjeneste (bevisstandarden: bekreftet)
         Risikoregler.Bruk(new[] { server }, new Regelsett());
         Sjekk("lokal server: type = Ukjent AI", server.Type == "Ukjent AI", true);
         Sjekk("lokal server: forblir rød", server.Risiko == Risiko.Rod, true);
@@ -296,10 +297,11 @@ static class Selvtest
         var gin = Skanner.GinLinje.Match("[GIN] 2026/10/26 - 22:01:02 | 200 |  1.2345ms |    192.168.1.20 | POST     \"/api/chat\"");
         Sjekk("spor: Ollama-logglinje gir klientadresse", gin.Success && gin.Groups[3].Value == "192.168.1.20" && gin.Groups[5].Value == "/api/chat", true);
         var spor = new Funn { Navn = "MCP-servere: Test", Kategori = Skanner.SporKategori, Risiko = Risiko.Gronn, Hvorfor = "x" };
+        spor.Sterkt();   // lest fra innholdet i MCP-oppsettet
         Risikoregler.Bruk(new[] { spor }, new Regelsett { GodkjentAi = new() { "MCP-servere: Test" } });
         Sjekk("spor: alltid rødt, også når IT har godkjent navnet", spor.Risiko == Risiko.Rod && spor.Type == "Ukjent AI-spor", true);
         Sjekk("spor: rapporten sier aldri «angrep»", (Rapport.Tekst(new[] { spor }) + Rapport.Tekst(Array.Empty<Funn>())).IndexOf("angrep", StringComparison.OrdinalIgnoreCase) >= 0, false);
-        Sjekk("spor: tom rapport sier «fant ingen spor»", Rapport.Tekst(Array.Empty<Funn>()).Contains("fant ingen spor"), true);
+        Sjekk("spor: tom rapport sier «Mulig spor: ingen»", Rapport.Tekst(Array.Empty<Funn>()).Contains("Mulig spor: ingen"), true);
 
         // Misbruksspor: tellere og uttrekk som aldri tar med innhold
         Sjekk("misbruk: skjulte tegn telles (null-bredde, tag-tegn)", Skanner.TellSkjulte("a\u200Bb\uDB40\uDC41c\uFEFF") == 3, true);
