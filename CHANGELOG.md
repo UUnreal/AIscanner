@@ -23,7 +23,16 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
-## [2.54.0] - 2026-11-20
+## [2.54.1] - 2026-11-20
+
+### Rettet
+- Sikkerhetsjobben stoppet utgivelsen av 2.54.0: gitleaks reagerte på en falsk testnøkkel i testen for maskerte
+  kommandoer etter sammenslåingen. Funnet er ført i `.gitleaksignore` (testdata, ingen ekte hemmelighet).
+  2.54.0 ble aldri bygget som utgivelse; 2.54.1 har samme innhold.
+- Kompilatoradvarsel (mulig null) i CSV-eksporten.
+- Nettsiden (findhiddenai.com) beskriver det nye i 2.54: modeller for bilde, lyd og video kjent på innholdet, WSL, AI-pakker i prosjekter, deepfake, pakker med lignende navn, Vakt med lastet modell og maskert kommando, og bevisnivåene.
+
+## [2.54.0] - 2026-11-20 (ikke utgitt, se 2.54.1)
 
 ### Testet på virtuell Windows (CI-testlaben, windows-latest)
 - Bevisnivå i funnene for ekte Ollama, llama.cpp-server, llamafile, modeller (Kina, Russland, vestlige), Claude Code,

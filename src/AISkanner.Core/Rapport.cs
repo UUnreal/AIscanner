@@ -196,7 +196,7 @@ public static class Rapport
     /// </summary>
     public static string Csv(IReadOnlyList<Funn> liste, bool engelsk = false)
     {
-        string T(string s) => engelsk ? Engelsk.Til(s) : s;
+        string T(string s) => engelsk ? Engelsk.Til(s) ?? s : s;
         string C(string? v)
         {
             v = (v ?? "").Replace("\r", " ").Replace("\n", " ");
