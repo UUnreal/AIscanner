@@ -375,6 +375,8 @@ public sealed partial class Skanner
         public readonly List<(string Sti, long Lengde, ModellFormat.Modell Modell)> Modeller = new();
         public readonly Dictionary<string, SortedSet<string>> Motorer = new(StringComparer.OrdinalIgnoreCase);
         public readonly Dictionary<string, (SortedSet<string> Pakker, bool Agent, string Sprak)> Miljoer = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Avhengighetsfiler med AI-pakker (bare pakkenavn).</summary>
+        public readonly List<(string Fil, string Mappe, SortedSet<string> Pakker, bool Agent, string Sprak)> Avhengigheter = new();
         /// <summary>Filer der en farlig YARA-regel slo til.</summary>
         public readonly List<(string Sti, long Lengde, List<YaraRegler.Regel> Treff)> Farlige = new();
         /// <summary>Modellfiler som bare ligger i skyen (OneDrive), funnet på navn og størrelse. Innholdet lastes aldri ned.</summary>
@@ -486,19 +488,22 @@ public sealed partial class Skanner
 
         // Python- og Node-miljøer med AI
         foreach (var (sti, (pakker, agent, sprak)) in ff.Miljoer) LeggTilMiljo(sti, pakker, agent, sprak);
+        // Avhengighetsfiler: samme prosjekt som et miljø over gir samme funn, med fila som et ekstra spor
+        foreach (var (fil, mappe, pakker, agent, sprak) in ff.Avhengigheter) LeggTilMiljo(mappe, pakker, agent, sprak, fil);
     }
 
     /// <summary>Python- eller Node-prosjekt med AI. Angrepsverktøy og pakker fra Kina gjør det rødt, red team-verktøy får en merknad.</summary>
-    internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak)
+    internal Funn LeggTilMiljo(string sti, SortedSet<string> pakker, bool agent, string sprak, string? avhengighetsfil = null)
     {
         var angrep = pakker.Where(AngrepPakker.ContainsKey).Select(x => AngrepPakker[x]).ToList();
         var f = LeggTil($"{sprak}-prosjekt med AI: {Prosjektnavn(sti)}", "Skygge-AI (utvikling)", agent || angrep.Count > 0 ? Risiko.Rod : Risiko.Gul,
             angrep.Count > 0 ? "Angrepsverktøy med AI: lager og kjører angrep mot andre maskiner." : agent ? "Ukjent AI-agent: kode som kan handle på egen hånd med AI." : "Kode som bruker AI-biblioteker.",
-            sprak, $"Mappe: {sti} ({string.Join(", ", pakker)})");
+            sprak, avhengighetsfil != null ? $"Avhengighetsfil: {avhengighetsfil} ({string.Join(", ", pakker)})" : $"Mappe: {sti} ({string.Join(", ", pakker)})");
         f.Bruk = $"Bruker {string.Join(", ", pakker.Take(4))}{(pakker.Count > 4 ? " …" : "")}.";
         foreach (var a in angrep) f.Advarsel($"Angrepsverktøy med AI: {a}.");
         // Installert pakke i et miljø: pakkebehandlerens egen oppføring er et eget spor ved siden av mappa (bevisstandarden)
-        f.LeggTilHvor("Installert pakke");
+        // En avhengighetsfil sier bare at prosjektet skal bruke pakken, ikke at den er installert
+        f.LeggTilHvor(avhengighetsfil != null ? "Avhengighetsfil" : "Installert pakke");
         foreach (var p in _regler.PythonPakker.Concat(_regler.NodePakker).Where(p => p.Fare != null && pakker.Contains(p.Navn)))
         {
             f.Risiko = Risiko.Rod;
@@ -761,6 +766,7 @@ public sealed partial class Skanner
     private void SjekkFil(FileInfo fil, string mappe, FilFunn ff, long minLengde, long? malLengde = null)
     {
         if (fil.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) SjekkProsjektOppsett(fil);
+        if (Avhengighetsfil(fil.Name) is { } avh) SjekkAvhengighetsfil(fil, avh, ff);
         SjekkAgentfil(fil);
         var ext = fil.Extension.ToLowerInvariant();
         if (ext == ".dll")

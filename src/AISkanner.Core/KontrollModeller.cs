@@ -188,6 +188,24 @@ public sealed partial class Skanner
         Sjekk(ds.Risiko == Risiko.Rod && ds.Advarsler.Any(a => a.StartsWith("Laget av Alibaba i Kina")), "dashscope ble ikke rødt med Kina");
         var gr = sk.LeggTilMiljo(Path.Combine(mappe, "test", ".venv", "Lib", "site-packages"), new SortedSet<string> { "garak", "torch" }, false, "Python");
         Sjekk(gr.Risiko == Risiko.Gul && gr.Merknader.Any(a => a.Contains("red team")), "garak fikk ikke red team-merknad, eller ble rød");
+        // Avhengighetsfiler: bare pakkenavn, kommentarer og versjoner telles ikke
+        Sjekk(AvhengighetNavn("requirements.txt", "# openai i en kommentar\nlangchain-openai>=0.1 # x\n-r base.txt\nnumpy").SequenceEqual(new[] { "langchain-openai", "numpy" }), "requirements.txt leses feil (kommentar eller valg tatt med)");
+        Sjekk(AvhengighetNavn("pyproject.toml", "[project]\nname = \"openai\"\ndependencies = [\n  \"torch>=2\",\n]\n[tool.poetry.dependencies]\npython = \"^3.11\"\nllama-cpp-python = \"^0.3\"\n[tool.ruff]\nselect = [\"transformers\"]").SequenceEqual(new[] { "torch", "llama-cpp-python" }), "pyproject.toml leses feil (prosjektnavn eller annen seksjon tatt med)");
+        Sjekk(AvhengighetNavn("package.json", "{\"name\":\"openai\",\"scripts\":{\"openai\":\"x\"},\"devDependencies\":{\"@anthropic-ai/sdk\":\"1\"}}").SequenceEqual(new[] { "@anthropic-ai/sdk" }), "package.json leses feil");
+        Sjekk(AvhengighetNavn("uv.lock", "[[package]]\nname = \"openai\"\n[package.metadata]\nname = \"torch\"").SequenceEqual(new[] { "openai" }), "uv.lock leses feil");
+        Sjekk(AvhengighetNavn("environment.yml", "dependencies:\n  - python=3.11\n  - pip:\n    - Torch==2 # x").SequenceEqual(new[] { "python", "Torch" }), "environment.yml leses feil");
+        Sjekk(Avhengighetsfil("requirements-dev.txt") == "Python" && Avhengighetsfil("Pipfile") == "Python" && Avhengighetsfil("readme.txt") == null && Avhengighetsfil("tsconfig.json") == null, "avhengighetsfil kjennes ikke igjen på navnet");
+        Sjekk(AiPakker(new[] { "Llama.CPP", "numpy" }, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase) { ["llama_cpp"] = false }, true).Pakker.SequenceEqual(new[] { "llama_cpp" }), "Python-navn med - eller . kjennes ikke igjen");
+        var avhMappe = Path.Combine(mappe, "avh");
+        Directory.CreateDirectory(Path.Combine(avhMappe, "ai-prosjekt"));
+        Directory.CreateDirectory(Path.Combine(avhMappe, "vanlig"));
+        File.WriteAllText(Path.Combine(avhMappe, "ai-prosjekt", "requirements.txt"), "openai==1.0\n");
+        File.WriteAllText(Path.Combine(avhMappe, "vanlig", "requirements.txt"), "# openai\nrequests\n");
+        var ffa = new FilFunn();
+        new Skanner(regler).Gaa(avhMappe, 4, ffa, new HashSet<string>(), 20L * 1024 * 1024, Stopwatch.StartNew());
+        Sjekk(ffa.Avhengigheter.Count == 1 && ffa.Avhengigheter[0].Pakker.Contains("openai"), $"avhengighetsfil med AI ble ikke funnet, eller kommentaren ga funn ({ffa.Avhengigheter.Count})");
+        var avf = sk.LeggTilMiljo(Path.Combine(avhMappe, "ai-prosjekt"), new SortedSet<string> { "openai" }, false, "Python", Path.Combine(avhMappe, "ai-prosjekt", "requirements.txt"));
+        Sjekk(avf.Hvor.Contains("Avhengighetsfil") && !avf.Hvor.Contains("Installert pakke") && avf.Bevisniva == Bevisniva.Sannsynlig, "avhengighetsfil ga feil spor eller bevisnivå");
         Sjekk(AngrepMcp.IsMatch("hexstrike-ai python3 hexstrike_mcp.py") && !AngrepMcp.IsMatch("filesystem npx @modelcontextprotocol/server-filesystem"), "MCP-regelen for angrepsverktøy treffer feil");
         Sjekk(ErAiBilde("ai/smollm2:latest") && ErAiBilde("docker/model-runner:latest") && !ErAiBilde("aiden/app:1"), "Docker Model Runner-bilder kjennes ikke igjen, eller feil bilde traff");
         Sjekk(Mappenavn(@"\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\blobs\sha256-" + new string('a', 64)) == "i Linux (WSL)", "modell i WSL vises ikke som Linux (WSL)");

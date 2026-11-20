@@ -231,7 +231,9 @@ public sealed partial class Skanner
             return;
         }
         var navn = Path.GetFileName(mappe);
-        if (LeverandorHopp.Contains(navn) && (!Fullt || AntivirusMappe(navn))) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: AntivirusMappe(navn) ? "antivirusets egne filer, røres ikke" : "mappenavn som hoppes over av regel (buffer, logger, oppdateringer)"); return; }
+        // Poetry legger prosjektmiljøene sine i pypoetry\Cache\virtualenvs: ikke buffer, så de leses
+        bool poetry = navn == "Cache" && Path.GetFileName(Path.GetDirectoryName(mappe)) == "pypoetry";
+        if (LeverandorHopp.Contains(navn) && !poetry && (!Fullt || AntivirusMappe(navn))) { Tilgangslogg.TellMappe(mappe, Utfall.HoppetOver, detalj: AntivirusMappe(navn) ? "antivirusets egne filer, røres ikke" : "mappenavn som hoppes over av regel (buffer, logger, oppdateringer)"); return; }
         if (navn is "site-packages" or "dist-packages") { Miljo(mappe, PythonAi, "Python", ff); return; }
         if (navn == "node_modules") { Miljo(mappe, NodeAi, "Node", ff); return; }
         FileSystemInfo[] innhold;
