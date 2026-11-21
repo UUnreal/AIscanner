@@ -29,7 +29,7 @@ Kategoriene er:
 
 - **Ekte navn på Windows-apper:** når pakken bare peker inn i resources.pri («ms-resource:»), slår Windows opp det ekte visningsnavnet (SHLoadIndirectString, bare lesing). Virker ikke for pakker som ikke er installert for brukeren; da brukes pakke-ID-en som før.
 - **Programmer fra PC-produsenten deles opp:** mapper som Program Files\Lenovo samlet alt under ett navn. Nå får hvert program sitt ekte produktnavn fra et program signert av produsenten, og blir egen rad.
-- **GGUF uten lesbart navn:** mangler navnet i modellfila eller er det uleselig, står det «navn ikke lesbart» (med familie bare når den er kjent fra innholdet). Filnavnet kan være endret og brukes ikke som navn.
+- **GGUF uten lesbart navn:** mangler navnet i modellfila eller er det uleselig, står det «navn ikke lesbart» med familie (bare når den er kjent fra innholdet) og en kort modell-ID, så ulike modeller ikke slås sammen. Filnavnet kan være endret og brukes ikke som navn.
 - **Personvernerklæringen:** Store-navnet findhiddenai, ny dato og bunntekst.
 
 Ikke testet på Windows: bygget og `--kontroll` i CI (virtuell Windows). resources.pri-oppslaget og Lenovo-delingen må bekreftes på en ekte PC.

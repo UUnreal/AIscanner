@@ -930,7 +930,7 @@ public sealed partial class Skanner
         var ekteNavn = Lesbar(m.Navn) ? m.Navn : null;
         bool uleselig = kilde == null && ekteNavn == null && !ollamaBlob && m.Format.Contains("GGUF");
         var navn = kilde ?? ekteNavn
-                   ?? (uleselig ? (id.Familie != null ? $"navn ikke lesbart ({id.Familie.Navn})" : "navn ikke lesbart")   // bare familie fra innholdet, ikke fra filnavnet
+                   ?? (uleselig ? "navn ikke lesbart" + (string.Join(", ", new[] { id.Familie?.Navn, Kortid(id.Sha256 ?? id.Fingeravtrykk) }.Where(x => x != null)) is { Length: > 0 } t ? $" ({t})" : "")   // familie bare fra innholdet; ID-en holder ulike modeller hver for seg
                    : id.FamilieTekst != null && (ollamaBlob || Regex.IsMatch(filnavn, @"^[0-9a-f]{16,}$|^(model|weights|out|output|checkpoint)", RegexOptions.IgnoreCase))
                        ? $"uten navn ({id.FamilieTekst})" : ollamaBlob ? "Ollama-modell" : filnavn);
         bool farligPlass = ErRisikabelPlass(sti);
@@ -1029,6 +1029,8 @@ public sealed partial class Skanner
             f.Advarsel($"Laget av {hf.Utgiver} i {IpLand.Navn(hf.Land!)} (høyrisikoland). Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
         }
     }
+
+    private static string? Kortid(string? id) => id == null ? null : "ID " + id.Substring(0, Math.Min(8, id.Length)).ToLowerInvariant();
 
     /// <summary>Et navn fra modellfila som kan vises: har bokstaver og ingen styretegn eller ødelagte tegn.</summary>
     internal static bool Lesbar(string? navn) =>
