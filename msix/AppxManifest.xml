@@ -40,7 +40,7 @@
     </Application>
   </Applications>
   <Capabilities>
-    <!-- Bare oppslag i NVD (produktnavn). Ingenting annet sendes. -->
+    <!-- Bare DNS-oppslag av kjente AI-tjenester. Ingenting sendes ut. -->
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>

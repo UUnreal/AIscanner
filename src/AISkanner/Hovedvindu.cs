@@ -20,8 +20,6 @@ public sealed class Hovedvindu : Form
     private Skanner? _skanner;
     private bool _soker;
     private CancellationTokenSource? _lyttStopp;
-    private int _revisjonAntall;
-    private CancellationTokenSource? _nvdStopp;
     // Språk: følger Windows til brukeren trykker på et flagg. Lagres ikke mellom kjøringer.
     private bool _engelsk = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("nb" or "nn" or "no");
     // Revisjonslogg: av til brukeren velger Ja på startskjermen. Da skrives én ny fil per søk, aldri over en gammel.
@@ -31,7 +29,6 @@ public sealed class Hovedvindu : Form
     private bool _vist;
     private readonly bool _mork = MorkModus();
     private double _sekunder;
-    private string _nvdStatus = "av";
     private readonly string[] _args;
 
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -229,16 +226,16 @@ public sealed class Hovedvindu : Form
         if (type is "sok" or "admin" && m.TryGetProperty("fullt", out var fu)) _fullt = fu.ValueKind == JsonValueKind.True;
         if (type == "sok" && !_soker)
         {
-            // Historikk og sikkerhetshull er alltid med. Bare IT kan slå dem av med --uten-historikk / --uten-nvd.
-            await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
+            // Historikk er alltid med. Bare IT kan slå den av med --uten-historikk.
+            await SokAsync(!_args.Contains("--uten-historikk"));
         }
         else if (type == "lagre") Lagre();
         else if (type == "logg" && _skanner != null && !_soker) SendLogg();
         else if (type == "admin" && !_soker)
         {
             // Allerede administrator: søk med en gang. Ellers starter programmet på nytt via Windows sin godkjenning (UAC).
-            if (Nettverk.ErAdmin()) await SokAsync(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
-            else StartSomAdmin(!_args.Contains("--uten-nvd"), !_args.Contains("--uten-historikk"));
+            if (Nettverk.ErAdmin()) await SokAsync(!_args.Contains("--uten-historikk"));
+            else StartSomAdmin(!_args.Contains("--uten-historikk"));
         }
         else if (type == "vis" && m.TryGetProperty("sti", out var sti)) VisIUtforsker(sti.GetString());
         else if (type == "folg" && m.TryGetProperty("id", out var fid) && fid.TryGetInt32(out var id))
@@ -261,10 +258,9 @@ public sealed class Hovedvindu : Form
         }
     }
 
-    private async Task SokAsync(bool nvd, bool historikk)
+    private async Task SokAsync(bool historikk)
     {
         _soker = true;
-        _nvdStopp?.Cancel();
         _lyttStopp?.Cancel();
         StoppAlleFolg();
         StoppNettverk();
@@ -272,7 +268,6 @@ public sealed class Hovedvindu : Form
         {
             var klokke = System.Diagnostics.Stopwatch.StartNew();
             _skanner = new Skanner(_regler, historikk) { MedAgentlogger = !_args.Contains("--uten-agentlogger"), LytteSekunder = LytteSekunder(_args), LyttIBakgrunnen = true, Fullt = _fullt };
-            // Sikkerhetshull slås opp etter at resultatet vises, så søket ikke venter på nettet
             _revisjonSti = null;
             // Progress<int> sender tilbake til UI-tråden; søkesirkelen viser 0–100 % fra faktisk fremdrift
             var prosent = new Progress<int>(p => Send(new { type = "prosent", p }));
@@ -291,11 +286,10 @@ public sealed class Hovedvindu : Form
             // Startes i bakgrunnen, så søket ikke venter på den
             _vaktStart ??= Task.Run(() => Vakt.Start(aktiv, Kommandolinje.Tillatt(_regler, out _), Array.Empty<string>()));
             _ = _vaktStart.ContinueWith(t => { if (t.Status == TaskStatus.RanToCompletion) aktiv.Vakt = _vakt = t.Result; }, TaskScheduler.Default);
-            _resultat = await Task.Run(() => _skanner.KjorAsync(false, prosent: prosent));
+            _resultat = await Task.Run(() => _skanner.KjorAsync(prosent: prosent));
             _ = LagLogg();
             fremdrift.Stop();
             _sekunder = klokke.Elapsed.TotalSeconds;
-            _nvdStatus = nvd ? "sjekker" : "av";
             _vist = true;
             // Lytter vi fortsatt på nettverket, skrives revisjonsloggen når lyttingen er ferdig, med alt som ble sett
             if (_revisjon && !_skanner.LytterNa) SkrivRevisjon(null);
@@ -310,31 +304,6 @@ public sealed class Hovedvindu : Form
         finally { _soker = false; }
         var skanner = _skanner!;
         if (skanner.LytterNa) _ = LyttFerdigAsync(skanner);
-        if (!nvd) return;
-        // Et nytt søk stopper oppslagene fra forrige
-        var stopp = _nvdStopp = new CancellationTokenSource();
-        try
-        {
-            await Nvd.SjekkAsync(_resultat, null, stopp.Token,
-                f => Send(new { type = "nvd", id = _resultat.IndexOf(f), merk = f.Advarsler.Skip(1).Concat(f.Merknader).Select(x => _engelsk ? Engelsk.Til(x) : x).ToList() }));
-            _nvdStatus = "ferdig";
-            Send(new { type = "nvdFerdig" });
-            // NVD-oppslagene kommer etter søket: de legges til sist i revisjonsloggen, med ny kontrollsum
-            // Er loggen ikke skrevet ennå (lyttingen går fortsatt), kommer oppslagene med når den skrives.
-            if (_revisjonSti is { } revisjonSti && _skanner == skanner)
-            {
-                var nye = skanner.Logg.Oppforinger.Skip(_revisjonAntall).ToList();
-                if (nye.Count > 0)
-                {
-                    _revisjonAntall += nye.Count;
-                    var gammel = File.ReadAllText(revisjonSti, Encoding.UTF8);
-                    using var fs = new FileStream(revisjonSti, FileMode.Append, FileAccess.Write);
-                    using var w = new StreamWriter(fs, new UTF8Encoding(false));
-                    w.Write(Revisjon.Tillegg(gammel, nye, _engelsk));
-                }
-            }
-        }
-        catch { }
     }
 
     /// <summary>
@@ -377,7 +346,6 @@ public sealed class Hovedvindu : Form
                 dataMalt = _skanner!.DataMalt,
                 maleSekunder = _skanner.MaleSekunder,
                 sendtTekst = T(Rapport.Storrelse(sendt)),
-                nvd = _nvdStatus,
                 enhet = Enhet.Tekst(),
                 sjekker = _skanner.Sjekker.Select(x => new { navn = T(x.Navn), tekst = T(x.Tekst), niva = x.Niva, linjer = x.Linjer }),
                 kjort = _skanner.Startet is { } st ? st.ToString("d. MMM yyyy 'kl.' HH:mm", System.Globalization.CultureInfo.GetCultureInfo("nb-NO")) : null,
@@ -470,7 +438,7 @@ public sealed class Hovedvindu : Form
     /// <summary>
     /// Datamengde kan bare måles av administrator. Starter programmet på nytt med Windows' vanlige spørsmål om tillatelse (UAC).
     /// </summary>
-    private void StartSomAdmin(bool nvd, bool historikk)
+    private void StartSomAdmin(bool historikk)
     {
         if (Nettverk.ErAdmin() || _soker) return;
         try
@@ -482,7 +450,7 @@ public sealed class Hovedvindu : Form
             var b = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
             var vindu = $" --vindu {b.X},{b.Y},{b.Width},{b.Height},{(WindowState == FormWindowState.Maximized ? "max" : "normal")} --klar {klarNavn}";
             try { AllowSetForegroundWindow(-1); } catch { }
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + vindu + (nvd ? "" : " --uten-nvd") + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_fullt ? " --fullt" : "") + (_engelsk ? " --en" : " --no"))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath, "--sok" + vindu + (historikk ? "" : " --uten-historikk") + (_args.Contains("--uten-agentlogger") ? " --uten-agentlogger" : "") + (Array.IndexOf(_args, "--lytt") is var li && li >= 0 && li + 1 < _args.Length ? $" --lytt {LytteSekunder(_args)}" : "") + (_revisjon ? " --revisjon" : "") + (_fullt ? " --fullt" : "") + (_engelsk ? " --en" : " --no"))
             {
                 UseShellExecute = true,
                 Verb = "runas",
@@ -523,7 +491,6 @@ public sealed class Hovedvindu : Form
             var navn = $"{(_engelsk ? "AI-audit" : "AI-revisjon")}_{Environment.MachineName}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var sti = Path.Combine(mappe, navn + ".txt");
             for (int n = 2; File.Exists(sti); n++) sti = Path.Combine(mappe, $"{navn} ({n}).txt");
-            _revisjonAntall = _skanner!.Logg.Oppforinger.Count;
             var tekst = Revisjon.Tekst(_resultat, _skanner!, Nettverk.ErAdmin() ? "administrator" : "bruker", _engelsk, feil);
             using var fs = new FileStream(sti, FileMode.CreateNew, FileAccess.Write);
             using var w = new StreamWriter(fs, new UTF8Encoding(false));

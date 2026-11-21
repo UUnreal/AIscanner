@@ -637,8 +637,6 @@ function tegnBunn() {
   if (info.kjortAv) deler.push(L(`Søkt i profilen til ${info.bruker} (godkjent av ${info.kjortAv})`, `Scanned the profile of ${info.bruker} (approved by ${info.kjortAv})`));
   if (info.brukerFeil) deler.push(info.brukerFeil);
   if (!info.revisjon) deler.push(L("Ingenting lagret", "Nothing stored"));
-  // Sikkerhetshull nevnes bare mens de sjekkes, eller når de ikke ble sjekket
-  if (info.nvd !== "ferdig") deler.push(info.nvd === "av" ? L("Sikkerhetshull ikke sjekket", "Vulnerabilities not checked") : L("Sjekker sikkerhetshull…", "Checking vulnerabilities…"));
   $("hodeInfo").textContent = deler.join(" · ");
   const rev = info.revisjon
     ? `<button id="revVis" title="${esc(info.revisjon)}">${L("Revisjonslogg lagret", "Audit trail saved")}</button> · `
@@ -1352,18 +1350,12 @@ function motta(m) {
     if (m.behold && varData) { side = s0; tegnListe(); dataApen = true; visArk("full"); tegnData(); return; }
     if (m.behold) { side = s0; tegnListe(); const f = alle.find(x => x.id === id); if (f) { apneArk(f); stedSide = ss; tegnDetalj(true); } }
   }
-  else if (m.type === "nvd") {
-    // Svar på sikkerhetshull kommer etter at resultatet vises
-    const f = alle.find(x => m.id != null ? x.id === m.id : x.navn === m.navn);
-    if (f) { f.merk = m.merk; if (valgt === f) tegnDetalj(true); }
-  }
   else if (m.type === "folgdata") {
     const g = folg[m.id]; if (!g) return;
     g.admin = m.admin; g.p.push({ ut: m.ut, inn: m.inn, n: m.n, til: m.til || [] });
     if (g.p.length > 120) g.p.shift();
     if (valgt && valgt.id === m.id && $("folgGraf")) $("folgGraf").innerHTML = folgGraf(m.id);
   }
-  else if (m.type === "nvdFerdig") { info.nvd = "ferdig"; tegnBunn(); }
   else if (m.type === "nettdata") mottaNett(m);
   else if (m.type === "prosessinfo") { nettProsess[m.pid] = m; if (nettApen) tegnNett(); }
   else if (m.type === "prosent") settProsent(m.p);
@@ -1457,7 +1449,6 @@ function omTekst() {
       L("OWASP Top 10 for LLM (2025) og for agenter (2026): funnet viser hvilken risiko det svarer til, også live i Vakt. Merket kommer fra det funnet viser, aldri fra navnet på produktet.", "OWASP Top 10 for LLM (2025) and for agents (2026): the finding shows which risk it matches, also live in Vakt. The tag comes from what the finding shows, never from the product name.") + kilde("https://genai.owasp.org/"),
       L("IP til land: DB-IP Lite (CC BY 4.0), innebygd.", "IP to country: DB-IP Lite (CC BY 4.0), built in.") + kilde("https://db-ip.com/db/lite.php"),
       L("IP til eier (ASN): ip-location-db (DB-IP og RouteViews, CC BY 4.0), innebygd.", "IP to owner (ASN): ip-location-db (DB-IP and RouteViews, CC BY 4.0), built in.") + kilde("https://github.com/sapics/ip-location-db"),
-      L("Kjente sikkerhetshull: NVD (bare produktnavnet sendes).", "Known vulnerabilities: NVD (only the product name is sent).") + kilde("https://nvd.nist.gov/"),
     ])
     + del(L("Det ingen PC kan se", "What no PC can see"), [
       L("Innholdet i kryptert trafikk (det AI-en får og svarer).", "The content of encrypted traffic (what the AI receives and answers)."),
@@ -1466,7 +1457,7 @@ function omTekst() {
     ])
     + del(L("Personvern", "Privacy"), [
       L("Leser aldri passord, informasjonskapsler, skjemadata, nøkkelverdier, innholdet i AI-samtaler eller minnet til andre programmer.", "Never reads passwords, cookies, form data, key values, the content of AI chats or the memory of other programs."),
-      L("Sender bare: navnene på kjente AI-tjenester i DNS, og produktnavn til NVD. Aldri PC-navn, brukernavn, stier eller funn.", "Sends only: the names of known AI services in DNS, and product names to NVD. Never PC name, user name, paths or findings."),
+      L("Sender bare: navnene på kjente AI-tjenester i DNS. Aldri PC-navn, brukernavn, stier eller funn.", "Sends only: the names of known AI services in DNS. Never PC name, user name, paths or findings."),
       L("<b>Som bruker:</b> rask, uten godkjenning. <b>Som admin:</b> måler datamengde, ser alle programmer og Windows' historikk. Windows ber om godkjenning først.",
         "<b>As user:</b> fast, no approval. <b>As admin:</b> measures data volume, sees every program and Windows' history. Windows asks for approval first."),
     ]);

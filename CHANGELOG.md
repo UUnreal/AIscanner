@@ -25,6 +25,10 @@ Kategoriene er:
 
 ## [2.58.0] - 2026-11-21
 
+### Fjernet
+
+- **NVD-oppslaget:** programmet sender ikke lenger produktnavn til NVD. Ingen nettverkskall ut, bare DNS-oppslag av kjente AI-tjenester og spørsmål til `127.0.0.1`. Valgene `--uten-nvd` og `--nvd` er borte.
+
 ### Rettet
 
 - **Ekte navn på Windows-apper:** når pakken bare peker inn i resources.pri («ms-resource:»), slår Windows opp det ekte visningsnavnet (SHLoadIndirectString, bare lesing). Virker ikke for pakker som ikke er installert for brukeren; da brukes pakke-ID-en som før.

@@ -56,7 +56,6 @@ For hver AI viser skanneren:
   Hver modell får en ID som er lik på alle PC-er (SHA-256 eller fingeravtrykk).
 - **Farlige modeller**: YARA-regler finner modeller som kjører kode når de lastes. Reglene ligger i den åpne fila
   [`ai-modeller.yar`](src/AISkanner.Core/ai-modeller.yar).
-- **Kjente sårbarheter**: antall CVE-er i NVD for kjente produkter.
 
 ## Kom i gang
 
@@ -104,8 +103,8 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
   ikke fra en AI-modell. Samme PC og samme regler gir samme svar.
 - **Datagrunnlag.** Knappen øverst til høyre i resultatet viser alt søket leste, hva det ikke fikk lest (nektet, låst,
   stoppet av antivirus, tidsgrense) og SHA-256 av reglene som ga resultatet.
-- **Sender nesten ingenting ut.** Etter søket sendes bare produktord som `ollama` til NVD (nvd.nist.gov).
-  PC-navn, brukernavn og stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
+- **Sender ingenting ut.** Bare DNS-oppslag av en fast liste med kjente AI-tjenester. PC-navn, brukernavn og
+  stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
 
 Se [SECURITY.md](SECURITY.md) for trusselmodellen og hvordan du melder fra om sårbarheter, og
 [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses.
@@ -132,21 +131,19 @@ Se [docs/REGELFILER.md](docs/REGELFILER.md) for format og eksempler.
 Vinduet tar disse valgene:
 
 ```
-AISkanner.exe [--uten-nvd] [--uten-historikk]
+AISkanner.exe [--uten-historikk]
 ```
 
 Kommandolinjeversjonen skriver JSON eller tekst. Den kan brukes til testing, eller til utrulling med for eksempel Intune:
 
 ```
-AISkanner.Cli [--nvd] [--uten-historikk] [--regler sti\regler.json] [--txt] [--flagg]
+AISkanner.Cli [--uten-historikk] [--regler sti\regler.json] [--txt] [--flagg]
 AISkanner.Cli --yara regler.yar fil1 [fil2 …]
 ```
 
 | Valg | Virkning |
 |---|---|
-| `--uten-nvd` | Vinduet: slår av NVD-oppslaget. |
 | `--uten-historikk` | Leser ikke nettleserhistorikk. |
-| `--nvd` | Kommandolinjen: slår på NVD-oppslaget, som er av der som standard. |
 | `--regler <sti>` | Bruker en annen `regler.json`. |
 | `--txt` | Skriver tekstrapport i stedet for JSON. |
 | `--flagg` | Leser AI-flagg fra `Local State` i Chrome og Edge. Av som standard (se [SECURITY.md](SECURITY.md)). |
@@ -186,7 +183,6 @@ er større enn 10 MB og skriver SHA-256 for alle filer til `SHA256.txt`. Se [CON
 | Ukjente AI-spor og lyttevindu (2.16–2.17) | Alle 29 alarmer slår ut i kontrollmodus på Linux. Ikke kontrollert på Windows: kjør `AISkanner.exe --kontroll`. |
 | Vindu (WebView2) | Kjørt på Windows i 2.3, 2.5 og 2.7. Tabellvisningen fra 2.8 og 2.10 er bare testet i nettleser med eksempeldata. |
 | YARA-motor | Testet mot YARA 4.5.4 med 134 regler, uten avvik. |
-| NVD-oppslag | Ikke testet, fordi byggemiljøet stenger for nettet. |
 | Søk som admin, datamengde og UAC | Ikke testet på Windows. |
 | Edge-modellmappe og `leverandorAi` med `bekreftet: false` | Mappenavnene er antatt, ikke sjekket på en ekte PC. |
 | Kodesignering | Ikke på plass. Planen er SignPath Foundation ([CODE_SIGNING.md](CODE_SIGNING.md)). |

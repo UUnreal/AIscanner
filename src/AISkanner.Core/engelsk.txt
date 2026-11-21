@@ -460,13 +460,6 @@ Ukjent AI: vi vet ikke hvem som har laget den eller hva den gjør.|Unknown AI: w
 Skygge-AI: ikke lagt inn av Windows, en signert leverandør eller IT.|Shadow AI: not installed by Windows, a signed vendor or IT.
 Sender data til|Sends data to
 
-# ---------- NVD ----------
-Sjekker kjente sårbarheter for|Checking known vulnerabilities for
-CVE-er, ikke sjekket mot din versjon|CVEs, not checked against your version
-er nevnt i|is mentioned in
-Hold programmet oppdatert.|Keep the program updated.
-NVD: ingen kjente sårbarheter funnet for|NVD: no known vulnerabilities found for
-NVD: oppslaget feilet (ingen nett eller for mange forespørsler).|NVD: the lookup failed (no network or too many requests).
 
 # ---------- Fremdrift og feil ----------
 Ser etter AI som kjører nå...|Looking for AI running now...
@@ -829,7 +822,6 @@ har lastet ned små AI-modeller som kjører på PC-en, f.eks.|has downloaded sma
 ~(\d+) forbindelser\b|$1 connections
 ~(\d+) porter\b|$1 ports
 ~(\d+) navn$|$1 names
-~(\d+) CVE$|$1 CVEs
 lest|read
 finnes ikke|not found
 fantes ikke|not found

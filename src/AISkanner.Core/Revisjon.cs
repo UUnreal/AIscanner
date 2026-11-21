@@ -189,18 +189,6 @@ public static class Revisjon
         return innhold + (engelsk ? "SHA-256 of everything above: " : "SHA-256 av alt over: ") + Sha256(innhold) + "\r\n";
     }
 
-    /// <summary>Tillegg som skrives til slutt i fila etter oppslag som kommer etter søket (NVD), med ny SHA-256 for hele fila.</summary>
-    public static string Tillegg(string tidligere, IEnumerable<Tilgang> nye, bool engelsk)
-    {
-        var sb = new StringBuilder();
-        string T(string? t) => (engelsk ? Engelsk.Til(t) : t) ?? "";
-        sb.Append("\r\n").Append(T("TILLEGG: OPPSLAG ETTER SØKET")).Append("\r\n");
-        foreach (var t in nye)
-            sb.Append($"{t.Tid:HH:mm:ss.fff}  {T(UtfallTekst(t.Utfall)),-20} {T(t.Sjekk)} | {T(t.Hva)} | {T(t.Mal)}{(t.Detalj != null ? " | " + T(t.Detalj) : "")}\r\n");
-        var alt = tidligere + sb;
-        return sb + (engelsk ? "SHA-256 of the whole file above: " : "SHA-256 av hele fila over: ") + Sha256(alt) + "\r\n";
-    }
-
     private static object Disker(Skanner s)
     {
         var talt = s.Logg.Disker.ToDictionary(x => x.Disk, StringComparer.OrdinalIgnoreCase);

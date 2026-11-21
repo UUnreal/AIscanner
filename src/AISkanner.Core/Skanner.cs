@@ -9,7 +9,7 @@ namespace AISkanner;
 /// <summary>
 /// Finner lokal AI, skygge-AI og nettleser-AI.
 /// Sikkerhet: leser bare, endrer ingenting, trenger ikke admin, starter ingen andre programmer.
-/// Ingenting sendes ut med mindre brukeren slår på sårbarhetssjekk (da sendes bare produktord til NVD).
+/// Sender ingenting ut. Bare DNS-oppslag av en fast liste med kjente AI-tjenester og spørsmål til lokale AI-servere på 127.0.0.1.
 /// </summary>
 public sealed partial class Skanner
 {
@@ -55,7 +55,7 @@ public sealed partial class Skanner
     /// <summary>Hendelser fra Defender under søket som gjelder dette programmet.</summary>
     public Antivirus.Resultat? Forsvar { get; private set; }
 
-    public async Task<List<Funn>> KjorAsync(bool eksternSjekk, IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null, IProgress<int>? prosent = null)
+    public async Task<List<Funn>> KjorAsync(IProgress<string>? status = null, CancellationToken ct = default, IProgress<int>? steg = null, IProgress<int>? prosent = null)
     {
         _funn.Clear();
         _status = status;
@@ -203,7 +203,6 @@ public sealed partial class Skanner
         prosentStopp.Cancel();
         await prosentLop.ConfigureAwait(false);
         Rapporter(helt: true);
-        if (eksternSjekk) await Nvd.SjekkAsync(_funn.Values, _status, ct);
         _status?.Report("Ferdig.");
         return Funn.Ordnet(_funn.Values);
     }

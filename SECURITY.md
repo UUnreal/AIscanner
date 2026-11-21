@@ -43,7 +43,6 @@ Vedlikeholder: Jørund. Prosjektet har ingen dusørordning (bug bounty).
 | Filer ved siden av programmet | Falsk DLL, `explorer.exe` eller regelfil i samme mappe eller arbeidsmappa | Windows-biblioteker bare fra System32, starter ikke hvis en DLL med samme navn som et innebygd bibliotek ligger ved siden av, regelfiler leses ikke i brukerens profil, full sti til Utforsker, 2 s tidsgrense på regex |
 | Navn brukeren styrer | Utvidelse eller mappe som kaller seg det samme som en godkjent AI | Godkjenning bare på navn fra regelsettet og domener fra målte forbindelser (2.13.1) |
 | Innhold i resultatet | Utvidelsesnavn eller modellnavn med HTML eller skript | All tekst fra funn escapes (`esc()` i `index.html`) før den vises. Siden er bygget inn, kan ikke navigere bort eller åpne nye vinduer, og utviklerverktøy og høyreklikkmeny er av |
-| Nettverket | Avlytting av NVD-oppslaget | HTTPS, og bare produktord sendes |
 
 ### Utenfor modellen
 
