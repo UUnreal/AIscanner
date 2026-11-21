@@ -75,6 +75,19 @@ public sealed partial class Skanner
         Sjekk(F("WhiteRabbitNeo") is { Risiko: Risiko.Rod } wr && wr.Advarsler.Any(a => a.StartsWith("Angrepsmodell:")), "angrepsmodell ble ikke rød med advarsel");
         Sjekk(F("uncensored") is { Risiko: Risiko.Gul } un && un.Advarsler.Any(a => a.StartsWith("Sensurfri:")), "sensurfri modell i Ollama fikk ikke advarsel, eller fikk feil farge");
         Sjekk(F("ShieldGemma") is { } sg && sg.Merknader.Any(a => a.StartsWith("Sikkerhetsmodell:")), "sikkerhetsmodell fikk ikke merknad");
+        // GGUF uten lesbart navn i fila: filnavnet kan være endret og brukes ikke som navn
+        var gjemt = Path.Combine(mappe, "gjemt");
+        Directory.CreateDirectory(gjemt);
+        foreach (var (fil, felt) in new[] { ("llama-3-8b-instruct.gguf", ("general.architecture", "llama")), ("phi-3-mini.gguf", ("general.name", "\u0001\u0002\uFFFD")) })
+        {
+            var sti = Path.Combine(gjemt, fil);
+            File.WriteAllBytes(sti, LagGguf(felt));
+            sk.LeggTilModell(sti, 64, ModellFormat.Gjenkjenn(sti)!);
+        }
+        Sjekk(sk._funn.Values.Count(x => x.Navn.Contains("navn ikke lesbart")) == 2 && F("llama-3-8b") == null && F("phi-3-mini") == null
+              && F("navn ikke lesbart")!.Detaljer.Any(d => d.Contains("kan være endret")), "GGUF uten lesbart navn fikk filnavnet som navn");
+        Sjekk(Lesbar("Llama 3.1 8B Instruct") && !Lesbar("") && !Lesbar("\u0001x") && !Lesbar("12345") && !Lesbar("ab\uFFFD"), "lesbart modellnavn kjennes feil igjen");
+        Sjekk(Ressursnavn(Path.Combine(mappe, "Falsk.App"), "<Identity Name=\"Falsk.App\" />", "ms-resource:AppName") == null, "resources.pri-oppslag uten fullt pakkenavn ga et navn");
 
         // llamafile: program (MZqFpD) med ukomprimert GGUF i en zip bakerst. Navn og innhold leses fra GGUF-en inni.
         var lf = Path.Combine(mappe, "kontroll.exe");
