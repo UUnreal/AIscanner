@@ -27,7 +27,8 @@ Kategoriene er:
 
 ### Fjernet
 
-- **NVD-oppslaget:** programmet sender ikke lenger produktnavn til NVD. Ingen nettverkskall ut, bare DNS-oppslag av kjente AI-tjenester og spørsmål til `127.0.0.1`. Valgene `--uten-nvd` og `--nvd` er borte.
+- **NVD-oppslaget:** programmet sender ikke lenger produktnavn til NVD. Ingen nettverkskall ut, bare spørsmål til `127.0.0.1`. Valgene `--uten-nvd` og `--nvd` er borte.
+- **Egne DNS-oppslag:** skanneren slår ikke lenger opp adressene til kjente AI-tjenester. IP-adressene hentes bare fra Windows' DNS-buffer. Null trafikk ut; MSIX-pakken ber ikke lenger om internettilgang. Ulempe: forbindelser nettleseren slår opp med sikker DNS (DoH) kjennes ikke igjen på navn.
 
 ### Rettet
 

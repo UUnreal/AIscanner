@@ -9,7 +9,7 @@ står i [SECURITY.md](SECURITY.md).
 - Kjøres manuelt av innlogget bruker. Ingen installasjon, ingen tjeneste og ingen persistens.
 - Leser bare. Endrer, sletter og installerer ingenting.
 - Trenger ikke administrator. Bare søk som administrator ber om det, og bare når brukeren velger det.
-- Sender ingenting ut. Bare DNS-oppslag av kjente AI-tjenester og spørsmål til `127.0.0.1`.
+- Sender ingenting ut: ingen DNS-oppslag og ingen nettverkskall. Bare spørsmål til lokale AI-servere på `127.0.0.1`.
 - Lagrer ingenting mellom søk, med mindre brukeren velger revisjonslogg (se under).
 - Har ingen AI-modell. Funnene kommer fra faste regler: filformat, YARA, `regler.json` og kjente adresser.
 
@@ -153,8 +153,7 @@ sjekkes bare for om den er tom, og kastes med en gang. Alle nøkkelnavn samles i
 
 - Etablerte TCP-forbindelser med eierprosess (`GetExtendedTcpTable`, `TCP_TABLE_OWNER_PID_CONNECTIONS`, IPv4 og IPv6).
 - Vertsnavn fra Windows' DNS-buffer (`DnsGetCacheDataTable` og `DnsQuery_W` med `DNS_QUERY_NO_WIRE_QUERY`, samme
-  kilde som `ipconfig /displaydns`). Ingen omvendte oppslag. Skannerens egne oppslag (se under) går utenom Windows og
-  havner ikke i bufferen. Står de fleste kjente AI-navnene i bufferen samtidig (rester etter en eldre versjon), brukes
+  kilde som `ipconfig /displaydns`). Ingen oppslag på nett, heller ikke omvendte. Står de fleste kjente AI-navnene i bufferen samtidig (rester etter en eldre versjon), brukes
   bufferen ikke som bevis i det søket.
 - Land fra en innebygd tabell (IP to Country Lite fra DB-IP.com, CC BY 4.0).
 - Eier (ASN og firma) fra en innebygd tabell (DB-IP og RouteViews via ip-location-db, CC BY 4.0). Merket «OSINT»: registrerte data, ikke målt. Ingen IP sendes ut.
@@ -328,11 +327,10 @@ modellfiler som beskrevet over.
 | Til | Hva | Når |
 |---|---|---|
 | `127.0.0.1` | Maks tre `GET` per lyttende port | Under søket |
-| Vanlig DNS (PC-ens egen DNS-server) | Navnene på de kjente AI-tjenestene fra `regler.json` (for eksempel `chatgpt.com`, `api.openai.com`), slått opp én gang per søk, sendt rett til DNS-serveren (UDP 53) utenom Windows' DNS-klient, så de ikke havner i DNS-bufferen | Under søket, bare på Windows |
 
-PC-navn, brukernavn, stier og funn sendes aldri. DNS-oppslagene er de samme som når en nettside åpnes, og inneholder
-bare navnet på tjenesten. De brukes til å kjenne igjen forbindelser nettleseren har slått opp selv (egen DNS eller
-sikker DNS, DoH), som derfor mangler i Windows' DNS-buffer. Et slikt IP-treff regnes bare når nettleseren selv har
+Ingenting annet går ut: ingen DNS-oppslag, ingen IP-oppslag og ingen andre nettverkskall. IP-adressene til kjente
+AI-tjenester hentes bare fra Windows' DNS-buffer. Forbindelser nettleseren har slått opp selv med sikker DNS (DoH)
+mangler der og kan derfor ikke kjennes igjen på navn. Et IP-treff regnes bare når nettleseren selv har
 tjenesten i nettverkslageret sitt (`Network Persistent State`, bare vertsnavn; alt som ikke er AI, forkastes), fordi
 mange tjenester deler IP-adresser på samme CDN. For andre programmer regnes IP-treff aldri. Ingen IP-oppslag på nett.
 

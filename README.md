@@ -103,8 +103,8 @@ Se [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md#risikomodell) for hele modellen.
   ikke fra en AI-modell. Samme PC og samme regler gir samme svar.
 - **Datagrunnlag.** Knappen øverst til høyre i resultatet viser alt søket leste, hva det ikke fikk lest (nektet, låst,
   stoppet av antivirus, tidsgrense) og SHA-256 av reglene som ga resultatet.
-- **Sender ingenting ut.** Bare DNS-oppslag av en fast liste med kjente AI-tjenester. PC-navn, brukernavn og
-  stier sendes aldri. Lokale AI-servere spørres bare på `127.0.0.1`.
+- **Sender ingenting ut.** Ingen DNS-oppslag og ingen nettverkskall; bare lesing. PC-navn, brukernavn og
+  stier forlater aldri PC-en. Lokale AI-servere spørres bare på `127.0.0.1`.
 
 Se [SECURITY.md](SECURITY.md) for trusselmodellen og hvordan du melder fra om sårbarheter, og
 [IT-INFO.md](IT-INFO.md) for nøyaktig hva som leses.

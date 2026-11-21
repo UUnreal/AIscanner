@@ -15,8 +15,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 - Alle med skrivetilgang må ha tofaktorinnlogging på GitHub.
 
 ## Personvern
-Programmet sender ingen data om brukeren eller PC-en noe sted. Det eneste som går ut, er DNS-oppslag av en fast
-liste med kjente AI-tjenester.
+Programmet sender ingenting ut: ingen DNS-oppslag og ingen nettverkskall. Det bare leser.
 PC-navn, brukernavn og filstier sendes aldri. Rapporter lagres bare lokalt når brukeren ber om det.
 Se [IT-INFO.md](IT-INFO.md) og [SECURITY.md](SECURITY.md).
 

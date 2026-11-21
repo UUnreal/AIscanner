@@ -9,7 +9,7 @@ namespace AISkanner;
 /// <summary>
 /// Finner lokal AI, skygge-AI og nettleser-AI.
 /// Sikkerhet: leser bare, endrer ingenting, trenger ikke admin, starter ingen andre programmer.
-/// Sender ingenting ut. Bare DNS-oppslag av en fast liste med kjente AI-tjenester og spørsmål til lokale AI-servere på 127.0.0.1.
+/// Sender ingenting ut: ingen DNS-oppslag, ingen nettverkskall. Bare spørsmål til lokale AI-servere på 127.0.0.1.
 /// </summary>
 public sealed partial class Skanner
 {
@@ -104,10 +104,10 @@ public sealed partial class Skanner
         var maling = TestNett == null ? Datamaling.Start() : null;
         // Lyttevindu: TCP-tabellen og DNS-bufferen leses ofte mens søket går, ikke bare én gang til slutt
         var lytting = TestNett == null && LytteSekunder > 0 && Plattform.ErWindows ? Lyttevindu.Start(maling, Kommandolinje.Tillatt(_regler, out _)) : null;
-        // Adressene til kjente AI-tjenester slås opp mens søket går, så nettleserens egne oppslag (DoH) kan kjennes igjen
+        // Adressene til kjente AI-tjenester hentes bare fra Windows' DNS-buffer: skanneren spør aldri en DNS-server
         _nettleserVerter = null;
         _aiIp = TestNett == null && Plattform.ErWindows
-            ? Task.Run(() => AiAdresser.SlaOpp(_regler.AiTjenester.Concat(_regler.AiNettsteder).SelectMany(t => t.Domener), TimeSpan.FromSeconds(4)))
+            ? Task.Run(() => AiAdresser.FraBuffer(_regler.AiTjenester.Concat(_regler.AiNettsteder).SelectMany(t => t.Domener)))
             : null;
         // Med LyttIBakgrunnen vises resultatet straks sjekkene er ferdige; lyttingen fortsetter og fullføres med FullforLyttingAsync
         bool bakgrunn = LyttIBakgrunnen && lytting != null;
