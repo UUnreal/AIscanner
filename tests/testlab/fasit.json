@@ -142,7 +142,7 @@
     },
     {
       "id": "WSL1 med Ollama-modellmappe",
-      "navn": "WSL|Linux",
+      "navn": "^AI-modeller i Linux \\(WSL\\)",
       "krever": "wsl"
     },
     {

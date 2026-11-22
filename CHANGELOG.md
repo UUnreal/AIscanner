@@ -23,6 +23,12 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+### Rettet
+
+- **WSL1 blir søkt i:** skanneren så bare WSL2 (vmmem) som «kjører». Nå regnes også en kjørende WSL1-distribusjon (Linux-prosessen «init» uten Windows-fil). Skanneren starter fortsatt aldri Linux selv.
+- **Testlaben:** WSL1-punktet krever nå funnet «AI-modeller i Linux (WSL)», ikke bare at WSL er installert (det ga grønt uten at modellmappa ble funnet). Distribusjonen holdes i gang under skannet.
+- **Byggeløypa:** actions/download-artifact v7 (Node 24) i stedet for v6 (Node 20-advarsel).
+
 ## [2.58.0] - 2026-11-21
 
 ### Fjernet

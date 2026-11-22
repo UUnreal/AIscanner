@@ -147,7 +147,9 @@ public sealed partial class Skanner
         using var lxss = Tilgangslogg.Nokkel(Bruker.Hkcu, @"Software\Microsoft\Windows\CurrentVersion\Lxss");
         if (lxss == null) return;
         if (lxss.GetSubKeyNames().Length == 0) return;
-        bool linuxKjorer = System.Diagnostics.Process.GetProcessesByName("vmmemWSL").Length > 0 || System.Diagnostics.Process.GetProcessesByName("vmmem").Length > 0;
+        // WSL2 kjører i en VM (vmmem/vmmemWSL). WSL1 har ingen VM: Linux-prosessene er pico-prosesser uten Windows-fil, og «init» finnes så lenge en distribusjon kjører.
+        bool linuxKjorer = System.Diagnostics.Process.GetProcessesByName("vmmemWSL").Length > 0 || System.Diagnostics.Process.GetProcessesByName("vmmem").Length > 0
+                           || System.Diagnostics.Process.GetProcessesByName("init").Any(p => { using (p) return ProsessSti.Hent(p) == null; });
         if (!linuxKjorer)
             lock (Blindsoner) Blindsoner.Add($"WSL (Linux i Windows) er installert ({lxss.GetSubKeyNames().Length}), men kjørte ikke. AI inne i WSL er ikke sjekket; søket starter aldri Linux.");
         foreach (var id in lxss.GetSubKeyNames())
