@@ -116,14 +116,19 @@ try {
 } catch { "::warning::llamafile ikke testet: $_" }
 Ferdig
 
-Steg 'WSL1 med Ubuntu og en Ollama-modellmappe (bare hvis maskinen tillater det)'
-# WSL2 virker ikke på GitHub-maskinene. WSL1 prøves; går det ikke, står WSL som «ikke testet» i rapporten.
+Steg 'WSL med Ubuntu og en Ollama-modellmappe (bare hvis maskinen tillater det)'
+# Går det ikke å sette opp WSL, står WSL som «ikke testet» i rapporten.
 $wslOk = $false
 try {
-  $j = Start-Job { wsl --install -d Ubuntu --web-download --no-launch 2>&1; wsl --set-default-version 1 2>&1; ubuntu install --root 2>&1; wsl -d Ubuntu -u root -- sh -c 'mkdir -p /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2 && echo "{}" > /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2/135m' 2>&1 }
+  $j = Start-Job { wsl --install -d Ubuntu --web-download --no-launch 2>&1; wsl -d Ubuntu -u root -- sh -c 'mkdir -p /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2 && echo "{}" > /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2/135m' 2>&1 }
   if (Wait-Job $j -Timeout 600) { Receive-Job $j | Select-Object -Last 5; $wslOk = (wsl -d Ubuntu -- echo ok 2>$null) -eq 'ok' } else { Stop-Job $j }
 } catch { }
-if ($wslOk) { Notér 'WSL1 Ubuntu med Ollama-modellmappe' @('WSL') 'WSL1 med Ollama-modellmappe' } else { '::warning::WSL ikke testet: kunne ikke settes opp på maskinen' }
+# WSL stopper distribusjonen når ingen prosess kjører; skanneren starter den aldri selv. Hold den i gang under skannet.
+if ($wslOk) {
+  Start-Process wsl.exe -ArgumentList '-d', 'Ubuntu', '--', 'sleep', '3600' -WindowStyle Hidden; Start-Sleep 5
+  wsl -l -v; Get-Process vmmem*, wsl, wslhost -ErrorAction SilentlyContinue | Format-Table Name, Id -AutoSize | Out-String
+  "Mappa sett fra Windows: $(Test-Path '\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\manifests')"
+  Notér 'WSL Ubuntu med Ollama-modellmappe' @('AI-modeller i Linux (WSL)') 'WSL med Ollama-modellmappe' } else { '::warning::WSL ikke testet: kunne ikke settes opp på maskinen' }
 Ferdig
 
 Steg 'Python med transformers som holder en modell i minnet'
@@ -210,7 +215,7 @@ foreach ($x in $fasit.med) {
 $renFeil = @($ren.funn | Where-Object { $_.bevisniva -ne 'Spor' -and ($_.risiko -in @($fasit.ren.forbudtFarge) -or $_.type -like 'Ukjent*') })
 foreach ($f in $renFeil) { $feil.Add("Ren maskin: falskt funn $($f.risiko) $($f.navn) ($($f.type))") }
 L ""; L "Fasit: $(if ($feil.Count) { "❌ $($feil.Count) feil" } else { '✅ alt riktig' })"; $feil | ForEach-Object { L "- $_" }
-L ""; L "Ikke testet her (ærlig): LM Studio (installasjonen kan ikke skriptes trygt), WSL2, Docker Desktop, GPU/NPU, Recall/Copilot, Windows 26H2, fart."
+L ""; L "Ikke testet her (ærlig): LM Studio (installasjonen kan ikke skriptes trygt), Docker Desktop, GPU/NPU, Recall/Copilot, Windows 26H2, fart."
 L ""; L "## Alle funn (navn · type · farge · nivå)"
 foreach ($f in $med.funn) { L "- $($f.navn) · $($f.type) · $($f.risiko) · $($f.bevisniva)" }
 
