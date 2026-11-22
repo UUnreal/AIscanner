@@ -116,15 +116,19 @@ try {
 } catch { "::warning::llamafile ikke testet: $_" }
 Ferdig
 
-Steg 'WSL1 med Ubuntu og en Ollama-modellmappe (bare hvis maskinen tillater det)'
-# WSL2 virker ikke på GitHub-maskinene. WSL1 prøves; går det ikke, står WSL som «ikke testet» i rapporten.
+Steg 'WSL med Ubuntu og en Ollama-modellmappe (bare hvis maskinen tillater det)'
+# Går det ikke å sette opp WSL, står WSL som «ikke testet» i rapporten.
 $wslOk = $false
 try {
-  $j = Start-Job { wsl --install -d Ubuntu --web-download --no-launch 2>&1; wsl --set-default-version 1 2>&1; ubuntu install --root 2>&1; wsl -d Ubuntu -u root -- sh -c 'mkdir -p /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2 && echo "{}" > /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2/135m' 2>&1 }
+  $j = Start-Job { wsl --install -d Ubuntu --web-download --no-launch 2>&1; wsl -d Ubuntu -u root -- sh -c 'mkdir -p /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2 && echo "{}" > /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/smollm2/135m' 2>&1 }
   if (Wait-Job $j -Timeout 600) { Receive-Job $j | Select-Object -Last 5; $wslOk = (wsl -d Ubuntu -- echo ok 2>$null) -eq 'ok' } else { Stop-Job $j }
 } catch { }
-# WSL1 stopper distribusjonen når ingen prosess kjører; skanneren starter den aldri selv. Hold den i gang under skannet.
-if ($wslOk) { Start-Process wsl.exe -ArgumentList '-d', 'Ubuntu', '--', 'sleep', '3600' -WindowStyle Hidden; Notér 'WSL1 Ubuntu med Ollama-modellmappe' @('AI-modeller i Linux (WSL)') 'WSL1 med Ollama-modellmappe' } else { '::warning::WSL ikke testet: kunne ikke settes opp på maskinen' }
+# WSL stopper distribusjonen når ingen prosess kjører; skanneren starter den aldri selv. Hold den i gang under skannet.
+if ($wslOk) {
+  Start-Process wsl.exe -ArgumentList '-d', 'Ubuntu', '--', 'sleep', '3600' -WindowStyle Hidden; Start-Sleep 5
+  wsl -l -v; Get-Process vmmem*, wsl, wslhost -ErrorAction SilentlyContinue | Format-Table Name, Id -AutoSize | Out-String
+  "Mappa sett fra Windows: $(Test-Path '\\wsl.localhost\Ubuntu\usr\share\ollama\.ollama\models\manifests')"
+  Notér 'WSL Ubuntu med Ollama-modellmappe' @('AI-modeller i Linux (WSL)') 'WSL med Ollama-modellmappe' } else { '::warning::WSL ikke testet: kunne ikke settes opp på maskinen' }
 Ferdig
 
 Steg 'Python med transformers som holder en modell i minnet'
