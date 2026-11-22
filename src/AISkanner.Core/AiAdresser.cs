@@ -4,44 +4,26 @@ using System.Text.Json;
 namespace AISkanner;
 
 /// <summary>
-/// Navn på forbindelser som Windows' DNS-buffer ikke kjenner. Nettlesere slår ofte opp navn selv (egen DNS eller
-/// sikker DNS, DoH), så bufferen mangler navnet og forbindelsen til ChatGPT ser ut som en ukjent IP-adresse.
-/// Løsningen: programmet slår selv opp adressene til de kjente AI-tjenestene (vanlige DNS-oppslag, samme som når
-/// en nettside åpnes; ingenting om PC-en sendes med) og sammenligner med forbindelsene som er åpne.
-/// Fordi mange tjenester deler IP-adresser på samme CDN, regnes et treff bare når nettleseren selv har tjenesten
-/// i nettverkslageret sitt (Network Persistent State). Ingenting lagres.
+/// Navn på forbindelser til kjente AI-tjenester, bare fra Windows' egen DNS-buffer (navn PC-en allerede har slått opp).
+/// Skanneren spør aldri en DNS-server og sender ingenting ut. Nettlesere med sikker DNS (DoH) fyller ikke bufferen,
+/// så de forbindelsene kjennes ikke igjen på navn. Fordi mange tjenester deler IP-adresser på samme CDN, regnes et
+/// IP-treff bare når nettleseren selv har tjenesten i nettverkslageret sitt (Network Persistent State). Ingenting lagres.
 /// </summary>
 internal static class AiAdresser
 {
-    /// <summary>Slår opp alle vertsnavnene samtidig. Det som ikke har svart innen fristen, tas ikke med.</summary>
-    public static Dictionary<IPAddress, List<string>> SlaOpp(IEnumerable<string> verter, TimeSpan frist)
+    /// <summary>IP-adressene i DNS-bufferen som hører til de kjente AI-vertsnavnene (eller underdomener av dem).</summary>
+    public static Dictionary<IPAddress, List<string>> FraBuffer(IEnumerable<string> verter)
     {
+        var kjente = verter.Select(v => v.Trim('.').ToLowerInvariant()).Where(v => v.Contains('.')).ToList();
+        bool Ai(string n) => kjente.Any(d => n == d || n.EndsWith("." + d, StringComparison.Ordinal));
         var kart = new Dictionary<IPAddress, List<string>>();
-        var liste = verter.Select(v => v.Trim('.').ToLowerInvariant()).Where(v => v.Contains('.')).Distinct().ToList();
-        // Egne DNS-spørringer rett til DNS-serveren, ikke via Windows: da havner navnene ikke i Windows' DNS-buffer, som
-        // skanneren leser som bevis på at PC-en har brukt tjenesten. (Før 2.30.0 forurenset oppslagene bufferen.)
-        var servere = EgenDns.Servere();
-        if (servere.Count == 0)
+        foreach (var (ip, navn) in Nettverk.DnsBuffer(out _, logg: false))
         {
-            Tilgangslogg.Logg("Nettverk", "DNS-oppslag av kjente AI-adresser", Utfall.HoppetOver, "fant ingen DNS-server; slår ikke opp via Windows for ikke å fylle DNS-bufferen");
-            return kart;
+            var ai = navn.Where(Ai).ToList();
+            if (ai.Count > 0) kart[ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip] = ai;
         }
-        var oppslag = liste.Select(v => (Vert: v, Svar: EgenDns.SlaOppAsync(v, servere, frist))).ToList();
-        try { Task.WaitAll(oppslag.Select(o => (Task)o.Svar).ToArray(), frist); } catch { }
-        int svarte = 0;
-        foreach (var (vert, svar) in oppslag)
-        {
-            if (svar.Status != TaskStatus.RanToCompletion) continue;
-            svarte++;
-            foreach (var ip in svar.Result)
-            {
-                var nokkel = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
-                if (!kart.TryGetValue(nokkel, out var l)) kart[nokkel] = l = new List<string>();
-                if (!l.Contains(vert)) l.Add(vert);
-            }
-        }
-        Tilgangslogg.Logg("Nettverk", "DNS-oppslag av kjente AI-adresser", svarte > 0 ? Utfall.Lest : Utfall.IkkeFunnet,
-            $"{svarte} av {liste.Count} navn svarte; brukes bare til å kjenne igjen forbindelser nettleseren selv har slått opp");
+        Tilgangslogg.Logg("Nettverk", "Kjente AI-adresser i DNS-bufferen", kart.Count > 0 ? Utfall.Lest : Utfall.IkkeFunnet,
+            "bare navn Windows allerede har slått opp; skanneren spør aldri en DNS-server");
         return kart;
     }
 

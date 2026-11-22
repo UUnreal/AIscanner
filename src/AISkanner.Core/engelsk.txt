@@ -460,13 +460,6 @@ Ukjent AI: vi vet ikke hvem som har laget den eller hva den gjør.|Unknown AI: w
 Skygge-AI: ikke lagt inn av Windows, en signert leverandør eller IT.|Shadow AI: not installed by Windows, a signed vendor or IT.
 Sender data til|Sends data to
 
-# ---------- NVD ----------
-Sjekker kjente sårbarheter for|Checking known vulnerabilities for
-CVE-er, ikke sjekket mot din versjon|CVEs, not checked against your version
-er nevnt i|is mentioned in
-Hold programmet oppdatert.|Keep the program updated.
-NVD: ingen kjente sårbarheter funnet for|NVD: no known vulnerabilities found for
-NVD: oppslaget feilet (ingen nett eller for mange forespørsler).|NVD: the lookup failed (no network or too many requests).
 
 # ---------- Fremdrift og feil ----------
 Ser etter AI som kjører nå...|Looking for AI running now...
@@ -829,7 +822,6 @@ har lastet ned små AI-modeller som kjører på PC-en, f.eks.|has downloaded sma
 ~(\d+) forbindelser\b|$1 connections
 ~(\d+) porter\b|$1 ports
 ~(\d+) navn$|$1 names
-~(\d+) CVE$|$1 CVEs
 lest|read
 finnes ikke|not found
 fantes ikke|not found
@@ -1518,7 +1510,7 @@ startet og stoppet under søket|started and stopped during the scan
 SRUM (Windows' ressursbruk,|SRUM (Windows resource usage,
  → ingen IP i bufferen (navnet fantes ikke eller er utløpt)| → no IP in the cache (the name did not exist or has expired)
 ~^IP-eiere \(ASN\): (.+)\. Slått opp i programmet, ingen IP sendes ut\. Eier er registrerte data \(OSINT\), ikke målt; alt annet om tilkoblinger er målt under søket\.$|IP owners (ASN): $1. Looked up inside the program, no IP is sent out. Owner is registered data (OSINT), not measured; everything else about connections is measured during the scan.
-  Adresse nå (skannerens oppslag, ikke sett under søket):|  Address now (the scanner's own lookup, not seen during the scan):
+  Adresse i DNS-bufferen (ikke sett under søket):|  Address in the DNS cache (not seen during the scan):
 
 # ---------- 2.40: Nettverk, UDP og datagrunnlag ----------
 ~^standardport for (.+)$|default port for $1

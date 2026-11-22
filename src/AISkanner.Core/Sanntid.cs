@@ -926,8 +926,12 @@ public sealed partial class Skanner
         var filnavn = Modellnavn(sti);
         bool ollamaBlob = Regex.IsMatch(sti, @"[\\/]blobs[\\/]sha256", RegexOptions.IgnoreCase);
         // Navn: fra programmet som lastet den ned, fra filen selv, ellers familien den tilhører
-        var navn = kilde ?? m.Navn
-                   ?? (id.FamilieTekst != null && (ollamaBlob || Regex.IsMatch(filnavn, @"^[0-9a-f]{16,}$|^(model|weights|out|output|checkpoint)", RegexOptions.IgnoreCase))
+        // GGUF uten lesbart navn i fila (general.name mangler eller er tull): filnavnet kan være endret, så det brukes ikke som navn
+        var ekteNavn = Lesbar(m.Navn) ? m.Navn : null;
+        bool uleselig = kilde == null && ekteNavn == null && !ollamaBlob && m.Format.Contains("GGUF");
+        var navn = kilde ?? ekteNavn
+                   ?? (uleselig ? "navn ikke lesbart" + (string.Join(", ", new[] { id.Familie?.Navn, Kortid(id.Sha256 ?? id.Fingeravtrykk) }.Where(x => x != null)) is { Length: > 0 } t ? $" ({t})" : "")   // familie bare fra innholdet; ID-en holder ulike modeller hver for seg
+                   : id.FamilieTekst != null && (ollamaBlob || Regex.IsMatch(filnavn, @"^[0-9a-f]{16,}$|^(model|weights|out|output|checkpoint)", RegexOptions.IgnoreCase))
                        ? $"uten navn ({id.FamilieTekst})" : ollamaBlob ? "Ollama-modell" : filnavn);
         bool farligPlass = ErRisikabelPlass(sti);
         // Modeller i kjente programmer (Ollama, LM Studio, GPT4All, Hugging Face-lageret) er gule. Alle andre er ukjente og røde.
@@ -995,6 +999,7 @@ public sealed partial class Skanner
                 f.Advarsel($"Forkledd: AI-modell ({m.Format}) med endelsen {endelse.ToLowerInvariant()}.");
             }
         }
+        if (uleselig) f.Detalj($"Navnet i modellfila mangler eller kan ikke leses. Filnavnet «{Kutt(Path.GetFileName(sti), 60)}» kan være endret og brukes ikke som navn.");
         if (m.Inni != null) f.Detalj($"Modellen ligger inni fila: {m.Inni}");
         if (m.Format.StartsWith("llamafile", StringComparison.Ordinal)) f.Advarsel("Kan kjøre skjult kode: AI-modell og program i én fil (llamafile) som kan startes direkte.");
         if (id.Kvantisering != null) f.Detalj($"Komprimert med {id.Kvantisering}");
@@ -1024,6 +1029,12 @@ public sealed partial class Skanner
             f.Advarsel($"Laget av {hf.Utgiver} i {IpLand.Navn(hf.Land!)} (høyrisikoland). Kjører lokalt, så data sendes ikke dit, men sjekk om bedriften tillater modellen.");
         }
     }
+
+    private static string? Kortid(string? id) => id == null ? null : "ID " + id.Substring(0, Math.Min(8, id.Length)).ToLowerInvariant();
+
+    /// <summary>Et navn fra modellfila som kan vises: har bokstaver og ingen styretegn eller ødelagte tegn.</summary>
+    internal static bool Lesbar(string? navn) =>
+        !string.IsNullOrWhiteSpace(navn) && navn!.Length <= 200 && navn.Any(char.IsLetter) && !navn.Any(c => char.IsControl(c) || c == '\uFFFD');
 
     /// <summary>Gir generiske filnavn ("model", "pytorch_model-00001-of-00004") et bedre navn fra mappene rundt.</summary>
     private static string Modellnavn(string sti)

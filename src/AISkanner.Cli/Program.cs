@@ -1,6 +1,6 @@
 // Kommandolinjeversjon av skanneren. Skriver funn som JSON.
 // Brukes til testing og til bedrifter som vil kjøre skanningen via Intune eller lignende.
-//   AISkanner.Cli [--fullt] [--nvd] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll | --nettverk] [--en]
+//   AISkanner.Cli [--fullt] [--uten-historikk] [--uten-agentlogger] [--lytt 0-60] [--regler sti\til\regler.json] [--txt | --revisjon | --kontroll | --nettverk] [--en]
 using AISkanner;
 
 // Test av YARA-motoren: AISkanner.Cli --yara regler.yar fil1 fil2 ... (skriver "fil: regel1 regel2", samme som yara.exe)
@@ -37,7 +37,6 @@ if (args.Length == 1 && args[0] == "--selvtest")
 // Søket gjelder brukeren som er logget inn (også når en annen konto, eller SYSTEM via Intune, kjører programmet)
 Bruker.Velg();
 
-bool nvd = args.Contains("--nvd");
 bool historikk = !args.Contains("--uten-historikk");
 int i = Array.IndexOf(args, "--regler");
 var regler = Regelsett.Last(i >= 0 && i + 1 < args.Length ? args[i + 1] : null);
@@ -103,7 +102,7 @@ var status = new Progress<string>(t => Console.Error.WriteLine(t));
 var skanner = new Skanner(regler, historikk) { LesNettleserflagg = args.Contains("--flagg"), Fullt = args.Contains("--fullt"), MedAgentlogger = !args.Contains("--uten-agentlogger"), LytteSekunder = Array.IndexOf(args, "--lytt") is var li && li >= 0 && li + 1 < args.Length && int.TryParse(args[li + 1], out var ls) ? Math.Max(0, Math.Min(60, ls)) : 20 };
 int tn = Array.IndexOf(args, "--test-nett");
 if (tn >= 0) skanner.TestNett = () => TestNett.Les(args[tn + 1]);
-var funn = await skanner.KjorAsync(nvd, status, prosent: args.Contains("--prosent") ? new Progress<int>(p => Console.Error.WriteLine($"  {p} %")) : null);
+var funn = await skanner.KjorAsync(status, prosent: args.Contains("--prosent") ? new Progress<int>(p => Console.Error.WriteLine($"  {p} %")) : null);
 foreach (var (navn, tid) in skanner.Tider.OrderByDescending(t => t.Value)) Console.Error.WriteLine($"  {tid.TotalSeconds,6:0.00} s  {navn}");
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 if (args.Contains("--datagrunnlag"))

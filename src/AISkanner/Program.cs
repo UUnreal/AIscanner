@@ -162,7 +162,7 @@ internal static class Program
     private static int Ytelse(bool fullt)
     {
         var sok = new Skanner(Regelsett.Last()) { LytteSekunder = 0, Fullt = fullt };
-        Task.Run(() => sok.KjorAsync(false)).GetAwaiter().GetResult();
+        Task.Run(() => sok.KjorAsync()).GetAwaiter().GetResult();
         foreach (var t in sok.Tider.OrderByDescending(t => t.Value)) Console.WriteLine($"{t.Value.TotalSeconds,7:0.00} s  {t.Key}");
         Console.WriteLine($"Mapper gått gjennom: {sok.MapperLest}, filhoder lest: {ModellFormat.Filhoder}");
         return 0;
@@ -189,9 +189,9 @@ internal static class Program
             }
             finally { try { File.Delete(tom); } catch { } }
 
-            // Et helt søk i .NET Framework 4.8 (det brukeren kjører), uten NVD og med kort lytting: ingen sjekk skal krasje
+            // Et helt søk i .NET Framework 4.8 (det brukeren kjører) og med kort lytting: ingen sjekk skal krasje
             var sok = new Skanner(Regelsett.Last()) { LytteSekunder = 2 };
-            var funn = Task.Run(() => sok.KjorAsync(false)).GetAwaiter().GetResult();
+            var funn = Task.Run(() => sok.KjorAsync()).GetAwaiter().GetResult();
             var stoppet = (Tilgangslogg.Aktiv?.Oppforinger ?? (IReadOnlyCollection<Tilgang>)Array.Empty<Tilgang>())
                 .Where(t => t.Hva == "Sjekk" && t.Utfall == Utfall.Feil).Select(t => $"{t.Mal}: {t.Detalj}").ToList();
             Console.WriteLine($"Søk: {sok.Tider.Sum(t => t.Value.TotalSeconds):0.0} s i sum, {(stoppet.Count == 0 ? "ingen sjekk stoppet" : "stoppet: " + string.Join(" | ", stoppet))}");

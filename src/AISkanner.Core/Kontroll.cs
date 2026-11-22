@@ -455,13 +455,6 @@ public sealed partial class Skanner
         Sjekk(V("chroma_db/chroma.sqlite3") == "Chroma" && V("rag/index.faiss") == "FAISS" && V("data/bok.lance/data/1.lance") == "LanceDB" && V("qd/collections/dok/collection.json") == "Qdrant",
             "vektordatabase (Chroma, FAISS, LanceDB eller Qdrant) ble ikke kjent igjen");
         Sjekk(V("vanlig/notat.sqlite3") == null, "vanlig SQLite-fil ble tatt for vektordatabase");
-        // Egen DNS (utenom Windows' buffer): spørring og svar med CNAME foran A-posten
-        var q = EgenDns.Sporring("chat.deepseek.com", 1, 0x1234);
-        var svar = q.Take(2).Concat(new byte[] { 0x81, 0x80, 0, 1, 0, 2, 0, 0, 0, 0 }).Concat(q.Skip(12))
-            .Concat(new byte[] { 0xC0, 0x0C, 0, 5, 0, 1, 0, 0, 0, 60, 0, 2, 0xC0, 0x0C })
-            .Concat(new byte[] { 0xC0, 0x0C, 0, 1, 0, 1, 0, 0, 0, 60, 0, 4, 1, 2, 3, 4 }).ToArray();
-        var ip = EgenDns.Tolk(svar, 0x1234);
-        Sjekk(ip != null && ip.Count == 1 && ip[0].ToString() == "1.2.3.4" && EgenDns.Tolk(svar, 0x9999) == null, "egen DNS-klient tolket ikke svaret riktig, eller godtok svar på en annen spørring");
         Sjekk(ErAiBilde("ollama/ollama:latest") && ErAiBilde("ghcr.io/open-webui/open-webui:main") && ErAiBilde("vllm/vllm-openai:v0.6") && ErAiBilde("nvcr.io/nim/meta/llama3:1")
               && !ErAiBilde("postgres:16") && !ErAiBilde("nginx:latest") && !ErAiBilde("mcr.microsoft.com/dotnet/sdk:8.0"), "Docker-bilder for AI ble ikke kjent igjen, eller vanlige bilder ble tatt for AI");
         Directory.CreateDirectory(Path.Combine(rot, "asar"));

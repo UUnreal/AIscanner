@@ -341,7 +341,7 @@ public sealed partial class Skanner
         var info = Pakkeinfo(pakke);
         var utgiver = info?.Utgiver;
         var visning = info?.Navn ?? Pakkenavn(Path.GetFileName(pakke));
-        // Pakke-ID «Clipchamp.Clipchamp» (visningsnavnet ligger i en ressursfil som ikke leses): vis den ekte delen én gang
+        // Pakke-ID «Clipchamp.Clipchamp» (når visningsnavnet i resources.pri ikke kan slås opp): vis den ekte delen én gang
         if (visning.Split('.') is { Length: 2 } del && del[0].Equals(del[1], StringComparison.OrdinalIgnoreCase)) visning = del[1];
         var kilde = $"Fil: {manifest} · ber om systemAIModels{(utgiver != null ? " · utgiver " + utgiver : "")}";
         // Microsofts egne apper (Paint, Bilder, Notisblokk, Outlook …) samles i ett grønt funn. Utgiveren er bekreftet av Windows:

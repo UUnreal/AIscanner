@@ -40,8 +40,7 @@
     </Application>
   </Applications>
   <Capabilities>
-    <!-- Bare oppslag i NVD (produktnavn). Ingenting annet sendes. -->
-    <Capability Name="internetClient" />
+    <!-- Ingen nettverkskapabilitet: skanneren sender ingenting ut. Vakt spør bare 127.0.0.1. -->
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>

@@ -20,7 +20,7 @@ const P = (k) => `<img src=x onerror="window.__x=(window.__x||[]).concat('${k}')
     ingenLand: P('ingenLand'), lokalt: false, kort: P('kort'), folgbar: true, merk: [P('merk')], steder: [P('sted'), 'C:\\x\\' + P('sti')],
     trafikk: [{ adresse: P('adresse'), tjeneste: P('tjeneste'), landKode: P('lk'), cdn: P('cdn'), ip: [{ ip: P('ip'), kode: P('ik'), cdn: P('icdn'), eier: P('eier'), land: P('iland'), farlig: true }],
       tilLand: P('tilLand'), land: P('tland'), farlig: true, antall: 3, kilde: [P('kilde')], proto: [P('proto')], prosesser: [{ pid: 4, fil: P('fil') }], data: P('data') }] }));
-  const info = { sekunder: 3, dataMalt: true, maleSekunder: 5, sendtTekst: P('sendt'), nvd: P('nvd'), enhet: P('enhet'),
+  const info = { sekunder: 3, dataMalt: true, maleSekunder: 5, sendtTekst: P('sendt'), enhet: P('enhet'),
     sjekker: [{ navn: P('sjnavn'), tekst: P('sjtekst'), niva: 'feil', linjer: [P('sjlinje')] }], kjort: P('kjort'), admin: true, fullt: true, bruker: P('bruker'),
     kjortAv: P('kjortAv'), brukerFeil: P('brukerFeil'), revisjon: P('revisjon'), revisjonFeil: false, lytter: false, lytteSekunder: 20,
     telling: { totalt: 4, modeller: 1, nettsteder: 1, utvidelser: 1, apper: 1, innebygd: 0, spor: 0 } };

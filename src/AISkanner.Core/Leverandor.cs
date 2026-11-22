@@ -363,7 +363,12 @@ public sealed partial class Skanner
             }
             catch { }
         }
-        if (frø != null) produkt = frø.Navn;
+        // Generelle produsentmapper (Lenovo, Dell, HP …) samler mange programmer: da teller det ekte produktnavnet fra et
+        // signert program eller pakken, så hvert program blir sin egen rad. Ellers navnet fra regelfila.
+        bool samleFrø = frø != null && frø.Navn.Equals(frø.Utgiver, StringComparison.OrdinalIgnoreCase);
+        bool ektenavn = samleFrø && produkt != null && signert != null && !fraMotor && signert.Inneholder(frø!.Utgiver) && !produkt.Inneholder("Operating System")
+                        && !produkt.Trim().Equals(frø!.Navn, StringComparison.OrdinalIgnoreCase);
+        if (frø != null && !ektenavn) produkt = frø.Navn;
         produkt ??= Pakkenavn(mappenavn);
         if (utgiver == null && frø != null && app.Beskyttet) { utgiver = frø.Utgiver; kilde = "mappe beskyttet av Windows"; }
         utgiver ??= filUtgiver ?? frø?.Utgiver;
@@ -383,7 +388,7 @@ public sealed partial class Skanner
         // versjonsnummer (WindowsAppRuntime.1.8 og .2) og utgiveren kortes til firmaet («Microsoft Windows» og
         // «Microsoft Corporation» er begge Microsoft). Hver kopi står fortsatt som egen mappe i detaljene.
         var firma = utgiver == null ? null : Firma(utgiver);
-        var navn = regel?.Navn ?? frø?.Navn
+        var navn = regel?.Navn ?? (ektenavn ? null : frø?.Navn)
                    ?? (firma != null && !UtenVersjon(produkt).Inneholder(firma) ? $"{UtenVersjon(produkt)} ({firma})" : UtenVersjon(produkt));
         var hva = frø?.Hva ?? (app.Filer.Count > 0 ? "AI-modeller som kjører lokalt i programmet"
             : app.Motorer.Count > 0 && !BareGrafikkMotor(app.Motorer) ? "AI-motor som kan kjøre AI-modeller lokalt" : "AI-biblioteker pakket inn i programmet");
@@ -433,7 +438,7 @@ public sealed partial class Skanner
         foreach (var d in app.SdkFiler) f.Detalj($"AI-bibliotek (.NET): {d}");
         foreach (var a in app.AsarFiler.Take(4)) f.Detalj($"app.asar: {a} ({string.Join(", ", app.AiPakker)})");
         if (app.AiPakker.Any(p => (NodeAi.TryGetValue(p, out var ag) || DotnetAi.TryGetValue(p, out ag)) && ag)) f.Advarsel("Programmet har med biblioteker for AI-agenter som kan handle på egen hånd.");
-        if (frø != null && !frø.Bekreftet) f.Merknad("Navnet kommer fra en liste over kjente mapper som ikke er bekreftet på alle PC-er. Selve funnet er gjort på innholdet.");
+        if (frø != null && !frø.Bekreftet && !ektenavn) f.Merknad("Navnet kommer fra en liste over kjente mapper som ikke er bekreftet på alle PC-er. Selve funnet er gjort på innholdet.");
         if (!bekreftet && utgiver != null) f.Advarsel($"Programmet sier at det er fra {Forkort(utgiver)}, men det er ikke bekreftet med en gyldig signatur.");
         foreach (var k in kjorer.Where(k => k.StartsWith(rot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))) HuskMappe(k, f);
     }
@@ -449,11 +454,43 @@ public sealed partial class Skanner
             string? Tag(string navn)
             {
                 var m = Regex.Match(t, $"<{navn}>([^<]+)</{navn}>");
-                return m.Success && !m.Groups[1].Value.StartsWith("ms-resource:") ? m.Groups[1].Value.Trim() : null;
+                if (!m.Success) return null;
+                var v = m.Groups[1].Value.Trim();
+                return v.StartsWith("ms-resource:", StringComparison.OrdinalIgnoreCase) ? Ressursnavn(rot, t, v) : v;
             }
             return (Tag("DisplayName"), Tag("PublisherDisplayName"));
         }
         catch { return null; }
+    }
+
+    [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int SHLoadIndirectString(string kilde, System.Text.StringBuilder ut, int lengde, IntPtr reservert);
+
+    /// <summary>
+    /// Det ekte visningsnavnet når manifestet bare peker inn i pakkens resources.pri («ms-resource:AppName»). Windows slår opp
+    /// navnet selv (SHLoadIndirectString, bare lesing). Virker for pakker som er installert for brukeren; ellers null.
+    /// Kilde: https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shloadindirectstring
+    /// </summary>
+    internal static string? Ressursnavn(string rot, string manifest, string verdi)
+    {
+        if (!Plattform.ErWindows) return null;
+        var full = Path.GetFileName(rot.TrimEnd('\\', '/'));
+        var id = Regex.Match(manifest, @"<Identity\b[^>]*\bName=""([^""]+)""");
+        if (!id.Success || full.Count(c => c == '_') < 4) return null;   // trenger fullt pakkenavn (Navn_versjon_arkitektur_ressurs_utgiver)
+        var nokkel = verdi.Substring("ms-resource:".Length);
+        var uri = nokkel.StartsWith("//") ? "ms-resource:" + nokkel
+            : nokkel.StartsWith("/") ? $"ms-resource://{id.Groups[1].Value}{nokkel}"
+            : $"ms-resource://{id.Groups[1].Value}/Resources/{nokkel}";
+        try
+        {
+            var sb = new System.Text.StringBuilder(512);
+            int hr = SHLoadIndirectString($"@{{{full}?{uri}}}", sb, sb.Capacity, IntPtr.Zero);
+            var navn = sb.ToString().Trim();
+            bool ok = hr == 0 && navn.Length is > 0 and < 200 && !navn.StartsWith("ms-resource", StringComparison.OrdinalIgnoreCase) && !navn.StartsWith("@");
+            Tilgangslogg.Logg("Fil", Path.Combine(rot, "resources.pri"), ok ? Utfall.Lest : Utfall.Feil, ok ? "visningsnavn slått opp av Windows" : $"visningsnavn ikke funnet (0x{hr:x8})");
+            return ok ? navn : null;
+        }
+        catch (Exception e) { Tilgangslogg.Feil("Fil", Path.Combine(rot, "resources.pri"), e); return null; }
     }
 
     /// <summary>"Microsoft.Paint_11.2.0.0_x64__8wekyb3d8bbwe" → "Microsoft.Paint".</summary>

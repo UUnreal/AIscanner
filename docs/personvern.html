@@ -28,7 +28,7 @@ a { color: var(--bla); }
 <body>
 <main>
 <h1>Personvern · Privacy</h1>
-<p class="dempet">AI-skanner · Sist endret 14. november 2026 · <a href="#en" lang="en">English below</a> · <a href="./">findhiddenai.com</a></p>
+<p class="dempet">AI-skanner (findhiddenai i Microsoft Store) · Sist endret 21. november 2026 · <a href="#en" lang="en">English below</a> · <a href="./">findhiddenai.com</a></p>
 
 <section aria-labelledby="no">
 <h2 id="no">Personvernerklæring</h2>
@@ -47,10 +47,9 @@ a { color: var(--bla); }
 
 <h3>Hva som sendes ut</h3>
 <ul>
-<li><b>NVD:</b> for å sjekke kjente sikkerhetshull sendes bare produktnavnet (for eksempel «ollama») over HTTPS til NVD, en tjeneste fra amerikanske NIST. NIST ser IP-adressen din, slik alle nettsteder gjør.</li>
-<li><b>DNS:</b> programmet slår opp adressene til en fast liste med kjente AI-tjenester hos DNS-serveren PC-en bruker. Lista er den samme for alle og sier ingenting om PC-en.</li>
+<li>Ingenting. Programmet gjør ingen DNS-oppslag og ingen andre nettverkskall. Det bare leser det som allerede finnes på PC-en, også Windows' egen DNS-buffer.</li>
 </ul>
-<p>Ingenting annet sendes. Aldri PC-navn, brukernavn, stier eller funn. Ingen data selges eller deles med noen.</p>
+<p>Aldri PC-navn, brukernavn, stier eller funn. Ingen data selges eller deles med noen.</p>
 
 <h3>Hva som lagres</h3>
 <p>Ingenting blir igjen etter søket. Vinduet bruker en midlertidig mappe (i AppData) som slettes når programmet lukkes. Det eneste som lagres, er det du selv velger: en rapport du lagrer, eller revisjonsloggen i Dokumenter\AI-skanner hvis du slår den på. Disse filene er dine og forlater ikke PC-en.</p>
@@ -58,7 +57,7 @@ a { color: var(--bla); }
 <h3>Dine valg</h3>
 <ul>
 <li>Du velger selv om programmet skal søke, og om det skal søke som bruker eller administrator.</li>
-<li>IT kan slå av NVD-oppslagene og nettleserhistorikken med <code>--uten-nvd</code> og <code>--uten-historikk</code>.</li>
+<li>IT kan slå av lesing av nettleserhistorikken med <code>--uten-historikk</code>.</li>
 <li>Du kan slette rapporter og revisjonslogger når du vil. Avinstallering i Windows, eller å slette AISkanner.exe, fjerner programmet helt.</li>
 <li>Alt programmet leser, vises under «Datagrunnlag» i vinduet. Kildekoden er åpen: <a href="https://github.com/UUnreal/AIscanner">github.com/UUnreal/AIscanner</a>.</li>
 </ul>
@@ -87,10 +86,9 @@ a { color: var(--bla); }
 
 <h3>What is sent out</h3>
 <ul>
-<li><b>NVD:</b> to check known vulnerabilities, only the product name (for example «ollama») is sent over HTTPS to NVD, a service of the US NIST. NIST sees your IP address, as every website does.</li>
-<li><b>DNS:</b> the program looks up the addresses of a fixed list of known AI services with the DNS server the PC uses. The list is the same for everyone and says nothing about the PC.</li>
+<li>Nothing. The program makes no DNS lookups and no other network calls. It only reads what is already on the PC, including Windows' own DNS cache.</li>
 </ul>
-<p>Nothing else is sent. Never the PC name, user name, paths or findings. No data is sold or shared with anyone.</p>
+<p>Never the PC name, user name, paths or findings. No data is sold or shared with anyone.</p>
 
 <h3>What is stored</h3>
 <p>Nothing is left after the scan. The window uses a temporary folder (in AppData) that is deleted when the program closes. The only things stored are what you choose: a report you save, or the audit log in Documents\AI-skanner if you turn it on. These files are yours and do not leave the PC.</p>
@@ -98,7 +96,7 @@ a { color: var(--bla); }
 <h3>Your choices</h3>
 <ul>
 <li>You decide whether the program scans, and whether it scans as user or administrator.</li>
-<li>IT can turn off the NVD lookups and browser history with <code>--uten-nvd</code> and <code>--uten-historikk</code>.</li>
+<li>IT can turn off reading browser history with <code>--uten-historikk</code>.</li>
 <li>You can delete reports and audit logs at any time. Uninstalling it in Windows, or deleting AISkanner.exe, removes the program completely.</li>
 <li>Everything the program reads is shown under «Data basis» in the window. The source code is open: <a href="https://github.com/UUnreal/AIscanner">github.com/UUnreal/AIscanner</a>.</li>
 </ul>
@@ -110,5 +108,6 @@ a { color: var(--bla); }
 <p>Jørund · <a href="mailto:heimholt@gmail.com">heimholt@gmail.com</a>. If this policy changes, the new date is shown at the top.</p>
 </section>
 </main>
+<footer><p class="dempet" style="text-align:center;padding:0 16px 32px">Laget av Jørund · <a href="mailto:heimholt@gmail.com">heimholt@gmail.com</a></p></footer>
 </body>
 </html>

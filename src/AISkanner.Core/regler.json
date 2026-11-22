@@ -17,7 +17,6 @@
         11434
       ],
       "hvorfor": "Kjører språkmodeller lokalt. Data blir på maskinen, men API-et har ingen innlogging. Blir rødt hvis porten er åpen mot nettverket.",
-      "nvd": "ollama",
       "enkelt": "Kjører AI lokalt på PC-en",
       "hvorforEnkelt": "Kjører AI-modeller på selve PC-en, uten internett. Det du skriver blir på maskinen."
     },
@@ -39,7 +38,6 @@
         1234
       ],
       "hvorfor": "Kjører språkmodeller lokalt med valgfri server. Modeller lastes ned fra internett uten kontroll fra IT.",
-      "nvd": "lm studio",
       "enkelt": "Kjører AI lokalt på PC-en",
       "hvorforEnkelt": "Et program for å laste ned og kjøre AI-modeller på PC-en. Modellene kommer fra internett uten kontroll."
     },
@@ -58,7 +56,6 @@
         4891
       ],
       "hvorfor": "Lokal chat-app med språkmodeller. Kan lese lokale dokumenter (LocalDocs).",
-      "nvd": "gpt4all",
       "enkelt": "Kjører AI lokalt på PC-en",
       "hvorforEnkelt": "Et AI-chatprogram som kjører på PC-en og kan lese dokumentene dine hvis du ber om det."
     },
@@ -77,7 +74,6 @@
         5001
       ],
       "hvorfor": "Kjører språkmodeller fra kommandolinjen. Ofte lastet ned som løse filer uten installasjon.",
-      "nvd": "llama.cpp",
       "enkelt": "Kjører AI fra kommandolinjen",
       "hvorforEnkelt": "Et teknisk verktøy for å kjøre AI-modeller. Ofte lastet ned som løse filer."
     },
@@ -119,7 +115,6 @@
         8188
       ],
       "hvorfor": "Bildegenerering lokalt. Tredjeparts tillegg (custom nodes) har tidligere inneholdt skadevare.",
-      "nvd": "comfyui",
       "enkelt": "Lager bilder med AI på PC-en",
       "hvorforEnkelt": "Et program som lager bilder med AI. Tillegg fra andre har tidligere inneholdt skadevare."
     },
@@ -139,7 +134,6 @@
       ],
       "porter": [],
       "hvorfor": "AI-agent som kan lese filer, kjøre kommandoer og sende kode til skyen. Høy risiko uten avtale og retningslinjer.",
-      "nvd": "claude code",
       "enkelt": "AI-assistent som kan styre PC-en",
       "hvorforEnkelt": "Den kan lese filene dine, kjøre programmer og sende innhold til Anthropic på nett."
     },
@@ -159,7 +153,6 @@
       ],
       "porter": [],
       "hvorfor": "AI-agent som kan kjøre kommandoer og endre filer. Kode sendes til OpenAI.",
-      "nvd": "codex cli",
       "enkelt": "AI-assistent som kan styre PC-en",
       "hvorforEnkelt": "Den kan endre filer og kjøre programmer, og sender innhold til OpenAI."
     },
@@ -195,7 +188,6 @@
       ],
       "porter": [],
       "hvorfor": "AI-kodeagent som endrer filer og bruker valgfri skytjeneste.",
-      "nvd": "aider",
       "enkelt": "AI som skriver kode for deg",
       "hvorforEnkelt": "Den endrer filer på egen hånd og sender koden til en AI-tjeneste."
     },
@@ -212,7 +204,6 @@
       ],
       "porter": [],
       "hvorfor": "Kodeeditor med innebygd AI-agent. Kildekode sendes til skyen.",
-      "nvd": "cursor ai",
       "enkelt": "Kodeprogram med innebygd AI",
       "hvorforEnkelt": "Koden du jobber med sendes til en AI-tjeneste på nett."
     },

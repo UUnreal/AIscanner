@@ -44,7 +44,6 @@ public sealed class Produkt : Regelmeta
     [JsonPropertyName("porter")] public List<int> Porter { get; set; } = new();
     [JsonPropertyName("kommandoer")] public List<string> Kommandoer { get; set; } = new();
     [JsonPropertyName("kunUtvidelse")] public bool KunUtvidelse { get; set; }
-    [JsonPropertyName("nvd")] public string? Nvd { get; set; }
     [JsonPropertyName("hvorfor")] public string Hvorfor { get; set; } = "";
     [JsonPropertyName("enkelt")] public string? Enkelt { get; set; }
     [JsonPropertyName("hvorforEnkelt")] public string? HvorforEnkelt { get; set; }

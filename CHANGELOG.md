@@ -23,6 +23,22 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.58.0] - 2026-11-21
+
+### Fjernet
+
+- **NVD-oppslaget:** programmet sender ikke lenger produktnavn til NVD. Ingen nettverkskall ut, bare spørsmål til `127.0.0.1`. Valgene `--uten-nvd` og `--nvd` er borte.
+- **Egne DNS-oppslag:** skanneren slår ikke lenger opp adressene til kjente AI-tjenester. IP-adressene hentes bare fra Windows' DNS-buffer. Null trafikk ut; MSIX-pakken ber ikke lenger om internettilgang. Ulempe: forbindelser nettleseren slår opp med sikker DNS (DoH) kjennes ikke igjen på navn.
+
+### Rettet
+
+- **Ekte navn på Windows-apper:** når pakken bare peker inn i resources.pri («ms-resource:»), slår Windows opp det ekte visningsnavnet (SHLoadIndirectString, bare lesing). Virker ikke for pakker som ikke er installert for brukeren; da brukes pakke-ID-en som før.
+- **Programmer fra PC-produsenten deles opp:** mapper som Program Files\Lenovo samlet alt under ett navn. Nå får hvert program sitt ekte produktnavn fra et program signert av produsenten, og blir egen rad.
+- **GGUF uten lesbart navn:** mangler navnet i modellfila eller er det uleselig, står det «navn ikke lesbart» med familie (bare når den er kjent fra innholdet) og en kort modell-ID, så ulike modeller ikke slås sammen. Filnavnet kan være endret og brukes ikke som navn.
+- **Personvernerklæringen:** Store-navnet findhiddenai, ny dato og bunntekst.
+
+Ikke testet på Windows: bygget og `--kontroll` i CI (virtuell Windows). resources.pri-oppslaget og Lenovo-delingen må bekreftes på en ekte PC.
+
 ## [2.57.0] - 2026-11-20
 
 ### Lagt til

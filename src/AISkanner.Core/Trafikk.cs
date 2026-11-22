@@ -309,7 +309,7 @@ public sealed partial class Skanner
     internal const string AiTjenesterHvorfor = "Et program på PC-en har slått opp navnet til AI-tjenester. Et oppslag er ikke bruk: Windows lagrer ikke hvilket program som spurte eller om noe ble sendt.";
 
     /// <summary>
-    /// Hvor tjenesten bak et funn ligger nå: IP-ene skannerens eget DNS-oppslag ga for tjenestens adresser, med land og
+    /// Hvor tjenesten bak et funn ligger nå: IP-ene Windows' DNS-buffer har for tjenestens adresser, med land og
     /// eier (OSINT). Ikke bevis for bruk og ikke sett under søket; det står slik i lista og rapporten.
     /// </summary>
     private void AdresseNa(Dictionary<IPAddress, List<string>> egne)

@@ -71,7 +71,6 @@ testene kan kjøre på Linux. `Polyfills.cs` og `Plattform.cs` jevner ut forskje
 | `YaraSjekk.cs` + `Yara/` | Kjører `ai-modeller.yar` på modellfiler. |
 | `Risikoregler.cs` | Siste steg: type, risiko, risikogrunn og «kommer fra». |
 | `Oversikt.cs` | Kort navn, kort lokasjon og stikkord på tre ord for tabellen og rapporten. |
-| `Nvd.cs` | Antall CVE-er i NVD. Sender bare produktordet. |
 | `Rapport.cs` | Tekstrapport (UTF-8 med BOM) og JSON. |
 | `ProsessSti.cs` | Filsti for en prosess med minst mulig tilgang. |
 
@@ -94,9 +93,7 @@ Søk
  │
  ├─ Risikoregler.Bruk             type, endelig risiko, risikogrunn, kommer fra
  │
- ├─ Resultat sendes til vinduet   sortert etter risiko, deretter navn
- │
- └─ Nvd.SjekkAsync                i bakgrunnen etter resultatet, oppdaterer funn ett og ett
+ └─ Resultat sendes til vinduet   sortert etter risiko, deretter navn
 ```
 
 Hver sjekk kaller `LeggTil(navn, kategori, risiko, …)`. Funn med samme navn slås sammen, og høyeste risiko vinner
@@ -232,8 +229,6 @@ Vinduet og siden snakker med JSON-meldinger:
 | Program → side | `modus` | Om programmet kjører som administrator |
 | Program → side | `start` | Start søket med en gang (etter omstart som administrator) |
 | Program → side | `resultat` | Alle funn og søkeinfo |
-| Program → side | `nvd` | NVD-merknader for ett funn |
-| Program → side | `nvdFerdig` | NVD-oppslaget er ferdig |
 | Program → side | `feil` | Søket stoppet |
 
 Siden kan også åpnes i en vanlig nettleser. Da brukes eksempeldata (`demo()`), og det er slik skjermbildene i

@@ -123,7 +123,6 @@ regelfil som ble brukt med sti og SHA-256, og `AISkanner.exe --lisens` viser MIT
   "mapper": ["%USERPROFILE%\\.ollama"],
   "porter": [11434],
   "kommandoer": [],
-  "nvd": "ollama",
   "hvorfor": "Kjører språkmodeller lokalt …",
   "enkelt": "Kjører AI lokalt på PC-en",
   "hvorforEnkelt": "Kjører AI-modeller på selve PC-en …"
@@ -140,7 +139,6 @@ regelfil som ble brukt med sti og SHA-256, og `AISkanner.exe --lisens` viser MIT
 | `porter` | Porter produktet lytter på. |
 | `kommandoer` | Kommandoer i `PATH` (`.exe`, `.cmd`, `.bat`, `.ps1`). Bare om fila finnes. Ingenting kjøres. |
 | `kunUtvidelse` | `true` når regelen bare skal treffe nettleserutvidelser. |
-| `nvd` | Ordet som sendes til NVD for å telle kjente sårbarheter. Bruk et produktord, aldri noe som kan identifisere en person eller bedrift. |
 | `hvorfor`, `hvorforEnkelt`, `enkelt` | Forklaringer i rapport og detaljvisning. |
 | `rad` | Fjernet i 2.28.0. Leses ikke. |
 

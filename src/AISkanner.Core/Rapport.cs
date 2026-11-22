@@ -113,7 +113,7 @@ public static class Rapport
                 L("  Sender til nå:");
                 foreach (var m in f.Trafikk) L($"    - {MalTekst(m)}");
             }
-            if (f.Trafikk.Count == 0 && f.Oppslag.Count > 0) L($"  Adresse nå (skannerens oppslag, ikke sett under søket): {string.Join("; ", f.Oppslag)}");
+            if (f.Trafikk.Count == 0 && f.Oppslag.Count > 0) L($"  Adresse i DNS-bufferen (ikke sett under søket): {string.Join("; ", f.Oppslag)}");
             if (f.Detaljer.Count > 0)
             {
                 L("  Funnet her:");
