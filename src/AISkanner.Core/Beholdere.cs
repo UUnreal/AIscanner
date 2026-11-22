@@ -1,4 +1,4 @@
-﻿using System.IO.Pipes;
+using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Win32;
@@ -148,9 +148,7 @@ public sealed partial class Skanner
         if (lxss == null) return;
         if (lxss.GetSubKeyNames().Length == 0) return;
         // WSL2 kjører i en VM (vmmem/vmmemWSL). WSL1 har ingen VM: Linux-prosessene er pico-prosesser uten Windows-fil, og «init» finnes så lenge en distribusjon kjører.
-        // wsl.exe/wslhost.exe lever bare så lenge en Linux-økt kjører (gjelder både WSL1 og WSL2).
-        static bool Finnes(string n) { var p = System.Diagnostics.Process.GetProcessesByName(n); foreach (var x in p) x.Dispose(); return p.Length > 0; }
-        bool linuxKjorer = Finnes("vmmemWSL") || Finnes("vmmem") || Finnes("wsl") || Finnes("wslhost")
+        bool linuxKjorer = System.Diagnostics.Process.GetProcessesByName("vmmemWSL").Length > 0 || System.Diagnostics.Process.GetProcessesByName("vmmem").Length > 0
                            || System.Diagnostics.Process.GetProcessesByName("init").Any(p => { using (p) return ProsessSti.Hent(p) == null; });
         if (!linuxKjorer)
             lock (Blindsoner) Blindsoner.Add($"WSL (Linux i Windows) er installert ({lxss.GetSubKeyNames().Length}), men kjørte ikke. AI inne i WSL er ikke sjekket; søket starter aldri Linux.");

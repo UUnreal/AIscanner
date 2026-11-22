@@ -215,7 +215,7 @@ foreach ($x in $fasit.med) {
 $renFeil = @($ren.funn | Where-Object { $_.bevisniva -ne 'Spor' -and ($_.risiko -in @($fasit.ren.forbudtFarge) -or $_.type -like 'Ukjent*') })
 foreach ($f in $renFeil) { $feil.Add("Ren maskin: falskt funn $($f.risiko) $($f.navn) ($($f.type))") }
 L ""; L "Fasit: $(if ($feil.Count) { "❌ $($feil.Count) feil" } else { '✅ alt riktig' })"; $feil | ForEach-Object { L "- $_" }
-L ""; L "Ikke testet her (ærlig): LM Studio (installasjonen kan ikke skriptes trygt), WSL2, Docker Desktop, GPU/NPU, Recall/Copilot, Windows 26H2, fart."
+L ""; L "Ikke testet her (ærlig): LM Studio (installasjonen kan ikke skriptes trygt), Docker Desktop, GPU/NPU, Recall/Copilot, Windows 26H2, fart."
 L ""; L "## Alle funn (navn · type · farge · nivå)"
 foreach ($f in $med.funn) { L "- $($f.navn) · $($f.type) · $($f.risiko) · $($f.bevisniva)" }
 
