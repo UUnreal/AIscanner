@@ -23,6 +23,20 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.59.0] - 2026-11-23
+
+### Lagt til
+
+- **13 agenter fra Microsoft Defenders støtteliste** som manglet: DeepSeek Harness, Buzz (Block), Microsoft Scout, Cortex Code/CoCo (Snowflake), Droid (Factory), nanobot, Oh My Pi, QClaw (Tencent), ZeroClaw, Qwen Studio, ZCode, Gemini Code Assist og Foundry Toolkit (VS Code). Hver regel har kilde. Microsoft Scout, Qwen Studio og ZCode kjennes bare på navn, fordi installasjonsstien ikke er dokumentert. Flere Windows-stier er bare dokumentert for macOS/Linux og står som «ikke bekreftet» i kilden.
+- **Utvidelser i alle VS Code-kopier:** i tillegg til VS Code, Cursor og Windsurf leses nå alle mapper %USERPROFILE%\.<navn>\extensions som har extensions.json (Kiro, Trae, Antigravity, VSCodium og nye kopier uten navneliste), og JetBrains-tillegg i %APPDATA%\JetBrains\<produkt>\plugins.
+- **Ukjente AI-utvidelser i kodeeditoren:** en utvidelse uten regel sjekkes på pakkenavnene i package.json mot AI-pakkelista. Treff gir rødt «Ukjent AI-utvidelse». Bare pakkenavn leses.
+- **LM Studio uten skjerm (llmster)** kjennes igjen som LM Studio.
+- **Civitai** (nedlasting av bildemodeller) som AI-nettsted.
+
+### Ikke tatt med
+
+- LM Studio-porten 43411 fra Splunks blogg: står ikke i LM Studios egen dokumentasjon.
+
 ### Rettet
 
 - **WSL1 blir søkt i:** skanneren så bare WSL2 (vmmem) som «kjører». Nå regnes også en kjørende WSL1-distribusjon (Linux-prosessen «init» uten Windows-fil). Skanneren starter fortsatt aldri Linux selv.
