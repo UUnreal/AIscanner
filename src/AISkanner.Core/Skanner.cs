@@ -705,15 +705,65 @@ public sealed partial class Skanner
             }
         }
 
-        foreach (var m in new[] { @"%USERPROFILE%\.vscode\extensions", @"%USERPROFILE%\.vscode-insiders\extensions", @"%USERPROFILE%\.cursor\extensions", @"%USERPROFILE%\.windsurf\extensions" })
+        EditorUtvidelser();
+    }
+
+    internal void EditorUtvidelser()
+    {
+        foreach (var m in EditorMapper())
         {
-            foreach (var d in Mapper(Utvid(m)))
+            foreach (var d in Mapper(m))
             {
                 var id = Regex.Replace(Path.GetFileName(d), @"-\d+(\.\d+)*.*$", "");
                 var r = FinnRegel(id);
                 if (r != null) FraRegel(r, "Utvidelse i kodeeditor", $"Editor-utvidelse: {d}");
+                else UkjentEditorUtvidelse(d, id);
             }
         }
+    }
+
+    /// <summary>
+    /// Utvidelsesmapper i kodeeditorer. VS Code og alle kopier av den (Cursor, Windsurf, Kiro, Trae, Antigravity, VSCodium …)
+    /// legger utvidelser i %USERPROFILE%\.&lt;navn&gt;\extensions med fila extensions.json, så de finnes uten navneliste.
+    /// JetBrains: %APPDATA%\JetBrains\&lt;produkt&gt;&lt;versjon&gt;\plugins. Kilder: github.com/microsoft/vscode (dataFolderName i product.json,
+    /// extensions.json i utvidelsesmappa) og jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html
+    /// </summary>
+    internal static IEnumerable<string> EditorMapper()
+    {
+        var ut = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var m in new[] { @"%USERPROFILE%\.vscode\extensions", @"%USERPROFILE%\.vscode-insiders\extensions", @"%USERPROFILE%\.cursor\extensions", @"%USERPROFILE%\.windsurf\extensions" })
+            ut.Add(Utvid(m));
+        foreach (var d in Mapper(Utvid("%USERPROFILE%")))
+        {
+            if (!Path.GetFileName(d).StartsWith(".")) continue;
+            var e = Path.Combine(d, "extensions");
+            if (File.Exists(Path.Combine(e, "extensions.json"))) ut.Add(e);
+        }
+        foreach (var d in Mapper(Utvid(@"%APPDATA%\JetBrains")))
+            if (Directory.Exists(Path.Combine(d, "plugins"))) ut.Add(Path.Combine(d, "plugins"));
+        return ut;
+    }
+
+    /// <summary>
+    /// Utvidelse uten regel: bare pakkenavnene i package.json sammenlignes med AI-pakkelista. Ingen kode leses eller kjøres.
+    /// Ukjent AI er alltid rødt (regel fra Jørund 2026-10-26).
+    /// </summary>
+    private void UkjentEditorUtvidelse(string mappe, string id)
+    {
+        var fil = new FileInfo(Path.Combine(mappe, "package.json"));
+        if (!fil.Exists) return;
+        if (fil.Length > 1 << 20) { Tilgangslogg.Tell("Fil", Utfall.HoppetOver, sted: fil.FullName, detalj: "package.json større enn 1 MB"); return; }
+        string tekst;
+        try { tekst = File.ReadAllText(fil.FullName); } catch (Exception e) { Tilgangslogg.Feil("Fil", fil.FullName, e); return; }
+        Tilgangslogg.Tell("Fil", Utfall.Lest, sted: fil.FullName, detalj: "editor-utvidelse: bare pakkenavn");
+        var (pakker, agent) = AiPakker(AvhengighetNavn("package.json", tekst), NodeAi, false);
+        pakker.RemoveWhere(p => p is "ai" or "agents");
+        if (pakker.Count == 0) return;
+        var f = LeggTil($"{Kutt(id, 40)} (editor-utvidelse)", "Skygge-AI", Risiko.Rod,
+            "Ukjent AI-utvidelse. Vi vet ikke hvem som lager den eller hvor dataene havner.",
+            "Utvidelse i kodeeditor", $"Editor-utvidelse: {mappe}");
+        f.Detalj("AI-biblioteker i utvidelsen: " + string.Join(", ", pakker.Take(8)));
+        if (agent) f.Advarsel("Har med biblioteker for AI-agenter som kan handle på egen hånd.");
     }
 
     // ---------- 5. Åpne porter ----------

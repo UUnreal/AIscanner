@@ -255,6 +255,34 @@ public sealed partial class Skanner
             Sjekk(s.FinnRegel(@"C:\Users\a\.copilot @github/copilot")?.Navn == "GitHub Copilot CLI", "GitHub Copilot CLI ble ikke kjent igjen");
             Sjekk(s.FinnRegel("tl;dv - Record, Transcribe & ChatGPT for Google Meet", utvidelse: true)?.Navn?.StartsWith("Møteopptakere", StringComparison.Ordinal) == true, "tl;dv-utvidelsen ble ikke kjent igjen som møteopptaker");
             Sjekk(s.FinnRegel("Read Aloud: A Text to Speech Voice Reader", utvidelse: true)?.Navn?.StartsWith("Møteopptakere", StringComparison.Ordinal) != true, "Read Aloud ble tatt for møteopptaker");
+            // Editor-utvidelser (2.59): VS Code-kopi uten navneliste (mappe med extensions.json), JetBrains-tillegg,
+            // ukjent utvidelse med AI-pakke (rød), vanlig utvidelse uten AI-pakke (ikke tatt med)
+            var gammelHjem = Environment.GetEnvironmentVariable("USERPROFILE");
+            var hjem = Path.Combine(rot, "editorhjem");
+            var kopi = Path.Combine(hjem, ".nykopi", "extensions");
+            Directory.CreateDirectory(Path.Combine(kopi, "kontroll.aihjelper-1.0.0"));
+            File.WriteAllText(Path.Combine(kopi, "extensions.json"), "[]");
+            File.WriteAllText(Path.Combine(kopi, "kontroll.aihjelper-1.0.0", "package.json"), "{\"name\":\"aihjelper\",\"dependencies\":{\"openai\":\"^4.0.0\",\"lodash\":\"4\"}}");
+            Directory.CreateDirectory(Path.Combine(kopi, "kontroll.vanlig-1.0.0"));
+            File.WriteAllText(Path.Combine(kopi, "kontroll.vanlig-1.0.0", "package.json"), "{\"name\":\"vanlig\",\"dependencies\":{\"lodash\":\"4\"}}");
+            Directory.CreateDirectory(Path.Combine(kopi, "google.geminicodeassist-2.1.0"));
+            var uten = Path.Combine(hjem, ".ikkeeditor", "extensions", "kontroll.skjult-1.0.0");
+            Directory.CreateDirectory(uten);
+            File.WriteAllText(Path.Combine(uten, "package.json"), "{\"dependencies\":{\"openai\":\"4\"}}");
+            Directory.CreateDirectory(Path.Combine(Environment.GetEnvironmentVariable("APPDATA")!, "JetBrains", "PyCharm2026.3", "plugins", "zcode"));
+            Environment.SetEnvironmentVariable("USERPROFILE", hjem);
+            try { s.EditorUtvidelser(); }
+            finally { Environment.SetEnvironmentVariable("USERPROFILE", gammelHjem); }
+            var ukjentEd = s._funn.Values.FirstOrDefault(f => f.Navn == "kontroll.aihjelper (editor-utvidelse)");
+            Sjekk(ukjentEd != null && ukjentEd.Risiko == Risiko.Rod && ukjentEd.Detaljer.Any(d => d.Contains("openai")) && !ukjentEd.Detaljer.Any(d => d.Contains("lodash")),
+                "ukjent editor-utvidelse med AI-pakke i en VS Code-kopi ble ikke rød, eller vanlige pakker ble vist");
+            Sjekk(!s._funn.Values.Any(f => f.Navn.StartsWith("kontroll.vanlig", StringComparison.Ordinal) || f.Navn.StartsWith("kontroll.skjult", StringComparison.Ordinal)),
+                "vanlig editor-utvidelse ble tatt for AI, eller en mappe uten extensions.json ble lest som editor");
+            Sjekk(s._funn.Values.Any(f => f.Navn == "Gemini Code Assist (VS Code)"), "Gemini Code Assist i en VS Code-kopi ble ikke kjent igjen");
+            Sjekk(s._funn.Values.Any(f => f.Navn == "ZCode (Z.ai / Zhipu)" && f.Detaljer.Any(h => h.Contains("JetBrains"))), "tillegg i JetBrains' plugins-mappe ble ikke lest");
+            Sjekk(s.FinnRegel("npm i -g @deepseek-ai/dsh")?.Navn == "DeepSeek Harness (DeepSeek)", "DeepSeek Harness ble tatt for DeepSeek-appen");
+            Sjekk(s.FinnRegel("deepseek")?.Navn == "DeepSeek", "DeepSeek-appen ble tatt for DeepSeek Harness");
+            Sjekk(s.FinnRegel("llmster")?.Navn == "LM Studio", "llmster ble ikke kjent igjen som LM Studio");
         }
         finally
         {

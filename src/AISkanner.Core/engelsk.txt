@@ -1694,3 +1694,28 @@ Mulig forfalsket Python-pakke|Possibly fake Python package
 Mulig forfalsket Node-pakke|Possibly fake Node package
 Avhengighetsfil|Dependency file
 I Linux (WSL).|In Linux (WSL).
+~\(editor-utvidelse\)|(editor extension)
+AI-biblioteker i utvidelsen:|AI libraries in the extension:
+Har med biblioteker for AI-agenter som kan handle på egen hånd.|Includes libraries for AI agents that can act on their own.
+AI-agent som kjører selv|AI agent that runs on its own
+AI-agenter i team-app|AI agents in a team app
+AI-agent fra Alibaba|AI agent from Alibaba
+AI-kodeagent|AI coding agent
+AI-verktøy i VS Code|AI tool in VS Code
+Kan laste ned og kjøre AI-modeller på PC-en.|Can download and run AI models on the PC.
+Koden du jobber med sendes til Google.|The code you work on is sent to Google.
+Kodeagent i terminalen (kommandoen dsh) som leser og endrer filer og kjører kommandoer med AI.|Coding agent in the terminal (the dsh command) that reads and changes files and runs commands with AI.
+Arbeidsflate der AI-agenter jobber sammen med folk og kjører i mappa ~/.buzz på PC-en.|Workspace where AI agents work with people and run in the ~/.buzz folder on the PC.
+Personlig AI-agent fra Microsoft som gjør oppgaver selv i en arbeidsmappe du velger.|Personal AI agent from Microsoft that does tasks on its own in a work folder you choose.
+Kodeagent fra Snowflake (kommandoen cortex) som leser og endrer filer, kjører kommandoer og bruker MCP-servere.|Coding agent from Snowflake (the cortex command) that reads and changes files, runs commands and uses MCP servers.
+Kodeagent i terminalen (kommandoen droid) som leser og endrer filer og kjører kommandoer med AI.|Coding agent in the terminal (the droid command) that reads and changes files and runs commands with AI.
+Liten personlig AI-agent som kjører kommandoer, bruker MCP-servere og kan styres fra chat-apper.|Small personal AI agent that runs commands, uses MCP servers and can be controlled from chat apps.
+Kodeagent i terminalen (kommandoen omp) som leser og endrer filer og kjører kommandoer med AI.|Coding agent in the terminal (the omp command) that reads and changes files and runs commands with AI.
+AI-agent fra Tencent bygget på OpenClaw. Gjør oppgaver selv på PC-en og kan styres fra chat-apper.|AI agent from Tencent built on OpenClaw. Does tasks on its own on the PC and can be controlled from chat apps.
+Personlig AI-agent (OpenClaw-type) som kjører kommandoer og kan styres fra chat-apper.|Personal AI agent (OpenClaw type) that runs commands and can be controlled from chat apps.
+Skrivebordsapp fra Alibaba med AI-agent.|Desktop app from Alibaba with an AI agent.
+Kodeagent fra Z.ai (Zhipu) som leser og endrer filer og kjører kommandoer med GLM-modeller.|Coding agent from Z.ai (Zhipu) that reads and changes files and runs commands with GLM models.
+Kodeassistent og agent fra Google inne i VS Code.|Coding assistant and agent from Google inside VS Code.
+Microsoft-utvidelse i VS Code som laster ned og kjører AI-modeller lokalt og lager agenter.|Microsoft extension in VS Code that downloads and runs AI models locally and builds agents.
+Nettsted for AI-bildemodeller|Website for AI image models
+Her lastes bildemodeller og LoRA-filer ned. Modeller fra ukjente kilder kan inneholde skadelig kode.|Image models and LoRA files are downloaded here. Models from unknown sources can contain harmful code.
