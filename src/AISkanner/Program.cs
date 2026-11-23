@@ -112,6 +112,9 @@ internal static class Program
     private static void Main(string[] args)
     {
         // Byggeløypa: laster bibliotekene og kjører kontrollen uten vindu, i mappa slik brukeren får den
+        // UTF-8 ut, ellers blir æøå til � i CI-merknadene
+        if (args.Contains("--lastetest") || args.Contains("--ytelse"))
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new System.Text.UTF8Encoding(false)) { AutoFlush = true });
         if (args.Contains("--lastetest")) { Environment.Exit(Lastetest()); return; }
         if (args.Contains("--ytelse")) { Environment.Exit(Ytelse(args.Contains("--fullt"))); return; }
 
