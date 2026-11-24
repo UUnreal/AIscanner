@@ -156,6 +156,9 @@ jobs:
           Copy-Item publish/AISkanner.exe pakke/
           Copy-Item msix/Assets/*.png pakke/Assets/
           (Get-Content msix/AppxManifest.xml -Raw).Replace('Version="0.0.0.0"', "Version=`"$v.0`"") | Set-Content pakke/AppxManifest.xml -Encoding utf8NoBOM
+          # Løftet i Store: bare runFullTrust, ingen nettverk eller andre tilganger. Kommer noe annet inn, stopper bygget.
+          $kap = ([xml](Get-Content pakke/AppxManifest.xml)).Package.Capabilities.ChildNodes | Where-Object { $_.NodeType -eq 'Element' } | ForEach-Object { $_.Name }
+          if (($kap -join ',') -ne 'runFullTrust') { "::error title=Store::Pakken ber om mer enn runFullTrust: $($kap -join ', ')"; exit 1 }
           $sdk = Get-Item "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64" | Where-Object { Test-Path (Join-Path $_.FullName makeappx.exe) } |
             Sort-Object { [version]$_.Parent.Name } -Descending | Select-Object -First 1
           if (-not $sdk) { "::error title=Store::Fant ikke makeappx.exe (Windows SDK)"; exit 1 }

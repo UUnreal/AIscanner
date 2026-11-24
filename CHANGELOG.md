@@ -23,6 +23,17 @@ Kategoriene er:
 
 ## [Ikke utgitt]
 
+## [2.59.1] - 2026-11-24
+
+### Endret
+
+- **Store-utgaven:** tittellinjen viser «findhiddenai · AI-skanner», så navnet er det samme som i Start og i Microsoft Store. AISkanner.exe heter fortsatt «AI-skanner».
+- **Store-pakken krever Windows 10 1903 eller nyere** (før: 1809). 1903 er første Windows med .NET Framework 4.8 innebygd, som programmet trenger. På 1809 kunne Store tilby en pakke som ikke starter.
+
+### Sikkerhet
+
+- **Byggeløypa stopper** hvis Store-pakken ber om noe annet enn runFullTrust (for eksempel internettilgang).
+
 ## [2.59.0] - 2026-11-23
 
 ### Lagt til
